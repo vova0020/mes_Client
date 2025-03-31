@@ -1,0 +1,237 @@
+.mesPage {
+  display: flex;
+  flex-direction: row;
+  height: 100vh; /* Высота на весь экран */
+  width: 100%;
+  font-family: sans-serif;
+  background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
+  overflow: hidden; /* Предотвращает прокрутку на уровне всей страницы */
+}
+
+/* Блок с боковой панелью */
+.Sidebar_Block {
+  width: 120px; /* Уменьшенная фиксированная ширина для сайдбара */
+  height: 100%; /* Высота на весь экран */
+  background-color: transparent; /* Прозрачный фон, чтобы был виден сайдбар */
+  padding: 10px 10px; /* Уменьшенные отступы для сайдбара */
+  box-sizing: border-box; /* Учитываем padding в общей ширине */
+  display: flex; /* Используем flex для центрирования */
+  align-items: center; /* Центрирование по вертикали */
+  justify-content: center; /* Центрирование по горизонтали */
+  overflow: hidden; /* Предотвращаем выход содержимого за границы */
+  transition: width 0.3s ease; /* Плавный переход при изменении ширины */
+}
+
+/* Основной блок контента */
+.Content_Block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Высота на весь экран */
+  padding: 10px 15px 10px 5px;
+  box-sizing: border-box; /* Учитываем padding в общей высоте */
+  overflow: hidden; /* Предотвращает прокрутку на уровне Content_Block */
+}
+
+/* Блок заголовка */
+.headerBlock {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  flex-shrink: 0; /* Запрещаем сжиматься */
+}
+
+/* Основной контейнер */
+.mainContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Занимает все доступное пространство */
+  min-height: 0; /* Важно для корректной работы flex в Firefox */
+  overflow: hidden; /* Предотвращает прокрутку на уровне mainContainer */
+}
+
+/* Контент (таблицы заказов и деталей) */
+.content {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+  flex: 1; /* Занимает все доступное пространство */
+  min-height: 0; /* Важно для корректной работы flex в Firefox */
+  overflow: hidden; /* Предотвращает прокрутку на уровне content */
+}
+
+/* Секция с таблицей заказов */
+.ordersSection {
+  width: 25%;
+  height: 100%; /* Занимает всю доступную высоту */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Предотвращает прокрутку на уровне секции */
+  transition: width 0.3s ease; /* Плавный переход при изменении ширины */
+}
+
+/* Секция с таблицей деталей */
+.detailsSection {
+  width: 75%;
+  height: 100%; /* Занимает всю доступную высоту */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; /* Учитываем padding в общей высоте */
+  overflow: hidden; /* Скрывае�� прокрутку на уровне секции */
+  transition: width 0.3s ease; /* Плавный переход при изменении ширины */
+}
+
+/* Заголовок в секции деталей */
+.detailsSection h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  flex-shrink: 0; /* Запрещаем сжиматься */
+}
+
+/* Контейнер для таблицы деталей */
+.detailsSection > div:last-child {
+  flex: 1; /* Занимает все оставшееся пространство */
+  overflow-y: auto; /* Добавляем прокрутку, если содержимое не помещается */
+  min-height: 0; /* Важно для корректной работы flex в Firefox */
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
+  .ordersSection {
+    width: 20%;
+  }
+  
+  .detailsSection {
+    width: 80%;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .ordersSection {
+    width: 30%;
+  }
+  
+  .detailsSection {
+    width: 70%;
+  }
+}
+
+/* Планшеты (от 768px до 991px) */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .ordersSection {
+    width: 35%;
+  }
+  
+  .detailsSection {
+    width: 65%;
+  }
+  
+  .Sidebar_Block {
+    width: 80px;
+    padding: 8px;
+  }
+  
+  .Content_Block {
+    padding: 8px 12px 8px 4px;
+  }
+  
+  .content {
+    gap: 12px;
+  }
+}
+
+/* Малые планшеты и большие телефоны (от 576px до 767px) */
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .mesPage {
+    flex-direction: row; /* Сохраняем горизонтальную структуру */
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .Sidebar_Block {
+    width: 60px; /* Уменьшаем ширину сайдбара */
+    padding: 5px;
+  }
+  
+  .Content_Block {
+    padding: 8px;
+    flex: 1;
+  }
+  
+  .content {
+    flex-direction: row; /* Сохраняем горизонтальную структуру */
+    gap: 8px;
+  }
+  
+  .ordersSection {
+    width: 40%; /* Увеличиваем относительную ширину для лучшей читаемости */
+    min-width: 150px; /* Минимальная ширина для читаемости */
+  }
+  
+  .detailsSection {
+    width: 60%; /* Уменьшаем относительную ширину */
+  }
+  
+  /* Уменьшаем размер шрифта для лучшей читаемости на маленьких экранах */
+  .mesPage {
+    font-size: 14px;
+  }
+  
+  /* Уменьшаем отступы в контейнерах */
+  .headerBlock {
+    margin-bottom: 10px;
+  }
+}
+
+/* Мобильные телефоны (до 575px) */
+@media screen and (max-width: 575px) {
+  .mesPage {
+    flex-direction: row; /* Сохраняем горизонтальную структуру */
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .Sidebar_Block {
+    width: 45px; /* Минимальная ширина сайдбара */
+    padding: 3px;
+  }
+  
+  .Content_Block {
+    padding: 5px;
+    flex: 1;
+  }
+  
+  .headerBlock {
+    margin-bottom: 8px;
+  }
+  
+  .content {
+    flex-direction: row; /* Сохраняем горизонтальную структуру */
+    gap: 5px;
+  }
+  
+  .ordersSection {
+    width: 40%; /* Увеличиваем относительную ширину для лучшей читаемости */
+    min-width: 120px; /* Минимальная ширина для читаемости */
+  }
+  
+  .detailsSection {
+    width: 60%; /* Уменьшаем относительную ширину */
+  }
+  
+  /* Уменьшаем размер шрифта для лучшей читаемости на маленьких экранах */
+  .mesPage {
+    font-size: 12px;
+  }
+  
+  /* Уменьшаем отступы в контейнерах */
+  .headerBlock {
+    margin-bottom: 5px;
+  }
+}

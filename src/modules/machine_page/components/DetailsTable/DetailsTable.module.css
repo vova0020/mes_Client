@@ -1,0 +1,430 @@
+/* Внешний контейнер (тёмный прямоугольник) с эффектом выпуклости */
+.detailsContainer {
+  background: linear-gradient(to bottom, #374051, #2d3441); /* Градиент для объемности */
+  border-radius: 8px;        /* Закруглённые углы */
+  box-sizing: border-box;
+  padding: 12px;             /* Уменьшенные отступы для всех размеров экрана */
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3), /* Внешняя тень для объема */
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), /* Внутренняя светлая тень сверху */
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2); /* Внутренняя темная тень снизу */
+  border: 1px solid #243342; /* Тонкая граница */
+  position: relative;
+  
+  /* Выравниваем контент по центру */
+  display: flex;
+  flex-direction: column;
+  
+  /* Ограничиваем высоту контейнера, чтобы он не выходил за пределы родителя */
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Заголовок "ДЕТАЛИ" */
+.title {
+  color: #fff;                /* Белый цвет */
+  font-size: 16px;            /* Уменьшенный размер шрифта по умолчанию */
+  font-weight: bold;          /* Жирный текст */
+  text-transform: uppercase;  /* Приводим к верхнему регистру */
+  margin-bottom: 12px;        /* Уменьшенный отступ снизу */
+  margin-top: 0;              /* Убираем отступ сверху */
+  text-align: center;         /* Центрирование текста */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Тень для текста, усиливает объемность */
+  letter-spacing: 1px;        /* Увеличенный межбуквенный интервал */
+  flex-shrink: 0;             /* Запрещаем заголовку сжиматься */
+}
+
+/* Контейнер для таблицы деталей - светлый выпуклый блок */
+.tableContainer {
+  width: 99%;                /* Занимает всю доступную ширину */
+  background: linear-gradient(145deg, #ffffff, #f0f0f0); /* Градиент для объемности */
+  border-radius: 6px;         /* Закругленные углы */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15), /* Внешняя тень */
+    inset 0 1px 0 rgba(255, 255, 255, 0.7); /* Внутренняя светлая тень сверху */
+  border: 1px solid #e0e0e0;  /* Тонкая граница */
+  
+  /* Добавляем прокрутку */
+  overflow-y: auto;           /* Вертикальная прокрутка при необходимости */
+  flex-grow: 1;               /* Позволяем списку растягиваться */
+  max-height: calc(100% - 50px); /* Уменьшенная максимальная высота */
+  
+  /* Стилизация полосы прокрутки для WebKit (Chrome, Safari, новые версии Edge) */
+  &::-webkit-scrollbar {
+    width: 8px;               /* Ширина полосы прокрутки */
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05); /* Фон дорожки */
+    border-radius: 4px;       /* Скругление углов дорожки */
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2); /* Цвет полосы прокрутки */
+    border-radius: 4px;       /* Скругление углов полосы */
+    transition: background 0.2s; /* Плавное изменение цвета при наведении */
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3); /* Цвет полосы прокрутки при наведении */
+  }
+  
+  /* Для Firefox */
+  scrollbar-width: thin;      /* Тонкая полоса прокрутки */
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05); /* Цвет полосы и дорожки */
+}
+
+/* Стили для таблицы */
+.detailsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px; /* Уменьшенный размер шрифта по умолчанию */
+}
+
+/* Стили для заголовков таблицы */
+.detailsTable th {
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  color: #333;
+  font-weight: bold;
+  text-align: center; /* Центрирование заголовков */
+  padding: 8px 12px; /* Уменьшенные отступы */
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для ячеек таблицы */
+.detailsTable td {
+  padding: 6px 12px; /* Уменьшенные отступы */
+  border-bottom: 1px solid #e0e0e0;
+  color: #333;
+}
+
+/* Стили для строк таблицы */
+.detailsTable tr {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  transition: all 0.2s ease;
+}
+
+/* Эффект при наведении на строку таблицы */
+.detailsTable tr:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Активная (выбранная) строка таблицы */
+.activeRow {
+  background: linear-gradient(to bottom, #e8f4fc, #d4e9f7) !important;
+  border-left: 3px solid #3498db;
+  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.2);
+}
+
+/* Стили для активной строки при наведении */
+.activeRow:hover {
+  background: linear-gradient(to bottom, #e8f4fc, #d4e9f7) !important;
+}
+
+/* Кнопка "Чертеж" */
+.drawingButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px; /* Уменьшенные отступы */
+  font-size: 11px; /* Уменьшенный размер шрифта */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.drawingButton:hover {
+  background: linear-gradient(to bottom, #3caae8, #3498db);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.drawingButton:active {
+  background: linear-gradient(to bottom, #2980b9, #3498db);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+/* Кнопка-стрелка */
+.arrowButton {
+  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 24px; /* Уменьшенный размер */
+  height: 24px; /* Уменьшенный размер */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px; /* Уменьшенный размер шрифта */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.arrowButton:hover {
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+  color: #333;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.arrowButton:active {
+  background: linear-gradient(to bottom, #e0e0e0, #f0f0f0);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(1px);
+}
+
+/* Последняя строка таблицы без нижней границы */
+.detailsTable tr:last-child td {
+  border-bottom: none;
+}
+
+/* Стили для пустой таблицы */
+.emptyMessage {
+  text-align: center;
+  padding: 15px;
+  color: #777;
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
+  .detailsContainer {
+    padding: 14px;
+  }
+  
+  .title {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 55px);
+  }
+  
+  .detailsTable {
+    font-size: 14px;
+  }
+  
+  .detailsTable th {
+    padding: 10px 14px;
+  }
+  
+  .detailsTable td {
+    padding: 8px 14px;
+  }
+  
+  .drawingButton {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .arrowButton {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .detailsContainer {
+    padding: 13px;
+  }
+  
+  .title {
+    font-size: 17px;
+    margin-bottom: 13px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 52px);
+  }
+  
+  .detailsTable {
+    font-size: 13px;
+  }
+  
+  .detailsTable th {
+    padding: 9px 13px;
+  }
+  
+  .detailsTable td {
+    padding: 7px 13px;
+  }
+  
+  .drawingButton {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  
+  .arrowButton {
+    width: 25px;
+    height: 25px;
+    font-size: 12px;
+  }
+}
+
+/* Планшеты (от 768px до 991px) */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .detailsContainer {
+    padding: 12px;
+  }
+  
+  .title {
+    font-size: 16px;
+    margin-bottom: 12px;
+    letter-spacing: 0.8px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 50px);
+  }
+  
+  .detailsTable {
+    font-size: 12px;
+  }
+  
+  .detailsTable th {
+    padding: 8px 12px;
+  }
+  
+  .detailsTable td {
+    padding: 6px 12px;
+  }
+  
+  .drawingButton {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  .arrowButton {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+}
+
+/* Малые планшеты и большие телефоны (от 576px до 767px) */
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .detailsContainer {
+    padding: 10px;
+  }
+  
+  .title {
+    font-size: 15px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 45px);
+    width: 100%;
+  }
+  
+  .detailsTable {
+    font-size: 11px;
+  }
+  
+  .detailsTable th {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .detailsTable td {
+    padding: 5px 8px;
+  }
+  
+  /* Создаем горизонтальную прокрутку для таблицы на маленьких экранах */
+  .tableContainer {
+    overflow-x: auto;
+  }
+  
+  .detailsTable {
+    min-width: 500px; /* Минимальная ширина таблицы, чтобы контент не сжимался слишком сильно */
+  }
+  
+  .drawingButton {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  
+  .arrowButton {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+}
+
+/* Мобильные телефоны (до 575px) */
+@media screen and (max-width: 575px) {
+  .detailsContainer {
+    padding: 8px;
+  }
+  
+  .title {
+    font-size: 14px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 40px);
+    width: 100%;
+  }
+  
+  .detailsTable {
+    font-size: 10px;
+  }
+  
+  .detailsTable th {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+  
+  .detailsTable td {
+    padding: 4px 6px;
+  }
+  
+  /* Создаем горизонтальную прокрутку для таблицы на маленьких экранах */
+  .tableContainer {
+    overflow-x: auto;
+  }
+  
+  .detailsTable {
+    min-width: 450px; /* Минимальная ширина таблицы, чтобы контент не сжимался слишком сильно */
+  }
+  
+  .drawingButton {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .arrowButton {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  /* Уменьшаем отступы в ячейках для экономии места */
+  .detailsTable td, .detailsTable th {
+    white-space: nowrap; /* Предотвращаем перенос текста */
+  }
+}
