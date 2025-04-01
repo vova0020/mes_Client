@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Anek+Latin:wght@400;600;700&display=swap');
+
 .header {
   display: flex;
   width: 100%;
@@ -34,7 +36,7 @@
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); /* тень для текста */
 }
 
-/* Гр��ппа навигационных кнопок (рядом друг с другом) */
+/* Группа навигационных кнопок (рядом друг с другом) */
 .navButtons {
   margin-top: 8px;
   display: flex;
@@ -98,16 +100,15 @@
 }
 
 /* Если используется логотип (раскомментируйте, если нужно) */
-
 .logo {
-  width: 400px;
-  height: 80px;
+  width: 150px;
+  /* height: 80px; */
   margin-right: 8px;
 }
 
-
 /* Текст логотипа */
 .brandName {
+  font-family: 'Anek Latin', sans-serif;
   font-size: 16px;
   font-weight: bold;
   color: #fff;
@@ -115,16 +116,16 @@
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); /* тень для текста */
 }
 
-/* Кнопка питания */
-.powerButton {
-  background: radial-gradient(circle at center, #e74c3c, #c0392b); /* ра��иальный градиент */
+/* Кнопка выхода */
+.exitButton {
+  background: radial-gradient(circle at center, #e74c3c, #c0392b); /* радиальный градиент для круга */
   border: 1px solid #a5281a; /* тонкая граница */
-  width: 32px; /* уменьшил размер для лучшего соотношения */
-  height: 32px;
-  border-radius: 50%;
+  width: 40px; /* увеличиваем размер для лучшего вида */
+  height: 40px;
+  border-radius: 50%; /* делаем круглую кнопку */
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: center; /* центрируем иконку по горизонтали */
+  align-items: center; /* центрируем иконку по вертикали */
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 
@@ -132,22 +133,31 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.2); /* внутренняя светлая тень сверху */
   position: relative;
   top: 0;
-  font-size: 16px; /* размер символа внутри кнопки */
   color: #fff;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  padding: 0;
 }
 
-.powerButton:hover {
-  background: radial-gradient(circle at center, #e95e4f, #c0392b);
+/* Стили для иконки внутри кнопки */
+.exitButton svg {
+  width: 20px; /* размер иконки */
+  height: 20px;
+  fill: #fff; /* цвет иконки */
+  display: block; /* убираем лишнее пространство вокруг SVG */
+}
+
+.exitButton:hover {
+  background: radial-gradient(circle at center, #e95e4f, #d14233);
   box-shadow: 
     0 3px 5px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-.powerButton:active {
+.exitButton:active {
   background: radial-gradient(circle at center, #c0392b, #a5281a);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
-  top: 1px; /* небольшое смещение вниз при нажатии */
+  transform: translateY(1px);
 }
 
 /* Медиа-запросы для адаптивного дизайна */
@@ -166,6 +176,16 @@
   .navButton {
     padding: 6px 30px;
     font-size: 14px;
+  }
+  
+  .exitButton {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .exitButton svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -212,10 +232,14 @@
     font-size: 14px;
   }
   
-  .powerButton {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+  .exitButton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .exitButton svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -263,9 +287,13 @@
     font-size: 12px;
   }
   
-  .powerButton {
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
+  .exitButton {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .exitButton svg {
+    width: 14px;
+    height: 14px;
   }
 }

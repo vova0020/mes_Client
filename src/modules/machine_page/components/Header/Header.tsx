@@ -1,8 +1,8 @@
 import React from 'react';
 import styles from './Header.module.css';
 // Если есть логотип/иконки, импортируйте их, например:
-import logo from '../../../../assets/Rectangle 12.jpg';
-
+import logo from '../../../../assets/logo-Photoroom.png';
+import LogoutIcon from '@mui/icons-material/Logout';
 const Header: React.FC = () => {
   return (
     <header className={styles.header}>
@@ -22,14 +22,13 @@ const Header: React.FC = () => {
       <div className={styles.brandContainer}>
         {/* Если есть логотип, раскомментируйте и под��тавьте нужный импорт */}
         
-        {/* <img src={logo} alt="Logo" className={styles.logo} /> */}
+        <img src={logo} alt="Logo" className={styles.logo} />
        
-        <span className={styles.brandName}>FIT-MES</span>
+        {/* <span className={styles.brandName}>FIT-MES</span> */}
       </div>
-      <button className={styles.powerButton}>
-        {/* Можно использовать SVG-иконку или символ */}
-        &#x23FB;
-      </button>
+      <button className={styles.exitButton} title="Выход">
+          <LogoutIcon />
+        </button>
     </div>
   </header>
 );

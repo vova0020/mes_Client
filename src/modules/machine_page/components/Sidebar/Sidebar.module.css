@@ -40,44 +40,54 @@
   gap: 15px;
 }
 
+/* Обновленные стили для кнопки START */
 .startButton {
-  background: linear-gradient(to bottom, #4caf50, #45a049); /* Градиент для объемности */
-  color: white;
+  background: transparent; /* Прозрачный фон, так как SVG уже содержит фон кнопки */
   border: none;
-  padding: 8px 12px; /* Уменьшенный padding для компактности */
-  border-radius: 8px; /* Увеличенное скругление */
+  padding: 0; /* Убираем отступы */
   cursor: pointer;
-  font-weight: bold;
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.2), /* Внешняя тень */
-    inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Внутренняя светлая тень сверху */
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3); /* Тень для текста */
   transition: all 0.2s ease;
-  /* Адаптивный размер шрифта */
-  font-size: clamp(12px, 1vw, 14px);
-  /* Минимальная ширина для кнопки */
-  min-width: 60px;
-  max-width: 100%; /* Ограничиваем максимальную ширину */
-  text-align: center;
-  white-space: nowrap;
-  /* Убираем margin, так как используем gap в родителе */
   margin: 0;
-  /* Предотвращаем переполнение текста */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  outline: none;
+  box-shadow: none;
+  
+  /* Адаптивные размеры с сохранением пропорций */
+  width: clamp(100px, 70%, 120px); /* Минимум 60px, максимум 120px, в среднем 30% от ширины родителя */
+  height: auto; /* Высота будет определяться содержимым */
+  aspect-ratio: 1 / 1; /* Сохраняем соотношение сторон 1:1 для круглой формы */
+  
+  /* Центрирование */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.startButton:hover {
-  background: linear-gradient(to bottom, #55c559, #4ab04e);
-  box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+/* Контейнер для иконки Start */
+.startIconContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.startButton:active {
-  background: linear-gradient(to bottom, #45a049, #4caf50); /* Инвертированный градиент */
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* Только внутренняя тень */
-  transform: translateY(1px); /* Небольшое смещение вниз при нажатии */
+/* Стили для иконки внутри кнопки START */
+.startIcon {
+  width: 100%; /* Занимает всю ширину контейнера */
+  height: 100%; /* Занимает всю высоту контейнера */
+  object-fit: contain; /* Сохраняет пропорции изображения */
+  display: block;
+  transition: filter 0.2s ease;
+}
+
+.startButton:hover .startIcon {
+  filter: brightness(1.1);
+}
+
+.startButton:active .startIcon {
+  filter: brightness(0.95);
 }
 
 .iconGroup {
@@ -90,13 +100,13 @@
   max-width: 100%; /* Ограничиваем максимальную ширину */
   
   /* Добавляем легкий эффект выпуклости для группы иконок */
-  background: linear-gradient(145deg, #2c3e50, #253444);
-  border-radius: 8px;
+  /* background: linear-gradient(145deg, #2c3e50, #253444); */
+  /* border-radius: 8px; */
   padding: 8px 0; /* Уменьшенный padding */
-  box-shadow: 
+  /* box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  
+   */
   /* Добавляем gap между иконками */
   gap: 8px;
   
@@ -105,12 +115,11 @@
 }
 
 .icon {
-  width: clamp(16px, 2vw, 24px); /* Адаптивный размер иконок */
-  height: clamp(16px, 2vw, 24px);
+  width: 74px; /* Фиксированный размер для больших экранов */
+  height: 60px;
   cursor: pointer;
-  fill: white;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); /* Тень для иконок */
-  transition: transform 0.2s ease, filter 0.2s ease;
+  /* Убираем fill: white, чтобы сохранить оригинальный цвет SVG */
+  transition: transform 0.2s ease;
   /* Убираем margin, так как используем gap в родителе */
   margin: 0;
   /* Предотвращаем переполнение */
@@ -118,8 +127,7 @@
 }
 
 .icon:hover {
-  transform: scale(1.1); /* Небольшое увеличение при наведении */
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)) brightness(1.2);
+  transform: scale(1.05); /* Небольшое увеличение при наведении */
 }
 
 .progressContainer {
@@ -172,18 +180,20 @@
 .footerIcon {
   margin-top: auto; /* Прижать к низу */
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  align-items: center; /* Центрирование содержимого по горизонтали */
+  /* justify-content: center; */  
   width: 100%;
   max-width: 100%; /* Ограничиваем максимальную ширину */
-  
+    /* Добавляем gap между иконками */
+    gap: 18px;
   /* Добавляем легкий эффект выпуклости для нижней иконки */
-  background: linear-gradient(145deg, #2c3e50, #253444);
-  border-radius: 8px;
-  padding: 8px 0; /* Уменьшенный padding */
-  box-shadow: 
+  /* background: linear-gradient(145deg, #2c3e50, #253444); */
+  /* border-radius: 8px; */
+  /* padding: 8px 0; Уменьшенный padding */
+  /* box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1); */
   
   /* Предотвращаем переполнение */
   overflow: hidden;
@@ -206,9 +216,13 @@
     font-size: 14px;
   }
   
+  .startButton {
+    width: clamp(100px, 70%, 120px);
+  }
+  
   .icon {
-    width: 24px;
-    height: 24px;
+    width: 74px;
+    height: 60px;
   }
   
   .progressLabel {
@@ -231,9 +245,13 @@
     font-size: 13px;
   }
   
+  .startButton {
+    width: clamp(90px, 70%, 100px);
+  }
+  
   .icon {
-    width: 22px;
-    height: 22px;
+    width: 65px;
+    height: 52px;
   }
   
   .progressLabel {
@@ -258,14 +276,18 @@
     min-width: 50px;
   }
   
+  .startButton {
+    width: clamp(60px, 70%, 90px);
+  }
+  
   .iconGroup {
     padding: 6px 0;
     gap: 6px;
   }
   
   .icon {
-    width: 20px;
-    height: 20px;
+    width: 55px;
+    height: 44px;
   }
   
   .progressContainer {
@@ -304,6 +326,12 @@
     border-radius: 6px;
   }
   
+  .startButton {
+    width: clamp(30px, 70%, 80px);
+    padding: 0;
+    border-radius: 0;
+  }
+  
   .iconGroup {
     padding: 5px 0;
     gap: 5px;
@@ -311,8 +339,8 @@
   }
   
   .icon {
-    width: 18px;
-    height: 18px;
+    width: 45px;
+    height: 36px;
   }
   
   .progressContainer {
@@ -353,6 +381,12 @@
     border-radius: 5px;
   }
   
+  .startButton {
+    width: clamp(20px, 15%, 70px);
+    padding: 0;
+    border-radius: 0;
+  }
+  
   .iconGroup {
     padding: 4px 0;
     gap: 4px;
@@ -360,8 +394,8 @@
   }
   
   .icon {
-    width: 16px;
-    height: 16px;
+    width: 35px;
+    height: 28px;
   }
   
   .progressContainer {
@@ -399,9 +433,19 @@
     font-size: 9px;
   }
   
+  .startButton {
+    width: clamp(35px, 12%, 60px);
+    padding: 0;
+  }
+  
   .iconGroup {
     padding: 3px 0;
     gap: 3px;
+  }
+  
+  .icon {
+    width: 30px;
+    height: 24px;
   }
   
   .progressContainer {
@@ -434,8 +478,13 @@
     min-width: 25px;
   }
   
+  .startButton {
+    width: clamp(20px, 80%, 50px);
+    padding: 0;
+  }
+  
   .icon {
-    width: 14px;
-    height: 14px;
+    width: 25px;
+    height: 20px;
   }
 }
