@@ -1,254 +1,383 @@
-/* AuthPage.module.css */
+/* Основные переменные */
 :root {
-    --primary-bg: linear-gradient(135deg, #0d1b2a, #1b263b);
-    --form-bg: rgba(255, 255, 255, 0.05);
-    --accent-color: #4a90e2;
-    --input-bg: rgba(255, 255, 255, 0.08);
-    --text-color: rgba(255, 255, 255, 0.9);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  /* Global reset */
-  :global(*),
-  :global(*::before),
-  :global(*::after) {
-    box-sizing: border-box;
-  }
-  
-  :global(body),
-  :global(html) {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  /* Main container */
-  .loginContainer {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    width: 100%;
-    background: var(--primary-bg);
-    color: var(--text-color);
-    padding: 2rem 1rem;
-    position: relative;
-  }
-  
-  /* Logo styles - Centered and larger */
-  .logoContainer {
-    position: fixed;
-    top: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-  }
-  
-  .logo {
-    width: 180px;
-    height: auto;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    transition: transform 0.3s ease;
-  }
-  
-  .logo:hover {
-    transform: scale(1.05);
-  }
-  
-  /* Form container */
-  .loginFormContainer {
-    background: var(--form-bg);
-    backdrop-filter: blur(12px);
-    padding: 2.5rem;
-    border-radius: 1.5rem;
-    width: 100%;
-    max-width: 400px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transform: translateY(0);
-    transition: var(--transition);
-    margin-top: 6rem; /* Space below the logo */
-    animation: fadeIn 0.8s ease forwards;
+  --primary-bg: linear-gradient(135deg, #1a1f35, #2d3456);
+  --form-bg: rgba(40, 45, 75, 0.9);  /* Более насыщенный и контрастный фон формы */
+  --accent-color: #4f46e5;
+  --input-bg: rgba(255, 255, 255, 0.07);  /* Более заметный фон полей ввода */
+  --text-color: rgba(255, 255, 255, 0.95);
+  --error-color: #ef4444;
+  --success-color: #10b981;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Глобальные стили */
+:global(*),
+:global(*::before),
+:global(*::after) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:global(body),
+:global(html) {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Основной контейнер */
+.loginContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--primary-bg);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  color: var(--text-color);
+  padding: 2rem 1rem;
+  position: relative;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Логотип - поднят выше */
+.logoContainer {
+  position: relative;
+  margin-bottom: 3rem; /* Увеличен отступ снизу для поднятия логотипа */
+  margin-top: -2rem; /* Отрицательный отступ сверху для поднятия логотипа */
+  z-index: 10;
+}
+
+.logo {
+  width: 350px;
+  height: auto;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  transition: var(--transition);
+  animation: logoFloat 6s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Форма входа - добавлен эффект выпуклости и улучшен контраст */
+.loginFormContainer {
+  background: var(--form-bg);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Улучшенная тень для эффекта выпуклости */
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+  animation: formAppear 0.6s ease-out;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0;
+  /* Градиент для эффекта выпуклости */
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  background-blend-mode: overlay;
+}
+
+.loginFormContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.loginFormContainer:hover::before {
+  left: 100%;
+}
+
+/* Добавляем дополнительный псевдоэлемент для усиления эффекта выпуклости */
+.loginFormContainer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.05)
+  );
+}
+
+@keyframes formAppear {
+  0% {
     opacity: 0;
+    transform: translateY(20px);
   }
-  
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(20px); }
-    100% { opacity: 1; transform: translateY(0); }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  /* Form elements */
-  .loginTitle {
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    background: linear-gradient(45deg, #4a90e2, #6ac8ff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  
-  .formGroup {
-    margin-bottom: 1.5rem;
-  }
-  
-  .formGroup label {
-    display: block;
-    margin-bottom: 0.75rem;
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.7);
-  }
-  
-  .formGroup input {
-    width: 100%;
-    padding: 0.875rem;
-    background: var(--input-bg);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.75rem;
-    color: var(--text-color);
-    font-size: 1rem;
-    transition: var(--transition);
-  }
-  
-  .formGroup input:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-  }
-  
-  /* Login button */
-  .loginButton {
-    width: 100%;
+}
+
+/* Заголовок - улучшена видимость */
+.loginTitle {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Форма */
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Группы полей ввода - улучшена видимость */
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  transition: var(--transition);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 0.875rem;
+  background: var(--input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  color: var(--text-color);
+  font-size: 1rem;
+  transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) inset;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1) inset;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Контейнер поля пароля */
+.passwordInputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInputContainer input {
+  padding-right: 40px;
+}
+
+/* Кнопка переключения видимости пароля - улучшена видимость */
+.passwordToggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  border-radius: 50%;
+}
+
+.passwordToggle:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);
+}
+
+.passwordToggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+/* Кнопка входа - улучшена видимость и добавлен эффект выпуклости */
+.loginButton {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--accent-color), #6366f1);
+  border: none;
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  /* Улучшенная тень для эффекта выпуклости */
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.loginButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.loginButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 15px rgba(79, 70, 229, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.loginButton:hover::before {
+  left: 100%;
+}
+
+.loginButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px rgba(0, 0, 0, 0.1),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Состояния загрузки и ошибок */
+.loginButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.formGroup input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ff6b6b;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .loginContainer {
     padding: 1rem;
-    background: linear-gradient(45deg, #4a90e2, #5a7cff);
-    border: none;
-    border-radius: 0.75rem;
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .loginButton::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: left 0.6s;
-  }
-  
-  .loginButton:hover::after {
-    left: 100%;
-  }
-  
-  .loginButton:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
   }
 
-  .passwordInputContainer {
-    position: relative;
-    display: flex;
-    align-items: center;
+  .logoContainer {
+    margin-top: 0; /* Сброс отрицательного отступа на мобильных */
   }
-  
-  .passwordInputContainer input {
-    padding-right: 40px; /* Место для кнопки */
+
+  .logo {
+    width: 180px;
   }
-  
-  .passwordToggle {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    padding: 5px;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s ease;
+
+  .loginFormContainer {
+    padding: 2rem 1.5rem;
   }
-  
-  .passwordToggle:hover {
-    color: var(--accent-color);
+
+  .loginTitle {
+    font-size: 1.25rem;
   }
-  
-  .passwordToggle:focus {
-    outline: none;
-    color: var(--accent-color);
+
+  .formGroup input {
+    padding: 0.75rem;
   }
-  
-  /* Для доступности при использовании клавиатуры */
-  .passwordToggle:focus-visible {
-    outline: 2px solid var(--accent-color);
-    border-radius: 4px;
+}
+
+/* Доступность */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
-  
-  /* Mobile adaptations */
-  @media (max-width: 480px) {
-    .loginContainer {
-      padding: 1rem;
-    }
-  
-    .logoContainer {
-      top: 1rem;
-    }
-  
-    .logo {
-      width: 120px;
-    }
-  
-    .loginFormContainer {
-      padding: 1.5rem;
-      border-radius: 1rem;
-      margin-top: 5rem;
-    }
-  
-    .loginTitle {
-      font-size: 1.25rem;
-    }
-  
-    .formGroup input {
-      padding: 0.75rem;
-    }
+}
+
+/* Поддержка Firefox */
+@-moz-document url-prefix() {
+  .loginFormContainer {
+    background: rgba(40, 45, 75, 0.95);
   }
-  
-  /* Accessibility */
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      transition: none !important;
-      animation: none !important;
-    }
-  }
-  
-  /* Firefox fallback */
-  @-moz-document url-prefix() {
-    .loginFormContainer {
-      background: rgba(0, 0, 0, 0.6);
-    }
-  }
+}
+
+/* Поддержка автозаполнения */
+.formGroup input:-webkit-autofill,
+.formGroup input:-webkit-autofill:hover,
+.formGroup input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-color);
+  -webkit-box-shadow: 0 0 0px 1000px rgba(40, 45, 70, 0.9) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Улучшенная фокусировка для доступности */
+.formGroup input:focus-visible,
+.passwordToggle:focus-visible,
+.loginButton:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}

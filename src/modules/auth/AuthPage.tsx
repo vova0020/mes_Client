@@ -8,6 +8,7 @@ const AuthPage: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [error, setError] = useState<string>(''); // Состояние для хранения ошибки
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -17,13 +18,32 @@ const AuthPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Функция для демонстрации ошибки
+  const showErrorDemo = () => {
+    setError('Неверный логин или пароль. Пожалуйста, проверьте введенные данные.');
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Пользователь:", username, "Пароль:", password);
+    
+    // Для демонстрации ошибки
+    if (username && password) {
+      // В реальном приложении здесь был бы запрос к API
+      showErrorDemo(); // Показываем ошибку для демонстрации
+    } else {
+      setError('Пожалуйста, заполните все поля');
+    }
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  // Функция для очистки ошибки при изменении полей ввода
+  const clearError = () => {
+    if (error) {
+      setError('');
+    }
   };
 
   return (
@@ -36,13 +56,23 @@ const AuthPage: React.FC = () => {
       <div className={styles.loginFormContainer}>
         <h1 className={styles.loginTitle}>АВТОРИЗАЦИЯ</h1>
         <form onSubmit={handleSubmit} className={styles.loginForm}>
+          {/* Отображение ошибки, если она есть */}
+          {error && (
+            <div className={styles.errorMessage}>
+              {error}
+            </div>
+          )}
+          
           <div className={styles.formGroup}>
             <label htmlFor="username">Логин</label>
             <input
               type="text"
               id="username"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                clearError();
+              }}
               required
             />
           </div>
@@ -53,7 +83,10 @@ const AuthPage: React.FC = () => {
                 type={showPassword ? "text" : "password"}
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError();
+                }}
                 required
               />
               <button
