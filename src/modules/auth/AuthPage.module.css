@@ -1,0 +1,254 @@
+/* AuthPage.module.css */
+:root {
+    --primary-bg: linear-gradient(135deg, #0d1b2a, #1b263b);
+    --form-bg: rgba(255, 255, 255, 0.05);
+    --accent-color: #4a90e2;
+    --input-bg: rgba(255, 255, 255, 0.08);
+    --text-color: rgba(255, 255, 255, 0.9);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Global reset */
+  :global(*),
+  :global(*::before),
+  :global(*::after) {
+    box-sizing: border-box;
+  }
+  
+  :global(body),
+  :global(html) {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Main container */
+  .loginContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    background: var(--primary-bg);
+    color: var(--text-color);
+    padding: 2rem 1rem;
+    position: relative;
+  }
+  
+  /* Logo styles - Centered and larger */
+  .logoContainer {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .logo {
+    width: 180px;
+    height: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s ease;
+  }
+  
+  .logo:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Form container */
+  .loginFormContainer {
+    background: var(--form-bg);
+    backdrop-filter: blur(12px);
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transform: translateY(0);
+    transition: var(--transition);
+    margin-top: 6rem; /* Space below the logo */
+    animation: fadeIn 0.8s ease forwards;
+    opacity: 0;
+  }
+  
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Form elements */
+  .loginTitle {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: linear-gradient(45deg, #4a90e2, #6ac8ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  
+  .formGroup {
+    margin-bottom: 1.5rem;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .formGroup input {
+    width: 100%;
+    padding: 0.875rem;
+    background: var(--input-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+  
+  .formGroup input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+  }
+  
+  /* Login button */
+  .loginButton {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(45deg, #4a90e2, #5a7cff);
+    border: none;
+    border-radius: 0.75rem;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .loginButton::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.6s;
+  }
+  
+  .loginButton:hover::after {
+    left: 100%;
+  }
+  
+  .loginButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  }
+
+  .passwordInputContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .passwordInputContainer input {
+    padding-right: 40px; /* Место для кнопки */
+  }
+  
+  .passwordToggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+  }
+  
+  .passwordToggle:hover {
+    color: var(--accent-color);
+  }
+  
+  .passwordToggle:focus {
+    outline: none;
+    color: var(--accent-color);
+  }
+  
+  /* Для доступности при использовании клавиатуры */
+  .passwordToggle:focus-visible {
+    outline: 2px solid var(--accent-color);
+    border-radius: 4px;
+  }
+  
+  /* Mobile adaptations */
+  @media (max-width: 480px) {
+    .loginContainer {
+      padding: 1rem;
+    }
+  
+    .logoContainer {
+      top: 1rem;
+    }
+  
+    .logo {
+      width: 120px;
+    }
+  
+    .loginFormContainer {
+      padding: 1.5rem;
+      border-radius: 1rem;
+      margin-top: 5rem;
+    }
+  
+    .loginTitle {
+      font-size: 1.25rem;
+    }
+  
+    .formGroup input {
+      padding: 0.75rem;
+    }
+  }
+  
+  /* Accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+  
+  /* Firefox fallback */
+  @-moz-document url-prefix() {
+    .loginFormContainer {
+      background: rgba(0, 0, 0, 0.6);
+    }
+  }
