@@ -83,13 +83,14 @@
   top: 1px; /* небольшое смещение вниз при нажатии */
 }
 
-/* Правый блок – теперь в колонку */
+/* Правый блок – в колонку */
 .rightContainer {
   display: flex;
-  flex-direction: column; /* изменено с row на column */
+  flex-direction: column; /* колонка для вертикального расположения */
   align-items: center;
   justify-content: center;
-  gap: 8px; /* расстояние между логотипом и кнопкой */
+  gap: 5px; /* расстояние между логотипом и кнопкой */
+  min-width: 150px; /* минимальная ширина для предотвращения сжатия */
 }
 
 /* Контейнер для логотипа и текста */
@@ -99,11 +100,12 @@
   justify-content: center;
 }
 
-/* Если используется логотип (раскомментируйте, если нужно) */
+/* Логотип */
 .logo {
-  width: 150px;
-  /* height: 80px; */
-  margin-right: 8px;
+  width: 120px;
+  height: auto; /* автоматическая высота для сохранения пропорций */
+  max-height: 60px; /* ограничение максимальной высоты */
+  object-fit: contain; /* сохраняет пропорции изображения */
 }
 
 /* Текст логотипа */
@@ -187,32 +189,35 @@
     width: 18px;
     height: 18px;
   }
+  
+  .logo {
+    width: 120px;
+    max-height: 50px;
+  }
 }
 
 /* Малые планшеты и большие телефоны (от 576px до 767px) */
 @media screen and (min-width: 576px) and (max-width: 767px) {
   .header {
-    height: 80px;
-    padding: 0 12px;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
+    height: auto;
+    min-height: 80px;
+    padding: 10px 12px;
+    position: relative; /* Для корректного позиционирования дочерних элементов */
   }
   
-  .leftContainer, .rightContainer {
-    width: 100%;
-    align-items: center;
+  .leftContainer {
+    width: calc(100% - 120px); /* Оставляем место для правого контейнера */
+    align-items: flex-start;
+    padding-right: 10px;
   }
   
   .techStage {
     font-size: 18px;
-    text-align: center;
   }
   
   .navButtons {
     margin-top: 5px;
-    width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
   }
   
   .navButton {
@@ -223,13 +228,22 @@
   
   .rightContainer {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: auto;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%); /* Центрирование по вертикали */
+    width: 100px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
   }
   
   .brandName {
     font-size: 14px;
+  }
+  
+  .logo {
+    width: 90px;
+    max-height: 35px;
   }
   
   .exitButton {
@@ -247,14 +261,15 @@
 @media screen and (max-width: 575px) {
   .header {
     height: auto;
+    min-height: 120px; /* Увеличиваем минимальную высоту */
     padding: 10px;
-    flex-direction: column;
+    position: relative; /* Для корректного позиционирования дочерних элементов */
   }
   
   .leftContainer {
     width: 100%;
     align-items: center;
-    margin-bottom: 10px;
+    padding-top: 50px; /* Оставляем место для правого контейнера сверху */
   }
   
   .techStage {
@@ -265,29 +280,40 @@
   .navButtons {
     margin-top: 5px;
     width: 100%;
-    flex-direction: column;
-    gap: 5px;
+    flex-direction: row; /* Сохраняем кнопки в ряд */
+    justify-content: center;
+    gap: 10px; /* Отступ между кнопками */
   }
   
   .navButton {
     padding: 5px 15px;
     font-size: 12px;
     margin-right: 0;
-    width: 100%;
+    flex: 1; /* Распределяем доступное пространство */
+    max-width: 45%; /* Ограничиваем максимальную ширину */
     text-align: center;
   }
   
   .rightContainer {
+    position: absolute;
+    top: 10px; /* Размещаем вверху */
+    left: 0;
+    right: 0;
     width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: row; /* Меняем на горизонтальное расположение */
+    justify-content: space-between; /* Распределяем по краям */
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    gap: 0;
   }
   
-  .brandName {
-    font-size: 12px;
+  .brandContainer {
+    order: 1; /* Логотип слева */
   }
   
   .exitButton {
+    order: 2; /* Кнопка выхода справа */
     width: 28px;
     height: 28px;
   }
@@ -295,5 +321,58 @@
   .exitButton svg {
     width: 14px;
     height: 14px;
+  }
+  
+  .brandName {
+    font-size: 12px;
+  }
+  
+  .logo {
+    width: 80px;
+    max-height: 30px;
+  }
+}
+
+/* Очень маленькие экраны (до 375px) */
+@media screen and (max-width: 375px) {
+  .header {
+    min-height: 110px;
+    padding: 8px;
+  }
+  
+  .leftContainer {
+    padding-top: 40px;
+  }
+  
+  .techStage {
+    font-size: 14px;
+  }
+  
+  .navButtons {
+    gap: 6px;
+  }
+  
+  .navButton {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+  
+  .rightContainer {
+    padding: 0 10px;
+  }
+  
+  .logo {
+    width: 70px;
+    max-height: 25px;
+  }
+  
+  .exitButton {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .exitButton svg {
+    width: 12px;
+    height: 12px;
   }
 }
