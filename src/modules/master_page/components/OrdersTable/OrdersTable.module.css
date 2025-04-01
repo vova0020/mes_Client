@@ -1,0 +1,296 @@
+/* Внешний контейнер (тёмный прямоугольник) с эффектом выпуклости */
+.ordersContainer {
+  background: linear-gradient(to bottom, #374051, #2d3441); /* Градиент для объемности */
+  border-radius: 8px;        /* Закруглённые углы */
+  box-sizing: border-box;
+  padding: 12px;             /* Уменьшенные отступы для всех размеров экрана */
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3), /* Внешняя тень для объема */
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), /* Внутренняя светлая тень сверху */
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2); /* Внутренняя темная тень снизу */
+  border: 1px solid #243342; /* Тонкая граница */
+  position: relative;
+  
+  /* Выравниваем контент по центру */
+  display: flex;
+  flex-direction: column;
+  
+  /* Ограничиваем высоту контейнера, чтобы он не выходил за пределы родителя */
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Заголовок "ЗАКАЗЫ" */
+.title {
+  color: #fff;                /* Белый цвет */
+  font-size: 16px;            /* Уменьшенный размер шрифта по умолчанию */
+  font-weight: bold;          /* Жирный текст */
+  text-transform: uppercase;  /* Приводим к верхнему регистру */
+  margin-bottom: 12px;        /* Уменьшенный отступ снизу */
+  margin-top: 0;              /* Убираем отступ сверху */
+  text-align: center;         /* Центрирование текста */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Тень для текста, усиливает объемность */
+  letter-spacing: 1px;        /* Увеличенный межбуквенный интервал */
+  flex-shrink: 0;             /* Запрещаем заголовку сжиматься */
+}
+
+/* Контейнер для списка заказов - светлый выпуклый блок */
+.listContainer {
+  width: 100%;                /* Занимает всю доступную ширину */
+  background: linear-gradient(145deg, #ffffff, #f0f0f0); /* Градиент для объемности */
+  border-radius: 6px;         /* Закругленные углы */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15), /* Внешняя тень */
+    inset 0 1px 0 rgba(255, 255, 255, 0.7); /* Внутренняя светлая тен�� сверху */
+  border: 1px solid #e0e0e0;  /* Тонкая граница */
+  
+  /* Добавляем прокрутку */
+  overflow-y: auto;           /* Вертикальная прокрутка при необходимости */
+  flex-grow: 1;               /* Позволяем списку растягиваться */
+  max-height: calc(100% - 50px); /* Уменьшенная максимальная высота */
+  
+  /* Стилизация полосы прокрутки для WebKit (Chrome, Safari, новые версии Edge) */
+  &::-webkit-scrollbar {
+    width: 8px;               /* Ширина полосы прокрутки */
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05); /* Фон дорожки */
+    border-radius: 4px;       /* Скругление углов дорожки */
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2); /* Цвет полосы прокрутки */
+    border-radius: 4px;       /* Скругление углов полосы */
+    transition: background 0.2s; /* Плавное изменение цвета при наведении */
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3); /* Цвет полосы прокрутки при наведении */
+  }
+  
+  /* Для Firefox */
+  scrollbar-width: thin;      /* Тонкая полоса прокрутки */
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05); /* Цвет полосы и дорожки */
+}
+
+/* Элемент списка заказов с эффектом выпуклости */
+.orderItem {
+  padding: 8px 12px;         /* Уменьшенные отступы со всех сторон */
+  position: relative;         /* Для позиционирования разделительной линии */
+  border-bottom: 1px solid #e0e0e0; /* Тонкая серая линия */
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9); /* Легкий градиент для объемности */
+  transition: all 0.2s ease;  /* Плавный переход для эффектов при наведении */
+  cursor: pointer;            /* Курсор-указатель для обозначения кликабельности */
+}
+
+/* Эффект при наведении на элемент списка */
+.orderItem:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); /* Легкая внутренняя тень при наведении */
+}
+
+/* Активный (выбранный) элемент с��иска */
+.activeItem {
+  background: linear-gradient(to bottom, #e8f4fc, #d4e9f7); /* Голубоватый градиент */
+  border-left: 3px solid #3498db; /* Синяя полоса слева */
+  padding-left: 9px; /* Компенсируем смещение из-за границы слева (уменьшено с 13px) */
+  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.2); /* Внутренняя тень с оттенком синего */
+}
+
+/* Стили для активного элемента при наведении */
+.activeItem:hover {
+  background: linear-gradient(to bottom, #e8f4fc, #d4e9f7); /* Сохраняем тот же градиент */
+}
+
+/* Последний элемент списка без нижней границы */
+.orderItem:last-child {
+  border-bottom: none;
+}
+
+/* Первый элемент списка может иметь особые стили при необходимости */
+.firstItem {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+/* Название заказа (например, "1489 - АБВГ...") */
+.orderTitle {
+  font-weight: bold;
+  font-size: 13px; /* Уменьшенный размер шрифта */
+  color: #333; /* Темный цвет для лучшей читаемости на светлом фоне */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); /* Легкая тень для текста, усиливает объемность */
+}
+
+/* Прогресс (например, "Выполненоч 100%") */
+.orderProgress {
+  margin-top: 3px; /* Уменьшенный отступ сверху */
+  font-size: 11px; /* Уменьшенный размер шрифта */
+  color: #666; /* Серый цвет для второстепенной информации */
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
+  .ordersContainer {
+    padding: 14px;
+  }
+  
+  .title {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  
+  .listContainer {
+    max-height: calc(100% - 55px);
+  }
+  
+  .orderItem {
+    padding: 10px 14px;
+  }
+  
+  .orderTitle {
+    font-size: 14px;
+  }
+  
+  .orderProgress {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  
+  .activeItem {
+    padding-left: 11px;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .ordersContainer {
+    padding: 13px;
+  }
+  
+  .title {
+    font-size: 17px;
+    margin-bottom: 13px;
+  }
+  
+  .listContainer {
+    max-height: calc(100% - 52px);
+  }
+  
+  .orderItem {
+    padding: 9px 13px;
+  }
+  
+  .orderTitle {
+    font-size: 13px;
+  }
+  
+  .orderProgress {
+    font-size: 11px;
+    margin-top: 3px;
+  }
+  
+  .activeItem {
+    padding-left: 10px;
+  }
+}
+
+/* Планшеты (от 768px до 991px) */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .ordersContainer {
+    padding: 12px;
+  }
+  
+  .title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .orderItem {
+    padding: 8px 12px;
+  }
+  
+  .orderTitle {
+    font-size: 12px;
+  }
+  
+  .orderProgress {
+    font-size: 10px;
+    margin-top: 3px;
+  }
+  
+  .activeItem {
+    padding-left: 9px;
+  }
+}
+
+/* Малые планшеты и большие телефоны (от 576px до 767px) */
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .ordersContainer {
+    padding: 10px;
+    max-height: 100vh;
+  }
+  
+  .title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .listContainer {
+    max-height: calc(100% - 40px);
+  }
+  
+  .orderItem {
+    padding: 7px 10px;
+  }
+  
+  .orderTitle {
+    font-size: 11px;
+  }
+  
+  .orderProgress {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  
+  .activeItem {
+    padding-left: 7px;
+  }
+}
+
+/* Мобильные телефоны (до 575px) */
+@media screen and (max-width: 575px) {
+  .ordersContainer {
+    padding: 8px;
+    max-height: 30vh;
+  }
+  
+  .title {
+    font-size: 14px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  
+  .listContainer {
+    max-height: calc(100% - 30px);
+  }
+  
+  .orderItem {
+    padding: 6px 8px;
+  }
+  
+  .orderTitle {
+    font-size: 10px;
+  }
+  
+  .orderProgress {
+    font-size: 8px;
+    margin-top: 2px;
+  }
+  
+  .activeItem {
+    padding-left: 5px;
+  }
+}

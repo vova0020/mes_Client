@@ -1,0 +1,299 @@
+@import url('https://fonts.googleapis.com/css2?family=Anek+Latin:wght@400;600;700&display=swap');
+
+.header {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, #374051, #2d3441); /* градиент для объемности */
+  padding: 0 20px;
+  height: 110px; /* можно подогнать под макет */
+  box-sizing: border-box;
+  border-radius: 5px;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.3), /* внешняя тень снизу */
+    inset 0 1px 0 rgba(255, 255, 255, 0.2), /* внутренняя светлая тень сверху */
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2); /* внутренняя темная тень снизу */
+  border: 1px solid #243342; /* тонкая граница */
+  position: relative;
+  z-index: 1; /* чтобы тень была видна */
+}
+
+/* Левый блок – два ряда: заголовок и кнопки */
+.leftContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Название технологического этапа */
+.techStage {
+  font-size: 22px; 
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); /* тень для текста */
+}
+
+/* Группа навигационных кнопок (рядом друг с другом) */
+.navButtons {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background: linear-gradient(to bottom, #3a5269, #2c3e50); градиент для объемности */
+  padding: 4px;
+}
+
+/* Стили для кнопок "СТАНОК" и "ОПЕРАТОР" */
+.navButton {
+  background: linear-gradient(to bottom, #4a6583, #34495e); /* градиент для объемности */
+  border: 1px solid #243342; /* тонкая граница */
+  color: #fff;
+  padding: 8px 40px;
+  margin-right: 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2), /* внешняя тень */
+    inset 0 1px 0 rgba(255, 255, 255, 0.15); /* внутренняя светлая тень сверху */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3); /* тень для текста */
+  position: relative;
+  top: 0;
+}
+
+.navButton:last-child {
+  margin-right: 0; /* убираем отступ у последней кнопки */
+}
+
+.navButton:hover {
+  background: linear-gradient(to bottom, #547599, #3b536b);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.navButton:active {
+  background: linear-gradient(to bottom, #34495e, #2c3e50); /* инвертированный градиент */
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.3); /* только внутренняя тень */
+  top: 1px; /* небольшое смещение вниз при нажатии */
+}
+
+/* Правый блок – теперь в колонку */
+.rightContainer {
+  display: flex;
+  flex-direction: column; /* изменено с row на column */
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* расстояние между логотипом и кнопкой */
+}
+
+/* Контейнер для логотипа и текста */
+.brandContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Если используется логотип (раскомментируйте, если нужно) */
+.logo {
+  width: 150px;
+  /* height: 80px; */
+  margin-right: 8px;
+}
+
+/* Текст логотипа */
+.brandName {
+  font-family: 'Anek Latin', sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); /* тень для текста */
+}
+
+/* Кнопка выхода */
+.exitButton {
+  background: radial-gradient(circle at center, #e74c3c, #c0392b); /* радиальный градиент для круга */
+  border: 1px solid #a5281a; /* тонкая граница */
+  width: 40px; /* увеличиваем размер для лучшего вида */
+  height: 40px;
+  border-radius: 50%; /* делаем круглую кнопку */
+  display: flex;
+  justify-content: center; /* центрируем иконку по горизонтали */
+  align-items: center; /* центрируем иконку по вертикали */
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3), /* внешняя тень */
+    inset 0 1px 0 rgba(255, 255, 255, 0.2); /* внутренняя светлая тень сверху */
+  position: relative;
+  top: 0;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  padding: 0;
+}
+
+/* Стили для иконки внутри кнопки */
+.exitButton svg {
+  width: 20px; /* размер иконки */
+  height: 20px;
+  fill: #fff; /* цвет иконки */
+  display: block; /* убираем лишнее пространство вокруг SVG */
+}
+
+.exitButton:hover {
+  background: radial-gradient(circle at center, #e95e4f, #d14233);
+  box-shadow: 
+    0 3px 5px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.exitButton:active {
+  background: radial-gradient(circle at center, #c0392b, #a5281a);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Планшеты (от 768px до 991px) */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .header {
+    height: 90px;
+    padding: 0 15px;
+  }
+  
+  .techStage {
+    font-size: 20px;
+  }
+  
+  .navButton {
+    padding: 6px 30px;
+    font-size: 14px;
+  }
+  
+  .exitButton {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .exitButton svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Малые планшеты и большие телефоны (от 576px до 767px) */
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .header {
+    height: 80px;
+    padding: 0 12px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .leftContainer, .rightContainer {
+    width: 100%;
+    align-items: center;
+  }
+  
+  .techStage {
+    font-size: 18px;
+    text-align: center;
+  }
+  
+  .navButtons {
+    margin-top: 5px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .navButton {
+    padding: 5px 20px;
+    font-size: 13px;
+    margin-right: 10px;
+  }
+  
+  .rightContainer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: auto;
+  }
+  
+  .brandName {
+    font-size: 14px;
+  }
+  
+  .exitButton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .exitButton svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Мобильные телефоны (до 575px) */
+@media screen and (max-width: 575px) {
+  .header {
+    height: auto;
+    padding: 10px;
+    flex-direction: column;
+  }
+  
+  .leftContainer {
+    width: 100%;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .techStage {
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  .navButtons {
+    margin-top: 5px;
+    width: 100%;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .navButton {
+    padding: 5px 15px;
+    font-size: 12px;
+    margin-right: 0;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .rightContainer {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .brandName {
+    font-size: 12px;
+  }
+  
+  .exitButton {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .exitButton svg {
+    width: 14px;
+    height: 14px;
+  }
+}
