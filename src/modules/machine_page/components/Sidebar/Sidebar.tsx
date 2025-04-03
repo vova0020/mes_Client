@@ -1,32 +1,40 @@
 import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
 
-// Пример: вы можете подключать SVG-иконки напрямую
-// или использовать готовые иконки из библиотеки (например, react-icons).
-// Здесь показан условный пример:
-
 import { ReactComponent as StatisticIcon } from '../../../../assets/sidebar/statistic.svg';
 import { ReactComponent as HistoriIcon } from '../../../../assets/sidebar/historiButton.svg';
 import { ReactComponent as ReclamaciIcon } from '../../../../assets/sidebar/reclamaciButton.svg';
-// Импортируем иконки для кнопки Start
+import { ReactComponent as KleiInActiveIcon } from '../../../../assets/sidebar/kleiInActive.svg';
+import { ReactComponent as KleiIActiveIcon } from '../../../../assets/sidebar/kleiActive.svg';
 import { ReactComponent as StartInactiveIcon } from '../../../../assets/sidebar/startButton.svg';
 import { ReactComponent as StartActiveIcon } from '../../../../assets/sidebar/activeStartButton.svg';
-import { Button } from '@mui/material';
- 
-const Sidebar: React.FC = () => {
-  // Добавляем состояние для отслеживания активности кнопки Start
-  const [isStartActive, setIsStartActive] = useState(false);
+import { ReactComponent as PolomkaInActiveIcon } from '../../../../assets/sidebar/sloman.svg';
+import { ReactComponent as PolomkaActiveIcon } from '../../../../assets/sidebar/slomanActive.svg';
 
-  // Функция для переключения состояния кнопки
+import { Button } from '@mui/material';
+
+const Sidebar: React.FC = () => {
+  const [isStartActive, setIsStartActive] = useState(false);
+  const [isPolomkaActive, setIsPolomkaActive] = useState(false);
+  const [isCleiActive, setIsCleiActive] = useState(false);
+  const progressValue = 100; // Это значение можно получать из пропсов или состояния
+
   const toggleStartButton = () => {
     setIsStartActive(prevState => !prevState);
+  };
+  const togglePolomkatButton = () => {
+    setIsPolomkaActive(prevState => !prevState);
+  };
+
+  const toggleCleiButton = () => {
+    setIsCleiActive(prevState => !prevState);
   };
 
   return (
     <div className={styles.sidebar}>
       <div className={styles.sidebarContent}>
-        {/* Кнопка START только с SVG-изображением */}
-        <button 
+        {/* Кнопка START */}
+        <button
           className={`${styles.startButton} ${isStartActive ? styles.startButtonActive : ''}`}
           onClick={toggleStartButton}
           aria-label="Start"
@@ -40,39 +48,60 @@ const Sidebar: React.FC = () => {
           </div>
         </button>
 
-        {/* Блок с иконками (примерно как на скриншоте) */}
+        <button 
+          className={`${styles.startButton} ${isStartActive ? styles.startButtonActive : ''}`}
+          onClick={togglePolomkatButton}
+          aria-label="Start"
+        >
+          <div className={styles.startIconContainer}>
+            {isPolomkaActive ? (
+              <PolomkaActiveIcon className={styles.startIcon} />
+            ) : (
+              <PolomkaInActiveIcon className={styles.startIcon} />
+            )}
+          </div>
+        </button>
+
+
+        {/* Блок с иконками */}
         <div className={styles.iconGroup}>
           <Button>
-            <StatisticIcon className={styles.icon} /> 
+            <StatisticIcon className={styles.icon} />
           </Button>
-          
-
         </div>
 
-        {/* Прогресс-бар c надписью 100% */}
+        {/* Вертикальный прогресс-бар */}
         <div className={styles.progressContainer}>
-          <div className={styles.progressLabel}>100%</div>
+          <div className={styles.progressLabel}>{progressValue}%</div>
           <div className={styles.progressBar}>
-            <div className={styles.progressFill} />
+            <div 
+              className={styles.progressFill} 
+              style={{ height: `${progressValue}%` }}
+            />
           </div>
         </div>
 
-        {/* Ещё иконки (для примера) */}
-        {/* <div className={styles.iconGroup}>
-          <TableIcon className={styles.icon} />
-        </div> */}
-
-        {/* Низ панели (например, меню или логотип) */}
+        {/* Нижние иконки */}
         <div className={styles.footerIcon}>
-  
-          <Button> 
-            <HistoriIcon className={styles.icon} />
-            </Button>
-          <Button>
-             <ReclamaciIcon className={styles.icon} />
+          <Button
+            onClick={toggleCleiButton}
+            aria-label="Klei"
+          >
+            <div className={styles.startIconContainer}>
+              {isCleiActive ? (
+                <KleiIActiveIcon className={styles.icon} />
+              ) : (
+                <KleiInActiveIcon className={styles.icon} />
+              )}
+            </div>
           </Button>
-         
-         
+
+          <Button>
+            <HistoriIcon className={styles.icon} />
+          </Button>
+          <Button>
+            <ReclamaciIcon className={styles.icon} />
+          </Button>
         </div>
       </div>
     </div>

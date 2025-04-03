@@ -8,11 +8,12 @@ import styles from './Sidebar.module.css';
 import { ReactComponent as StatisticIcon } from '../../../../assets/sidebar/statistic.svg';
 import { ReactComponent as HistoriIcon } from '../../../../assets/sidebar/historiButton.svg';
 import { ReactComponent as ReclamaciIcon } from '../../../../assets/sidebar/reclamaciButton.svg';
-// Импортируем иконки для кнопки Start
-import { ReactComponent as StartInactiveIcon } from '../../../../assets/sidebar/startButton.svg';
-import { ReactComponent as StartActiveIcon } from '../../../../assets/sidebar/activeStartButton.svg';
+import { ReactComponent as BuferIcon } from '../../../../assets/sidebar/buferButton.svg';
+import { ReactComponent as PolomkaInActiveIcon } from '../../../../assets/sidebar/sloman.svg';
+import { ReactComponent as PolomkaActiveIcon } from '../../../../assets/sidebar/slomanActive.svg';
+
 import { Button } from '@mui/material';
- 
+
 const Sidebar: React.FC = () => {
   // Добавляем состояние для отслеживания активности кнопки Start
   const [isStartActive, setIsStartActive] = useState(false);
@@ -25,54 +26,40 @@ const Sidebar: React.FC = () => {
   return (
     <div className={styles.sidebar}>
       <div className={styles.sidebarContent}>
-        {/* Кнопка START только с SVG-изображением */}
-        <button 
+
+
+      <button 
           className={`${styles.startButton} ${isStartActive ? styles.startButtonActive : ''}`}
           onClick={toggleStartButton}
           aria-label="Start"
         >
           <div className={styles.startIconContainer}>
             {isStartActive ? (
-              <StartActiveIcon className={styles.startIcon} />
+              <PolomkaActiveIcon className={styles.startIcon} />
             ) : (
-              <StartInactiveIcon className={styles.startIcon} />
+              <PolomkaInActiveIcon className={styles.startIcon} />
             )}
           </div>
         </button>
 
-        {/* Блок с иконками (примерно как на скриншоте) */}
-        <div className={styles.iconGroup}>
-          <Button>
-            <StatisticIcon className={styles.icon} /> 
-          </Button>
-          
 
-        </div>
-
-        {/* Прогресс-бар c надписью 100% */}
-        <div className={styles.progressContainer}>
-          <div className={styles.progressLabel}>100%</div>
-          <div className={styles.progressBar}>
-            <div className={styles.progressFill} />
-          </div>
-        </div>
-
-        {/* Ещё иконки (для примера) */}
-        {/* <div className={styles.iconGroup}>
-          <TableIcon className={styles.icon} />
-        </div> */}
 
         {/* Низ панели (например, меню или логотип) */}
         <div className={styles.footerIcon}>
-  
-          <Button> 
-            <HistoriIcon className={styles.icon} />
-            </Button>
           <Button>
-             <ReclamaciIcon className={styles.icon} />
+            <StatisticIcon className={styles.icon} />
           </Button>
-         
-         
+          <Button>
+            <BuferIcon className={styles.icon} />
+          </Button>
+          <Button>
+            <HistoriIcon className={styles.icon} />
+          </Button>
+          <Button>
+            <ReclamaciIcon className={styles.icon} />
+          </Button>
+
+
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ interface Detail {
   size: string;
   totalQuantity: number;
   readyForProcessing: number;
+  distributed: number;
   completed: number;
 }
 
@@ -26,6 +27,7 @@ const DetailsTable: React.FC = () => {
       size: '50x200 мм',
       totalQuantity: 10,
       readyForProcessing: 8,
+    distributed: 8,
       completed: 5,
     },
     {
@@ -36,6 +38,7 @@ const DetailsTable: React.FC = () => {
       size: '80x30 мм',
       totalQuantity: 15,
       readyForProcessing: 15,
+      distributed: 15,
       completed: 10,
     },
     {
@@ -46,6 +49,7 @@ const DetailsTable: React.FC = () => {
       size: '40x60 мм',
       totalQuantity: 20,
       readyForProcessing: 20,
+      distributed: 20,
       completed: 20,
     },
     {
@@ -56,6 +60,7 @@ const DetailsTable: React.FC = () => {
       size: '120x15 мм',
       totalQuantity: 8,
       readyForProcessing: 5,
+    distributed: 5,
       completed: 3,
     },
     {
@@ -66,6 +71,7 @@ const DetailsTable: React.FC = () => {
       size: '100x25 мм',
       totalQuantity: 12,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 6,
     },
     {
@@ -76,6 +82,7 @@ const DetailsTable: React.FC = () => {
       size: '250x150x100 мм',
       totalQuantity: 5,
       readyForProcessing: 3,
+    distributed: 3,
       completed: 1,
     },
     {
@@ -86,6 +93,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
     {
@@ -96,6 +104,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
     {
@@ -106,6 +115,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
     {
@@ -116,6 +126,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
     {
@@ -126,6 +137,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
     {
@@ -136,6 +148,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
     {
@@ -146,6 +159,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
     {
@@ -156,6 +170,7 @@ const DetailsTable: React.FC = () => {
       size: '30x150 мм',
       totalQuantity: 18,
       readyForProcessing: 12,
+      distributed: 12,
       completed: 8,
     },
   ];
@@ -203,6 +218,7 @@ const DetailsTable: React.FC = () => {
                 <th>Тех. информация</th>
                 <th>Общее кол-во</th>
                 <th>Готово к обработке</th>
+                <th>Распределено</th>
                 <th>Выполнено</th>
                 <th></th> {/* Колонка для кнопки-стрелки */}
               </tr>
@@ -228,6 +244,7 @@ const DetailsTable: React.FC = () => {
                   </td>
                   <td>{detail.totalQuantity}</td>
                   <td>{detail.readyForProcessing}</td>
+                  <td>{detail.distributed}</td>
                   <td>{detail.completed}</td>
                   <td>
                     <button 

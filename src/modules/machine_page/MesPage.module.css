@@ -6,6 +6,7 @@
   font-family: sans-serif;
   background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
   overflow: hidden; /* Предотвращает прокрутку на уровне всей страницы */
+  
 }
 
 /* Блок с боковой панелью */
