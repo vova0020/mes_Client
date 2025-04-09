@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
@@ -8,6 +8,14 @@ import MachinesCards from './components/MachinesCards/MachinesCards';
 import styles from './MasterPage.module.css';
 
 const MasterPage: React.FC = () => {
+  // Добавляем только состояние для отслеживания выбранного заказа
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+
+  // Обработчик выбора заказа
+  const handleOrderSelect = (orderId: number | null) => {
+    setSelectedOrderId(orderId);
+  };
+
   return (
     <div className={styles.mesPage}>
       {/* Боковая панель */}
@@ -28,7 +36,7 @@ const MasterPage: React.FC = () => {
           <div className={styles.topRow}>
             {/* Секция с таблицей заказов */}
             <div className={styles.ordersSection}>
-              <OrdersTable />
+              <OrdersTable onOrderSelect={handleOrderSelect} />
             </div>
             
             {/* Секция с карточками станков */}
@@ -40,7 +48,7 @@ const MasterPage: React.FC = () => {
           {/* Нижний ряд с таблицей деталей на всю ширину */}
           <div className={styles.bottomRow}>
             <div className={styles.detailsSection}>
-              <DetailsTable />
+              <DetailsTable selectedOrderId={selectedOrderId} />
             </div>
           </div>
         </div>
