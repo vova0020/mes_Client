@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
 import useDetails from '../../../hooks/useDetails';
+import PalletsSidebar from '../PalletsSidebar/PalletsSidebar';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
@@ -13,11 +14,18 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   // Состояние для анимации (показывать/скрывать детали)
   const [showDetails, setShowDetails] = useState(false);
   
+  // Состояние для боковой панели с поддонами
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
+  
   // Используем хук для получения данных о деталях
   const { details, loading, error, fetchDetails } = useDetails();
   
   // Ref для отслеживания предыдущего ID заказа
   const prevOrderIdRef = useRef<number | null>(null);
+  
+  // Ref для контейнера таблицы, используется для определения кликов за пределами sidebar
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Загружаем детали при изменении выбранного заказа
   useEffect(() => {
@@ -45,7 +53,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   // Показываем детали с анимацией после загрузки
   useEffect(() => {
     if (!loading && details.length > 0) {
-      // Небольшая задержка ��еред показом деталей для более заметной анимации
+      // Небольшая задержка перед показом деталей для более заметной анимации
       const timer = setTimeout(() => {
         setShowDetails(true);
       }, 100);
@@ -53,6 +61,43 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
       return () => clearTimeout(timer);
     }
   }, [loading, details]);
+
+  // Синхронизация выделенной строки с состоянием боковой панели
+  useEffect(() => {
+    // Когда закрывается панель, снимаем выделение
+    if (!sidebarOpen) {
+      setActiveDetailId(null);
+    } else {
+      // Когда открывается панель, выделяем соответствующую строку
+      setActiveDetailId(selectedDetailForPallets);
+    }
+  }, [sidebarOpen, selectedDetailForPallets]);
+
+  // Обработчик кликов за пре��елами боковой панели
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      // Проверяем, что sidebar открыт
+      if (!sidebarOpen) return;
+      
+      // Получаем элемент sidebar через DOM
+      const sidebar = document.querySelector(`.${styles.sidebar}`);
+      
+      // Проверяем, что клик был не внутри sidebar и не на кнопке-стрелке
+      if (sidebar && 
+          !sidebar.contains(event.target as Node) && 
+          !(event.target as Element).closest(`.${styles.arrowButton}`)) {
+        setSidebarOpen(false);
+      }
+    };
+
+    // Добавляем слушатель событий
+    document.addEventListener('mousedown', handleOutsideClick);
+    
+    // Удаляем слушатель при размонтировании
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [sidebarOpen, styles.sidebar, styles.arrowButton]);
 
   // Обработчик клика по строке таблицы с возможностью сброса выбора
   const handleRowClick = (detailId: number) => {
@@ -74,7 +119,13 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   // Обработчик клика по кнопке-стрелке
   const handleArrowClick = (e: React.MouseEvent, detailId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
-    console.log(`Действие по стрелке для детали ${detailId}`);
+    setSelectedDetailForPallets(detailId);
+    setSidebarOpen(true);
+  };
+
+  // Обработчик закрытия боковой панели
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
   };
 
   // Отображаем сообщение о загрузке
@@ -155,7 +206,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
           </div>
           <div className={styles.emptyMessage}>
             <h3>Нет доступных деталей</h3>
-            <p>В данном заказе отсутствуют детали или они еще не были добавлены</p>
+            <p>В данном заказе отсутс��вуют детали или они еще не были добавлены</p>
           </div>
         </div>
       </div>
@@ -164,7 +215,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
 
   // Если есть детали для отображения
   return (
-    <div className={styles.detailsContainer}>
+    <div className={styles.detailsContainer} ref={containerRef}>
       <h2 className={styles.title}>Информация о деталях</h2>
 
       <div className={styles.tableContainer}>
@@ -223,6 +274,13 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Боковая панель с поддо��ами */}
+      <PalletsSidebar 
+        detailId={selectedDetailForPallets} 
+        isOpen={sidebarOpen} 
+        onClose={handleCloseSidebar} 
+      />
     </div>
   );
 };
