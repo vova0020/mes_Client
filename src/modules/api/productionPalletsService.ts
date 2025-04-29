@@ -5,8 +5,13 @@ import { API_URL } from './config';
 export interface BufferCellDto {
   id: number;
   code: string;
-  bufferId: number;
-  bufferName: string;
+  capacity: number;
+  buffer: {
+    id: number,
+    location: string,
+    name: string,
+  };
+  status?: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'MAINTENANCE';
 }
 
 export interface MachineDto {
@@ -31,6 +36,18 @@ export interface PalletsResponseDto {
   total: number;
 }
 
+// Интерфейс для ответа API с буферными ячейками
+export interface BufferCellsResponseDto {
+  cells: BufferCellDto[];
+  total: number;
+}
+
+// Интерфейс для ответа API со станками
+export interface MachinesResponseDto {
+  machines: MachineDto[];
+  total: number;
+}
+
 // Функция для получения производственных поддонов по ID детали
 export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<ProductionPallet[]> => {
   if (detailId === null) {
@@ -43,6 +60,63 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
     return response.data.pallets;
   } catch (error) {
     console.error('Ошибка при получении поддонов детали:', error);
+    throw error;
+  }
+};
+
+
+// Обновленная функция для получения доступных ячеек буфера
+export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/buffer/cells`);
+    console.log('Ответ API:', response.data);
+    
+    // Проверяем формат данных и адаптируем под него
+    if (Array.isArray(response.data)) {
+      // Если сервер возвращает массив напрямую
+      return response.data;
+    } else if (response.data.cells && Array.isArray(response.data.cells)) {
+      // Если сервер возвращает объект с полем cells
+      return response.data.cells;
+    } else {
+      // Неизвестный формат, возвращаем пустой массив и логируем ошибку
+      console.error('Неожиданный формат данных от сервера:', response.data);
+      return [];
+    }
+  } catch (error) {
+    console.error('Ошибка при получении ячеек буфера:', error);
+    throw error;
+  }
+};
+
+// Обновленная функция для получения доступных станков
+export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/machin/all`);
+    console.log('Ответ API:', response.data);
+    
+    // Проверяем формат данных и адаптируем под него
+    if (Array.isArray(response.data)) {
+      // Если сервер возвращает массив напрямую
+      return response.data.map((item: any) => ({
+        id: item.id,
+        name: item.name || item.code || '',
+        status: item.status || 'ACTIVE'
+      }));
+    } else if (response.data.machines && Array.isArray(response.data.machines)) {
+      // Если сервер возвращает объект с полем machines
+      return response.data.machines.map((item: any) => ({
+        id: item.id,
+        name: item.name || item.code || '',
+        status: item.status || 'ACTIVE'
+      }));
+    } else {
+      // Неизвестный формат, возвращаем пустой массив и логируем ошибку
+      console.error('Неожиданный формат данных от сервера:', response.data);
+      return [];
+    }
+  } catch (error) {
+    console.error('Ошибка при получении станков:', error);
     throw error;
   }
 };
@@ -61,7 +135,7 @@ export const updatePalletMachine = async (palletId: number, machine: string): Pr
   }
 };
 
-// Функция для обновления ячейки буфера для п��ддона (заглушка)
+// Функция для обновления ячейки буфера для поддона (заглушка)
 export const updatePalletBufferCell = async (palletId: number, bufferCellId: number): Promise<void> => {
   try {
     // В будущем здесь будет реальный запрос на сервер

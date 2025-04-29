@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './PalletsSidebar.module.css';
 import useProductionPallets from '../../../hooks/productionPallets';
@@ -10,47 +9,27 @@ interface PalletsSidebarProps {
   onClose: () => void;
 }
 
-// Список доступных станков
-const machines = [
-  'Станок 1', 'Станок 2', 'Станок 3', 'Станок 4', 'Станок 5'
-];
-
-// Список доступных ячеек буфера с их ID
-const bufferCells = [
-  { id: 1, address: 'A1-B2' },
-  { id: 2, address: 'A3-B4' },
-  { id: 3, address: 'A5-B6' },
-  { id: 4, address: 'A7-B8' },
-  { id: 5, address: 'C1-D2' },
-  { id: 6, address: 'C3-D4' },
-  { id: 7, address: 'C5-D6' },
-  { id: 8, address: 'C7-D8' },
-  { id: 9, address: 'E1-F2' },
-  { id: 10, address: 'E3-F4' },
-  { id: 11, address: 'E5-F6' },
-  { id: 12, address: 'E7-F8' },
-  { id: 13, address: 'G1-H2' },
-  { id: 14, address: 'G3-H4' },
-  { id: 15, address: 'G5-H6' },
-  { id: 16, address: 'G7-H8' }
-];
-
 const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClose }) => {
   // Ref для боковой панели
   const sidebarRef = useRef<HTMLDivElement>(null);
   
   // Используем обновленный хук для получения данных о поддонах
   const { 
-    pallets, 
+    pallets,
+    bufferCells,
+    machines, // Теперь получаем машины из сервера
     loading, 
     error, 
     fetchPallets,
     updateMachine,
-    updateBufferCell
+    updateBufferCell,
+    loadSegmentResources
   } = useProductionPallets(null);
   
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [bufferCellsLoading, setBufferCellsLoading] = useState<boolean>(false);
+  const [machinesLoading, setMachinesLoading] = useState<boolean>(false);
 
   // Добавляем обработчик кликов вне боковой панели
   useEffect(() => {
@@ -82,9 +61,17 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     if (detailId !== null && isOpen) {
       setShowDetails(false);
       setErrorMessage(null);
+      setBufferCellsLoading(true);
+      setMachinesLoading(true);
       
-      // Используем функцию из хука для загрузки данных
-      fetchPallets(detailId)
+      // Сначала загружаем ресурсы сегмента (включая ячейки буфера и станки)
+      loadSegmentResources()
+        .then(() => {
+          setBufferCellsLoading(false);
+          setMachinesLoading(false);
+          // Затем загружаем данные о поддонах
+          return fetchPallets(detailId);
+        })
         .then(() => {
           // Показываем детали с небольшой задержкой для анимации
           setTimeout(() => {
@@ -92,10 +79,13 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
           }, 100);
         })
         .catch((err) => {
+          setBufferCellsLoading(false);
+          setMachinesLoading(false);
           setErrorMessage('Не удалось загрузить данные о поддонах');
+          console.error('Ошибка загрузки данных:', err);
         });
     }
-  }, [detailId, isOpen, fetchPallets]);
+  }, [detailId, isOpen, fetchPallets, loadSegmentResources]);
 
   // Сбрасываем состояние при закрытии панели
   useEffect(() => {
@@ -117,7 +107,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
   // Обработчик изменения адреса ячейки буфера
   const handleBufferCellChange = async (palletId: number, bufferCellAddress: string) => {
     // Находим ID ячейки буфера по адресу
-    const bufferCell = bufferCells.find(cell => cell.address === bufferCellAddress);
+    const bufferCell = bufferCells.find(cell => cell.code === bufferCellAddress);
     if (!bufferCell) return;
     
     try {
@@ -170,18 +160,144 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     }
   };
 
+  // Обработчик повторной загрузки ячеек буфера и станков
+  const handleRetryLoadResources = () => {
+    setBufferCellsLoading(true);
+    setMachinesLoading(true);
+    loadSegmentResources()
+      .then(() => {
+        setBufferCellsLoading(false);
+        setMachinesLoading(false);
+      })
+      .catch((err) => {
+        setBufferCellsLoading(false);
+        setMachinesLoading(false);
+        console.error('Ошибка загрузки ресурсов:', err);
+      });
+  };
+
   // Получение адреса ячейки буфера по коду
   const getBufferCellAddress = (bufferCell: any): string => {
     if (!bufferCell) return '';
-    // Для совместимости с текущим интерфейсом найдем соответствующую ячейку в нашем списке
-    const cell = bufferCells.find(c => c.id === bufferCell.id);
-    return cell ? cell.address : bufferCell.code || '';
+    
+    // Используем напрямую код ячейки
+    return bufferCell.code || '';
   };
 
   // Получаем имя станка для отображения в селекте
   const getMachineName = (machine: any): string => {
     if (!machine) return '';
     return machine.name || '';
+  };
+
+  // Компонент для отображения состояния загрузки ресурсов
+  const ResourceLoading = ({ loading, type }: { loading: boolean, type: string }) => {
+    if (loading) {
+      return (
+        <div className={styles.bufferCellLoading}>
+          <div className={styles.miniSpinner}></div>
+          <span>Загрузка {type}...</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Компонент для отображения селектора ячеек буфера
+  const BufferCellSelector = ({ pallet }: { pallet: any }) => {
+    if (bufferCellsLoading) {
+      return <ResourceLoading loading={bufferCellsLoading} type="ячеек" />;
+    }
+    
+    if (!bufferCells || bufferCells.length === 0) {
+      return (
+        <div className={styles.bufferCellError}>
+          <span>Нет доступных ячеек</span>
+          <button 
+            className={styles.miniRetryButton} 
+            onClick={handleRetryLoadResources}
+            title="Обновить ресурсы"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 4v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1 20v-6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      );
+    }
+    
+    return (
+      <select 
+        className={styles.bufferCellSelect}
+        value={getBufferCellAddress(pallet.bufferCell)}
+        onChange={(e) => handleBufferCellChange(pallet.id, e.target.value)}
+      >
+        <option value="">Выберите ячейку</option>
+        {bufferCells.map((cell) => (
+          <option key={cell.id} value={cell.code}>
+            {cell.code}
+          </option>
+        ))}
+      </select>
+    );
+  };
+
+  // Компонент для отображения селектора станков
+  const MachineSelector = ({ pallet }: { pallet: any }) => {
+    if (machinesLoading) {
+      return <ResourceLoading loading={machinesLoading} type="станков" />;
+    }
+    
+    if (!machines || machines.length === 0) {
+      return (
+        <div className={styles.bufferCellError}>
+          <span>Нет доступных станков</span>
+          <button 
+            className={styles.miniRetryButton} 
+            onClick={handleRetryLoadResources}
+            title="Обновить ресурсы"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 4v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1 20v-6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      );
+    }
+    
+    const currentMachineName = getMachineName(pallet.machine);
+    
+    return (
+      <select 
+        className={styles.machineSelect}
+        value={currentMachineName}
+        onChange={(e) => handleMachineChange(pallet.id, e.target.value)}
+      >
+        <option value="">Выберите станок</option>
+        {/* Добавляем сначала текущий станок, если он есть */}
+        {currentMachineName && (
+          <option key={`current-${currentMachineName}`} value={currentMachineName}>
+            {currentMachineName} (текущий)
+          </option>
+        )}
+        {/* Добавляем все остальные станки, которые не являются текущим */}
+        {machines.map((machine) => {
+          // Пропускаем текущий станок, так как он уже добавлен выше
+          if (machine.name === currentMachineName) {
+            return null;
+          }
+          return (
+            <option key={machine.id} value={machine.name}>
+              {machine.name}
+            </option>
+          );
+        })}
+      </select>
+    );
   };
 
   return (
@@ -263,33 +379,11 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
                   >
                     <td>{pallet.name || `P${pallet.id.toString().padStart(3, '0')}`}</td>
                     <td>
-                      <select 
-                        className={styles.bufferCellSelect}
-                        value={getBufferCellAddress(pallet.bufferCell)}
-                        onChange={(e) => handleBufferCellChange(pallet.id, e.target.value)}
-                      >
-                        <option value="">Выберите ячейку</option>
-                        {bufferCells.map((cell) => (
-                          <option key={cell.id} value={cell.address}>
-                            {cell.address}
-                          </option>
-                        ))}
-                      </select>
+                      <BufferCellSelector pallet={pallet} />
                     </td>
                     <td>{pallet.quantity}</td>
                     <td>
-                      <select 
-                        className={styles.machineSelect}
-                        value={getMachineName(pallet.machine)}
-                        onChange={(e) => handleMachineChange(pallet.id, e.target.value)}
-                      >
-                        <option value="">Выберите станок</option>
-                        {machines.map((machine) => (
-                          <option key={machine} value={machine}>
-                            {machine}
-                          </option>
-                        ))}
-                      </select>
+                      <MachineSelector pallet={pallet} />
                     </td>
                     <td className={styles.actionsCell}>
                       <button 

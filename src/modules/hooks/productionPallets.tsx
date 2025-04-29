@@ -3,7 +3,11 @@ import {
   ProductionPallet, 
   fetchProductionPalletsByDetailId,
   updatePalletMachine,
-  updatePalletBufferCell
+  updatePalletBufferCell,
+  BufferCellDto,
+  MachineDto,
+  fetchBufferCellsBySegmentId,
+  fetchMachinBySegmentId
 } from '../api/productionPalletsService';
 
 // Определение интерфейса результата хука
@@ -11,9 +15,12 @@ interface UseProductionPalletsResult {
   pallets: ProductionPallet[];
   loading: boolean;
   error: Error | null;
+  bufferCells: BufferCellDto[];
+  machines: MachineDto[];
   fetchPallets: (detailId: number | null) => Promise<void>;
   updateMachine: (palletId: number, machine: string) => Promise<void>;
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
+  loadSegmentResources: () => Promise<void>;
 }
 
 // Пользовательский хук для управления данными о производственных поддонах
@@ -22,6 +29,9 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [currentDetailId, setCurrentDetailId] = useState<number | null>(initialDetailId);
+  // Состояние для ячеек буфера и станков
+  const [bufferCells, setBufferCells] = useState<BufferCellDto[]>([]);
+  const [machines, setMachines] = useState<MachineDto[]>([]);
   
   // Функция для получения поддонов для конкретной детали
   const fetchPallets = useCallback(async (detailId: number | null) => {
@@ -50,18 +60,20 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     try {
       await updatePalletMachine(palletId, machineName);
       
+      // Находим выбранный станок из загруженных данных
+      const selectedMachine = machines.find(machine => machine.name === machineName);
+      
       // Обновляем локальное состояние после успешного обновления на сервере
       setPallets(prevPallets => 
         prevPallets.map(pallet => {
           if (pallet.id === palletId) {
-            // Пока что используем заглушку для данных о станке
             return { 
               ...pallet, 
-              machine: { 
+              machine: selectedMachine || { 
                 id: 0, // Временное значение
                 name: machineName, 
                 status: 'ACTIVE' 
-              } 
+              }
             };
           }
           return pallet;
@@ -71,26 +83,24 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       setError(err instanceof Error ? err : new Error('Ошибка при обновлении станка'));
       throw err;
     }
-  }, []);
+  }, [machines]);
   
   // Функция для обновления ячейки буфера для поддона
   const updateBufferCell = useCallback(async (palletId: number, bufferCellId: number) => {
     try {
       await updatePalletBufferCell(palletId, bufferCellId);
       
+      // Находим выбранную ячейку буфера из загруженных данных
+      const selectedBufferCell = bufferCells.find(cell => cell.id === bufferCellId);
+      
       // Обновляем локальное состояние после успешного обновления на сервере
+      // Используем реальные данные с сервера вместо заглушки
       setPallets(prevPallets => 
         prevPallets.map(pallet => {
           if (pallet.id === palletId) {
-            // Пока что используем заглушку для данных о ячейке буфера
             return { 
               ...pallet, 
-              bufferCell: { 
-                id: bufferCellId, 
-                code: `Cell-${bufferCellId}`, 
-                bufferId: 1, 
-                bufferName: "Основной буфер"
-              } 
+              bufferCell: selectedBufferCell || null
             };
           }
           return pallet;
@@ -99,6 +109,30 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Ошибка при обновлении ячейки буфера'));
       throw err;
+    }
+  }, [bufferCells]);
+
+  // Функция для загрузки ресурсов выбранного сегмента
+  const loadSegmentResources = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Загружаем данные о ячейках буфера
+      const bufferCellsData = await fetchBufferCellsBySegmentId();
+      console.log('Получены данные о ячейках буфера:', bufferCellsData);
+      setBufferCells(bufferCellsData);
+      
+      // Загружаем данные о станках
+      const machinesData = await fetchMachinBySegmentId();
+      console.log('Получены данные о станках:', machinesData);
+      // Данные уже должны иметь правильный формат благодаря изменениям в API
+      setMachines(machinesData);
+    } catch (err) {
+      console.error('Ошибка при загрузке ресурсов сегмента:', err);
+      setError(err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке ресурсов'));
+    } finally {
+      setLoading(false);
     }
   }, []);
   
@@ -115,7 +149,10 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     error,
     fetchPallets,
     updateMachine,
-    updateBufferCell
+    updateBufferCell,
+    bufferCells,
+    machines,
+    loadSegmentResources
   };
 };
 
