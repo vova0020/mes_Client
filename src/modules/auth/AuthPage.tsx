@@ -1,37 +1,72 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './AuthPage.module.css';
 import logo from '../../assets/logo-Photoroom.png';
 import LoadingScreen from '../../componentsGlobal/LoadingScreen/index';
+import authService, { AuthCredentials } from '../../services/authService';
 
 const AuthPage: React.FC = () => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [error, setError] = useState<string>(''); // Состояние для хранения ошибки
-
+  const [error, setError] = useState<string>('');
+  
+  const navigate = useNavigate();
+  
+  // При загрузке компонента проверяем, авторизован ли пользователь
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Функция для демонстрации ошибки
-  const showErrorDemo = () => {
-    setError('Неверный логин или пароль. Пожалуйста, проверьте введенные данные.');
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+    const checkAuth = async () => {
+      // Если пользователь уже авторизован, перенаправляем его
+      if (authService.isAuthenticated()) {
+        const user = authService.getUser();
+        const assignments = authService.getAssignments();
+        
+        if (user && assignments) {
+          const homePage = authService.determineHomePage(user, assignments);
+          navigate(homePage);
+        }
+      } else {
+        // Если не авторизован, показываем форму входа после короткой загрузки
+        setTimeout(() => {
+          setLoading(false);
+        }, 2500);
+      }
+    };
     
-    // Для демонстрации ошибки
-    if (username && password) {
-      // В реальном приложении здесь был бы запрос к API
-      showErrorDemo(); // Показываем ошибку для демонстрации
-    } else {
+    checkAuth();
+  }, [navigate]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    
+    if (!username || !password) {
       setError('Пожалуйста, заполните все поля');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const credentials: AuthCredentials = { username, password };
+      const authData = await authService.login(credentials);
+      
+      // Сохраняем данные авторизации
+      authService.saveAuthData(authData);
+      
+      // Перенаправляем пользователя на соответствующую страницу
+      const homePage = authService.determineHomePage(authData.user, authData.assignments);
+      navigate(homePage);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message || 'Неверный логин или пароль. Пожалуйста, проверьте введенные данные.');
+      } else {
+        setError('Произошла ошибка при входе в систему');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -74,6 +109,7 @@ const AuthPage: React.FC = () => {
                 clearError();
               }}
               required
+              disabled={isSubmitting}
             />
           </div>
           <div className={styles.formGroup}>
@@ -88,12 +124,14 @@ const AuthPage: React.FC = () => {
                   clearError();
                 }}
                 required
+                disabled={isSubmitting}
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 className={styles.passwordToggle}
                 aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                disabled={isSubmitting}
               >
                 {showPassword ? (
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -107,8 +145,8 @@ const AuthPage: React.FC = () => {
               </button>
             </div>
           </div>
-          <button type="submit" className={styles.loginButton}>
-            ВОЙТИ
+          <button type="submit" className={styles.loginButton} disabled={isSubmitting}>
+            {isSubmitting ? 'ВХОД...' : 'ВОЙТИ'}
           </button>
         </form>
       </div>

@@ -7,7 +7,9 @@ import {
   BufferCellDto,
   MachineDto,
   fetchBufferCellsBySegmentId,
-  fetchMachinBySegmentId
+  fetchMachinBySegmentId,
+  OperationDto,
+  getCurrentOperation
 } from '../api/productionPalletsService';
 
 // Определение интерфейса результата хука
@@ -18,9 +20,10 @@ interface UseProductionPalletsResult {
   bufferCells: BufferCellDto[];
   machines: MachineDto[];
   fetchPallets: (detailId: number | null) => Promise<void>;
-  updateMachine: (palletId: number, machine: string) => Promise<void>;
+  updateMachine: (palletId: number, machine: string, processStepId?: number) => Promise<void>;
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
   loadSegmentResources: () => Promise<void>;
+  refreshPalletData: (palletId: number) => Promise<void>;
 }
 
 // Пользовательский хук для управления данными о производственных поддонах
@@ -47,21 +50,73 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     
     try {
       const fetchedPallets = await fetchProductionPalletsByDetailId(detailId);
-      setPallets(fetchedPallets);
+      
+      // Для каждого поддона получаем текущую операцию
+      const palletsWithOperations = await Promise.all(
+        fetchedPallets.map(async (pallet) => {
+          try {
+            const operation = await getCurrentOperation(pallet.id);
+            return {
+              ...pallet,
+              currentOperation: operation || undefined
+            };
+          } catch (err) {
+            console.error(`Ошибка получения операции для поддона ${pallet.id}:`, err);
+            return pallet;
+          }
+        })
+      );
+      
+      setPallets(palletsWithOperations);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Произошла неизвестная ошибка'));
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Функция для обновления данных конкретного поддона
+  const refreshPalletData = useCallback(async (palletId: number) => {
+    try {
+      // Получаем текущий список поддонов и данные для текущей детали
+      if (currentDetailId === null) return;
+      
+      // Получаем текущую операцию для поддона
+      const operation = await getCurrentOperation(palletId);
+      
+      // Обновляем состояние поддона в массиве
+      setPallets(prevPallets => 
+        prevPallets.map(pallet => {
+          if (pallet.id === palletId) {
+            return { 
+              ...pallet, 
+              currentOperation: operation || undefined
+            };
+          }
+          return pallet;
+        })
+      );
+    } catch (err) {
+      console.error(`Ошибка обновления данных поддона ${palletId}:`, err);
+    }
+  }, [currentDetailId]);
   
   // Функция для обновления станка для поддона
-  const updateMachine = useCallback(async (palletId: number, machineName: string) => {
+  const updateMachine = useCallback(async (
+    palletId: number, 
+    machineName: string, 
+    processStepId: number = 1
+  ) => {
     try {
-      await updatePalletMachine(palletId, machineName);
-      
       // Находим выбранный станок из загруженных данных
       const selectedMachine = machines.find(machine => machine.name === machineName);
+      
+      if (!selectedMachine) {
+        throw new Error(`Станок с именем "${machineName}" не найден`);
+      }
+      
+      // Вызываем обновленную функцию с новым API
+      const operation = await updatePalletMachine(palletId, machineName, processStepId);
       
       // Обновляем локальное состояние после успешного обновления на сервере
       setPallets(prevPallets => 
@@ -69,11 +124,9 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
           if (pallet.id === palletId) {
             return { 
               ...pallet, 
-              machine: selectedMachine || { 
-                id: 0, // Временное значение
-                name: machineName, 
-                status: 'ACTIVE' 
-              }
+              machine: selectedMachine,
+              bufferCell: null, // Поддон больше не в буфере
+              currentOperation: operation as OperationDto | undefined
             };
           }
           return pallet;
@@ -88,19 +141,25 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   // Функция для обновления ячейки буфера для поддона
   const updateBufferCell = useCallback(async (palletId: number, bufferCellId: number) => {
     try {
-      await updatePalletBufferCell(palletId, bufferCellId);
-      
       // Находим выбранную ячейку буфера из загруженных данных
       const selectedBufferCell = bufferCells.find(cell => cell.id === bufferCellId);
       
+      if (!selectedBufferCell) {
+        throw new Error(`Ячейка буфера с ID ${bufferCellId} не найдена`);
+      }
+      
+      // Вызываем обновленную функцию с новым API
+      const operation = await updatePalletBufferCell(palletId, bufferCellId);
+      
       // Обновляем локальное состояние после успешного обновления на сервере
-      // Используем реальные данные с сервера вместо заглушки
       setPallets(prevPallets => 
         prevPallets.map(pallet => {
           if (pallet.id === palletId) {
             return { 
               ...pallet, 
-              bufferCell: selectedBufferCell || null
+              bufferCell: selectedBufferCell,
+              machine: null, // Поддон больше не на станке
+              currentOperation: operation as OperationDto | undefined
             };
           }
           return pallet;
@@ -152,7 +211,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     updateBufferCell,
     bufferCells,
     machines,
-    loadSegmentResources
+    loadSegmentResources,
+    refreshPalletData
   };
 };
 

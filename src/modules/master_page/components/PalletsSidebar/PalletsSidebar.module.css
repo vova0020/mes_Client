@@ -1,3 +1,4 @@
+
 /* Основной контейнер боковой панели с градиентным фоном и тенями */
 .sidebar {
   position: fixed;
@@ -196,6 +197,31 @@
   box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.1);
 }
 
+/* Выделение обрабатываемого поддона */
+.processingRow {
+  background: linear-gradient(to bottom, #e8f7ff, #d9f0ff) !important;
+  position: relative;
+  box-shadow: 
+    0 0 0 1px rgba(52, 152, 219, 0.3),
+    inset 0 0 8px rgba(52, 152, 219, 0.1);
+}
+
+.processingRow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #3498db;
+  animation: pulseHighlight 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseHighlight {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* Последняя строка таблицы без нижней границы */
 .palletsTable tr:last-child td {
   border-bottom: none;
@@ -255,6 +281,21 @@
     inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* Стили для задисейбленной кнопки */
+.actionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.actionButton:disabled:hover::before {
+  opacity: 0;
+}
+
+.actionButton:disabled:active {
+  transform: none;
+}
+
 /* Стили для кнопки МЛ */
 .mlButton {
   background: linear-gradient(to bottom, #3498db, #2980b9);
@@ -271,6 +312,25 @@
 
 .mlButton:active {
   background: linear-gradient(to bottom, #2980b9, #3498db);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для кнопки обновления данных поддона */
+.refreshButton {
+  background: linear-gradient(to bottom, #7f8c8d, #636e72);
+  color: white;
+  border-left: 3px solid #535c5f;
+}
+
+.refreshButton:hover {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.refreshButton:active {
+  background: linear-gradient(to bottom, #636e72, #7f8c8d);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -360,6 +420,13 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
+.machineSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+  background-image: none;
+}
+
 /* Стили для выпадающего списка ячеек буфера */
 .bufferCellSelect {
   width: 100%;
@@ -387,6 +454,13 @@
   box-shadow: 
     0 0 0 3px rgba(52, 152, 219, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.bufferCellSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+  background-image: none;
 }
 
 /* Стили для состояний загрузки и ошибки ячеек буфера */
@@ -470,7 +544,6 @@
   min-height: 40px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
-
 
 /* Анимация появления строк */
 .animatedRow {
@@ -657,6 +730,132 @@
   margin: 0;
 }
 
+/* Стили для компонента статуса операции */
+.operationStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.processStep {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+}
+
+.noOperation {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  display: block;
+  padding: 4px 0;
+}
+
+
+/* Стили для различных статусов операций */
+.statusInProgress {
+  background: linear-gradient(to bottom, #f1c40f, #f39c12);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #d35400;
+}
+
+.statusBuffered {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #1c6ea4;
+}
+
+.statusCompleted {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #219653;
+}
+
+.statusFailed {
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #922b21;
+}
+
+/* Кнопка обновления данных поддона */
+.refreshButton {
+  background: linear-gradient(to bottom, #7f8c8d, #636e72);
+  color: white;
+  border-left: 3px solid #535c5f;
+}
+
+.refreshButton:hover {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.refreshButton:active {
+  background: linear-gradient(to bottom, #636e72, #7f8c8d);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Пульсирующая анимация для индикаторов статуса */
+@keyframes statusPulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+.statusInProgress {
+  animation: statusPulse 2s infinite;
+}
+
+/* Дополнительные стили для статуса операции */
+.operationStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.processStep {
+  font-size: 11px;
+  color: #555;
+  padding: 2px 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Улучшенный стиль для пустой операции */
+.noOperation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  border-radius: 12px;
+  border-left: 2px solid #ccc;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
 /* Медиа-запросы для адаптивного дизайна */
 @media screen and (max-width: 1200px) {
   .sidebar.open {
@@ -667,6 +866,15 @@
     padding: 0 10px;
     min-width: 32px;
     height: 30px;
+  }
+  
+  .statusBadge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .processStep {
+    font-size: 10px;
   }
 }
 
@@ -695,11 +903,19 @@
     padding: 15px;
   }
   
-  .bufferCellSelect {
+  .bufferCellSelect, .machineSelect {
     padding: 8px 10px;
     font-size: 12px;
     background-position: right 10px center;
     padding-right: 28px;
+  }
+  
+  .palletsTable th, .palletsTable td {
+    padding: 10px 12px;
+  }
+  
+  .operationStatus {
+    gap: 2px;
   }
 }
 
@@ -725,6 +941,33 @@
   .sidebarContent {
     padding: 12px;
   }
+  
+  .palletsTable {
+    font-size: 12px;
+  }
+  
+  .palletsTable th {
+    padding: 10px 8px;
+  }
+  
+  .palletsTable td {
+    padding: 8px;
+  }
+  
+  .statusBadge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  .processStep {
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+  
+  .noOperation {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
 }
 
 @media screen and (max-width: 576px) {
@@ -740,11 +983,12 @@
   }
   
   .palletsTable th {
-    padding: 8px 10px;
+    padding: 8px 6px;
+    font-size: 10px;
   }
   
   .palletsTable td {
-    padding: 6px 10px;
+    padding: 6px;
   }
   
   .actionButton {
@@ -762,10 +1006,235 @@
     padding: 10px;
   }
   
-  .bufferCellSelect {
+  .bufferCellSelect, .machineSelect {
     padding: 6px 8px;
     font-size: 11px;
     background-position: right 8px center;
     padding-right: 24px;
   }
+  
+  .statusBadge {
+    padding: 2px 4px;
+    font-size: 9px;
+    letter-spacing: 0.2px;
+  }
+  
+  .processStep {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+  
+  .noOperation {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+  
+  /* Оптимизация для маленьких экранов - скрываем некоторые колонки */
+  .palletsTable th:nth-child(5),
+  .palletsTable td:nth-child(5) {
+    display: none; /* Скрываем колонку со статусом на маленьких экранах */
+  }
+  
+  /* Добавляем индикатор статуса к имени поддона */
+  .palletsTable tr[data-status="IN_PROGRESS"] td:first-child::after {
+    content: ' 🔄';
+  }
+  
+  .palletsTable tr[data-status="BUFFERED"] td:first-child::after {
+    content: ' 🔵';
+  }
+  
+  .palletsTable tr[data-status="COMPLETED"] td:first-child::after {
+    content: ' ✅';
+  }
+  
+  .palletsTable tr[data-status="FAILED"] td:first-child::after {
+    content: ' ❌';
+  }
+}
+
+/* Стили для дизайна процесса обработки */
+.processingRow {
+  background: linear-gradient(to bottom, #e8f7ff, #d9f0ff) !important;
+  position: relative;
+  box-shadow: 
+    0 0 0 1px rgba(52, 152, 219, 0.3),
+    inset 0 0 8px rgba(52, 152, 219, 0.1);
+}
+
+.processingRow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #3498db;
+  animation: pulseHighlight 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseHighlight {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Стили для отключенных элементов управления */
+.actionButton:disabled, 
+.machineSelect:disabled, 
+.bufferCellSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  background-image: none;
+}
+
+/* Дополнительные подсказки для пользователя */
+.machineSelect:disabled::after,
+.bufferCellSelect:disabled::after {
+  display: block;
+  content: attr(title);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.machineSelect:disabled:hover::after,
+.bufferCellSelect:disabled:hover::after {
+  opacity: 1;
+}
+
+/* Стили для тултипов с пояснениями */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+  pointer-events: none;
+}
+
+/* Добавляем специальные стили для таблицы при пустых данных */
+.emptyContainer {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #f8f8f8, #eeeeee);
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  margin-top: 20px;
+}
+
+.emptyMessage {
+  text-align: center;
+  color: #888;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.emptyText {
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 400px;
+}
+
+/* Анимация подсветки обновленной строки */
+@keyframes highlightUpdate {
+  0%, 100% { background: linear-gradient(to bottom, #ffffff, #f9f9f9); }
+  50% { background: linear-gradient(to bottom, #ebf5fb, #d6eaf8); }
+}
+
+.updateHighlight {
+  animation: highlightUpdate 1.5s ease;
+}
+
+/* Стили для текстов состояний */
+.stateText {
+  color: #555;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.stateTitle {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+/* Дополнительные улучшения для доступности */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+  
+  .animatedRow {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+  
+  .processingRow::before {
+    animation: none;
+  }
+  
+  .statusInProgress {
+    animation: none;
+  }
+}
+
+/* Улучшенные стили для фокуса для доступности */
+.actionButton:focus, 
+.machineSelect:focus, 
+.bufferCellSelect:focus {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Хелперы для доступности */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

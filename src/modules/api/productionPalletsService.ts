@@ -20,6 +20,40 @@ export interface MachineDto {
   status: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE';
 }
 
+export interface ProcessStepDto {
+  id: number;
+  name: string;
+}
+
+export interface OperatorDto {
+  id: number;
+  username: string;
+  details?: {
+    fullName: string;
+  };
+}
+
+export interface OperationDto {
+  id: number;
+  status: 'IN_PROGRESS' | 'BUFFERED' | 'COMPLETED' | 'FAILED';
+  startedAt: string;
+  quantity?: number;
+  productionPallet: {
+    id: number;
+    name: string;
+  };
+  machine?: {
+    id: number;
+    name: string;
+    status: string;
+  };
+  processStep: {
+    id: number;
+    name: string;
+  };
+  operator?: OperatorDto;
+}
+
 // Определение интерфейса для производственного поддона
 export interface ProductionPallet {
   id: number;
@@ -28,6 +62,8 @@ export interface ProductionPallet {
   detailId: number;
   bufferCell: BufferCellDto | null;
   machine: MachineDto | null;
+  currentOperation?: OperationDto;
+  processStepId?: number;
 }
 
 // Интерфейс для ответа API со списком поддонов
@@ -48,6 +84,26 @@ export interface MachinesResponseDto {
   total: number;
 }
 
+// Интерфейс для запроса назначения на станок
+export interface AssignToMachineRequest {
+  palletId: number;
+  machineId: number;
+  processStepId: number;
+  operatorId?: number;
+}
+
+// Интерфейс для запроса перемещения в буфер
+export interface MoveToBufferRequest {
+  operationId: number;
+  bufferCellId: number;
+}
+
+// Интерфейс для ответа операции
+export interface OperationResponse {
+  message: string;
+  operation: OperationDto;
+}
+
 // Функция для получения производственных поддонов по ID детали
 export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<ProductionPallet[]> => {
   if (detailId === null) {
@@ -63,7 +119,6 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
     throw error;
   }
 };
-
 
 // Обновленная функция для получения доступных ячеек буфера
 export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> => {
@@ -121,28 +176,106 @@ export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
   }
 };
 
-// Функция для обновления станка для поддона (заглушка)
-export const updatePalletMachine = async (palletId: number, machine: string): Promise<void> => {
+// Новая функция: назначение поддона на станок
+export const assignPalletToMachine = async (
+  palletId: number, 
+  machineId: number, 
+  processStepId: number,
+  operatorId?: number
+): Promise<OperationDto> => {
   try {
-    // В будущем здесь будет реальный запрос на сервер
-    console.log(`Заглушка: Обновление станка ${machine} для поддона ${palletId}`);
+    const payload: AssignToMachineRequest = {
+      palletId,
+      machineId,
+      processStepId,
+      operatorId
+    };
     
-    // Эмуляция успешного ответа от сервера
-    return Promise.resolve();
+    const response = await axios.post<OperationResponse>(
+      `${API_URL}/pallet-operations/assign-to-machine`,
+      payload
+    );
+    
+    console.log('Поддон успешно назначен на станок:', response.data);
+    return response.data.operation;
+  } catch (error) {
+    console.error('Ошибка при назначении поддона на станок:', error);
+    throw error;
+  }
+};
+
+// Новая функция: перемещение поддона в буфер
+export const movePalletToBuffer = async (
+  operationId: number,
+  bufferCellId: number
+): Promise<OperationDto> => {
+  try {
+    const payload: MoveToBufferRequest = {
+      operationId,
+      bufferCellId
+    };
+    
+    const response = await axios.post<OperationResponse>(
+      `${API_URL}/pallet-operations/move-to-buffer`,
+      payload
+    );
+    
+    console.log('Поддон успешно перемещен в буфер:', response.data);
+    return response.data.operation;
+  } catch (error) {
+    console.error('Ошибка при перемещении поддона в буфер:', error);
+    throw error;
+  }
+};
+
+// Обновленная функция для обновления станка для поддона
+export const updatePalletMachine = async (
+  palletId: number, 
+  machineName: string, 
+  processStepId: number = 1
+): Promise<OperationDto | void> => {
+  try {
+    // Находим машину по имени - это дополнительный API-запрос
+    const machines = await fetchMachinBySegmentId();
+    const machine = machines.find(m => m.name === machineName);
+    
+    if (!machine) {
+      throw new Error(`Станок с именем "${machineName}" не найден`);
+    }
+    
+    // Используем новый API для назначения поддона на станок
+    return await assignPalletToMachine(palletId, machine.id, processStepId);
   } catch (error) {
     console.error('Ошибка при обновлении станка для поддона:', error);
     throw error;
   }
 };
 
-// Функция для обновления ячейки буфера для поддона (заглушка)
-export const updatePalletBufferCell = async (palletId: number, bufferCellId: number): Promise<void> => {
+// Обновленная функция для обновления ячейки буфера для по��дона
+export const updatePalletBufferCell = async (
+  palletId: number, 
+  bufferCellId: number
+): Promise<OperationDto | void> => {
   try {
-    // В будущем здесь будет реальный запрос на сервер
-    console.log(`Заглушка: Обновление ячейки буфера ${bufferCellId} для поддона ${palletId}`);
+    // Получаем текущие данные о поддоне, чтобы узнать operationId
+    // Это может требовать дополнительного API вызова, если эти данные не доступны
+    // Для примера предположим, что у нас есть API для получения текущей операции поддона
     
-    // Эмуляция успешного ответа от сервера
-    return Promise.resolve();
+    // Заглушка для получения operationId
+    // В реальном коде нужно сделать API запрос
+    const response = await axios.get<{operation: OperationDto | null}>(`${API_URL}/pallets/${palletId}/current-operation`);
+    const operation = response.data.operation;
+    
+    if (!operation) {
+      throw new Error(`Текущая операция для поддона ${palletId} не найдена`);
+    }
+    
+    if (operation.status !== 'IN_PROGRESS') {
+      throw new Error(`Можно перемещать в буфер только операции в статусе IN_PROGRESS`);
+    }
+    
+    // Используем новый API для перемещения поддона в буфер
+    return await movePalletToBuffer(operation.id, bufferCellId);
   } catch (error) {
     console.error('Ошибка при обновлении ячейки буфера для поддона:', error);
     throw error;
@@ -159,5 +292,16 @@ export const getPalletRouteSheet = async (palletId: number): Promise<Blob> => {
   } catch (error) {
     console.error('Ошибка при получении маршрутного листа поддона:', error);
     throw error;
+  }
+};
+
+// Новая функция: получение текущей операции для поддона
+export const getCurrentOperation = async (palletId: number): Promise<OperationDto | null> => {
+  try {
+    const response = await axios.get<{operation: OperationDto | null}>(`${API_URL}/pallets/${palletId}/current-operation`);
+    return response.data.operation;
+  } catch (error) {
+    console.error('Ошибка при получении текущей операции поддона:', error);
+    return null;
   }
 };

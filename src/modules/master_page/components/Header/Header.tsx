@@ -1,8 +1,11 @@
+
 import React from 'react';
 import styles from './Header.module.css';
 // Если есть логотип/иконки, импортируйте их, например:
 import logo from '../../../../assets/logo-Photoroom.png';
-import LogoutIcon from '@mui/icons-material/Logout';
+// Импортируем компонент LogoutButton вместо иконки LogoutIcon
+import LogoutButton from '../../../../componentsGlobal/LogoutButton/LogoutButton';
+
 const Header: React.FC = () => {
   return (
     <header className={styles.header}>
@@ -14,22 +17,18 @@ const Header: React.FC = () => {
         <div className={styles.navButtons}>
           <button className={styles.navButton}>Производственная линия</button>
           <button className={styles.navButton}>СТАНОК</button>
-
         </div>
       </div>
 
-      {/* Правый блок: логотип с текстом и кнопка питания (теперь в колонку) */}
+      {/* Правый блок: логотип с текстом и кнопка выхода (теперь в колонку) */}
       <div className={styles.rightContainer}>
         <div className={styles.brandContainer}>
-          {/* Если есть логотип, раскомментируйте и под��тавьте нужный импорт */}
-
+          {/* Если есть логотип, раскомментируйте и подставьте нужный импорт */}
           <img src={logo} alt="Logo" className={styles.logo} />
-
           {/* <span className={styles.brandName}>FIT-MES</span> */}
         </div>
-        <button className={styles.exitButton} title="Выход">
-          <LogoutIcon />
-        </button>
+        {/* Заменяем старую кнопку выхода на компонент LogoutButton */}
+        <LogoutButton className={styles.exitButton} />
       </div>
     </header>
   );
