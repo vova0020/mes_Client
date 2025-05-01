@@ -49,26 +49,57 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     setCurrentDetailId(detailId);
     
     try {
+      // Получаем данные о поддонах
       const fetchedPallets = await fetchProductionPalletsByDetailId(detailId);
       
-      // Для каждого поддона получаем текущую операцию
-      const palletsWithOperations = await Promise.all(
-        fetchedPallets.map(async (pallet) => {
-          try {
-            const operation = await getCurrentOperation(pallet.id);
-            return {
-              ...pallet,
-              currentOperation: operation || undefined
-            };
-          } catch (err) {
-            console.error(`Ошибка получения операции для поддона ${pallet.id}:`, err);
-            return pallet;
-          }
-        })
-      );
+      // Отладочная информация
+      console.log('Полученные данные о поддонах:', fetchedPallets);
       
-      setPallets(palletsWithOperations);
+      if (fetchedPallets.length > 0) {
+        // Проверяем, есть ли у первого поддона данные об операции
+        const hasExistingOperations = fetchedPallets.some(p => p.currentOperation);
+        
+        if (hasExistingOperations) {
+          console.log('Поддоны уже содержат данные об операциях');
+          
+          // Убедимся, что currentOperation определен (не undefined)
+          const normalizedPallets = fetchedPallets.map(pallet => ({
+            ...pallet,
+            // Если currentOperation === undefined, то преобразуем его в null для единообразия
+            currentOperation: pallet.currentOperation === undefined ? null : pallet.currentOperation
+          }));
+          
+          setPallets(normalizedPallets);
+        } else {
+          console.log('Требуется дополнительный запрос для получения операций');
+          
+          // Если данных об операциях нет, делаем дополнительные запросы
+          const palletsWithOperations = await Promise.all(
+            fetchedPallets.map(async (pallet) => {
+              try {
+                const operation = await getCurrentOperation(pallet.id);
+                return {
+                  ...pallet,
+                  currentOperation: operation // null или данные операции
+                };
+              } catch (err) {
+                console.error(`Ошибка при получении операции для поддона ${pallet.id}:`, err);
+                return {
+                  ...pallet,
+                  currentOperation: null
+                };
+              }
+            })
+          );
+          
+          setPallets(palletsWithOperations);
+        }
+      } else {
+        // Если поддонов нет, просто устанавливаем пустой массив
+        setPallets([]);
+      }
     } catch (err) {
+      console.error('Ошибка при получении поддонов:', err);
       setError(err instanceof Error ? err : new Error('Произошла неизвестная ошибка'));
     } finally {
       setLoading(false);
@@ -90,7 +121,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
           if (pallet.id === palletId) {
             return { 
               ...pallet, 
-              currentOperation: operation || undefined
+              currentOperation: operation // null или данные операции
             };
           }
           return pallet;
@@ -126,7 +157,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
               ...pallet, 
               machine: selectedMachine,
               bufferCell: null, // Поддон больше не в буфере
-              currentOperation: operation as OperationDto | undefined
+              currentOperation: operation as OperationDto // может быть null
             };
           }
           return pallet;
@@ -159,7 +190,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
               ...pallet, 
               bufferCell: selectedBufferCell,
               machine: null, // Поддон больше не на станке
-              currentOperation: operation as OperationDto | undefined
+              currentOperation: operation as OperationDto // может быть null
             };
           }
           return pallet;

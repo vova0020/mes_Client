@@ -23,6 +23,7 @@ export interface MachineDto {
 export interface ProcessStepDto {
   id: number;
   name: string;
+  sequence?: number;
 }
 
 export interface OperatorDto {
@@ -35,10 +36,12 @@ export interface OperatorDto {
 
 export interface OperationDto {
   id: number;
-  status: 'IN_PROGRESS' | 'BUFFERED' | 'COMPLETED' | 'FAILED';
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED';
+  completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED';
   startedAt: string;
+  completedAt?: string;
   quantity?: number;
-  productionPallet: {
+  productionPallet?: {
     id: number;
     name: string;
   };
@@ -47,10 +50,7 @@ export interface OperationDto {
     name: string;
     status: string;
   };
-  processStep: {
-    id: number;
-    name: string;
-  };
+  processStep?: ProcessStepDto;
   operator?: OperatorDto;
 }
 
@@ -62,7 +62,7 @@ export interface ProductionPallet {
   detailId: number;
   bufferCell: BufferCellDto | null;
   machine: MachineDto | null;
-  currentOperation?: OperationDto;
+  currentOperation?: OperationDto | null;
   processStepId?: number;
 }
 
@@ -94,7 +94,7 @@ export interface AssignToMachineRequest {
 
 // Интерфейс для запроса перемещения в буфер
 export interface MoveToBufferRequest {
-  operationId: number;
+  palletId: number;
   bufferCellId: number;
 }
 
@@ -104,6 +104,49 @@ export interface OperationResponse {
   operation: OperationDto;
 }
 
+// Функция для получения текста статуса операции в удобном для отображения формате
+export const getOperationStatusText = (operation?: OperationDto | null): string => {
+  // Отладочный вывод
+  console.log('getOperationStatusText получил операцию:', operation);
+  
+  // Проверка наличия операции
+  if (!operation) {
+    return 'Не в обработке';
+  }
+  
+  // Проверка completionStatus (если есть)
+  if (operation.completionStatus) {
+    switch (operation.completionStatus) {
+      case 'COMPLETED': return 'Готово';
+      case 'PARTIALLY_COMPLETED': return 'Выполнено частично';
+      case 'IN_PROGRESS': return 'В работе';
+      default: return 'В обработке';
+    }
+  } 
+  
+  // Если нет completionStatus, используем status
+  if (operation.status) {
+    switch (operation.status) {
+      case 'IN_PROGRESS': return 'В работе';
+      case 'COMPLETED': return 'Готово';
+      case 'FAILED': return 'Ошибка';
+      case 'BUFFERED': return 'В буфере';
+      default: return 'В обработке';
+    }
+  }
+  
+  // Если ничего не подошло
+  return 'Статус неизвестен';
+};
+
+// Функция для получения текста текущего этапа обработки
+export const getProcessStepText = (operation?: OperationDto | null): string => {
+  if (!operation || !operation.processStep) return 'Нет данных';
+  
+  const step = operation.processStep;
+  return `${step.name}${step.sequence ? ` (этап ${step.sequence})` : ''}`;
+};
+
 // Функция для получения производственных поддонов по ID детали
 export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<ProductionPallet[]> => {
   if (detailId === null) {
@@ -111,9 +154,20 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
   }
   try {
     const response = await axios.get<PalletsResponseDto>(`${API_URL}/pallets/detail/${detailId}`);
+    console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
     
-    // Возвращаем массив поддонов из ответа API
-    return response.data.pallets;
+    // Обрабатываем данные от API - убеждаемся, что currentOperation корректно определен
+    const processedPallets = response.data.pallets.map(pallet => {
+      // Дополнительная проверка и логирование для отладки
+      console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
+        hasCurrentOperation: !!pallet.currentOperation,
+        currentOperation: pallet.currentOperation
+      });
+      
+      return pallet;
+    });
+    
+    return processedPallets;
   } catch (error) {
     console.error('Ошибка при получении поддонов детали:', error);
     throw error;
@@ -124,7 +178,6 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
 export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> => {
   try {
     const response = await axios.get(`${API_URL}/buffer/cells`);
-    console.log('Ответ API:', response.data);
     
     // Проверяем формат данных и адаптируем под него
     if (Array.isArray(response.data)) {
@@ -148,7 +201,6 @@ export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> =>
 export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
   try {
     const response = await axios.get(`${API_URL}/machin/all`);
-    console.log('Ответ API:', response.data);
     
     // Проверяем формат данных и адаптируем под него
     if (Array.isArray(response.data)) {
@@ -206,12 +258,12 @@ export const assignPalletToMachine = async (
 
 // Новая функция: перемещение поддона в буфер
 export const movePalletToBuffer = async (
-  operationId: number,
+  palletId: number,
   bufferCellId: number
 ): Promise<OperationDto> => {
   try {
     const payload: MoveToBufferRequest = {
-      operationId,
+      palletId,
       bufferCellId
     };
     
@@ -251,31 +303,15 @@ export const updatePalletMachine = async (
   }
 };
 
-// Обновленная функция для обновления ячейки буфера для по��дона
+// Обновленная функция для обновления ячейки буфера для поддона
 export const updatePalletBufferCell = async (
   palletId: number, 
   bufferCellId: number
 ): Promise<OperationDto | void> => {
   try {
-    // Получаем текущие данные о поддоне, чтобы узнать operationId
-    // Это может требовать дополнительного API вызова, если эти данные не доступны
-    // Для примера предположим, что у нас есть API для получения текущей операции поддона
-    
-    // Заглушка для получения operationId
-    // В реальном коде нужно сделать API запрос
-    const response = await axios.get<{operation: OperationDto | null}>(`${API_URL}/pallets/${palletId}/current-operation`);
-    const operation = response.data.operation;
-    
-    if (!operation) {
-      throw new Error(`Текущая операция для поддона ${palletId} не найдена`);
-    }
-    
-    if (operation.status !== 'IN_PROGRESS') {
-      throw new Error(`Можно перемещать в буфер только операции в статусе IN_PROGRESS`);
-    }
-    
-    // Используем новый API для перемещения поддона в буфер
-    return await movePalletToBuffer(operation.id, bufferCellId);
+    // В соответствии с документацией API, мы можем перемещать поддон в буфер 
+    // вне зависимости от статуса операции
+    return await movePalletToBuffer(palletId, bufferCellId);
   } catch (error) {
     console.error('Ошибка при обновлении ячейки буфера для поддона:', error);
     throw error;
@@ -299,6 +335,7 @@ export const getPalletRouteSheet = async (palletId: number): Promise<Blob> => {
 export const getCurrentOperation = async (palletId: number): Promise<OperationDto | null> => {
   try {
     const response = await axios.get<{operation: OperationDto | null}>(`${API_URL}/pallets/${palletId}/current-operation`);
+    console.log(`Получена операция для поддона ${palletId}:`, response.data);
     return response.data.operation;
   } catch (error) {
     console.error('Ошибка при получении текущей операции поддона:', error);
