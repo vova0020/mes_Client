@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import MesPage from './modules/machine_page/MesPage';
@@ -20,12 +19,8 @@ function App() {
             <Route path="/machine" element={<MesPage />} />
           </Route>
           
-          {/* Защищенные маршруты для мастеров */}
-          <Route element={<ProtectedRoute requiredRole="admin" />}>
-            <Route path="/master" element={<MasterPage />} />
-          </Route>
-          {/* Защищенные маршруты для мастеров */}
-          <Route element={<ProtectedRoute requiredRole="master" />}>
+          {/* Защищенные маршруты для мастеров и администраторов */}
+          <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} />}>
             <Route path="/master" element={<MasterPage />} />
           </Route>
           

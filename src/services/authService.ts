@@ -112,18 +112,7 @@ const authService = {
         return '/master';
         
       case 'master':
-        if (assignments.segments && assignments.segments.length > 0) {
-          // Если есть только один участок, направляем сразу на него
-          if (assignments.segments.length === 1) {
-            return `/master`;
-          } else {
-            // Если участков несколько, все равно направляем на страницу мастера
-            // В будущем можно добавить страницу выбора участка
-            return '/master';
-          }
-        } else {
-          return '/master';
-        }
+        return '/master';
         
       case 'operator':
         if (assignments.machines && assignments.machines.length > 0) {
