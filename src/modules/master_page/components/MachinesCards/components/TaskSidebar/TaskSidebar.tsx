@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './TaskSidebar.module.css';
-import useMachines from '../../../../../hooks/useMachines';
-import { MachineTask } from '../../../../../api/machineService';
+import useMachines from '../../../../../hooks/masterPage/useMachinesMaster';
+import { MachineTask } from '../../../../../api/masterPage/machineMasterService';
 
 // Типы статусов деталей
 type TaskStatus = 'pending' | 'processing' | 'completed';

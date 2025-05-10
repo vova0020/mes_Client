@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './OrdersTable.module.css';
-import useOrders from '../../../hooks/useOrders';
-import { Order } from '../../../api/orderService';
+import useOrders from '../../../hooks/masterPage/useOrdersMaster';
+import { Order } from '../../../api/masterPage/orderServiceMaster';
 
 interface OrdersTableProps {
   onOrderSelect?: (orderId: number | null) => void;
@@ -22,7 +22,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   useEffect(() => {
     if (onOrderSelect) {
       onOrderSelect(activeOrderId);
-    }
+    } 
   }, [activeOrderId, onOrderSelect]);
   
   useEffect(() => {

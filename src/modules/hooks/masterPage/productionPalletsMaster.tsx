@@ -10,7 +10,7 @@ import {
   fetchMachinBySegmentId,
   OperationDto,
   getCurrentOperation
-} from '../api/productionPalletsServiceMaster';
+} from '../../api/masterPage/productionPalletsServiceMaster';
 
 // Определение интерфейса результата хука
 interface UseProductionPalletsResult {
@@ -43,7 +43,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       setCurrentDetailId(null);
       return;
     }
-    
+     
     setLoading(true);
     setError(null);
     setCurrentDetailId(detailId);

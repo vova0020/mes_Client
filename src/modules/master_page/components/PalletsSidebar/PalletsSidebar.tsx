@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './PalletsSidebar.module.css';
-import useProductionPallets from '../../../hooks/productionPalletsMaster';
-import { getPalletRouteSheet, getOperationStatusText, getProcessStepText } from '../../../api/productionPalletsServiceMaster';
+import useProductionPallets from '../../../hooks/masterPage/productionPalletsMaster';
+import { getPalletRouteSheet, getOperationStatusText, getProcessStepText } from '../../../api/masterPage/productionPalletsServiceMaster';
 
 interface PalletsSidebarProps {
   detailId: number | null;

@@ -8,7 +8,7 @@ import {
   MachineTask,
   fetchMachinesBySegmentId,
   MachineDto
-} from '../api/machineService';
+} from '../../api/masterPage/machineMasterService';
 
 // Определение интерфейса результата хука
 interface UseMachinesResult {

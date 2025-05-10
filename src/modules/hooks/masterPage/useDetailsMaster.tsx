@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Detail, fetchDetailsByOrderId } from '../api/detailService';
+import { Detail, fetchDetailsByOrderId } from '../../api/masterPage/detailServiceMaster'; 
 
 // Определение интерфейса результата хука
 interface UseDetailsResult {
@@ -32,7 +32,7 @@ const useDetails = (initialOrderId: number | null = null): UseDetailsResult => {
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Произошла неизвестная ошибка'));
     } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   }, []); // Пустой массив зависимостей означает, что функция создается только один раз
   

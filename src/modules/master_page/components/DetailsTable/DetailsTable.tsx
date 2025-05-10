@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
-import useDetails from '../../../hooks/useDetails';
+import useDetails from '../../../hooks/masterPage/useDetailsMaster';
 import PalletsSidebar from '../PalletsSidebar/PalletsSidebar';
 
 interface DetailsTableProps {

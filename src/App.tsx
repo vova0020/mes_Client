@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import MesPage from './modules/machine_page/MesPage';
+import MesPage from './modules/machineNoSmen_page/MesPage';
 import AuthPage from './modules/auth/AuthPage';
 import MasterPage from './modules/master_page/MasterPage';
 import ProtectedRoute from './components/ProtectedRoute';

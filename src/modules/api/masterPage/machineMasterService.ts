@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from './config';
+import { API_URL } from '../config';
 
 // Определение интерфейса для данных о станке
 export interface Machine {

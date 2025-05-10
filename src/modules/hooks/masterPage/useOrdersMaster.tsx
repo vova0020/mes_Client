@@ -1,7 +1,7 @@
 // src/modules/hooks/useOrders.tsx
 import { useState, useEffect } from 'react';
-import * as orderService from '../api/orderService';
-import { Order } from '../api/orderService';
+import * as orderService from '../../api/masterPage/orderServiceMaster';
+import { Order } from '../../api/masterPage/orderServiceMaster';
 
 const useOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);

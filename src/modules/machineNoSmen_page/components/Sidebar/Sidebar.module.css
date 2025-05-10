@@ -487,4 +487,67 @@
     width: 25px;
     height: 20px;
   }
+  
+/* Стили для отображения состояний кнопок */
+
+/* Стили для отключенных кнопок */
+.buttonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+  pointer-events: none;
+}
+
+.buttonDisabled:hover {
+  transform: none !important;
+  filter: grayscale(0.8) !important;
+}
+
+/* Стиль для активной кнопки "Поломка" */
+.brokenButtonActive {
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+}
+
+.brokenButtonActive .startIcon {
+  filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.7));
+}
+
+/* Стиль для активной кнопки "Старт" */
+.startButtonActive {
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
+}
+
+.startButtonActive .startIcon {
+  filter: drop-shadow(0 0 3px rgba(76, 175, 80, 0.7));
+}
+
+/* Стили для кнопок в режиме обслуживания */
+.maintenanceMode .icon,
+.maintenanceMode .startIcon {
+  filter: grayscale(0.8) opacity(0.7);
+}
+
+/* Стили для иконок в неактивном режиме */
+.inactiveMode .icon,
+.inactiveMode .startIcon {
+  filter: grayscale(1) opacity(0.5);
+}
+
+/* Анимация пульсации для сломанной кнопки */
+@keyframes pulseBroken {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+}
+
+.pulseBroken {
+  animation: pulseBroken 2s infinite ease-in-out;
+}
+
 }
