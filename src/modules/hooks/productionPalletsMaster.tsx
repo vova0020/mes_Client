@@ -10,7 +10,7 @@ import {
   fetchMachinBySegmentId,
   OperationDto,
   getCurrentOperation
-} from '../api/productionPalletsService';
+} from '../api/productionPalletsServiceMaster';
 
 // Определение интерфейса результата хука
 interface UseProductionPalletsResult {
@@ -20,7 +20,7 @@ interface UseProductionPalletsResult {
   bufferCells: BufferCellDto[];
   machines: MachineDto[];
   fetchPallets: (detailId: number | null) => Promise<void>;
-  updateMachine: (palletId: number, machine: string, processStepId?: number) => Promise<void>;
+  updateMachine: (palletId: number, machine: string, segmentId: number) => Promise<void>;
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
   loadSegmentResources: () => Promise<void>;
   refreshPalletData: (palletId: number) => Promise<void>;
@@ -136,7 +136,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   const updateMachine = useCallback(async (
     palletId: number, 
     machineName: string, 
-    processStepId: number = 1
+    segmentId: number 
   ) => {
     try {
       // Находим выбранный станок из загруженных данных
@@ -147,7 +147,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       }
       
       // Вызываем обновленную функцию с новым API
-      const operation = await updatePalletMachine(palletId, machineName, processStepId);
+      const operation = await updatePalletMachine(palletId, machineName, segmentId);
       
       // Обновляем локальное состояние после успешного обновления на сервере
       setPallets(prevPallets => 

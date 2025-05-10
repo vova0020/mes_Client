@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './PalletsSidebar.module.css';
-import useProductionPallets from '../../../hooks/productionPallets';
-import { getPalletRouteSheet, getOperationStatusText, getProcessStepText } from '../../../api/productionPalletsService';
+import useProductionPallets from '../../../hooks/productionPalletsMaster';
+import { getPalletRouteSheet, getOperationStatusText, getProcessStepText } from '../../../api/productionPalletsServiceMaster';
 
 interface PalletsSidebarProps {
   detailId: number | null;
@@ -12,37 +13,66 @@ interface PalletsSidebarProps {
 const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClose }) => {
   // Ref для боковой панели
   const sidebarRef = useRef<HTMLDivElement>(null);
-  
+
   // Используем обновленный хук для получения данных о поддонах
-  const { 
+  const {
     pallets,
     bufferCells,
     machines,
-    loading, 
-    error, 
+    loading,
+    error,
     fetchPallets,
     updateMachine,
     updateBufferCell,
     loadSegmentResources,
     refreshPalletData
   } = useProductionPallets(null);
-  
+
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [bufferCellsLoading, setBufferCellsLoading] = useState<boolean>(false);
   const [machinesLoading, setMachinesLoading] = useState<boolean>(false);
   const [processingPalletId, setProcessingPalletId] = useState<number | null>(null);
+  const [processStepIdError, setProcessStepIdError] = useState<string | null>(null);
 
-  // Значения процессов (в реальном приложении должны быть получены с сервера)
-  const defaultProcessStepId = 1; // Значение по умолчанию
+  // Получаем значение из localStorage
+  const getdefaultSegmentId = (): number | null => {
+    try {
+      const assignmentsData = localStorage.getItem('assignments');
+      if (!assignmentsData) {
+        setProcessStepIdError('Не найдены данные по сегментам в локальном хранилище');
+        return null;
+      }
+
+      const parsedData = JSON.parse(assignmentsData);
+      if (!parsedData.segments || parsedData.segments.length === 0) {
+        setProcessStepIdError('Список сегментов в локальном хранилище пуст');
+        return null;
+      }
+
+      const segmentId = parsedData.segments[0].id;
+      if (typeof segmentId !== 'number') {
+        setProcessStepIdError('Некорректный ID сегмента в локальном хранилище');
+        return null;
+      }
+
+      return segmentId;
+    } catch (error) {
+      console.error('Ошибка при получении defaultSegmentId из localStorage:', error);
+      setProcessStepIdError('Ошибка при чтении данных из локального хранилища');
+      return null;
+    }
+  };
+
+  const defaultSegmentId = getdefaultSegmentId();
 
   // Добавляем обработчик кликов вне боковой панели
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       // Проверяем, что sidebar открыт и что клик был не внутри него
-      if (isOpen && 
-          sidebarRef.current && 
-          !sidebarRef.current.contains(event.target as Node)) {
+      if (isOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -54,7 +84,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
         document.addEventListener('mousedown', handleOutsideClick);
       }, 100);
     }
-    
+
     // Удаляем обработчик при закрытии панели или размонтировании компонента
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
@@ -68,7 +98,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
       setErrorMessage(null);
       setBufferCellsLoading(true);
       setMachinesLoading(true);
-      
+
       // Сначала загружаем ресурсы сегмента (включая ячейки буфера и станки)
       loadSegmentResources()
         .then(() => {
@@ -101,9 +131,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
 
   // Обработчик изменения выбранного станка
   const handleMachineChange = async (palletId: number, newMachine: string) => {
+    if (defaultSegmentId === null) {
+      setErrorMessage('Невозможно назначить станок: не найден ID сегмента');
+      return;
+    }
+
     try {
       setProcessingPalletId(palletId);
-      await updateMachine(palletId, newMachine, defaultProcessStepId);
+      await updateMachine(palletId, newMachine, defaultSegmentId);
       await refreshPalletData(palletId);
       console.log(`Поддон ${palletId} назначен на станок: ${newMachine}`);
     } catch (err) {
@@ -119,7 +154,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     // Находим ID ячейки буфера по адресу
     const bufferCell = bufferCells.find(cell => cell.code === bufferCellAddress);
     if (!bufferCell) return;
-    
+
     try {
       setProcessingPalletId(palletId);
       await updateBufferCell(palletId, bufferCell.id);
@@ -138,17 +173,17 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     try {
       setProcessingPalletId(palletId);
       const blob = await getPalletRouteSheet(palletId);
-      
+
       // Создаем URL для скачивания файла
       const url = window.URL.createObjectURL(blob);
-      
+
       // Создаем ссылку для скачивания
       const a = document.createElement('a');
       a.href = url;
       a.download = `Маршрутный_лист_поддон_${palletId}.pdf`;
       document.body.appendChild(a);
       a.click();
-      
+
       // Очищаем ресурсы
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
@@ -182,6 +217,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
   // Обработчик повторной загрузки данных
   const handleRetry = () => {
     setErrorMessage(null);
+    setProcessStepIdError(null);
     if (detailId !== null) {
       fetchPallets(detailId);
     }
@@ -220,9 +256,22 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
   // Получение адреса ячейки буфера по коду
   const getBufferCellAddress = (bufferCell: any): string => {
     if (!bufferCell) return '';
-    
-    // Используем напрямую код ячейки
-    return bufferCell.code || '';
+
+    // Добавляем отладочный вывод для проверки структуры объекта
+    console.log('Структура bufferCell:', bufferCell);
+
+    // Проверяем разные варианты структуры bufferCell
+    // 1. Прямой доступ к code (как в текущих данных с сервера)
+    if (bufferCell.code) {
+      return bufferCell.code;
+    }
+
+    // 2. Доступ через buffer.code (если структура соответствует интерфейсу BufferCellDto)
+    if (bufferCell.buffer && bufferCell.buffer.code) {
+      return bufferCell.buffer.code;
+    }
+
+    return '';
   };
 
   // Получаем имя станка для отображения в селекте
@@ -234,29 +283,31 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
   // Функция для получения класса стиля в зависимости от статуса операции
   const getOperationStatusClass = (operation?: any): string => {
     if (!operation) return '';
-    
+
     // Отладочный вывод
     console.log('Получение класса для операции:', operation);
-    
+
     // Сначала проверяем completionStatus (если есть)
     if (operation.completionStatus) {
-      switch(operation.completionStatus) {
+      switch (operation.completionStatus) {
+        case 'ON_MACHINE': return styles.statusOnMachine;
         case 'IN_PROGRESS': return styles.statusInProgress;
+        case 'BUFFERED': return styles.statusBuffered;
         case 'COMPLETED': return styles.statusCompleted;
         case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
         default: return '';
       }
     } else if (operation.status) {
       // Используем status, если completionStatus отсутствует
-      switch(operation.status) {
+      switch (operation.status) {
+        case 'ON_MACHINE': return styles.statusOnMachine;
         case 'IN_PROGRESS': return styles.statusInProgress;
         case 'BUFFERED': return styles.statusBuffered;
         case 'COMPLETED': return styles.statusCompleted;
-        case 'FAILED': return styles.statusFailed;
+        // case 'FAILED': return styles.statusFailed;
         default: return '';
       }
     }
-    
     return '';
   };
 
@@ -273,98 +324,126 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     return null;
   };
 
+
   // Компонент для отображения селектора ячеек буфера
   const BufferCellSelector = ({ pallet }: { pallet: any }) => {
     // Проверяем, находится ли поддон в процессе обновления
     const isProcessing = processingPalletId === pallet.id;
-    
+
     if (isProcessing) {
       return <ResourceLoading loading={true} type="обновления" />;
     }
-    
+
     if (bufferCellsLoading) {
       return <ResourceLoading loading={bufferCellsLoading} type="ячеек" />;
     }
-    
+
     if (!bufferCells || bufferCells.length === 0) {
       return (
         <div className={styles.bufferCellError}>
           <span>Нет доступных ячеек</span>
-          <button 
-            className={styles.miniRetryButton} 
+          <button
+            className={styles.miniRetryButton}
             onClick={handleRetryLoadResources}
             title="Обновить ресурсы"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M23 4v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1 20v-6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M23 4v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 20v-6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
       );
     }
-    
+
+    // Получаем код текущей ячейки буфера
+    const currentBufferCellCode = getBufferCellAddress(pallet.bufferCell);
+
     return (
-      <select 
+      <select
         className={styles.bufferCellSelect}
-        value={getBufferCellAddress(pallet.bufferCell)}
+        value={currentBufferCellCode}
         onChange={(e) => handleBufferCellChange(pallet.id, e.target.value)}
         title="Выберите ячейку буфера для поддона"
       >
         <option value="">Выберите ячейку</option>
-        {bufferCells.map((cell) => (
-          <option key={cell.id} value={cell.code}>
-            {cell.code}
+        {/* Добавляем сначала текущую ячейку буфера, если она есть */}
+        {currentBufferCellCode && (
+          <option key={`current-${currentBufferCellCode}`} value={currentBufferCellCode}>
+            {currentBufferCellCode} (текущая)
           </option>
-        ))}
+        )}
+        {/* Добавляем все остальные ячейки буфера, которые не являются текущей */}
+        {bufferCells.map((cell) => {
+          // Пропускаем текущую ячейку буфера, так как она уже добавлена выше
+          if (cell.code === currentBufferCellCode) {
+            return null;
+          }
+          return (
+            <option key={cell.id} value={cell.code}>
+              {cell.code}
+            </option>
+          );
+        })}
       </select>
     );
   };
+
 
   // Компонент для отображения селектора станков
   const MachineSelector = ({ pallet }: { pallet: any }) => {
     // Проверяем, находится ли поддон в процессе обновления
     const isProcessing = processingPalletId === pallet.id;
-    
+
     // Проверяем, можно ли назначить поддон на станок
     // (если нет активной операции или операция в статусе BUFFERED, COMPLETED или PARTIALLY_COMPLETED)
-    const canAssignToMachine = !pallet.currentOperation || 
-      pallet.currentOperation.status === 'BUFFERED' || 
-      (pallet.currentOperation.completionStatus === 'COMPLETED') || 
+    const canAssignToMachine = !pallet.currentOperation ||
+      pallet.currentOperation.status === 'BUFFERED' ||
+      pallet.currentOperation.status === 'ON_MACHINE' ||
+      (pallet.currentOperation.completionStatus === 'COMPLETED') ||
       (pallet.currentOperation.completionStatus === 'PARTIALLY_COMPLETED');
-    
+
+    // Если отсутствует ID сегмента, отображаем предупреждение
+    if (defaultSegmentId === null) {
+      return (
+        <div className={styles.bufferCellError}>
+          <span>Ошибка ID сегмента</span>
+        </div>
+      );
+    }
+
     if (isProcessing) {
       return <ResourceLoading loading={true} type="обновления" />;
     }
-    
+
     if (machinesLoading) {
       return <ResourceLoading loading={machinesLoading} type="станков" />;
     }
-    
+
     if (!machines || machines.length === 0) {
       return (
         <div className={styles.bufferCellError}>
           <span>Нет доступных станков</span>
-          <button 
-            className={styles.miniRetryButton} 
+          <button
+            className={styles.miniRetryButton}
             onClick={handleRetryLoadResources}
             title="Обновить ресурсы"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M23 4v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1 20v-6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M23 4v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 20v-6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
       );
     }
-    
+
     const currentMachineName = getMachineName(pallet.machine);
-    
+
     return (
-      <select 
+      <select
         className={styles.machineSelect}
         value={currentMachineName}
         onChange={(e) => handleMachineChange(pallet.id, e.target.value)}
@@ -372,7 +451,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
         title={!canAssignToMachine ? "Поддон уже назначен на станок и находится в процессе обработки" : "Выберите станок для поддона"}
       >
         <option value="">Выберите станок</option>
-        {/* Добавляем сначала текущий с��анок, если он есть */}
+        {/* Добавляем сначала текущий станок, если он есть */}
         {currentMachineName && (
           <option key={`current-${currentMachineName}`} value={currentMachineName}>
             {currentMachineName} (текущий)
@@ -398,17 +477,17 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
   const OperationStatus = ({ operation }: { operation?: any }) => {
     // Отладочный вывод
     console.log('Компонент OperationStatus получил операцию:', operation);
-    
+
     if (!operation) {
       return <span className={styles.noOperation}>Не в обработке</span>;
     }
-    
+
     // Получаем текст статуса (с приоритетом completionStatus)
     const statusText = getOperationStatusText(operation);
-    
+
     // Получаем текст этапа обработки
     const processStepText = getProcessStepText(operation);
-    
+
     return (
       <div className={styles.operationStatus}>
         <span className={`${styles.statusBadge} ${getOperationStatusClass(operation)}`}>
@@ -425,7 +504,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
 
   // Рендеринг основного компонента
   return (
-    <div 
+    <div
       ref={sidebarRef}
       className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
     >
@@ -433,7 +512,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
         <h2>Поддоны детали</h2>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
-      
+
       <div className={styles.sidebarContent}>
         {loading ? (
           <div className={styles.stateContainer}>
@@ -441,6 +520,17 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
             <div className={styles.loadingMessage}>
               <h3>Загрузка данных</h3>
               <p>Пожалуйста, подождите...</p>
+            </div>
+          </div>
+        ) : processStepIdError ? (
+          <div className={styles.stateContainer}>
+            <div className={styles.errorIcon}>⚠️</div>
+            <div className={styles.errorMessage}>
+              <h3>Ошибка загрузки ID сегмента</h3>
+              <p>{processStepIdError}</p>
+              <button className={styles.retryButton} onClick={handleRetry}>
+                Повторить загрузку
+              </button>
             </div>
           </div>
         ) : error || errorMessage ? (
@@ -482,8 +572,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
                 </thead>
                 <tbody>
                   {pallets.map((pallet, index) => (
-                    <tr 
-                      key={pallet.id} 
+                    <tr
+                      key={pallet.id}
                       className={`${styles.animatedRow} ${processingPalletId === pallet.id ? styles.processingRow : ''}`}
                       style={{ animationDelay: `${index * 0.05}s` }}
                       data-status={pallet.currentOperation?.status || pallet.currentOperation?.completionStatus || 'NO_OPERATION'}
@@ -500,8 +590,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
                         <OperationStatus operation={pallet.currentOperation} />
                       </td>
                       <td className={styles.actionsCell}>
-                        <button 
-                          className={`${styles.actionButton} ${styles.mlButton}`} 
+                        <button
+                          className={`${styles.actionButton} ${styles.mlButton}`}
                           onClick={() => handleOpenML(pallet.id)}
                           disabled={processingPalletId === pallet.id}
                           title="Маршрутный лист"
@@ -509,15 +599,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
                           <DocumentIcon />
                           МЛ
                         </button>
-                        {/* <button 
-                          className={`${styles.actionButton} ${styles.refreshButton}`} 
-                          onClick={() => handleRefreshPallet(pallet.id)}
-                          disabled={processingPalletId === pallet.id}
-                          title="Обновить данные поддона"
-                        >
-                          <RefreshIcon />
-                     
-                        </button> */}
+
                       </td>
                     </tr>
                   ))}

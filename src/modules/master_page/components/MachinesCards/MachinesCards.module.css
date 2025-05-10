@@ -202,6 +202,8 @@
 .buttonContainer {
   margin-top: auto;
   padding-top: 5px;
+  position: relative;
+  z-index: 10; /* Высокий z-index, чтобы кнопка была поверх оверлеев */
 }
 
 .openTaskButton {
@@ -271,7 +273,9 @@
   align-items: center;
   padding: 20px;
   text-align: center;
-  z-index: 1;
+  z-index: 1; /* Меньший z-index, чтобы кнопка была поверх оверлея */
+  /* Изменение высоты оверлея, чтобы он не закрывал кнопку */
+  height: calc(100% - 45px); /* Оставляем место для кнопки */
 }
 
 /* Стили для неактивного состояния */
@@ -349,6 +353,44 @@
   0% { transform: scale(1); opacity: 0.8; }
   50% { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Изменяем кнопку задания для разных статусов */
+.machineCard[data-status="inactive"] .openTaskButton,
+.machineCard[data-status="maintenance"] .openTaskButton,
+.machineCard[data-status="broken"] .openTaskButton {
+  /* Особый стиль для кнопки при неактивных статусах */
+  background: linear-gradient(to bottom, #6c757d, #5a6268);
+  box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  margin-top: 10px; /* Добавляем больше отступа сверху */
+}
+
+/* Стили для кнопки при наведении для разных статусов */
+.machineCard[data-status="inactive"] .openTaskButton:hover,
+.machineCard[data-status="maintenance"] .openTaskButton:hover,
+.machineCard[data-status="broken"] .openTaskButton:hover {
+  background: linear-gradient(to bottom, #5a6268, #495057);
+}
+
+/* Стиль для кнопки при обслуживании */
+.machineCard[data-status="maintenance"] .openTaskButton {
+  background: linear-gradient(to bottom, #ffc107, #e0a800);
+  color: #212529;
+}
+
+.machineCard[data-status="maintenance"] .openTaskButton:hover {
+  background: linear-gradient(to bottom, #e0a800, #d39e00);
+}
+
+/* Стиль для кнопки при поломке */
+.machineCard[data-status="broken"] .openTaskButton {
+  background: linear-gradient(to bottom, #dc3545, #c82333);
+}
+
+.machineCard[data-status="broken"] .openTaskButton:hover {
+  background: linear-gradient(to bottom, #c82333, #bd2130);
 }
 
 /* Медиа-запросы для адаптивности */

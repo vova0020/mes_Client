@@ -1,76 +1,22 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import styles from './MachinesCards.module.css';
-
-// Интерфейс для данных о станке
-interface MachineData {
-  id: string;
-  name: string;
-  status: 'active' | 'inactive' | 'maintenance' | 'broken';
-  currentOrder?: string;
-  efficiency: number;
-  // Новые поля
-  productionRate?: number; // Норма выработки
-  plannedAmount?: number; // Запланировано
-  completedAmount?: number; // Выполнено
-}
-
-// Временные данные для демонстрации
-const demoMachines: MachineData[] = [
-  {
-    id: 'machine-001',
-    name: 'Станок ЧПУ #1',
-    status: 'active',
-    currentOrder: 'ORD-2023-001',
-    efficiency: 87,
-    productionRate: 100,
-    plannedAmount: 80,
-    completedAmount: 45
-  },
-  {
-    id: 'machine-002',
-    name: 'Фрезерный станок #2',
-    status: 'maintenance',
-    efficiency: 0,
-    productionRate: 0,
-    plannedAmount: 0,
-    completedAmount: 0
-  },
-  {
-    id: 'machine-003',
-    name: 'Токарный станок #3',
-    status: 'inactive',
-    efficiency: 0,
-    productionRate: 0,
-    plannedAmount: 0,
-    completedAmount: 0
-  },
-  {
-    id: 'machine-004',
-    name: 'Шлифовальный станок #4',
-    status: 'active',
-    efficiency: 92,
-    productionRate: 120,
-    plannedAmount: 100,
-    completedAmount: 78
-  },
-  {
-    id: 'machine-005',
-    name: 'Сверлильный станок #5',
-    status: 'broken',
-    efficiency: 0,
-    productionRate: 0,
-    plannedAmount: 0,
-    completedAmount: 0
-  }
-];
+import useMachines from '../../../hooks/useMachines';
+import TaskSidebar from './components/TaskSidebar/TaskSidebar';
 
 const MachinesCards: React.FC = () => {
-  // В реальном приложении данные будут загружаться из API
-  const machines = demoMachines;
+  // Используем хук для получения данных о станках
+  const { machines, loading, error, refreshMachines } = useMachines();
+  
+  // Состояние для отслеживания открытия/закрытия сменного задания
+  const [isTaskSidebarOpen, setIsTaskSidebarOpen] = useState(false);
+  
+  // Состояние для хранения информации о выбранном станке
+  const [selectedMachine, setSelectedMachine] = useState<{id: number, name: string} | null>(null);
 
   // Функция для определения класса статуса
   const getStatusClass = (status: string): string => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'active':
         return styles.statusActive;
       case 'inactive':
@@ -86,7 +32,7 @@ const MachinesCards: React.FC = () => {
 
   // Функция для отображения статуса на русском
   const getStatusText = (status: string): string => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'active':
         return 'Активен';
       case 'inactive':
@@ -100,16 +46,24 @@ const MachinesCards: React.FC = () => {
     }
   };
 
-  // Функция для расчета процента выполнения от нормы
-  const calculateCompletionPercentage = (completed: number = 0, rate: number = 1): number => {
-    if (rate === 0) return 0;
-    return Math.min(Math.round((completed / rate) * 100), 100);
+  // Функция для расчета процента выполнения
+  const calculateCompletionPercentage = (completed: number = 0, planned: number = 1): number => {
+    if (planned === 0) return 0;
+    return Math.min(Math.round((completed / planned) * 100), 100);
   };
 
   // Обработчик нажатия на кнопку "Открыть сменное задание"
-  const handleOpenTask = (machineId: string) => {
-    console.log(`Открываем сменное задание для станка ${machineId}`);
-    // Здесь будет логика открытия сменного задания
+  const handleOpenTask = (machineId: number, machineName: string) => {
+    console.log(`Открываем сменное задание для станка ${machineId}: ${machineName}`);
+    // Сохраняем информацию о выбранном станке
+    setSelectedMachine({ id: machineId, name: machineName });
+    // Открываем боковую панель сменного задания
+    setIsTaskSidebarOpen(true);
+  };
+  
+  // Обработчик закрытия боковой панели сменного задания
+  const handleCloseTaskSidebar = () => {
+    setIsTaskSidebarOpen(false);
   };
 
   // Функция для отображения оверлея неактивного станка
@@ -136,80 +90,138 @@ const MachinesCards: React.FC = () => {
     </div>
   );
 
+  // Отображаем сообщение о загрузке
+  if (loading) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <div className={styles.loadingMessage}>
+            <h3>Загрузка данных</h3>
+            <p>Пожалуйста, подождите...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Отображаем сообщение об ошибке
+  if (error) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorMessage}>
+            <h3>Ошибка загрузки данных</h3>
+            <p>{error.message || 'Произошла ошибка при получении информации о станках.'}</p>
+            <button className={styles.retryButton} onClick={refreshMachines}>
+              Повторить загрузку
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Отображаем сообщение, если нет доступных станков
+  if (machines.length === 0) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.emptyIcon}>📭</div>
+          <div className={styles.emptyMessage}>
+            <h3>Нет доступных станков</h3>
+            <p>Не найдено ни одного станка для текущего сегмента.</p>
+            <button className={styles.retryButton} onClick={refreshMachines}>
+              Обновить данные
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.detailsContainer}>
-      <h2 className={styles.title}>СТАНКИ</h2>
-      
-      <div className={styles.tableContainer}>
-        <div className={styles.cardsWrapper}>
-          {machines.map(machine => (
-            <div 
-              key={machine.id} 
-              className={styles.machineCard}
-              data-status={machine.status}
-            >
-              <div className={styles.cardHeader}>
-                <h3 className={styles.machineName}>{machine.name}</h3>
-                <div className={`${styles.statusIndicator} ${getStatusClass(machine.status)}`}>
-                  {getStatusText(machine.status)}
-                </div>
-              </div>
-              
-              <div className={styles.cardBody}>
-                {machine.currentOrder && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Текущий заказ:</span>
-                    <span className={styles.infoValue}>{machine.currentOrder}</span>
+    <>
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        
+        <div className={styles.tableContainer}>
+          <div className={styles.cardsWrapper}>
+            {machines.map(machine => (
+              <div 
+                key={machine.id} 
+                className={styles.machineCard}
+                data-status={machine.status.toLowerCase()}
+              >
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.machineName}>{machine.name}</h3>
+                  <div className={`${styles.statusIndicator} ${getStatusClass(machine.status)}`}>
+                    {getStatusText(machine.status)}
                   </div>
-                )}
+                </div>
                 
-                {machine.status === 'active' && (
-                  <>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Норма выработки:</span>
-                      <span className={styles.infoValue}>{machine.productionRate} шт.</span>
-                    </div>
-                    
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Запланировано:</span>
-                      <span className={styles.infoValue}>{machine.plannedAmount} шт.</span>
-                    </div>
-                    
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Выполнено:</span>
-                      <span className={styles.infoValue}>
-                        {machine.completedAmount} шт. ({calculateCompletionPercentage(machine.completedAmount, machine.productionRate)}%)
-                        <div className={styles.progressBar}>
-                          <div 
-                            className={styles.progressFill} 
-                            style={{ width: `${calculateCompletionPercentage(machine.completedAmount, machine.productionRate)}%` }}
-                          />
-                        </div>
-                      </span>
-                    </div>
-                  </>
-                )}
-                
-                {machine.status === 'active' && (
+                <div className={styles.cardBody}>
+                  {machine.status.toLowerCase() === 'active' && (
+                    <>
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Норма выработки:</span>
+                        <span className={styles.infoValue}>{machine.recommendedLoad} шт.</span>
+                      </div>
+                      
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Запланировано:</span>
+                        <span className={styles.infoValue}>{machine.plannedQuantity} шт.</span>
+                      </div>
+                      
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Выполнено:</span>
+                        <span className={styles.infoValue}>
+                          {machine.completedQuantity} шт. ({calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%)
+                          <div className={styles.progressBar}>
+                            <div 
+                              className={styles.progressFill} 
+                              style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%` }}
+                            />
+                          </div>
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Кнопка "Открыть сменное задание" отображается всегда */}
                   <div className={styles.buttonContainer}>
                     <button 
                       className={styles.openTaskButton}
-                      onClick={() => handleOpenTask(machine.id)}
+                      onClick={() => handleOpenTask(machine.id, machine.name)}
                     >
                       Открыть сменное задание
                     </button>
                   </div>
-                )}
-                
-                {machine.status === 'inactive' && renderInactiveOverlay()}
-                {machine.status === 'maintenance' && renderMaintenanceOverlay()}
-                {machine.status === 'broken' && renderBrokenOverlay()}
+                  
+                  {machine.status.toLowerCase() === 'inactive' && renderInactiveOverlay()}
+                  {machine.status.toLowerCase() === 'maintenance' && renderMaintenanceOverlay()}
+                  {machine.status.toLowerCase() === 'broken' && renderBrokenOverlay()}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+      
+      {/* Компонент боковой панели сменного задания */}
+      {selectedMachine && (
+        <TaskSidebar 
+          isOpen={isTaskSidebarOpen}
+          onClose={handleCloseTaskSidebar}
+          machineId={selectedMachine.id}
+          machineName={selectedMachine.name}
+        />
+      )}
+    </>
   );
 };
 

@@ -737,14 +737,6 @@
   gap: 5px;
 }
 
-/* Статус 'частично выполнено' */
-.statusPartiallyCompleted {
-  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
-  color: #fff;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  border-left: 2px solid #7d3c98;
-}
-
 .statusBadge {
   display: inline-flex;
   align-items: center;
@@ -774,20 +766,26 @@
 
 
 /* Стили для различных статусов операций */
-.statusInProgress {
-  background: linear-gradient(to bottom, #f1c40f, #f39c12);
-  color: #fff;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  border-left: 2px solid #d35400;
-}
 
-.statusBuffered {
+
+/* Статус 'Задание на станке но еще не обрабатывалось' */
+.statusOnMachine {
   background: linear-gradient(to bottom, #3498db, #2980b9);
   color: #fff;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   border-left: 2px solid #1c6ea4;
 }
 
+/* Статус 'Станок приступил к обработке' */
+.statusInProgress {
+  background: linear-gradient(to bottom, #f1c40f, #f39c12);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #d35400;
+  animation: pulse 1.5s infinite;
+}
+
+/* Статус 'Задание выполнено' */
 .statusCompleted {
   background: linear-gradient(to bottom, #2ecc71, #27ae60);
   color: #fff;
@@ -795,12 +793,42 @@
   border-left: 2px solid #219653;
 }
 
+/* Статус 'частично выполнено' */
+.statusPartiallyCompleted {
+  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #7d3c98;
+}
+
+/* Статус 'Поддон перемещен в буфер' */
+.statusBuffered {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #5d6d7e;
+}
+
+/* Статус 'Ошибка' */
 .statusFailed {
   background: linear-gradient(to bottom, #e74c3c, #c0392b);
   color: #fff;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   border-left: 2px solid #922b21;
 }
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 
 /* Кнопка обновления данных поддона */
 .refreshButton {

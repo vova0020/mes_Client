@@ -1,18 +1,24 @@
 import axios from 'axios';
 import { API_URL } from './config';
 
+
 // Определение интерфейсов согласно документации API
 export interface BufferCellDto {
   id: number;
   code: string;
-  capacity: number;
-  buffer: {
+  // Добавляем поля из реальной структуры данных сервера
+  bufferId?: number;
+  bufferName?: string;
+  // Оставляем старые поля для обратной совместимости
+  capacity?: number;
+  buffer?: {
     id: number,
     location: string,
     name: string,
   };
   status?: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'MAINTENANCE';
 }
+
 
 export interface MachineDto {
   id: number;
@@ -36,8 +42,8 @@ export interface OperatorDto {
 
 export interface OperationDto {
   id: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED';
-  completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED';
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED'| 'ON_MACHINE';
+  completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED'| 'BUFFERED'| 'ON_MACHINE';
   startedAt: string;
   completedAt?: string;
   quantity?: number;
@@ -63,7 +69,7 @@ export interface ProductionPallet {
   bufferCell: BufferCellDto | null;
   machine: MachineDto | null;
   currentOperation?: OperationDto | null;
-  processStepId?: number;
+  segmentId?: number;
 }
 
 // Интерфейс для ответа API со списком поддонов
@@ -88,7 +94,7 @@ export interface MachinesResponseDto {
 export interface AssignToMachineRequest {
   palletId: number;
   machineId: number;
-  processStepId: number;
+  segmentId: number;
   operatorId?: number;
 }
 
@@ -119,6 +125,8 @@ export const getOperationStatusText = (operation?: OperationDto | null): string 
     switch (operation.completionStatus) {
       case 'COMPLETED': return 'Готово';
       case 'PARTIALLY_COMPLETED': return 'Выполнено частично';
+      case 'ON_MACHINE': return 'Ожидает обработки';
+      case 'BUFFERED': return 'В буфере';
       case 'IN_PROGRESS': return 'В работе';
       default: return 'В обработке';
     }
@@ -129,6 +137,7 @@ export const getOperationStatusText = (operation?: OperationDto | null): string 
     switch (operation.status) {
       case 'IN_PROGRESS': return 'В работе';
       case 'COMPLETED': return 'Готово';
+      case 'ON_MACHINE': return 'Ожидает обработки';
       case 'FAILED': return 'Ошибка';
       case 'BUFFERED': return 'В буфере';
       default: return 'В обработке';
@@ -177,7 +186,29 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
 // Обновленная функция для получения доступных ячеек буфера
 export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> => {
   try {
-    const response = await axios.get(`${API_URL}/buffer/cells`);
+    // Получаем segmentId из локального хранилища
+    const assignmentsData = localStorage.getItem('assignments');
+    let segmentId: number;
+    
+    if (!assignmentsData) {
+      console.error('Отсутствуют данные assignments в localStorage');
+      throw new Error('Отсутствуют данные assignments в localStorage');
+    }
+    
+    try {
+      const parsedData = JSON.parse(assignmentsData);
+      if (!parsedData.segments || parsedData.segments.length === 0) {
+        console.error('В данных assignments отсутствуют segments');
+        throw new Error('В данных assignments отсутствуют segments');
+      }
+      segmentId = parsedData.segments[0].id;
+    } catch (parseError) {
+      console.error('Ошибка при парсинге данных из localStorage:', parseError);
+      throw parseError;
+    }
+    
+    // Формируем URL с обязательным параметром segmentId
+    const response = await axios.get(`${API_URL}/buffer/cells?segmentId=${segmentId}`);
     
     // Проверяем формат данных и адаптируем под него
     if (Array.isArray(response.data)) {
@@ -200,7 +231,29 @@ export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> =>
 // Обновленная функция для получения доступных станков
 export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
   try {
-    const response = await axios.get(`${API_URL}/machin/all`);
+    // Получаем segmentId из локального хранилища
+    const assignmentsData = localStorage.getItem('assignments');
+    let segmentId: number;
+    
+    if (!assignmentsData) {
+      console.error('Отсутствуют данные assignments в localStorage');
+      throw new Error('Отсутствуют данные assignments в localStorage');
+    }
+    
+    try {
+      const parsedData = JSON.parse(assignmentsData);
+      if (!parsedData.segments || parsedData.segments.length === 0) {
+        console.error('В данных assignments отсутствуют segments');
+        throw new Error('В данных assignments отсутствуют segments');
+      }
+      segmentId = parsedData.segments[0].id;
+    } catch (parseError) {
+      console.error('Ошибка при парсинге данных из localStorage:', parseError);
+      throw parseError;
+    }
+    
+    // Формируем URL с обязательным параметром segmentId
+    const response = await axios.get(`${API_URL}/machin/all?segmentId=${segmentId}`);
     
     // Проверяем формат данных и адаптируем под него
     if (Array.isArray(response.data)) {
@@ -232,14 +285,14 @@ export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
 export const assignPalletToMachine = async (
   palletId: number, 
   machineId: number, 
-  processStepId: number,
+  segmentId: number,
   operatorId?: number
 ): Promise<OperationDto> => {
   try {
     const payload: AssignToMachineRequest = {
       palletId,
       machineId,
-      processStepId,
+      segmentId,
       operatorId
     };
     
@@ -284,7 +337,7 @@ export const movePalletToBuffer = async (
 export const updatePalletMachine = async (
   palletId: number, 
   machineName: string, 
-  processStepId: number = 1
+  segmentId: number 
 ): Promise<OperationDto | void> => {
   try {
     // Находим машину по имени - это дополнительный API-запрос
@@ -296,7 +349,7 @@ export const updatePalletMachine = async (
     }
     
     // Используем новый API для назначения поддона на станок
-    return await assignPalletToMachine(palletId, machine.id, processStepId);
+    return await assignPalletToMachine(palletId, machine.id, segmentId);
   } catch (error) {
     console.error('Ошибка при обновлении станка для поддона:', error);
     throw error;
