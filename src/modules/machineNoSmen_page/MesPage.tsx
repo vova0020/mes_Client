@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
@@ -20,7 +20,6 @@ const MesPage: React.FC = () => {
     machine, 
     loading, 
     error, 
-    isActive, 
     isInactive, 
     isBroken, 
     isOnMaintenance, 
@@ -28,7 +27,15 @@ const MesPage: React.FC = () => {
     changeStatus
   } = useMachine();
 
-  // Функция для отображения соответствующего ко��тента в зависимости от состояния
+  // Добавляем только состояние для отсле��ивания выбранного заказа
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  
+  // Обработчик выбора заказа с useCallback для стабильной ссылки на функцию
+  const handleOrderSelect = useCallback((orderId: number | null) => {
+    setSelectedOrderId(orderId);
+  }, []);
+
+  // Функция для отображения соответствующего контента в зависимости от состояния
   const renderContent = () => {
     // Если идет загрузка, показываем спиннер
     if (loading === 'loading') {
@@ -59,10 +66,10 @@ const MesPage: React.FC = () => {
     return (
       <>
         <div className={styles.ordersSection}>
-          <OrdersTable />
+          <OrdersTable onOrderSelect={handleOrderSelect} />
         </div>
         <div className={styles.detailsSection}>
-          <DetailsTable />
+          <DetailsTable selectedOrderId={selectedOrderId} />
         </div>
       </>
     );

@@ -82,39 +82,5 @@ export const machineApi = {
       console.error('Ошибка при изменении статуса станка:', error);
       throw error;
     }
-  },
-
-  /**
-   * Получение заказов и деталей для участка
-   * @param segmentId - ID производственного участка
-   * @returns Promise с данными о заказах и деталях
-   */
-  getSegmentOrders: async (segmentId: number) => {
-    try {
-      const response = await axios.get(`${API_URL}/machines-no-shifts/segment/orders`, {
-        params: { segmentId }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при получении заказов и деталей для участка:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Получение поддонов для детали
-   * @param detailId - ID детали
-   * @returns Promise с данными о поддонах
-   */
-  getDetailPallets: async (detailId: number) => {
-    try {
-      const response = await axios.get(`${API_URL}/machines-no-shifts/detail/pallets`, {
-        params: { detailId }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при получении поддонов для детали:', error);
-      throw error;
-    }
-  }
+  }, 
 };

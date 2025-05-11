@@ -41,7 +41,7 @@
   border-radius: 6px;         /* Закругленные углы */
   box-shadow: 
     0 2px 4px rgba(0, 0, 0, 0.15), /* Внешняя тень */
-    inset 0 1px 0 rgba(255, 255, 255, 0.7); /* Внутренняя светлая тен�� сверху */
+    inset 0 1px 0 rgba(255, 255, 255, 0.7); /* Внутренняя светлая тень сверху */
   border: 1px solid #e0e0e0;  /* Тонкая граница */
   
   /* Добавляем прокрутку */
@@ -80,8 +80,10 @@
   position: relative;         /* Для позиционирования разделительной линии */
   border-bottom: 1px solid #e0e0e0; /* Тонкая серая линия */
   background: linear-gradient(to bottom, #ffffff, #f9f9f9); /* Легкий градиент для объемности */
-  transition: all 0.2s ease;  /* Плавный переход для эффектов при наведении */
+  transition: background 0.2s ease;  /* Плавный переход для эффектов при наведении */
   cursor: pointer;            /* Курсор-указатель для обозначения кликабельности */
+  display: flex;              /* Используем flexbox для расположения элементов */
+  flex-direction: column;
 }
 
 /* Эффект при наведении на элемент списка */
@@ -90,7 +92,7 @@
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); /* Легкая внутренняя тень при наведении */
 }
 
-/* Активный (выбранный) элемент с��иска */
+/* Активный (выбранный) элемент списка */
 .activeItem {
   background: linear-gradient(to bottom, #e8f4fc, #d4e9f7); /* Голубоватый градиент */
   border-left: 3px solid #3498db; /* Синяя полоса слева */
@@ -108,29 +110,267 @@
   border-bottom: none;
 }
 
-/* Первый элемент списка может иметь особые стили при необходимости */
+/* Первый элемент списка может иметь особые стили */
 .firstItem {
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
 
-/* Название заказа (например, "1489 - АБВГ...") */
+/* Название заказа */
 .orderTitle {
   font-weight: bold;
   font-size: 13px; /* Уменьшенный размер шрифта */
-  color: #333; /* Темный цвет для лучшей читаемости на светлом фоне */
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); /* Легкая тень для текста, усиливает объемность */
+  color: #333; /* Темный цвет для лучшей читаемости */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); /* Тень для повышения объема */
+  margin-bottom: 4px; /* Отступ до блока с информацией */
 }
 
-/* Прогресс (например, "Выполненоч 100%") */
-.orderProgress {
-  margin-top: 3px; /* Уменьшенный отступ сверху */
+/* Контейнер для информации о заказе (доступно, выполнено и кнопки) */
+.orderInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Вертикальное центрирование */
+  margin-bottom: 6px; /* Исходный отступ */
+  gap: 20px; /* Отступ между элементами */
+}
+
+/* Доступность заказа - теперь идёт первой */
+.orderAvailability {
   font-size: 11px; /* Уменьшенный размер шрифта */
   color: #666; /* Серый цвет для второстепенной информации */
+  order: 1; /* Теперь «Доступно» выводится первым */
+  white-space: nowrap; /* Предотвращаем перенос строки */
+  margin-right: 10px; /* Дополнительный отступ справа */
+}
+
+/* Прогресс заказа - теперь идёт вторым */
+.orderProgress {
+  font-size: 11px; /* Уменьшенный размер шрифта */
+  color: #666; /* Серый цвет для второстепенной информации */
+  order: 2; /* Теперь «Выполнено» выводится вторым */
+  white-space: nowrap; /* Предотвращаем перенос строки */
+}
+
+/* Контейнер для кнопок действий - теперь располагается на одном уровне с текстом */
+.orderActions {
+  display: flex;
+  align-items: center; /* вертикальное выравнивание по центру */
+  gap: 8px; /* расстояние между кнопками */
+  order: 3; /* Теперь иконки выводятся третьими */
+  margin-left: auto; /* Прижимаем иконки к правому краю */
+}
+
+/* Кнопка действия */
+.actionButton {
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  padding: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Эффект при наведении на кнопку */
+.actionButton:hover {
+  background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+  border-color: #c0c0c0;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Эффект при нажатии на кнопку */
+.actionButton:active {
+  background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+/* Цвет иконок в кнопках */
+.actionButton svg {
+  color: #333; /* более насыщенный цвет для лучшей заметности */
+  transition: color 0.2s ease;
+}
+
+/* Цвет иконок при наведении */
+.actionButton:hover svg {
+  color: #3498db;
+}
+
+/* Стили для всплывающих подсказок (tooltip) */
+.tooltip {
+  position: absolute;
+  bottom: 100%; /* Располагается над элементом */
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  color: #333;
+  padding: 5px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+/* Псевдоэлемент для маленького треугольника */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #f0f0f0 transparent transparent transparent;
+}
+
+/* Показываем tooltip при наведении на контейнер */
+.orderItem:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Контейнер состояний: загрузки, ошибки, пустого списка */
+.stateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  height: 100%;
+  min-height: 150px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Стили для состояния загрузки */
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(52, 152, 219, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingMessage {
+  text-align: center;
+}
+
+.loadingMessage h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.loadingMessage p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Стили для состояния ошибки */
+.errorIcon {
+  color: #e74c3c;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}
+
+.errorMessage {
+  text-align: center;
+}
+
+.errorMessage h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.errorMessage p {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 15px 0;
+}
+
+.retryButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.retryButton:hover {
+  background: linear-gradient(to bottom, #3ea2e5, #3498db);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.retryButton:active {
+  background: linear-gradient(to bottom, #2980b9, #2573a7);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+/* Стили для пустого списка */
+.emptyIcon {
+  color: #bdc3c7;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}
+
+.emptyMessage {
+  text-align: center;
+}
+
+.emptyMessage h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.emptyMessage p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
 }
 
 /* Медиа-запросы для адаптивного дизайна */
-
 /* Большие настольные экраны (более 1200px) */
 @media screen and (min-width: 1201px) {
   .ordersContainer {
@@ -152,15 +392,55 @@
   
   .orderTitle {
     font-size: 14px;
+    margin-bottom: 5px;
   }
   
-  .orderProgress {
+  .orderProgress,
+  .orderAvailability {
     font-size: 12px;
-    margin-top: 4px;
+  }
+  
+  .orderInfo {
+    margin-bottom: 8px;
+  }
+  
+  .actionButton {
+    width: 28px;
+    height: 28px;
+    padding: 5px;
+  }
+  
+  .actionButton svg {
+    width: 18px;
+    height: 18px;
   }
   
   .activeItem {
     padding-left: 11px;
+  }
+  
+  .loadingSpinner {
+    width: 50px;
+    height: 50px;
+    border-width: 4px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 14px;
+  }
+  
+  .retryButton {
+    padding: 10px 20px;
+    font-size: 14px;
   }
 }
 
@@ -185,15 +465,52 @@
   
   .orderTitle {
     font-size: 13px;
+    margin-bottom: 4px;
   }
   
-  .orderProgress {
+  .orderProgress,
+  .orderAvailability {
     font-size: 11px;
-    margin-top: 3px;
+  }
+  
+  .orderInfo {
+    margin-bottom: 7px;
+  }
+  
+  .actionButton {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .actionButton svg {
+    width: 17px;
+    height: 17px;
   }
   
   .activeItem {
     padding-left: 10px;
+  }
+  
+  .loadingSpinner {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 15px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 13px;
+  }
+  
+  .retryButton {
+    padding: 9px 18px;
+    font-size: 13px;
   }
 }
 
@@ -214,15 +531,53 @@
   
   .orderTitle {
     font-size: 12px;
+    margin-bottom: 3px;
   }
   
-  .orderProgress {
+  .orderProgress,
+  .orderAvailability {
     font-size: 10px;
-    margin-top: 3px;
+  }
+  
+  .orderInfo {
+    margin-bottom: 6px;
+  }
+  
+  .actionButton {
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+  }
+  
+  .actionButton svg {
+    width: 16px;
+    height: 16px;
   }
   
   .activeItem {
     padding-left: 9px;
+  }
+  
+  .loadingSpinner {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 14px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 12px;
+  }
+  
+  .retryButton {
+    padding: 8px 16px;
+    font-size: 12px;
   }
 }
 
@@ -248,15 +603,55 @@
   
   .orderTitle {
     font-size: 11px;
+    margin-bottom: 2px;
   }
   
-  .orderProgress {
+  .orderProgress,
+  .orderAvailability {
     font-size: 9px;
-    margin-top: 2px;
+  }
+  
+  .orderInfo {
+    margin-bottom: 5px;
+  }
+  
+  .actionButton {
+    width: 22px;
+    height: 22px;
+    padding: 3px;
+  }
+  
+  .actionButton svg {
+    width: 14px;
+    height: 14px;
   }
   
   .activeItem {
     padding-left: 7px;
+  }
+  
+  .loadingSpinner {
+    width: 35px;
+    height: 35px;
+    border-width: 3px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 11px;
+  }
+  
+  .retryButton {
+    padding: 7px 14px;
+    font-size: 11px;
   }
 }
 
@@ -283,14 +678,104 @@
   
   .orderTitle {
     font-size: 10px;
+    margin-bottom: 2px;
   }
   
-  .orderProgress {
+  .orderProgress,
+  .orderAvailability {
     font-size: 8px;
-    margin-top: 2px;
+  }
+  
+  .orderInfo {
+    margin-bottom: 4px;
+  }
+  
+  .actionButton {
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+  }
+  
+  .actionButton svg {
+    width: 12px;
+    height: 12px;
   }
   
   .activeItem {
     padding-left: 5px;
   }
+  
+  .loadingSpinner {
+    width: 30px;
+    height: 30px;
+    border-width: 2px;
+    margin-bottom: 10px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 10px;
+  }
+  
+  .retryButton {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+  
+  /* Для очень маленьких экранов переносим иконки на новую строку */
+  .orderInfo {
+    flex-wrap: wrap;
+  }
+  
+  .orderActions {
+    margin-top: 4px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Анимация для элементов списка заказов */
+.animatedItem {
+  opacity: 0;
+  transform: translateY(15px);
+  animation-name: fadeInUp;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Ключевые кадры для плавного появления */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Анимации для появления и скрытия списка заказов */
+.showOrders {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.hideOrders {
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }

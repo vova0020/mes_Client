@@ -4,16 +4,21 @@ import { API_URL } from '../config';
 // Определение интерфейса детали
 export interface Detail {
   id: number;
-  articleNumber: string;
+  article: string;
   name: string;
   material: string;
   size: string;
-  totalQuantity: number;
+  totalNumber: number;
   readyForProcessing: number;
   distributed: number;
   completed: number;
 }
 
+
+/**
+ * Получает ID сегмента из localStorage
+ * @returns ID сегмента или null, если не удалось получить
+ */
 const getSegmentIdFromStorage = (): number | null => {
   try {
     const assignmentsData = localStorage.getItem('assignments');
@@ -23,12 +28,12 @@ const getSegmentIdFromStorage = (): number | null => {
     }
     
     const parsedData = JSON.parse(assignmentsData);
-    if (!parsedData.segments || parsedData.segments.length === 0) {
+    if (!parsedData.machines || parsedData.machines.length === 0) {
       console.error('Нет данных assignments отсутствуют segments');
       return null;
     }
     
-    return parsedData.segments[0].id;
+    return parsedData.machines[0].segmentId;
   } catch (error) {
     console.error('Ошибка при получении segmentId из localStorage:', error);
     return null;
@@ -40,12 +45,20 @@ export const fetchDetailsByOrderId = async (orderId: number | null): Promise<Det
   if (orderId === null) {
     return [];
   }
-  
   const segmentId = getSegmentIdFromStorage();
-  
+    
+    if (segmentId === null) {
+      console.error('Не удалось получить ID сегмента из localStorage');
+      throw new Error('Не удалось получить ID сегмента из localStorage');
+    }
   try {
-    const response = await axios.get(`${API_URL}/details/${orderId}/segment/${segmentId}`);
-    return response.data;
+    const response = await axios.get(`${API_URL}/machines-no-shifts/order/details`, {
+      params: {
+        orderId: orderId,
+        segmentId: segmentId
+      }
+    });
+    return response.data.details;
   } catch (error) {
     console.error('Ошибка при получении деталей:', error);
     throw error;
