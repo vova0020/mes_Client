@@ -5,6 +5,7 @@ import AuthPage from './modules/auth/AuthPage';
 import MasterPage from './modules/master_page/MasterPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingScreen from './componentsGlobal/LoadingScreen';
+import MachinePage from './modules/machine_page/MachinePage';
 
 function App() {
   return (
@@ -16,7 +17,7 @@ function App() {
           
           {/* Защищенные маршруты для операторов */}
           <Route element={<ProtectedRoute requiredRole="operator" />}>
-            <Route path="/machine" element={<MesPage />} />
+            <Route path="/machine" element={<MachinePage />} />
           </Route>
           
           {/* Защищенные маршруты для мастеров и администраторов */}
