@@ -70,8 +70,8 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Правый блок: логотип с текстом и кнопка выхода (теперь в колонку) */}
-      <div className={styles.rightContainer}>
+      {/* Правый блок: логотип с текстом и кнопка питания (теперь в колонку) */}
+       <div className={styles.rightContainer}>
         <div className={styles.brandContainer}>
           {/* Если есть логотип, раскомментируйте и подставьте нужный импорт */}
           <img src={logo} alt="Logo" className={styles.logo} />

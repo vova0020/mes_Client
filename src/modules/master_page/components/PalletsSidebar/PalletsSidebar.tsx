@@ -27,6 +27,12 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     loadSegmentResources,
     refreshPalletData
   } = useProductionPallets(null);
+  
+  // Создаем локальное состояние для отображаемых поддонов
+  const [displayPallets, setDisplayPallets] = useState<any[]>([]);
+  
+  // Флаг для отслеживания первой загрузки
+  const initialLoadDone = useRef(false);
 
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -63,6 +69,52 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
       return null;
     }
   };
+
+  // Обновляем displayPallets только при необходимости
+  useEffect(() => {
+    if (!loading && pallets && pallets.length > 0) {
+      if (!initialLoadDone.current || displayPallets.length !== pallets.length) {
+        // При первой загрузке или изменении количества поддонов
+        setDisplayPallets(pallets);
+        initialLoadDone.current = true;
+      } else {
+        // При обновлении данных обновляем только изменяющиеся поля
+        setDisplayPallets(prevPallets => {
+          return prevPallets.map(prevPallet => {
+            const newPallet = pallets.find(p => p.id === prevPallet.id);
+            if (newPallet) {
+              return {
+                ...prevPallet,
+                // Обновляем только те поля, которые могут меняться
+                currentOperation: newPallet.currentOperation,
+                machine: newPallet.machine,
+                bufferCell: newPallet.bufferCell,
+                quantity: newPallet.quantity,
+                // Другие поля, которые могут меняться
+              };
+            }
+            return prevPallet;
+          });
+        });
+      }
+    }
+  }, [pallets, loading, displayPallets.length]);
+
+  // Добавить интервал обновления данных для открытой панели
+  useEffect(() => {
+    // Устанавливаем интервал обновления только если панель открыта и есть ID детали
+    if (isOpen && detailId !== null) {
+      // Устанавливаем интервал обновления каждые 3 секунды
+      const intervalId = setInterval(() => {
+        // Обновляем данные о поддонах для выбранной детали
+        fetchPallets(detailId);
+      }, 3000);
+      
+      // Очищаем интервал при закрытии панели или изменении detailId
+      return () => clearInterval(intervalId);
+    }
+  }, [isOpen, detailId, fetchPallets]); // Зависимости: статус открытия и ID детали
+
 
   const defaultSegmentId = getdefaultSegmentId();
 
@@ -258,7 +310,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     if (!bufferCell) return '';
 
     // Добавляем отладочный вывод для проверки структуры объекта
-    console.log('Структура bufferCell:', bufferCell);
+    // console.log('Структура bufferCell:', bufferCell);
 
     // Проверяем разные варианты структуры bufferCell
     // 1. Прямой доступ к code (как в текущих данных с сервера)
@@ -285,7 +337,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     if (!operation) return '';
 
     // Отладочный вывод
-    console.log('Получение класса для операции:', operation);
+    // console.log('Получение класса для операции:', operation);
 
     // Сначала проверяем completionStatus (если есть)
     if (operation.completionStatus) {
@@ -475,9 +527,6 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
 
   // Компонент для отображения статуса операции
   const OperationStatus = ({ operation }: { operation?: any }) => {
-    // Отладочный вывод
-    console.log('Компонент OperationStatus получил операцию:', operation);
-
     if (!operation) {
       return <span className={styles.noOperation}>Не в обработке</span>;
     }
@@ -502,6 +551,9 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
     );
   };
 
+  // Изменяем условия отображения состояния загрузки
+  const shouldShowLoading = loading && !initialLoadDone.current;
+
   // Рендеринг основного компонента
   return (
     <div
@@ -514,7 +566,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
       </div>
 
       <div className={styles.sidebarContent}>
-        {loading ? (
+        {shouldShowLoading ? (
           <div className={styles.stateContainer}>
             <div className={styles.loadingSpinner}></div>
             <div className={styles.loadingMessage}>
@@ -538,13 +590,13 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
             <div className={styles.errorIcon}>⚠️</div>
             <div className={styles.errorMessage}>
               <h3>Ошибка загрузки данных</h3>
-              <p>{errorMessage || 'Произошла ошибка при получении информации о поддонах.'}</p>
+              <p>{errorMessage || 'Произошла ошибка при по��учении информации о поддонах.'}</p>
               <button className={styles.retryButton} onClick={handleRetry}>
                 Повторить загрузку
               </button>
             </div>
           </div>
-        ) : pallets.length === 0 ? (
+        ) : displayPallets.length === 0 ? (
           <div className={styles.stateContainer}>
             <div className={styles.emptyIcon}>📭</div>
             <div className={styles.emptyMessage}>
@@ -571,7 +623,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
                   </tr>
                 </thead>
                 <tbody>
-                  {pallets.map((pallet, index) => (
+                  {displayPallets.map((pallet, index) => (
                     <tr
                       key={pallet.id}
                       className={`${styles.animatedRow} ${processingPalletId === pallet.id ? styles.processingRow : ''}`}
@@ -590,7 +642,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
                         <OperationStatus operation={pallet.currentOperation} />
                       </td>
                       <td className={styles.actionsCell}>
-                        <button
+                          <button
                           className={`${styles.actionButton} ${styles.mlButton}`}
                           onClick={() => handleOpenML(pallet.id)}
                           disabled={processingPalletId === pallet.id}
@@ -599,7 +651,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
                           <DocumentIcon />
                           МЛ
                         </button>
-
+                        
+                       
                       </td>
                     </tr>
                   ))}

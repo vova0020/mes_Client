@@ -24,6 +24,21 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       onOrderSelect(activeOrderId);
     } 
   }, [activeOrderId, onOrderSelect]);
+
+
+  // Добавить интервал обновления данных
+useEffect(() => {
+  // Загружаем данные сразу при монтировании компонента
+  fetchOrders();
+  
+  // Устанавливаем интервал обновления каждые 3 секунды
+  const intervalId = setInterval(() => {
+    fetchOrders();
+  }, 30000);
+  
+  // Очищаем интервал при размонтировании компонента
+  return () => clearInterval(intervalId);
+}, []); // Пустой массив зависимостей, чтобы эффект выполнился только при монтировании/размонтировании
   
   useEffect(() => {
     if (!loading && orders.length > 0) {

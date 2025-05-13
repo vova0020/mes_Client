@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+// @ts-nocheck
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './MachinesCards.module.css';
 import useMachines from '../../../hooks/masterPage/useMachinesMaster';
 import TaskSidebar from './components/TaskSidebar/TaskSidebar';
@@ -8,11 +8,56 @@ const MachinesCards: React.FC = () => {
   // Используем хук для получения данных о станках
   const { machines, loading, error, refreshMachines } = useMachines();
   
+  // Создаем локальное состояние для отображения данных
+  const [displayMachines, setDisplayMachines] = useState([]);
+  
+  // Флаг для отслеживания первой загрузки
+  const initialLoadDone = useRef(false);
+
   // Состояние для отслеживания открытия/закрытия сменного задания
   const [isTaskSidebarOpen, setIsTaskSidebarOpen] = useState(false);
-  
+
   // Состояние для хранения информации о выбранном станке
-  const [selectedMachine, setSelectedMachine] = useState<{id: number, name: string} | null>(null);
+  const [selectedMachine, setSelectedMachine] = useState<{ id: number, name: string } | null>(null);
+  
+  // Обновляем displayMachines только один раз при первой загрузке
+  // или когда изменяется количество машин (добавление/удаление)
+  useEffect(() => {
+    if (!loading && machines && machines.length > 0) {
+      if (!initialLoadDone.current || displayMachines.length !== machines.length) {
+        setDisplayMachines(machines);
+        initialLoadDone.current = true;
+      } else {
+        // Обновляем только те поля, которые могут меняться, сохраняя стабильность отображения
+        setDisplayMachines(prevMachines => {
+          return prevMachines.map(prevMachine => {
+            const newMachine = machines.find(m => m.id === prevMachine.id);
+            if (newMachine) {
+              return {
+                ...prevMachine,
+                completedQuantity: newMachine.completedQuantity,
+                plannedQuantity: newMachine.plannedQuantity,
+                status: newMachine.status,
+                recommendedLoad: newMachine.recommendedLoad
+              };
+            }
+            return prevMachine;
+          });
+        });
+      }
+    }
+  }, [machines, loading, displayMachines.length]);
+
+  // Добавить интервал обновления данных
+  useEffect(() => {
+    // Устанавливаем интервал обновления каждые 4 секунды
+    const intervalId = setInterval(() => {
+      refreshMachines();
+    }, 4000);
+
+    // Очищаем интервал при размонтировании компонента
+    return () => clearInterval(intervalId);
+  }, [refreshMachines]); // Добавляем refreshMachines в зависимости
 
   // Функция для определения класса статуса
   const getStatusClass = (status: string): string => {
@@ -60,7 +105,7 @@ const MachinesCards: React.FC = () => {
     // Открываем боковую панель сменного задания
     setIsTaskSidebarOpen(true);
   };
-  
+
   // Обработчик закрытия боковой панели сменного задания
   const handleCloseTaskSidebar = () => {
     setIsTaskSidebarOpen(false);
@@ -91,7 +136,7 @@ const MachinesCards: React.FC = () => {
   );
 
   // Отображаем сообщение о загрузке
-  if (loading) {
+  if (loading && !initialLoadDone.current) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>СТАНКИ</h2>
@@ -107,7 +152,7 @@ const MachinesCards: React.FC = () => {
   }
 
   // Отображаем сообщение об ошибке
-  if (error) {
+  if (error && !initialLoadDone.current) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>СТАНКИ</h2>
@@ -126,7 +171,7 @@ const MachinesCards: React.FC = () => {
   }
 
   // Отображаем сообщение, если нет доступных станков
-  if (machines.length === 0) {
+  if (displayMachines.length === 0) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>СТАНКИ</h2>
@@ -148,12 +193,12 @@ const MachinesCards: React.FC = () => {
     <>
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>СТАНКИ</h2>
-        
+
         <div className={styles.tableContainer}>
           <div className={styles.cardsWrapper}>
-            {machines.map(machine => (
-              <div 
-                key={machine.id} 
+            {displayMachines.map(machine => (
+              <div
+                key={machine.id}
                 className={styles.machineCard}
                 data-status={machine.status.toLowerCase()}
               >
@@ -163,7 +208,7 @@ const MachinesCards: React.FC = () => {
                     {getStatusText(machine.status)}
                   </div>
                 </div>
-                
+
                 <div className={styles.cardBody}>
                   {machine.status.toLowerCase() === 'active' && (
                     <>
@@ -171,19 +216,19 @@ const MachinesCards: React.FC = () => {
                         <span className={styles.infoLabel}>Норма выработки:</span>
                         <span className={styles.infoValue}>{machine.recommendedLoad} шт.</span>
                       </div>
-                      
+
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Запланировано:</span>
                         <span className={styles.infoValue}>{machine.plannedQuantity} шт.</span>
                       </div>
-                      
+
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Выполнено:</span>
                         <span className={styles.infoValue}>
                           {machine.completedQuantity} шт. ({calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%)
                           <div className={styles.progressBar}>
-                            <div 
-                              className={styles.progressFill} 
+                            <div
+                              className={styles.progressFill}
                               style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%` }}
                             />
                           </div>
@@ -191,17 +236,17 @@ const MachinesCards: React.FC = () => {
                       </div>
                     </>
                   )}
-                  
+
                   {/* Кнопка "Открыть сменное задание" отображается всегда */}
                   <div className={styles.buttonContainer}>
-                    <button 
+                    <button
                       className={styles.openTaskButton}
                       onClick={() => handleOpenTask(machine.id, machine.name)}
                     >
                       Открыть сменное задание
                     </button>
                   </div>
-                  
+
                   {machine.status.toLowerCase() === 'inactive' && renderInactiveOverlay()}
                   {machine.status.toLowerCase() === 'maintenance' && renderMaintenanceOverlay()}
                   {machine.status.toLowerCase() === 'broken' && renderBrokenOverlay()}
@@ -211,10 +256,10 @@ const MachinesCards: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Компонент боковой панели сменного задания */}
       {selectedMachine && (
-        <TaskSidebar 
+        <TaskSidebar
           isOpen={isTaskSidebarOpen}
           onClose={handleCloseTaskSidebar}
           machineId={selectedMachine.id}

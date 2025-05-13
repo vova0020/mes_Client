@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './Sidebar.module.css';
 
 import { ReactComponent as StatisticIcon } from '../../../../assets/sidebar/statistic.svg';
@@ -26,52 +26,88 @@ const Sidebar: React.FC<SidebarProps> = ({
   isLoading = false,
   onStatusChange
 }) => {
+  // Состояния кнопок
   const [isStartActive, setIsStartActive] = useState(false);
   const [isPolomkaActive, setIsPolomkaActive] = useState(false);
   const [isCleiActive, setIsCleiActive] = useState(false);
-  const progressValue = 100; // Это значение можно получать из пропсов или состояния
+  
+  // Локальное состояние для хранения предыдущих данных о станке
+  const [displayMachine, setDisplayMachine] = useState<Machine | null>(null);
+  
+  // Флаг для отслеживания первой загрузки
+  const initialLoadDone = useRef(false);
+  
+  // Прогресс-бар (может быть получен из данных о станке в будущем)
+  const progressValue = 100;
+  
+  // Обновляем локальное состояние машины с минимальными визуальными изменениями
+  useEffect(() => {
+    if (machine) {
+      if (!initialLoadDone.current || !displayMachine) {
+        // При первой загрузке или если displayMachine еще не установлен
+        setDisplayMachine(machine);
+        initialLoadDone.current = true;
+      } else {
+        // Обновляем только те поля, которые могут меняться,
+        // сохраняя стабильность отображения
+        setDisplayMachine(prevMachine => {
+          if (!prevMachine) return machine;
+          
+          return {
+            ...prevMachine,
+            status: machine.status,
+            // Другие поля, которые могут меняться динамически
+          };
+        });
+      }
+    }
+  }, [machine, displayMachine]);
   
   // Обновляем состояние кнопок в зависимости от статуса станка
   useEffect(() => {
-    if (machine) {
+    // Используем displayMachine вместо machine для стабильности
+    if (displayMachine) {
       // Устанавливаем состояние кнопки "Старт" в зависимости от статуса
-      setIsStartActive(machine.status === 'ACTIVE');
+      setIsStartActive(displayMachine.status === 'ACTIVE');
       
       // Устанавливаем состояние кнопки "Поломка" в зависимости от статуса
-      setIsPolomkaActive(machine.status === 'BROKEN');
+      setIsPolomkaActive(displayMachine.status === 'BROKEN');
     }
-  }, [machine]);
+  }, [displayMachine]);
+  
+  // Отображаем компонент только после первой загрузки
+  const shouldShowLoading = isLoading && !initialLoadDone.current;
   
   // Определяем, должны ли второстепенные кнопки быть отключены
-  const areIconButtonsDisabled = isLoading || !machine || 
-                           machine.status === 'INACTIVE' || 
-                           machine.status === 'MAINTENANCE';
+  const areIconButtonsDisabled = shouldShowLoading || !displayMachine || 
+                           displayMachine.status === 'INACTIVE' || 
+                           displayMachine.status === 'MAINTENANCE';
   
   // Определяем, должна ли кнопка "Старт" быть отключена
   // Важно: не отключаем её для INACTIVE статуса, чтобы можно было активировать станок
-  const isStartButtonDisabled = isLoading || !machine || 
-                           machine.status === 'MAINTENANCE' || 
-                           machine.status === 'BROKEN';
+  const isStartButtonDisabled = shouldShowLoading || !displayMachine || 
+                           displayMachine.status === 'MAINTENANCE' || 
+                           displayMachine.status === 'BROKEN';
   
   // Определяем дополнительные классы для сайдбара в зависимости от состояния
   const getSidebarClassNames = () => {
-    if (!machine) return '';
+    if (!displayMachine) return '';
     
-    if (machine.status === 'INACTIVE') return styles.inactiveMode;
-    if (machine.status === 'MAINTENANCE') return styles.maintenanceMode;
+    if (displayMachine.status === 'INACTIVE') return styles.inactiveMode;
+    if (displayMachine.status === 'MAINTENANCE') return styles.maintenanceMode;
     
     return '';
   };
 
   // Функция для обработки нажатия кнопки "Старт"
   const toggleStartButton = async () => {
-    if (!machine || !onStatusChange || isLoading) return;
+    if (!displayMachine || !onStatusChange || shouldShowLoading) return;
     
     try {
-      if (machine.status === 'ACTIVE') {
+      if (displayMachine.status === 'ACTIVE') {
         // Если станок активен, делаем его неактивным
         await onStatusChange('INACTIVE');
-      } else if (machine.status === 'INACTIVE') {
+      } else if (displayMachine.status === 'INACTIVE') {
         // Если станок неактивен, делаем его активным
         await onStatusChange('ACTIVE');
         console.log('Меняем статус с INACTIVE на ACTIVE');
@@ -84,10 +120,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   // Функция для обработки нажатия кнопки "Поломка"
   const togglePolomkatButton = async () => {
-    if (!machine || !onStatusChange || isLoading) return;
+    if (!displayMachine || !onStatusChange || shouldShowLoading) return;
     
     try {
-      if (machine.status === 'BROKEN') {
+      if (displayMachine.status === 'BROKEN') {
         // Если станок сломан, делаем его неактивным
         await onStatusChange('INACTIVE');
       } else {
@@ -102,8 +138,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   // Функция для обработки нажатия кнопки "Клей"
   const toggleCleiButton = () => {
     // Не меняем состояние, если станок неактивен или на обслуживании или сломан
-    if (isLoading || !machine || machine.status === 'INACTIVE' || 
-        machine.status === 'MAINTENANCE' || machine.status === 'BROKEN') {
+    if (shouldShowLoading || !displayMachine || displayMachine.status === 'INACTIVE' || 
+        displayMachine.status === 'MAINTENANCE' || displayMachine.status === 'BROKEN') {
       return;
     }
     setIsCleiActive(prevState => !prevState);
@@ -157,7 +193,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className={styles.progressBar}>
             <div 
               className={styles.progressFill} 
-              style={{ height: `${progressValue}%` }}
+              style={{ 
+                height: `${progressValue}%`,
+                transition: 'height 0.5s ease-in-out'  // Добавляем плавную анимацию
+              }}
             />
           </div>
         </div>
