@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/static/css/main.6c467b6f.css",
+    "main.js": "/static/js/main.75869a2a.js",
+    "static/js/453.ed3810f9.chunk.js": "/static/js/453.ed3810f9.chunk.js",
+    "static/media/logo-Photoroom.png": "/static/media/logo-Photoroom.3a4a30e5655d34b24179.png",
+    "static/media/kleiActive.svg": "/static/media/kleiActive.1f2ebf0272c371d12ba4c851c52c2bca.svg",
+    "static/media/kleiInActive.svg": "/static/media/kleiInActive.77854479f0fc1586b170725826fe28e2.svg",
+    "static/media/activeStartButton.svg": "/static/media/activeStartButton.61a83053d8c2364cea3c70e2356197dc.svg",
+    "static/media/startButton.svg": "/static/media/startButton.c82da041dcc40f0031383437420ded40.svg",
+    "static/media/historiButton.svg": "/static/media/historiButton.ce0175cbcc3adfa7a9046cf918b3ac5e.svg",
+    "static/media/reclamaciButton.svg": "/static/media/reclamaciButton.8173a03ca47e70de24f01f9f479af145.svg",
+    "static/media/buferButton.svg": "/static/media/buferButton.54b047bbd174770aa97cdd13c26dffd9.svg",
+    "static/media/statistic.svg": "/static/media/statistic.9c560364c135698f60fcb3fc8d74c383.svg",
+    "static/media/slomanActive.svg": "/static/media/slomanActive.1aa99c46a91cc981325f9e3092d30e9b.svg",
+    "static/media/sloman.svg": "/static/media/sloman.04a8fead6f8e6438630f37ac111a97d0.svg",
+    "index.html": "/index.html",
+    "main.6c467b6f.css.map": "/static/css/main.6c467b6f.css.map",
+    "main.75869a2a.js.map": "/static/js/main.75869a2a.js.map",
+    "453.ed3810f9.chunk.js.map": "/static/js/453.ed3810f9.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6c467b6f.css",
+    "static/js/main.75869a2a.js"
+  ]
+}
