@@ -1,0 +1,1207 @@
+/* Внешний контейнер (тёмный прямоугольник) с эффектом выпуклости */
+.detailsContainer {
+  background: linear-gradient(to bottom, #374051, #2d3441); /* Градиент для объемности */
+  border-radius: 8px;        /* Закруглённые углы */
+  box-sizing: border-box;
+  padding: 12px;             /* Уменьшенные отступы для всех размеров экрана */
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3), /* Внешняя тень для объема */
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), /* Внутренняя светлая тень сверху */
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2); /* Внутренняя темная тень снизу */
+  border: 1px solid #243342; /* Тонкая граница */
+  position: relative;
+  
+  /* Выравниваем контент по центру */
+  display: flex;
+  flex-direction: column;
+  
+  /* Ограничиваем высоту контейнера, чтобы он не выходил за пределы родителя */
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Заголовок "ДЕТАЛИ" */
+.title {
+  color: #fff;                /* Белый цвет */
+  font-size: 16px;            /* Уменьшенный размер шрифта по умолчанию */
+  font-weight: bold;          /* Жирный текст */
+  text-transform: uppercase;  /* Приводим к верхнему регистру */
+  margin-bottom: 12px;        /* Уменьшенный отступ снизу */
+  margin-top: 0;              /* Убираем отступ сверху */
+  text-align: center;         /* Центрирование текста */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Тень для текста, усиливает объемность */
+  letter-spacing: 1px;        /* Увеличенный межбуквенный интервал */
+  flex-shrink: 0;             /* Запрещаем заголовку сжиматься */
+}
+
+/* Контейнер для таблицы деталей - светлый выпуклый блок */
+.tableContainer {
+  width: 99%;                /* Занимает всю доступную ширину */
+  background: linear-gradient(145deg, #ffffff, #f0f0f0); /* Градиент для объемности */
+  border-radius: 6px;         /* Закругленные углы */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15), /* Внешняя тень */
+    inset 0 1px 0 rgba(255, 255, 255, 0.7); /* Внутренняя светлая тень сверху */
+  border: 1px solid #e0e0e0;  /* Тонкая граница */
+  
+  /* Добавляем прокрутку */
+  overflow-y: auto;           /* Вертикальная прокрутка при необходимости */
+  flex-grow: 1;               /* Позволяем списку растягиваться */
+  max-height: calc(100% - 50px); /* Уменьшенная максимальная высота */
+  
+  /* Стилизация полосы прокрутки для WebKit (Chrome, Safari, новые версии Edge) */
+  &::-webkit-scrollbar {
+    width: 8px;               /* Ширина полосы прокрутки */
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05); /* Фон дорожки */
+    border-radius: 4px;       /* Скругление углов дорожки */
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2); /* Цвет полосы прокрутки */
+    border-radius: 4px;       /* Скругление углов полосы */
+    transition: background 0.2s; /* Плавное изменение цвета при наведении */
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3); /* Цвет полосы прокрутки при наведении */
+  }
+  
+  /* Для Firefox */
+  scrollbar-width: thin;      /* Тонкая полоса прокрутки */
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05); /* Цвет полосы и дорожки */
+}
+
+/* Стили для таблицы */
+.detailsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px; /* Уменьшенный размер шрифта по умолчанию */
+}
+
+/* Стили для заголовков таблицы */
+.detailsTable th {
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  color: #333;
+  font-weight: bold;
+  text-align: center; /* Центрирование заголовков */
+  padding: 8px 12px; /* Уменьшенные отступы */
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для ячеек таблицы */
+.detailsTable td {
+  padding: 6px 12px; /* Уменьшенные отступы */
+  border-bottom: 1px solid #e0e0e0;
+  color: #333;
+}
+
+/* Стили для строк таблицы */
+.detailsTable tr {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  transition: all 0.2s ease;
+}
+
+/* Эффект при наведении на строку таблицы */
+.detailsTable tr:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Активная (выбранная) строка таблицы */
+.activeRow {
+  background: linear-gradient(to bottom, #e8f4fc, #d4e9f7) !important;
+  border-left: 3px solid #3498db;
+  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.2);
+}
+
+/* Стили для активной строки при наведении */
+.activeRow:hover {
+  background: linear-gradient(to bottom, #e8f4fc, #d4e9f7) !important;
+}
+
+/* Кнопка "Чертеж" */
+.drawingButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px; /* Уменьшенные отступы */
+  font-size: 11px; /* Уменьшенный размер шрифта */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.drawingButton:hover {
+  background: linear-gradient(to bottom, #3caae8, #3498db);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.drawingButton:active {
+  background: linear-gradient(to bottom, #2980b9, #3498db);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+/* Кнопка-стрелка */
+.arrowButton {
+  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 24px; /* Уменьшенный размер */
+  height: 24px; /* Уменьшенный размер */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px; /* Уменьшенный размер шрифта */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.arrowButton:hover {
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+  color: #333;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.arrowButton:active {
+  background: linear-gradient(to bottom, #e0e0e0, #f0f0f0);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(1px);
+}
+
+/* Последняя строка таблицы без нижней границы */
+.detailsTable tr:last-child td {
+  border-bottom: none;
+}
+
+/* Общий контейнер для состояний загрузки, ошибки и пустого списка */
+.stateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  height: 100%;
+  min-height: 150px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0); /* Градиент как у tableContainer */
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7); /* Внутренняя светлая тень сверху */
+}
+
+/* Стили для состояния загрузки */
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(52, 152, 219, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db; /* Синий цвет, соответствующий activeItem */
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Тень для объемности */
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingMessage {
+  text-align: center;
+}
+
+.loadingMessage h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); /* Тень как у orderTitle */
+}
+
+.loadingMessage p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Стили для состояния ошибки */
+.errorIcon {
+  color: #e74c3c; /* Красный цвет для ошибки */
+  margin-bottom: 15px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1)); /* Тень для SVG */
+}
+
+.errorMessage {
+  text-align: center;
+}
+
+.errorMessage h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.errorMessage p {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 15px 0;
+}
+
+.retryButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9); /* Градиент как у активного элемента */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Внутренняя светлая тень сверху */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.retryButton:hover {
+  background: linear-gradient(to bottom, #3ea2e5, #3498db);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.retryButton:active {
+  background: linear-gradient(to bottom, #2980b9, #2573a7);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+/* Стили для пустого списка */
+.emptyIcon {
+  color: #bdc3c7; /* Серый цвет для пустого состояния */
+  margin-bottom: 15px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}
+
+.emptyMessage {
+  text-align: center;
+}
+
+.emptyMessage h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.emptyMessage p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
+  .detailsContainer {
+    padding: 14px;
+  }
+  
+  .title {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 55px);
+  }
+  
+  .detailsTable {
+    font-size: 14px;
+  }
+  
+  .detailsTable th {
+    padding: 10px 14px;
+  }
+  
+  .detailsTable td {
+    padding: 8px 14px;
+  }
+  
+  .drawingButton {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .arrowButton {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+  }
+  
+  .loadingSpinner {
+    width: 50px;
+    height: 50px;
+    border-width: 4px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 14px;
+  }
+  
+  .retryButton {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .detailsContainer {
+    padding: 13px;
+  }
+  
+  .title {
+    font-size: 17px;
+    margin-bottom: 13px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 52px);
+  }
+  
+  .detailsTable {
+    font-size: 13px;
+  }
+  
+  .detailsTable th {
+    padding: 9px 13px;
+  }
+  
+  .detailsTable td {
+    padding: 7px 13px;
+  }
+  
+  .drawingButton {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  
+  .arrowButton {
+    width: 25px;
+    height: 25px;
+    font-size: 12px;
+  }
+  
+  .loadingSpinner {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 15px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 13px;
+  }
+  
+  .retryButton {
+    padding: 9px 18px;
+    font-size: 13px;
+  }
+}
+
+/* Планшеты (от 768px до 991px) */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .detailsContainer {
+    padding: 12px;
+  }
+  
+  .title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .detailsTable {
+    font-size: 12px;
+  }
+  
+  .detailsTable th {
+    padding: 8px 12px;
+  }
+  
+  .detailsTable td {
+    padding: 6px 12px;
+  }
+  
+  .drawingButton {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  .arrowButton {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  
+  .loadingSpinner {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 14px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 12px;
+  }
+  
+  .retryButton {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
+
+/* Малые планшеты и большие телефоны (от 576px до 767px) */
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .detailsContainer {
+    padding: 10px;
+  }
+  
+  .title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 45px);
+    width: 100%;
+  }
+  
+  .detailsTable {
+    font-size: 11px;
+  }
+  
+  .detailsTable th {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .detailsTable td {
+    padding: 5px 8px;
+  }
+  
+  /* Создаем горизонтальную прокрутку для таблицы на маленьких экранах */
+  .tableContainer {
+    overflow-x: auto;
+  }
+  
+  .detailsTable {
+    min-width: 500px; /* Минимальная ширина таблицы, чтобы контент не сжимался слишком сильно */
+  }
+  
+  .drawingButton {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  
+  .arrowButton {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+  
+  .loadingSpinner {
+    width: 35px;
+    height: 35px;
+    border-width: 3px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 11px;
+  }
+  
+  .retryButton {
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+}
+
+/* Мобильные телефоны (до 575px) */
+@media screen and (max-width: 575px) {
+  .detailsContainer {
+    padding: 8px;
+  }
+  
+  .title {
+    font-size: 14px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  
+  .tableContainer {
+    max-height: calc(100% - 40px);
+    width: 100%;
+  }
+  
+  .detailsTable {
+    font-size: 10px;
+  }
+  
+  .detailsTable th {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+  
+  .detailsTable td {
+    padding: 4px 6px;
+  }
+  
+  /* Создаем горизонтальную прокрутку для таблицы на маленьких экранах */
+  .tableContainer {
+    overflow-x: auto;
+  }
+  
+  .detailsTable {
+    min-width: 450px; /* Минимальная ширина таблицы, чтобы контент не сжимался слишком сильно */
+  }
+  
+  .drawingButton {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .arrowButton {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  /* Уменьшаем отступы в ячейках для экономии места */
+  .detailsTable td, .detailsTable th {
+    white-space: nowrap; /* Предотвращаем перенос текста */
+  }
+  
+  .loadingSpinner {
+    width: 30px;
+    height: 30px;
+    border-width: 2px;
+    margin-bottom: 10px;
+  }
+  
+  .loadingMessage h3,
+  .errorMessage h3,
+  .emptyMessage h3 {
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+  
+  .loadingMessage p,
+  .errorMessage p,
+  .emptyMessage p {
+    font-size: 10px;
+  }
+  
+  .retryButton {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+}
+
+/* Анимированные строки таблицы */
+.animatedRow {
+  opacity: 0;
+  transform: translateY(10px);
+  animation-duration: 0.3s;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}
+
+/* Состояние для показа деталей */
+.showDetails .animatedRow {
+  animation-name: fadeInUp;
+}
+
+/* Состояние для скрытия деталей */
+.hideDetails .animatedRow {
+  animation-name: fadeOutDown;
+}
+
+/* Анимация появления снизу вверх */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Анимация исчезновения сверху вниз */
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Анимация перехода для отображения всей таблицы */
+.showDetails {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.hideDetails {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Стилизация для плавного перехода фона таблицы */
+.detailsTable tbody {
+  transition: background-color 0.3s ease;
+}
+
+
+
+/* Стили для статусов операций */
+.statusOnMachine {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+}
+
+.statusInProgress {
+  background: linear-gradient(to bottom, #e8f5fe, #d6ecfd);
+  border-left: 3px solid #2196f3;
+}
+
+.statusCompleted {
+  background: linear-gradient(to bottom, #e8f8e8, #d6f5d6);
+  border-left: 3px solid #4caf50;
+}
+
+.statusBuffered {
+  background: linear-gradient(to bottom, #fff8e6, #feefcc);
+  border-left: 3px solid #ff9800;
+}
+
+.statusPartiallyCompleted {
+  background: linear-gradient(to bottom, #f5e8f7, #edd6f0);
+  border-left: 3px solid #9c27b0;
+}
+
+/* Стили для ячейки с кнопками действий */
+.actionsCell {
+  white-space: nowrap;
+  display: flex;
+  gap: 5px;
+}
+
+/* Стили для кнопок действий на основе существующего стиля .actionButton */
+.actionButton {
+  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.actionButton:hover {
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+  border-color: #999;
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.actionButton:active {
+  background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(1px);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Стили для разных типов кнопок действий */
+.monitorButton {
+  background: linear-gradient(to bottom, #9c27b0, #8e44ad);
+  color: white;
+  border-color: #7d3c98;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.monitorButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #ab47bc, #9c27b0);
+  border-color: #8e44ad;
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.monitorButton:active {
+  background: linear-gradient(to bottom, #8e44ad, #7d3c98);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.startButton {
+  background: linear-gradient(to bottom, #2196f3, #1976d2);
+  color: white;
+  border-color: #0d47a1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.startButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #42a5f5, #2196f3);
+  border-color: #1976d2;
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.startButton:active {
+  background: linear-gradient(to bottom, #1976d2, #0d47a1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.completeButton {
+  background: linear-gradient(to bottom, #4caf50, #388e3c);
+  color: white;
+  border-color: #2e7d32;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.completeButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #66bb6a, #4caf50);
+  border-color: #388e3c;
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.completeButton:active {
+  background: linear-gradient(to bottom, #388e3c, #2e7d32);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.partialButton {
+  background: linear-gradient(to bottom, #ff9800, #f57c00);
+  color: white;
+  border-color: #e65100;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.partialButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #ffa726, #ff9800);
+  border-color: #f57c00;
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.partialButton:active {
+  background: linear-gradient(to bottom, #f57c00, #e65100);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Переименуем drawingButton в schemeButton для кнопки схемы укладки */
+.schemeButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px; /* Уменьшенные отступы */
+  font-size: 11px; /* Уменьшенный размер шрифта */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.schemeButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #3caae8, #3498db);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.schemeButton:active {
+  background: linear-gradient(to bottom, #2980b9, #3498db);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.schemeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Сообщения об успехе/ошибке */
+.successMessage, 
+.errorAlert {
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.successMessage {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #388e3c;
+  border-left: 4px solid #4caf50;
+}
+
+.errorAlert {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+  border-left: 4px solid #f44336;
+}
+
+.successIcon, 
+.errorIcon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+/* Стили для модального окна - используем стили согласованные с остальным дизайном */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 
+    0 5px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s;
+}
+
+.modalCloseBtn:hover {
+  color: #333;
+}
+
+.modalBody {
+  padding: 20px;
+}
+
+.taskInfo {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.taskInfoItem {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.taskInfoItem:last-child {
+  margin-bottom: 0;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.numberInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.numberInput:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 
+    0 0 0 2px rgba(52, 152, 219, 0.2),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.progressWrapper {
+  margin-top: 15px;
+}
+
+.progressBar {
+  height: 8px;
+  background-color: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(to right, #4caf50, #66bb6a);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progressValue {
+  text-align: right;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.modalFooter {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eee;
+  background-color: #f8f9fa;
+}
+
+.modalCancelBtn, 
+.modalConfirmBtn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.modalCancelBtn {
+  background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+  color: #333;
+  border: 1px solid #ccc;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.modalCancelBtn:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #e8e8e8);
+  border-color: #999;
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.modalCancelBtn:active {
+  background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(1px);
+}
+
+.modalConfirmBtn {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: 1px solid #2573a7;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+}
+
+.modalConfirmBtn:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #3ea2e5, #3498db);
+  border-color: #2980b9;
+  box-shadow: 
+    0 2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.modalConfirmBtn:active {
+  background: linear-gradient(to bottom, #2980b9, #2573a7);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.modalConfirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.buttonSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+/* Адаптивные стили для модального окна */
+@media screen and (max-width: 767px) {
+  .modalContent {
+    max-width: 90%;
+    margin: 0 15px;
+  }
+
+  .modalHeader h3 {
+    font-size: 1.1rem;
+  }
+
+  .modalBody {
+    padding: 15px;
+  }
+
+  .taskInfo {
+    padding: 12px;
+  }
+
+  .taskInfoItem {
+    font-size: 0.9rem;
+  }
+
+  .inputGroup label {
+    font-size: 0.9rem;
+  }
+
+  .numberInput {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+
+  .modalFooter {
+    padding: 12px 15px;
+  }
+
+  .modalCancelBtn,
+  .modalConfirmBtn {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+}

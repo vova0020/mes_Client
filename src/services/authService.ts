@@ -110,6 +110,15 @@ const authService = {
     switch (role) {
       case 'admin':
         return '/master';
+      case 'nosmen':
+        return '/nosmenmachine';
+      case 'ypakmaster':
+        return '/ypakmaster';
+      case 'ypakoperator':
+        return '/ypakmachine';
+        
+      case 'complect':
+        return '/complect';
         
       case 'master':
         return '/master';

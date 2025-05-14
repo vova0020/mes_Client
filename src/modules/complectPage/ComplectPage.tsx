@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
-
-import DetailsTable from './components/DetailsTable/MacinsDetailsTable';
+import OrdersTable from './components/OrdersTable/OrdersTable';
+import DetailsTable from './components/DetailsTable/DetailsTable';
 import { 
   LoadingSpinner, 
   ErrorStatus, 
@@ -12,9 +12,9 @@ import {
 } from './components/loader/spiner';
 import { useMachine } from '../hooks/machinNoSmenHook/useMachine';
 
-import styles from './MachinePage.module.css';
+import styles from './ComplectPage.module.css';
 
-const MachinePage: React.FC = () => {
+const ComplectPage: React.FC = () => {
   // Использовать хук без передачи ID - он сам возьмет ID из localStorage
   const { 
     machine, 
@@ -26,6 +26,14 @@ const MachinePage: React.FC = () => {
     refetch,
     changeStatus
   } = useMachine();
+
+  // Добавляем только состояние для отсле��ивания выбранного заказа
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  
+  // Обработчик выбора заказа с useCallback для стабильной ссылки на функцию
+  const handleOrderSelect = useCallback((orderId: number | null) => {
+    setSelectedOrderId(orderId);
+  }, []);
 
   // Функция для отображения соответствующего контента в зависимости от состояния
   const renderContent = () => {
@@ -54,11 +62,16 @@ const MachinePage: React.FC = () => {
       return <MaintenanceStatus machineName={machine?.name || ''} />;
     }
     
-    // Если станок активен, показываем только DetailsTable на всю ширину
+    // Если станок активен, показываем обычный контент с таблицами
     return (
-      <div className={styles.fullWidthSection}>
-        <DetailsTable  />
-      </div>
+      <>
+        <div className={styles.ordersSection}>
+          <OrdersTable onOrderSelect={handleOrderSelect} />
+        </div>
+        <div className={styles.detailsSection}>
+          <DetailsTable selectedLineId={selectedOrderId} />
+        </div>
+      </>
     );
   };
 
@@ -92,4 +105,4 @@ const MachinePage: React.FC = () => {
   );
 };
 
-export default MachinePage;
+export default ComplectPage;

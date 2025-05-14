@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 
-import DetailsTable from './components/DetailsTable/MacinsDetailsTable';
+import DetailsTable from './components/DetailsTable/YpackMachinDetailsTable';
 import { 
   LoadingSpinner, 
   ErrorStatus, 
@@ -12,9 +12,9 @@ import {
 } from './components/loader/spiner';
 import { useMachine } from '../hooks/machinNoSmenHook/useMachine';
 
-import styles from './MachinePage.module.css';
+import styles from './YpakMachinePage.module.css';
 
-const MachinePage: React.FC = () => {
+const YpakMachinePage: React.FC = () => {
   // Использовать хук без передачи ID - он сам возьмет ID из localStorage
   const { 
     machine, 
@@ -92,4 +92,4 @@ const MachinePage: React.FC = () => {
   );
 };
 
-export default MachinePage;
+export default YpakMachinePage;

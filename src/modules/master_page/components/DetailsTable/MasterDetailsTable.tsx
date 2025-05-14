@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
 import useDetails from '../../../hooks/masterPage/useDetailsMaster';
-import PalletsSidebar from '../PalletsSidebar/PalletsSidebar';
+import PalletsSidebar from '../PalletsSidebar/MasterPalletsSidebar';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
@@ -73,31 +73,31 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
     }
   }, [sidebarOpen, selectedDetailForPallets]);
 
-  // Обработчик кликов за пре��елами боковой панели
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      // Проверяем, что sidebar открыт
-      if (!sidebarOpen) return;
+  // // Обработчик кликов за пре��елами боковой панели
+  // useEffect(() => {
+  //   const handleOutsideClick = (event: MouseEvent) => {
+  //     // Проверяем, что sidebar открыт
+  //     if (!sidebarOpen) return;
       
-      // Получаем элемент sidebar через DOM
-      const sidebar = document.querySelector(`.${styles.sidebar}`);
+  //     // Получаем элемент sidebar через DOM
+  //     const sidebar = document.querySelector(`.${styles.sidebar}`);
       
-      // Проверяем, что клик был не внутри sidebar и не на кнопке-стрелке
-      if (sidebar && 
-          !sidebar.contains(event.target as Node) && 
-          !(event.target as Element).closest(`.${styles.arrowButton}`)) {
-        setSidebarOpen(false);
-      }
-    };
+  //     // Проверяем, что клик был не внутри sidebar и не на кнопке-стрелке
+  //     if (sidebar && 
+  //         !sidebar.contains(event.target as Node) && 
+  //         !(event.target as Element).closest(`.${styles.arrowButton}`)) {
+  //       setSidebarOpen(false);
+  //     }
+  //   };
 
-    // Добавляем слушатель событий
-    document.addEventListener('mousedown', handleOutsideClick);
+  //   // Добавляем слушатель событий
+  //   document.addEventListener('mousedown', handleOutsideClick);
     
-    // Удаляем слушатель при размонтировании
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [sidebarOpen, styles.sidebar, styles.arrowButton]);
+  //   // Удаляем слушатель при размонтировании
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleOutsideClick);
+  //   };
+  // }, [sidebarOpen, styles.sidebar, styles.arrowButton]);
 
   // Обработчик клика по строке таблицы с возможностью сброса выбора
   const handleRowClick = (detailId: number) => {

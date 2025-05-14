@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
-import DetailsTable from './components/DetailsTable/DetailsTable';
+import DetailsTable from './components/DetailsTable/NoSmenDetailsTable';
 import { 
   LoadingSpinner, 
   ErrorStatus, 
@@ -14,7 +14,7 @@ import { useMachine } from '../hooks/machinNoSmenHook/useMachine';
 
 import styles from './MesPage.module.css';
 
-const MesPage: React.FC = () => {
+const MasterPage: React.FC = () => {
   // Использовать хук без передачи ID - он сам возьмет ID из localStorage
   const { 
     machine, 
@@ -105,4 +105,4 @@ const MesPage: React.FC = () => {
   );
 };
 
-export default MesPage;
+export default MasterPage;

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
-import DetailsTable from './components/DetailsTable/MasterDetailsTable';
+import DetailsTable from './components/DetailsTable/MasterYpackDetailsTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
 
-import styles from './MasterPage.module.css';
+import styles from './MasterYpakPage.module.css';
 
-const MasterPage: React.FC = () => {
+const MasterYpakPage: React.FC = () => {
   // Добавляем только состояние для отслеживания выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
@@ -57,4 +57,4 @@ const MasterPage: React.FC = () => {
   );
 };
 
-export default MasterPage;
+export default MasterYpakPage;

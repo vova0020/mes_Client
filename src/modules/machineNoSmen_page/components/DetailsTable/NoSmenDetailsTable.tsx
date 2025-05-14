@@ -1,12 +1,15 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
-import { useDetails } from '../../../hooks/machinhook/useDetails';
-import PalletsSidebar from '../PalletsSidebar/PalletsSidebar';
+import useDetails from '../../../hooks/machinNoSmenHook/useDetails';
+import PalletsSidebar from '../PalletsSidebar/NoSmenPalletsSidebar';
 
-const DetailsTable: React.FC = () => {
-  // Состояние для отслеживания активной задачи
-  const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
+interface DetailsTableProps {
+  selectedOrderId: number | null;
+}
+
+const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
+  // Состояние для отслеживания активной детали
+  const [activeDetailId, setActiveDetailId] = useState<number | null>(null);
   
   // Состояние для анимации (показывать/скрывать детали)
   const [showDetails, setShowDetails] = useState(false);
@@ -16,21 +19,45 @@ const DetailsTable: React.FC = () => {
   // Состояние для позиции сайдбара
   const [sidebarPosition, setSidebarPosition] = useState({ top: 120, right: 20 });
   
-  // Используем хук для получения данных о задачах
-  const { 
-    machineDetails, 
-    tasks, 
-    loading, 
-    error, 
-    refetch 
-  } = useDetails();
+  // Используем хук для получения данных о деталях
+  const { details, loading, error, fetchDetails } = useDetails();
+  
+  // Ref для отслеживания предыдущего ID заказа
+  const prevOrderIdRef = useRef<number | null>(null);
   
   // Ref для контейнера таблицы
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Загружаем детали при изменении выбранного заказа
+  useEffect(() => {
+    // Если меняется ID заказа, сначала скрываем детали с анимацией
+    if (prevOrderIdRef.current !== selectedOrderId && !loading && details.length > 0) {
+      setShowDetails(false);
+      
+      // Используем setTimeout для создания "задержки" при смене данных
+      const timer = setTimeout(() => {
+        fetchDetails(selectedOrderId);
+        // Сбрасываем активную деталь при смене заказа
+        setActiveDetailId(null);
+        // Закрываем сайдбар при смене заказа
+        setIsSidebarOpen(false);
+      }, 300); // Задержка должна быть равна или меньше времени ан��мации исчезновения
+      
+      return () => clearTimeout(timer);
+    } else {
+      fetchDetails(selectedOrderId);
+      // Сбрасываем активную деталь при смене заказа
+      setActiveDetailId(null);
+      // Закрываем сайдбар при смене заказа
+      setIsSidebarOpen(false);
+    }
+    
+    prevOrderIdRef.current = selectedOrderId;
+  }, [selectedOrderId, fetchDetails]);
+
   // Показываем детали с анимацией после загрузки
-  React.useEffect(() => {
-    if (loading === 'success' && tasks.length > 0) {
+  useEffect(() => {
+    if (!loading && details.length > 0) {
       // Небольшая задержка перед показом деталей для более заметной анимации
       const timer = setTimeout(() => {
         setShowDetails(true);
@@ -38,17 +65,17 @@ const DetailsTable: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [loading, tasks]);
+  }, [loading, details]);
 
   // Обработчик клика по строке таблицы с возможностью сброса выбора
-  const handleRowClick = (taskId: number) => {
+  const handleRowClick = (detailId: number) => {
     // Если нажали на уже выбранную строку, сбрасываем выбор
-    if (activeTaskId === taskId) {
-      setActiveTaskId(null);
+    if (activeDetailId === detailId) {
+      setActiveDetailId(null);
       setIsSidebarOpen(false);
     } else {
       // Иначе выбираем новую строку
-      setActiveTaskId(taskId);
+      setActiveDetailId(detailId);
     }
   };
 
@@ -59,7 +86,7 @@ const DetailsTable: React.FC = () => {
   };
 
   // Обработчик клика по кнопке-стрелке для открытия сайдбара
-  const handleArrowClick = (e: React.MouseEvent, taskId: number, buttonElement: HTMLButtonElement) => {
+  const handleArrowClick = (e: React.MouseEvent, detailId: number, buttonElement: HTMLButtonElement) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     
     // Получаем позицию кнопки для позиционирования сайдбара
@@ -67,8 +94,8 @@ const DetailsTable: React.FC = () => {
     const top = rect.top;
     const right = window.innerWidth - rect.right + buttonElement.offsetWidth;
     
-    // Устанавливаем активную задачу
-    setActiveTaskId(taskId);
+    // Устанавливаем активную деталь
+    setActiveDetailId(detailId);
     // Устанавливаем позицию сайдбара
     setSidebarPosition({ top, right });
     // Открываем сайдбар
@@ -81,7 +108,7 @@ const DetailsTable: React.FC = () => {
   };
 
   // Отображаем сообщение о загрузке
-  if (loading === 'loading') {
+  if (loading) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>Информация о деталях</h2>
@@ -113,7 +140,7 @@ const DetailsTable: React.FC = () => {
           <div className={styles.errorMessage}>
             <h3>Не удалось загрузить детали</h3>
             <p>Произошла ошибка при получении данных с сервера</p>
-            <button onClick={() => refetch()} className={styles.retryButton}>
+            <button onClick={() => fetchDetails(selectedOrderId)} className={styles.retryButton}>
               Попробовать снова
             </button>
           </div>
@@ -122,8 +149,29 @@ const DetailsTable: React.FC = () => {
     );
   }
 
-  // Если нет задач для отображения
-  if (tasks.length === 0) {
+  // Если заказ не выбран, показываем соответствующее сообщение
+  if (selectedOrderId === null) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>Информация о деталях</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.emptyIcon}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5Z" stroke="currentColor" strokeWidth="2" />
+              <path d="M9 12H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div className={styles.emptyMessage}>
+            <h3>Выберите заказ</h3>
+            <p>Для просмотра деталей необходимо выбрать заказ из списка</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Если выбран заказ, но нет деталей
+  if (details.length === 0) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>Информация о деталях</h2>
@@ -136,15 +184,15 @@ const DetailsTable: React.FC = () => {
             </svg>
           </div>
           <div className={styles.emptyMessage}>
-            <h3>Нет доступных задач</h3>
-            <p>В данный момент отсутствуют задачи для этого станка</p>
+            <h3>Нет доступных деталей</h3>
+            <p>В данном заказе отсутствуют детали или они еще не были добавлены</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Если есть задачи для отображения
+  // Если есть детали для отображения
   return (
     <div className={styles.detailsContainer} ref={containerRef}>
       <h2 className={styles.title}>Информация о деталях</h2>
@@ -153,51 +201,47 @@ const DetailsTable: React.FC = () => {
         <table className={styles.detailsTable}>
           <thead>
             <tr>
-              <th>Приоритет</th>
-              <th>Заказ</th>
               <th>Артикул</th>
-              <th>Название детали</th>
+              <th>Название</th>
               <th>Материал</th>
               <th>Размер</th>
               <th>Тех. информация</th>
               <th>Общее кол-во</th>
-              <th>К обработке</th>
+              <th>Готово к обработке</th>
               <th>Выполнено</th>
               <th></th> {/* Колонка для кнопки-стрелки */}
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {tasks.map((task, index) => (
+            {details.map((detail, index) => (
               <tr
-                key={task.operationId}
+                key={detail.id}
                 className={`
-                  ${activeTaskId === task.operationId ? styles.activeRow : ''}
+                  ${activeDetailId === detail.id ? styles.activeRow : ''}
                   ${styles.animatedRow}
                 `}
                 style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => handleRowClick(task.operationId)}
+                onClick={() => handleRowClick(detail.id)}
               >
-                <td>{task.priority}</td>
-                <td>{`${task.order.runNumber} - ${task.order.name}`}</td>
-                <td>{task.detail.article}</td>
-                <td>{task.detail.name}</td>
-                <td>{task.detail.material}</td>
-                <td>{task.detail.size}</td>
+                <td>{detail.article}</td>
+                <td>{detail.name}</td>
+                <td>{detail.material}</td>
+                <td>{detail.size}</td>
                 <td>
                   <button 
                     className={styles.drawingButton}
-                    onClick={(e) => handleDrawingClick(e, task.detail.id)}
+                    onClick={(e) => handleDrawingClick(e, detail.id)}
                   >
                     Чертеж
                   </button>
                 </td>
-                <td>{task.detail.totalNumber}</td>
-                <td>{task.readyForProcessing }</td>
-                <td>{task.completed }</td>
+                <td>{detail.totalNumber}</td>
+                <td>{detail.readyForProcessing}</td>
+                <td>{detail.completed}</td>
                 <td>
                   <button 
                     className={styles.arrowButton}
-                    onClick={(e) => handleArrowClick(e, task.operationId, e.currentTarget)}
+                    onClick={(e) => handleArrowClick(e, detail.id, e.currentTarget)}
                   >
                     &#10095; {/* Символ стрелки вправо */}
                   </button>
@@ -210,9 +254,7 @@ const DetailsTable: React.FC = () => {
       
       {/* Боковая панель поддонов */}
       <PalletsSidebar 
-        detailId={activeTaskId !== null ? 
-          tasks.find(task => task.operationId === activeTaskId)?.detail.id || null : 
-          null}
+        detailId={activeDetailId}
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
         // position={sidebarPosition}

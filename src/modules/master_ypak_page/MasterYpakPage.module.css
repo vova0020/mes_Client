@@ -1,0 +1,176 @@
+.mesPage {
+  display: flex;
+  flex-direction: row;
+  height: 100vh; /* Высота на весь экран */
+  width: 100%;
+  font-family: sans-serif;
+  background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
+  overflow: hidden; /* Предотвращает прокрутку на уровне всей страницы */
+  
+}
+
+.Sidebar_Block {
+  width: 120px; /* Уменьшенная фиксированная ширина для сайдбара */
+  height: 100%; /* Высота на весь экран */
+  background-color: transparent; /* Прозрачный фон, чтобы был виден сайдбар */
+  padding: 10px 10px; /* Уменьшенные отступы для сайдбара */
+  box-sizing: border-box; /* Учитываем padding в общей ширине */
+  display: flex; /* Используем flex для центрирования */
+  align-items: center; /* Центрирование по вертикали */
+  justify-content: center; /* Центрирование по горизонтали */
+  overflow: hidden; /* Предотвращаем выход содержимого за границы */
+  transition: width 0.3s ease; /* Плавный переход при изменении ширины */
+}
+
+.Content_Block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Высота на весь экран */
+  padding: 10px 15px 10px 5px;
+  box-sizing: border-box; /* Учитываем padding в общей высоте */
+  overflow: hidden; /* Предотвращает прокрутку на уровне Content_Block */
+}
+
+.headerBlock {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  flex-shrink: 0; /* Запрещаем сжиматься */
+}
+
+.mainContainer {
+  flex: 1; /* Занимает оставшееся пространство */
+  display: flex;
+  flex-direction: column;
+  /* padding: 16px; */
+  gap: 16px; /* Отступ между верхним и нижним рядом */
+  overflow: hidden; /* Предотвращает прокрутку на уровне mainContainer */
+  height: calc(100% - 60px); /* Вычитаем высоту шапки */
+}
+
+.topRow {
+  display: flex;
+  gap: 16px; /* Отступ между секциями заказов и станков */
+  height: 40%; /* Верхний ряд занимает 40% доступной высоты */
+  min-height: 200px; /* Минимальная высота для верхнего ряда */
+  width: 100%;
+}
+
+.ordersSection {
+  width: 40%; /* Секция с заказами занимает 40% ширины верхнего ряда */
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Скрываем прокрутку на уровне секции */
+}
+
+.machinesSection {
+  width: 60%; /* Секция со станками занимает 60% ширины верхнего ряда */
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Скрываем прокрутку на уровне секции */
+}
+
+.bottomRow {
+  flex: 1; /* Занимает оставшееся пространство */
+  min-height: 200px; /* Минимальная высота для нижнего ряда */
+  width: 100%;
+}
+
+.detailsSection {
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Скрываем прокрутку на уровне секции */
+}
+
+/* Стили для внутренних компонентов, чтобы они корректно занимали всю доступную высоту */
+.ordersSection > div,
+.machinesSection > div,
+.detailsSection > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Адаптивные стили для разных размеров экрана */
+@media screen and (max-width: 1200px) {
+  .topRow {
+    height: 45%; /* Увеличиваем высоту верхнего ряда */
+  }
+}
+
+@media screen and (max-width: 992px) {
+  .Sidebar_Block {
+    width: 100px; /* Уменьшаем ширину боковой панели */
+  }
+  
+  .topRow {
+    height: 50%; /* Увеличиваем высоту верхнего ряда */
+  }
+}
+
+/* Для планшетов */
+@media screen and (max-width: 768px) {
+  .topRow {
+    flex-direction: column; /* Меняем направление на вертикальное */
+    height: 60%; /* Увеличиваем высоту верхнего ряда */
+  }
+  
+  .ordersSection,
+  .machinesSection {
+    width: 100%; /* Блоки занимают всю ширину */
+    height: 50%; /* Каждый блок занимает половину высоты верхнего ряда */
+  }
+}
+
+/* Для мобильных устройств */
+@media screen and (max-width: 576px) {
+  .mesPage {
+    flex-direction: column; /* Меняем направление на вертикальное */
+  }
+  
+  .Sidebar_Block {
+    width: 100%;
+    height: auto;
+    min-height: 50px;
+  }
+  
+  .mainContainer {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .topRow {
+    gap: 8px;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media screen and (max-height: 600px) {
+  .headerBlock {
+    height: 40px; /* Уменьшаем высоту шапки */
+    min-height: 40px;
+  }
+  
+  .mainContainer {
+    height: calc(100% - 40px); /* Пересчитываем высоту */
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .topRow {
+    min-height: 150px; /* Уменьшаем минимальную высоту */
+  }
+  
+  .bottomRow {
+    min-height: 150px; /* Уменьшаем минимальную высоту */
+  }
+}

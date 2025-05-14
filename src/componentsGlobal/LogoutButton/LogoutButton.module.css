@@ -1,4 +1,4 @@
-.logoutButton {
+/* .logoutButton {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -22,4 +22,4 @@
 
 .logoutButton:hover svg {
   fill: #333;
-}
+} */

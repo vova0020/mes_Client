@@ -1,0 +1,378 @@
+@import url('https://fonts.googleapis.com/css2?family=Anek+Latin:wght@400;600;700&display=swap');
+
+.header {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, #374051, #2d3441); /* градиент для объемности */
+  padding: 0 20px;
+  height: 110px; /* можно подогнать под макет */
+  box-sizing: border-box;
+  border-radius: 5px;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.3), /* внешняя тень снизу */
+    inset 0 1px 0 rgba(255, 255, 255, 0.2), /* внутренняя светлая тень сверху */
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2); /* внутренняя темная тень снизу */
+  border: 1px solid #243342; /* тонкая граница */
+  position: relative;
+  z-index: 1; /* чтобы тень была видна */
+}
+
+/* Левый блок – два ряда: заголовок и кнопки */
+.leftContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Название технологического этапа */
+.techStage {
+  font-size: 22px; 
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); /* тень для текста */
+}
+
+/* Группа навигационных кнопок (рядом друг с другом) */
+.navButtons {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background: linear-gradient(to bottom, #3a5269, #2c3e50); градиент для объемности */
+  padding: 4px;
+}
+
+/* Стили для кнопок "СТАНОК" и "ОПЕРАТОР" */
+.navButton {
+  background: linear-gradient(to bottom, #4a6583, #34495e); /* градиент для объемности */
+  border: 1px solid #243342; /* тонкая граница */
+  color: #fff;
+  padding: 8px 40px;
+  margin-right: 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2), /* внешняя тень */
+    inset 0 1px 0 rgba(255, 255, 255, 0.15); /* внутренняя светлая тень сверху */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3); /* тень для текста */
+  position: relative;
+  top: 0;
+}
+
+.navButton:last-child {
+  margin-right: 0; /* убираем отступ у последней кнопки */
+}
+
+.navButton:hover {
+  background: linear-gradient(to bottom, #547599, #3b536b);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.navButton:active {
+  background: linear-gradient(to bottom, #34495e, #2c3e50); /* инвертированный градиент */
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.3); /* только внутренняя тень */
+  top: 1px; /* небольшое смещение вниз при нажатии */
+}
+
+/* Правый блок – в колонку */
+.rightContainer {
+  display: flex;
+  flex-direction: column; /* колонка для вертикального расположения */
+  align-items: center;
+  justify-content: center;
+  gap: 5px; /* расстояние между логотипом и кнопкой */
+  min-width: 150px; /* минимальная ширина для предотвращения сжатия */
+}
+
+/* Контейнер для логотипа и текста */
+.brandContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Логотип */
+.logo {
+  width: 120px;
+  height: auto; /* автоматическая высота для сохранения пропорций */
+  max-height: 60px; /* ограничение максимальной высоты */
+  object-fit: contain; /* сохраняет пропорции изображения */
+}
+
+/* Текст логотипа */
+.brandName {
+  font-family: 'Anek Latin', sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); /* тень для текста */
+}
+
+/* Кнопка выхода */
+.exitButton {
+  background: radial-gradient(circle at center, #e74c3c, #c0392b); /* радиальный градиент для круга */
+  border: 1px solid #a5281a; /* тонкая граница */
+  width: 40px; /* увеличиваем размер для лучшего вида */
+  height: 40px;
+  border-radius: 50%; /* делаем круглую кнопку */
+  display: flex;
+  justify-content: center; /* центрируем иконку по горизонтали */
+  align-items: center; /* центрируем иконку по вертикали */
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3), /* внешняя тень */
+    inset 0 1px 0 rgba(255, 255, 255, 0.2); /* внутренняя светлая тень сверху */
+  position: relative;
+  top: 0;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  padding: 0;
+}
+
+/* Стили для иконки внутри кнопки */
+.exitButton svg {
+  width: 20px; /* размер иконки */
+  height: 20px;
+  fill: #fff; /* цвет иконки */
+  display: block; /* убираем лишнее пространство вокруг SVG */
+}
+
+.exitButton:hover {
+  background: radial-gradient(circle at center, #e95e4f, #d14233);
+  box-shadow: 
+    0 3px 5px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.exitButton:active {
+  background: radial-gradient(circle at center, #c0392b, #a5281a);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Планшеты (от 768px до 991px) */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .header {
+    height: 90px;
+    padding: 0 15px;
+  }
+  
+  .techStage {
+    font-size: 20px;
+  }
+  
+  .navButton {
+    padding: 6px 30px;
+    font-size: 14px;
+  }
+  
+  .exitButton {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .exitButton svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .logo {
+    width: 120px;
+    max-height: 50px;
+  }
+}
+
+/* Малые планшеты и большие телефоны (от 576px до 767px) */
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .header {
+    height: auto;
+    min-height: 80px;
+    padding: 10px 12px;
+    position: relative; /* Для корректного позиционирования дочерних элементов */
+  }
+  
+  .leftContainer {
+    width: calc(100% - 120px); /* Оставляем место для правого контейнера */
+    align-items: flex-start;
+    padding-right: 10px;
+  }
+  
+  .techStage {
+    font-size: 18px;
+  }
+  
+  .navButtons {
+    margin-top: 5px;
+    justify-content: flex-start;
+  }
+  
+  .navButton {
+    padding: 5px 20px;
+    font-size: 13px;
+    margin-right: 10px;
+  }
+  
+  .rightContainer {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%); /* Центрирование по вертикали */
+    width: 100px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .brandName {
+    font-size: 14px;
+  }
+  
+  .logo {
+    width: 90px;
+    max-height: 35px;
+  }
+  
+  .exitButton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .exitButton svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Мобильные телефоны (до 575px) */
+@media screen and (max-width: 575px) {
+  .header {
+    height: auto;
+    min-height: 120px; /* Увеличиваем минимальную высоту */
+    padding: 10px;
+    position: relative; /* Для корректного позиционирования дочерних элементов */
+  }
+  
+  .leftContainer {
+    width: 100%;
+    align-items: center;
+    padding-top: 50px; /* Оставляем место для правого контейнера сверху */
+  }
+  
+  .techStage {
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  .navButtons {
+    margin-top: 5px;
+    width: 100%;
+    flex-direction: row; /* Сохраняем кнопки в ряд */
+    justify-content: center;
+    gap: 10px; /* Отступ между кнопками */
+  }
+  
+  .navButton {
+    padding: 5px 15px;
+    font-size: 12px;
+    margin-right: 0;
+    flex: 1; /* Распределяем доступное пространство */
+    max-width: 45%; /* Ограничиваем максимальную ширину */
+    text-align: center;
+  }
+  
+  .rightContainer {
+    position: absolute;
+    top: 10px; /* Размещаем вверху */
+    left: 0;
+    right: 0;
+    width: 100%;
+    flex-direction: row; /* Меняем на горизонтальное расположение */
+    justify-content: space-between; /* Распределяем по краям */
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    gap: 0;
+  }
+  
+  .brandContainer {
+    order: 1; /* Логотип слева */
+  }
+  
+  .exitButton {
+    order: 2; /* Кнопка выхода справа */
+    width: 28px;
+    height: 28px;
+  }
+  
+  .exitButton svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .brandName {
+    font-size: 12px;
+  }
+  
+  .logo {
+    width: 80px;
+    max-height: 30px;
+  }
+}
+
+/* Очень маленькие экраны (до 375px) */
+@media screen and (max-width: 375px) {
+  .header {
+    min-height: 110px;
+    padding: 8px;
+  }
+  
+  .leftContainer {
+    padding-top: 40px;
+  }
+  
+  .techStage {
+    font-size: 14px;
+  }
+  
+  .navButtons {
+    gap: 6px;
+  }
+  
+  .navButton {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+  
+  .rightContainer {
+    padding: 0 10px;
+  }
+  
+  .logo {
+    width: 70px;
+    max-height: 25px;
+  }
+  
+  .exitButton {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .exitButton svg {
+    width: 12px;
+    height: 12px;
+  }
+}

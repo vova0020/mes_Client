@@ -1,0 +1,1055 @@
+
+/* Основной контейнер боковой панели */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -80%; /* Начальное положение за пределами экрана */
+  width: 80%; /* Более широкая панель для таблицы */
+  height: 100vh;
+  background: linear-gradient(135deg, #374051, #2a303c);
+  box-shadow: 
+    -8px 0 30px rgba(0, 0, 0, 0.5), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-left: 1px solid #1e2a3a;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.sidebar.open {
+  right: 20px;
+  top: 20px;
+  width: calc(85% - 40px); /* Увеличиваем ширину панели */
+  height: calc(100vh - 40px);
+  border-radius: 12px;
+  opacity: 1;
+  transform: translateX(0);
+  box-shadow: 
+    -8px 0 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1000px rgba(0, 0, 0, 0.5); /* Затемнение фона */
+}
+
+/* Заголовок панели */
+.sidebarHeader {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(to bottom, #3f4a5f, #343e4f);
+  border-radius: 12px 12px 0 0;
+}
+
+.sidebarHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1.2px;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sortButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  border-radius: 50%;
+}
+
+.sortButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.closeButton:hover {
+  color: #3498db;
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Основное содержимое панели */
+.sidebarContent {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Стилизация полосы прокрутки для WebKit */
+.sidebarContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebarContent::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.sidebarContent::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.sidebarContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Контейнер для таблицы задания */
+.tableContainer {
+  width: 100%;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
+  border-radius: 10px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(224, 224, 224, 0.8);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+/* Обертка для горизонтальной прокрутки */
+.tableScrollContainer {
+  width: 100%;
+  overflow-x: auto;
+  /* Улучшенная прокрутка для лучшего UX */
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  padding-bottom: 5px; /* Небольшой отступ для скроллбара */
+}
+
+/* Стилизация полосы прокрутки для горизонтальной прокрутки */
+.tableScrollContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tableScrollContainer::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.tableScrollContainer::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.tableScrollContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Стили для таблицы */
+.tasksTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  table-layout: fixed; /* Фиксированная ширина столбцов */
+  min-width: 1050px; /* Минимальная ширина, чтобы все столбцы могли вместить контент */
+}
+
+/* Стили для заголовков таблицы */
+.tasksTable th {
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  color: #333;
+  font-weight: 600;
+  text-align: left; /* Выравнивание по левому краю */
+  padding: 12px 8px; /* Уменьшаем горизонтальные отступы */
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  white-space: nowrap; /* Предотвращает перенос текста в заголовках */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Добавляем многоточие для длинного текста */
+}
+
+/* Особые стили для некоторых колонок */
+.priorityColumn {
+  width: 70px; /* Уменьшаем ширину колонки приоритета */
+  text-align: center;
+}
+
+.statusColumn {
+  width: 100px; /* Уменьшаем ширину колонки статуса */
+}
+
+.actionsColumn {
+  width: 240px; /* Оптимизируем ширину колонки с действиями */
+}
+
+/* Задаем ширину для каждой колонки */
+.tasksTable th:nth-child(2) { /* Заказ */
+  width: 110px;
+}
+
+.tasksTable th:nth-child(3) { /* Артикул */
+  width: 90px;
+}
+
+.tasksTable th:nth-child(4) { /* Наименование */
+  width: 130px;
+}
+
+.tasksTable th:nth-child(5) { /* Материал */
+  width: 100px;
+}
+
+.tasksTable th:nth-child(6) { /* Размер */
+  width: 90px;
+}
+
+.tasksTable th:nth-child(7) { /* № поддона */
+  width: 80px;
+}
+
+.tasksTable th:nth-child(8) { /* Кол-во */
+  width: 60px;
+}
+
+/* Стили для ячеек таблицы */
+.tasksTable td {
+  padding: 8px; /* Уменьшаем отступы */
+  border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+  color: #333;
+  vertical-align: middle;
+  white-space: nowrap; /* Предотвращает перенос текста */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Добавляем многоточие для длинного текста */
+}
+
+/* Специальные стили для ячейки с действиями */
+.tasksTable td.actionsCell {
+  padding: 6px 8px;
+  width: 240px;
+}
+
+/* Стили для ячейки статуса */
+.tasksTable td.statusCell {
+  text-align: center;
+  padding: 6px 8px;
+}
+
+/* Стили для строк таблицы */
+.tasksTable tr {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  transition: all 0.2s ease;
+}
+
+/* Стили для строк в зависимости от статуса */
+.tasksTable tr.status-pending {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+}
+
+.tasksTable tr.status-processing {
+  background: linear-gradient(to bottom, #f0f7ff, #e5f1ff);
+  border-left: 3px solid #3498db;
+}
+
+.tasksTable tr.status-completed {
+  background: linear-gradient(to bottom, #f0fff5, #e5ffe8);
+  border-left: 3px solid #2ecc71;
+}
+
+/* Эффект при наведении на строку таблицы */
+.tasksTable tr:hover {
+  background: linear-gradient(to bottom, #f0f7ff, #e5f1ff);
+  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.1);
+}
+
+.tasksTable tr:hover td {
+  white-space: normal; /* При наведении разрешаем перенос строк для просмотра всего содержимого */
+  max-width: 200px; /* Ограничиваем максимальную ширину для предотвращения слишком длинных строк */
+  word-break: break-word; /* Разрешаем перенос слов */
+}
+
+/* Последняя строка таблицы без нижней границы */
+.tasksTable tr:last-child td {
+  border-bottom: none;
+}
+
+/* Стили для индикатора приоритета (числового) */
+.priorityIndicator {
+  padding: 3px 6px; /* Уменьшаем отступы */
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  text-align: center;
+  min-width: 24px;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Стили для отсутствующего приоритета */
+.noPriority {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+/* Стили для разных уровней приоритета (числового) */
+.highPriority {
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+}
+
+.mediumPriority {
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+}
+
+.lowPriority {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+}
+
+.veryLowPriority {
+  background: linear-gradient(to bottom, #16a085, #1abc9c);
+}
+
+.normalPriority {
+  background: linear-gradient(to bottom, #7f8c8d, #95a5a6);
+}
+
+/* Стили для индикатора статуса */
+.statusIndicator {
+  padding: 3px 6px; /* Уменьшаем отступы */
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  text-align: center;
+  min-width: 70px;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.statusPending {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+}
+
+.statusProcessing {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+}
+
+.statusCompleted {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+}
+
+/* Особые стили для некоторых ячеек */
+.priorityCell {
+  text-align: center;
+}
+
+.palletCell, .quantityCell {
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Контейнер для кнопок действий */
+.actionButtonsContainer {
+  display: flex;
+  gap: 5px; /* Уменьшаем отступы между элементами */
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* Стили для кнопок действий */
+.actionButton {
+  min-width: 32px; /* Уменьшаем минимальную ширину */
+  height: 28px; /* Уменьшаем высоту */
+  padding: 0 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.actionButton:hover::before {
+  opacity: 1;
+}
+
+.actionButton:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Стили для кнопки частичной обработки */
+.partialButton {
+  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+  color: white;
+  border-left: 3px solid #7d3c98;
+}
+
+.partialButton:hover {
+  background: linear-gradient(to bottom, #a66bbe, #9b59b6);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.partialButton:active {
+  background: linear-gradient(to bottom, #8e44ad, #9b59b6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для отключенной кнопки */
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #aaa;
+  border-left-color: #999;
+}
+
+.actionButton:disabled::before {
+  display: none;
+}
+
+/* Стили для кнопки удаления */
+.deleteButton {
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  color: white;
+  border-left: 3px solid #a0302a;
+}
+
+.deleteButton:hover {
+  background: linear-gradient(to bottom, #ed6a5a, #e74c3c);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.deleteButton:active {
+  background: linear-gradient(to bottom, #c0392b, #e74c3c);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для селектора станка */
+.machineSelect {
+  flex: 1;
+  min-width: 110px; /* Уменьшаем ширину */
+  max-width: 110px; /* Ограничиваем максимальную ширину */
+  padding: 4px 8px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 4px;
+  background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+  font-size: 11px;
+  color: #333;
+  cursor: pointer;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 22px;
+  height: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.machineSelect:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Стили для отключенного селектора */
+.machineSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+}
+
+/* Состояния загрузки, ошибки и пустых данных */
+.loadingContainer, .errorContainer, .emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  min-height: 300px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
+  border-radius: 10px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(224, 224, 224, 0.8);
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loadingText, .errorText, .emptyText {
+  color: #7f8c8d;
+  font-size: 14px;
+  max-width: 400px;
+  margin: 10px 0;
+}
+
+.errorIcon, .emptyIcon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.errorIcon {
+  color: #e74c3c;
+}
+
+.emptyIcon {
+  color: #3498db;
+}
+
+.errorTitle, .emptyTitle {
+  color: #333;
+  font-size: 18px;
+  margin: 0 0 8px 0;
+}
+
+.retryButton {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.retryButton:hover {
+  background: linear-gradient(to bottom, #2980b9, #2471a3);
+}
+
+/* Стили для подвала (footer) */
+.sidebarFooter {
+  padding: 16px 20px;
+  background: linear-gradient(to bottom, #343e4f, #293241);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 0 0 12px 12px;
+}
+
+.footerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.infoLabel {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.infoValue {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.footerButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.printButton, .exportButton {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: none;
+}
+
+.printButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+}
+
+.printButton:hover {
+  background: linear-gradient(to bottom, #2980b9, #2471a3);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.exportButton {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: white;
+}
+
+.exportButton:hover {
+  background: linear-gradient(to bottom, #27ae60, #219653);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.printButton:disabled, .exportButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Стили для модального окна частичной обработки */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.modalContent {
+  width: 400px;
+  background: linear-gradient(to bottom, #fafafa, #f0f0f0);
+  border-radius: 10px;
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transform: translateY(20px);
+  animation: slideUp 0.3s forwards;
+}
+
+@keyframes slideUp {
+  to { transform: translateY(0); }
+}
+
+.modalHeader {
+  padding: 15px 20px;
+  background: linear-gradient(to bottom, #3f4a5f, #343e4f);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.modalCloseButton {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.modalCloseButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.modalBody {
+  padding: 20px;
+}
+
+.modalInfoRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modalLabel {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.modalValue {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.quantityInputContainer {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.quantityLabel {
+  display: block;
+  color: #34495e;
+  font-weight: 500;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.quantityInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+
+.quantityInput {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.quantityInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.quantityButton {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.quantityButton:hover {
+  background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
+}
+
+.quantityButton:active {
+  background: linear-gradient(to bottom, #d8d8d8, #e8e8e8);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.quantityButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalFooter {
+  padding: 15px 20px;
+  background: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modalCancelButton {
+  padding: 8px 16px;
+  background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalCancelButton:hover {
+  background: linear-gradient(to bottom, #e0e0e0, #d5d5d5);
+}
+
+.modalConfirmButton {
+  padding: 8px 16px;
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.modalConfirmButton:hover {
+  background: linear-gradient(to bottom, #2980b9, #2471a3);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.modalConfirmButton:active {
+  background: linear-gradient(to bottom, #2471a3, #2980b9);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.modalConfirmButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(to bottom, #7f8c8d, #95a5a6);
+  box-shadow: none;
+}
+
+/* Стили для адаптивности */
+@media (max-width: 1200px) {
+  .sidebar.open {
+    width: calc(90% - 40px);
+  }
+  
+  .actionsColumn {
+    width: 280px;
+  }
+}
+
+@media (max-width: 992px) {
+  .sidebar.open {
+    width: calc(95% - 40px);
+  }
+  
+  .actionButtonsContainer {
+    flex-wrap: wrap;
+  }
+  
+  .actionButton, .machineSelect {
+    font-size: 11px;
+  }
+  
+  .actionsColumn {
+    width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .sidebar.open {
+    width: calc(100% - 20px);
+    right: 10px;
+    left: 10px;
+    height: calc(100vh - 20px);
+    top: 10px;
+  }
+  
+  .tasksTable th, .tasksTable td {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .modalContent {
+    width: 95%;
+    max-width: 400px;
+  }
+  
+  .actionButtonsContainer {
+    gap: 4px;
+  }
+  
+  .actionButton {
+    min-width: auto;
+    padding: 0 8px;
+  }
+  
+  .machineSelect {
+    min-width: 120px;
+  }
+  
+  .sidebarFooter {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .footerButtons {
+    justify-content: space-between;
+  }
+}
+
+/* Анимации для элементов интерфейса */
+@keyframes pulseButton {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.printButton:hover, .exportButton:hover {
+  animation: pulseButton 1s infinite;
+}
+
+/* Стили для состояния drag-and-drop (для будущей функциональности) */
+.dragItem {
+  opacity: 0.7;
+  transform: scale(0.98);
+  background: rgba(52, 152, 219, 0.1) !important;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.5) !important;
+}
+
+.dropTarget {
+  border: 2px dashed #3498db !important;
+  background: rgba(52, 152, 219, 0.05) !important;
+}
+
+/* Стили для подсветки поиска (для будущей функциональности) */
+.highlightText {
+  background: rgba(241, 196, 15, 0.3);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* Стиль для кнопки "Полная обработка" (для будущей функциональности) */
+.completeButton {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: white;
+  border-left: 3px solid #219653;
+}
+
+.completeButton:hover {
+  background: linear-gradient(to bottom, #27ae60, #219653);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.completeButton:active {
+  background: linear-gradient(to bottom, #219653, #27ae60);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
