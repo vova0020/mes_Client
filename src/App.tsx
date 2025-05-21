@@ -10,6 +10,7 @@ import MasterYpakPage from './modules/master_ypak_page/MasterYpakPage';
 import YpakMachinePage from './modules/ypak_machin_page/YpakMachinePage';
 import ComplectPage from './modules/complectPage/ComplectPage';
 
+
 function App() {
   return (
     <Router>
@@ -51,7 +52,9 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
+
     </Router>
+
   );
 }
 

@@ -200,3 +200,34 @@
     font-size: 12px;
   }
 }
+
+/* Добавьте эти стили к вашему файлу MachinePage.module.css */
+
+/* Стиль для информационной строки о Socket.IO соединении */
+.socketConnected {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 4px;
+  background-color: #4caf50;
+  color: white;
+  text-align: center;
+  font-size: 12px;
+  z-index: 1000;
+}
+
+.socketDisconnected {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 4px;
+  background-color: #f44336;
+  color: white;
+  text-align: center;
+  font-size: 12px;
+  z-index: 1000;
+}
+
+/* Остальные стили остаются без изменений */

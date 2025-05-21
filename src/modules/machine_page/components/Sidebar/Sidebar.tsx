@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import styles from './Sidebar.module.css';
 
@@ -11,20 +10,23 @@ import { ReactComponent as StartInactiveIcon } from '../../../../assets/sidebar/
 import { ReactComponent as StartActiveIcon } from '../../../../assets/sidebar/activeStartButton.svg';
 import { ReactComponent as PolomkaInActiveIcon } from '../../../../assets/sidebar/sloman.svg';
 import { ReactComponent as PolomkaActiveIcon } from '../../../../assets/sidebar/slomanActive.svg';
+import { ReactComponent as WifiIcon } from '../../../../assets/sidebar/wifi.svg'; // Необходимо добавить иконку WiFi
 
-import { Button } from '@mui/material';
+import { Button, Tooltip } from '@mui/material';
 import { Machine, MachineStatus } from '../../../api/machinNoSmenApi/machineApi';
 
 interface SidebarProps {
   machine?: Machine | null;
   isLoading?: boolean;
   onStatusChange?: (status: MachineStatus) => Promise<void>;
+  isSocketConnected?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   machine, 
   isLoading = false,
-  onStatusChange
+  onStatusChange,
+  isSocketConnected = false
 }) => {
   const [isStartActive, setIsStartActive] = useState(false);
   const [isPolomkaActive, setIsPolomkaActive] = useState(false);
@@ -112,6 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className={styles.sidebar}>
       <div className={`${styles.sidebarContent} ${getSidebarClassNames()}`}>
+        
         {/* Кнопка START */}
         <button
           className={`${styles.startButton} ${isStartActive ? styles.startButtonActive : ''} ${isStartButtonDisabled ? styles.buttonDisabled : ''}`}

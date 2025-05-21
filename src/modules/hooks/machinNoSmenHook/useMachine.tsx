@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { machineApi, Machine, getLocalMachineIds, MachineStatus } from '../../api/machinNoSmenApi/machineApi';
+import { socketService, SocketEvent } from '../../api/socket/socketService';
 
 // Типы состояний загрузки
 export type LoadingState = 'loading' | 'success' | 'error';
@@ -17,10 +18,11 @@ interface UseMachineResult {
   machineId: number | undefined;
   segmentId: number | null | undefined;
   changeStatus: (status: MachineStatus) => Promise<void>;
+  isSocketConnected: boolean;
 }
 
 /**
- * Хук для работы с данными о станке
+ * Хук для работы с данными о станке, с поддержкой Socket.IO
  * @param machineId - ID станка (если не указан, будет взят из localStorage)
  * @returns Объект с данными и состояниями станка
  */
@@ -29,21 +31,39 @@ export const useMachine = (machineId?: number): UseMachineResult => {
   const [loading, setLoading] = useState<LoadingState>('loading');
   const [error, setError] = useState<Error | null>(null);
   const [effectiveId, setEffectiveId] = useState<number | undefined>(machineId);
+  const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
+  
+  // Используем ref для отслеживания актуального состояния в обработчиках событий
+  const machineRef = useRef<Machine | null>(null);
+  const loadingRef = useRef<LoadingState>('loading');
+  
+  // При изменении machine обновляем ref
+  useEffect(() => {
+    machineRef.current = machine;
+  }, [machine]);
+  
+  // При изменении loading обновляем ref
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
 
   // Получаем ID станка из localStorage, если он не передан в параметрах
   useEffect(() => {
     if (machineId === undefined) {
       const localIds = getLocalMachineIds();
       if (localIds) {
+        console.log(`Получен ID станка из localStorage: ${localIds.machineId}`);
         setEffectiveId(localIds.machineId);
+      } else {
+        console.error('ID станка не найден в localStorage');
       }
     } else {
       setEffectiveId(machineId);
     }
   }, [machineId]);
 
-  // Функция для загрузки данных о станке
-  const fetchMachine = async (): Promise<void> => {
+  // Функция для загрузки данных о станке через REST API
+  const fetchMachine = useCallback(async (): Promise<void> => {
     if (!effectiveId) {
       setLoading('error');
       setError(new Error('ID станка не определен'));
@@ -54,7 +74,9 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       setLoading('loading');
       setError(null);
       
+      console.log(`Загрузка данных о станке через REST API, ID: ${effectiveId}`);
       const data = await machineApi.getMachineById(effectiveId);
+      console.log('Полученные данные о станке:', data);
       setMachine(data);
       setLoading('success');
     } catch (err) {
@@ -62,7 +84,85 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       setError(err instanceof Error ? err : new Error('Неизвестная ошибка'));
       console.error('Ошибка при загрузке данных о станке:', err);
     }
-  };
+  }, [effectiveId]);
+
+  // Функция для обработки событий обновления статуса станка от Socket.IO
+  const handleMachineStatusUpdate = useCallback((updatedMachine: Machine) => {
+    console.log('Получено обновление статуса станка через Socket.IO:', updatedMachine);
+    console.log('Текущий effectiveId:', effectiveId);
+    
+    // Проверяем, что ID станка соответствует текущему
+    if (updatedMachine && updatedMachine.id === effectiveId) {
+      console.log('ID совпадает, обновляем данные станка...');
+      console.log('Старый статус:', machineRef.current?.status);
+      console.log('Новый статус:', updatedMachine.status);
+      
+      // Обновляем состояние machine
+      setMachine(updatedMachine);
+      
+      // Также обновляем состояние loading, если оно было в состоянии загрузки
+      if (loadingRef.current === 'loading') {
+        setLoading('success');
+      }
+    } else {
+      console.warn(
+        `ID станка не совпадает: получено=${updatedMachine?.id}, ожидается=${effectiveId}. ` +
+        'Обновление проигнорировано.'
+      );
+    }
+  }, [effectiveId]);
+
+  // Инициализация Socket.IO и настройка обработчиков событий
+  useEffect(() => {
+    if (!effectiveId) {
+      console.warn('effectiveId не определен, не инициализируем сокет');
+      return;
+    }
+    
+    try {
+      console.log(`Инициализация сокета для станка с ID=${effectiveId}`);
+      
+      // Инициализируем сокет
+      const socket = socketService.initialize();
+      
+      // Присоединяемся к комнате для получения обновлений станков
+      socketService.joinMachinesRoom();
+      
+      // Устанавливаем обработчики событий
+      socketService.setHandlers({
+        onConnect: () => {
+          console.log('Socket.IO подключен успешно');
+          setIsSocketConnected(true);
+        },
+        onDisconnect: () => {
+          console.log('Socket.IO отключен');
+          setIsSocketConnected(false);
+        },
+        onError: (error) => {
+          console.error('Socket.IO ошибка:', error);
+          // Если возникла ошибка сокета, попробуем загрузить данные через REST API
+          fetchMachine();
+        },
+        onMachineStatusUpdate: handleMachineStatusUpdate
+      });
+      
+      // Проверяем текущее состояние соединения
+      setIsSocketConnected(socketService.isConnected());
+      
+      // Первоначальная загрузка данных через REST API
+      fetchMachine();
+      
+      // Очистка при размонтировании компонента
+      return () => {
+        console.log('Очистка обработчиков Socket.IO');
+        socketService.clearHandlers();
+      };
+    } catch (error) {
+      console.error('Ошибка при инициализации Socket.IO:', error);
+      // В случае ошибки с сокетом, используем обычный REST API
+      fetchMachine();
+    }
+  }, [effectiveId, handleMachineStatusUpdate, fetchMachine]);
 
   // Функция для изменения статуса станка
   const changeStatus = useCallback(async (status: MachineStatus): Promise<void> => {
@@ -75,24 +175,42 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       setLoading('loading');
       setError(null);
       
+      console.log(`Изменение статуса станка с ID=${effectiveId} на ${status}`);
       const updatedMachine = await machineApi.changeMachineStatus(effectiveId, status);
-      setMachine(updatedMachine);
-      setLoading('success');
+      console.log('Ответ после изменения статуса:', updatedMachine);
+      
+      // Если соединение через Socket.IO неактивно, обновляем состояние напрямую
+      if (!isSocketConnected) {
+        console.log('Socket.IO отключен, обновляем данные напрямую');
+        setMachine(updatedMachine);
+        setLoading('success');
+      } else {
+        console.log('Socket.IO активен, ожидаем обновления через событие updateStatus');
+        
+        // Форсируем обновление через небольшую задержку для корректного рендеринга компонентов
+        setTimeout(() => {
+          // Проверяем, пришло ли обновление через сокет
+          if (machineRef.current?.status !== status) {
+            console.log('Обновление через Socket.IO не пришло или не обновило состояние, обновляем данные напрямую');
+            setMachine({
+              ...updatedMachine,
+              // Убедимся, что статус обновился
+              status: status
+            });
+            setLoading('success');
+          } else {
+            console.log('Состояние успешно обновлено через Socket.IO');
+          }
+        }, 1000); // Уменьшаем таймаут до 1 секунды для более быстрой реакции UI
+      }
     } catch (err) {
       setLoading('error');
       setError(err instanceof Error ? err : new Error('Ошибка при изменении статуса станка'));
       console.error('Ошибка при изменении статуса станка:', err);
     }
-  }, [effectiveId]);
+  }, [effectiveId, isSocketConnected]);
 
-  // Загрузка данных о станке при изменении effectiveId
-  useEffect(() => {
-    if (effectiveId) {
-      fetchMachine();
-    }
-  }, [effectiveId]);
-
-  // Вычисляемые состояния станка
+  // Вычисляемые состояния станка на основе текущего статуса
   const isActive = machine?.status === 'ACTIVE';
   const isInactive = machine?.status === 'INACTIVE';
   const isBroken = machine?.status === 'BROKEN';
@@ -109,6 +227,7 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     refetch: fetchMachine,
     machineId: effectiveId,
     segmentId: machine?.segmentId,
-    changeStatus
+    changeStatus,
+    isSocketConnected
   };
 };
