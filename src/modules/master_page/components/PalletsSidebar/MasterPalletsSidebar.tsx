@@ -5,12 +5,13 @@ import useProductionPallets from '../../../hooks/masterPage/productionPalletsMas
 import { getPalletRouteSheet, getOperationStatusText, getProcessStepText } from '../../../api/masterPage/productionPalletsServiceMaster';
 
 interface PalletsSidebarProps {
+  detailInfo: any;
   detailId: number | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClose }) => {
+const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, isOpen, onClose }) => {
   // Ref для боковой панели
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -503,114 +504,133 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ detailId, isOpen, onClo
   };
 
   // Рендеринг основного компонента
-  return (
-    <div
-      ref={sidebarRef}
-      className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
-    >
-      <div className={styles.sidebarHeader}>
+
+return (
+  <div
+    ref={sidebarRef}
+    className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
+  >
+    <div className={styles.sidebarHeader}>
+      <div className={styles.headerTop}>
         <h2>Поддоны детали</h2>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
-
-      <div className={styles.sidebarContent}>
-        {loading ? (
-          <div className={styles.stateContainer}>
-            <div className={styles.loadingSpinner}></div>
-            <div className={styles.loadingMessage}>
-              <h3>Загрузка данных</h3>
-              <p>Пожалуйста, подождите...</p>
-            </div>
-          </div>
-        ) : processStepIdError ? (
-          <div className={styles.stateContainer}>
-            <div className={styles.errorIcon}>⚠️</div>
-            <div className={styles.errorMessage}>
-              <h3>Ошибка загрузки ID сегмента</h3>
-              <p>{processStepIdError}</p>
-              <button className={styles.retryButton} onClick={handleRetry}>
-                Повторить загрузку
-              </button>
-            </div>
-          </div>
-        ) : error || errorMessage ? (
-          <div className={styles.stateContainer}>
-            <div className={styles.errorIcon}>⚠️</div>
-            <div className={styles.errorMessage}>
-              <h3>Ошибка загрузки данных</h3>
-              <p>{errorMessage || 'Произошла ошибка при получении информации о поддонах.'}</p>
-              <button className={styles.retryButton} onClick={handleRetry}>
-                Повторить загрузку
-              </button>
-            </div>
-          </div>
-        ) : pallets.length === 0 ? (
-          <div className={styles.stateContainer}>
-            <div className={styles.emptyIcon}>📭</div>
-            <div className={styles.emptyMessage}>
-              <h3>Нет доступных поддонов</h3>
-              {detailId ? (
-                <p>Для выбранной детали не найдено ни одного поддона.</p>
-              ) : (
-                <p>Выберите деталь для отображения её поддонов.</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className={`${styles.tableContainer} ${showDetails ? styles.showDetails : styles.hideDetails}`}>
-            <div className={styles.tableScrollContainer}>
-              <table className={styles.palletsTable}>
-                <thead>
-                  <tr>
-                    <th>Поддон</th>
-                    <th>Количество</th>
-                    <th>Станок</th>
-                    <th>Буфер</th>
-                    <th>Статус</th>
-                    <th>Действия</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pallets.map((pallet, index) => (
-                    <tr
-                      key={pallet.id}
-                      className={`${styles.animatedRow} ${processingPalletId === pallet.id ? styles.processingRow : ''}`}
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                      data-status={pallet.currentOperation?.status || pallet.currentOperation?.completionStatus || 'NO_OPERATION'}
-                    >
-                      <td>{pallet.name || `Поддон №${pallet.id}`}</td>
-                      <td>{pallet.quantity}</td>
-                      <td>
-                        <MachineSelector pallet={pallet} />
-                      </td>
-                      <td>
-                        <BufferCellSelector pallet={pallet} />
-                      </td>
-                      <td>
-                        <OperationStatus operation={pallet.currentOperation} />
-                      </td>
-                      <td className={styles.actionsCell}>
-                        <button
-                          className={`${styles.actionButton} ${styles.mlButton}`}
-                          onClick={() => handleOpenML(pallet.id)}
-                          disabled={processingPalletId === pallet.id}
-                          title="Маршрутный лист"
-                        >
-                          <DocumentIcon />
-                          МЛ
-                        </button>
-
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+      <div className={styles.detailInfo}>
+        <div className={styles.detailProperty}>
+          <span className={styles.propertyLabel}>Артикул:</span>
+          <span className={styles.propertyValue}>{detailInfo.articleNumber}</span>
+        </div>
+        <div className={styles.detailProperty}>
+          <span className={styles.propertyLabel}>Название:</span>
+          <span className={styles.propertyValue}>{detailInfo.name}</span>
+        </div>
+        <div className={styles.detailProperty}>
+          <span className={styles.propertyLabel}>Размер:</span>
+          <span className={styles.propertyValue}>{detailInfo.size}</span>
+        </div>
       </div>
     </div>
-  );
+
+    <div className={styles.sidebarContent}>
+      {/* Остальное содержимое компонента без изменени�� */}
+      {loading ? (
+        <div className={styles.stateContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <div className={styles.loadingMessage}>
+            <h3>Загрузка данных</h3>
+            <p>Пожалуйста, подождите...</p>
+          </div>
+        </div>
+      ) : processStepIdError ? (
+        <div className={styles.stateContainer}>
+          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorMessage}>
+            <h3>Ошибка загрузки ID сегмента</h3>
+            <p>{processStepIdError}</p>
+            <button className={styles.retryButton} onClick={handleRetry}>
+              Повторить загрузку
+            </button>
+          </div>
+        </div>
+      ) : error || errorMessage ? (
+        <div className={styles.stateContainer}>
+          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorMessage}>
+            <h3>Ошибка загрузки данных</h3>
+            <p>{errorMessage || 'Произошла ошибка при получении информации о поддонах.'}</p>
+            <button className={styles.retryButton} onClick={handleRetry}>
+              Повторить загрузку
+            </button>
+          </div>
+        </div>
+      ) : pallets.length === 0 ? (
+        <div className={styles.stateContainer}>
+          <div className={styles.emptyIcon}>📭</div>
+          <div className={styles.emptyMessage}>
+            <h3>Нет доступных поддонов</h3>
+            {detailId ? (
+              <p>Для выбранной детали не найдено ни одного поддона.</p>
+            ) : (
+              <p>Выберите деталь для отображения её поддонов.</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className={`${styles.tableContainer} ${showDetails ? styles.showDetails : styles.hideDetails}`}>
+          <div className={styles.tableScrollContainer}>
+            <table className={styles.palletsTable}>
+              <thead>
+                <tr>
+                  <th>Поддон</th>
+                  <th>Количество</th>
+                  <th>Адрес</th>
+                   <th>Станок</th>
+                  <th>Статус</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pallets.map((pallet, index) => (
+                  <tr
+                    key={pallet.id}
+                    className={`${styles.animatedRow} ${processingPalletId === pallet.id ? styles.processingRow : ''}`}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                    data-status={pallet.currentOperation?.status || pallet.currentOperation?.completionStatus || 'NO_OPERATION'}
+                  >
+                    <td>{pallet.name || `Поддон №${pallet.id}`}</td>
+                    <td>{pallet.quantity}</td>
+                    <td>
+                      <BufferCellSelector pallet={pallet} />
+                    </td>
+                    <td>
+                      <MachineSelector pallet={pallet} />
+                    </td>
+                    <td>
+                      <OperationStatus operation={pallet.currentOperation} />
+                    </td>
+                    <td className={styles.actionsCell}>
+                      <button
+                        className={`${styles.actionButton} ${styles.mlButton}`}
+                        onClick={() => handleOpenML(pallet.id)}
+                        disabled={processingPalletId === pallet.id}
+                        title="Маршрутный лист"
+                      >
+                        <DocumentIcon />
+                        МЛ
+                      </button>
+
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 };
 
 export default PalletsSidebar;

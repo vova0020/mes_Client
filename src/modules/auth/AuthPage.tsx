@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './AuthPage.module.css';
-import logo from '../../assets/logo-Photoroom.png';
+import logo from '../../assets/logo2.png';
+import logoIcon from '../../assets/logo.png';
 import LoadingScreen from '../../componentsGlobal/LoadingScreen/index';
 import authService, { AuthCredentials } from '../../services/authService';
 
@@ -86,7 +87,8 @@ const AuthPage: React.FC = () => {
       <LoadingScreen isLoading={loading} />
 
       <div className={styles.logoContainer}>
-        <img src={logo} alt="Наш логотип" className={styles.logo} />
+        <img src={logoIcon} alt="Наш логотип" className={styles.logo} />
+        <img src={logo} alt="Наш текст" className={styles.logo} />
       </div>
       <p>raskroy_op1</p>
       <p>raskroy_op2</p>

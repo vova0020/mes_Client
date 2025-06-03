@@ -201,17 +201,17 @@ export const getOperationStatusText = (operation?: OperationDto | null): string 
     return 'Не в обработке';
   }
   
-  // Проверка completionStatus (если есть)
-  if (operation.completionStatus) {
-    switch (operation.completionStatus) {
-      case 'COMPLETED': return 'Готово';
-      case 'PARTIALLY_COMPLETED': return 'Выполнено частично';
-      case 'ON_MACHINE': return 'Ожидает обработки';
-      case 'BUFFERED': return 'В буфере';
-      case 'IN_PROGRESS': return 'В работе';
-      default: return 'В обработке';
-    }
-  } 
+  // // Проверка completionStatus (если есть)
+  // if (operation.completionStatus) {
+  //   switch (operation.completionStatus) {
+  //     case 'COMPLETED': return 'Готово';
+  //     case 'PARTIALLY_COMPLETED': return 'Выполнено частично';
+  //     case 'ON_MACHINE': return 'Ожидает обработки';
+  //     case 'BUFFERED': return 'В буфере';
+  //     case 'IN_PROGRESS': return 'В работе';
+  //     default: return 'В обработке';
+  //   }
+  // } 
   
   // Если нет completionStatus, используем status
   if (operation.status) {
@@ -249,7 +249,7 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
       throw new Error('Не удалось получить ID сегмента из localStorage');
     }
   try {
-    const response = await axios.get<PalletsResponseDto>(`${API_URL}/machinesSmen/detail/pallets`,{
+    const response = await axios.get<PalletsResponseDto>(`${API_URL}/machins/pallets/detail/pallets`,{
       params: {
         detailId: detailId,
         segmentId: segmentId
@@ -395,7 +395,7 @@ export const updateBufferCell = async (palletId: number, bufferCellId: number): 
   try {
        
     // Отправляем запрос на API
-    const response = await axios.post(`${API_URL}/pallets/move-to-buffer`, {
+    const response = await axios.post(`${API_URL}/machins/pallets/move-to-buffer`, {
       palletId: palletId,
       bufferCellId: bufferCellId
     });

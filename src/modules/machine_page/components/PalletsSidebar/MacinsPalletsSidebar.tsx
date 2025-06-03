@@ -510,7 +510,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                   <tr>
                     <th>Поддон</th>
                     <th>Количество</th>
-                    <th>Буфер</th>
+                    <th>Адрес</th>
                     <th>Статус</th>
                     <th>Действия</th>
                   </tr>

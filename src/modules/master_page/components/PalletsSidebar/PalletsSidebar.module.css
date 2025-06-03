@@ -33,18 +33,27 @@
     0 0 0 1000px rgba(0, 0, 0, 0.5); /* Затемнение фона */
 }
 
-/* Заголовок панели */
+/* Заголовок панели - обновленный стиль */
 .sidebarHeader {
-  padding: 16px 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #374051, #2a303c);
+  border-radius: 12px 12px 0 0; /* Закругление только верхних углов */
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.headerTop {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(to bottom, #3f4a5f, #343e4f);
-  border-radius: 12px 12px 0 0; /* Закругление только верхних углов */
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
-.sidebarHeader h2 {
+.headerTop h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
@@ -75,6 +84,75 @@
   color: #3498db;
   transform: scale(1.1);
   background: rgba(255, 255, 255, 0.15);
+}
+
+.detailInfo {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.detailProperty {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(52, 152, 219, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-left: 2px solid #3498db;
+  animation: fadeIn 0.3s forwards;
+}
+
+.propertyLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 6px;
+}
+
+.propertyValue {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  background: rgba(52, 152, 219, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Анимация появления для элементов заголовка */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detailProperty:nth-child(1) { animation-delay: 0.05s; }
+.detailProperty:nth-child(2) { animation-delay: 0.1s; }
+.detailProperty:nth-child(3) { animation-delay: 0.15s; }
+.detailProperty:nth-child(4) { animation-delay: 0.2s; }
+
+/* Добавляем иконки для свойств */
+.detailProperty svg {
+  margin-right: 6px;
+  opacity: 0.7;
 }
 
 /* Основное содержимое панели */
@@ -939,6 +1017,15 @@
     padding: 15px;
   }
   
+  .detailInfo {
+    padding: 12px 15px;
+    gap: 10px;
+  }
+  
+  .detailProperty {
+    padding: 5px 10px;
+  }
+  
   .bufferCellSelect, .machineSelect {
     padding: 8px 10px;
     font-size: 12px;
@@ -976,6 +1063,29 @@
   
   .sidebarContent {
     padding: 12px;
+  }
+  
+  .detailInfo {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .detailProperty {
+    padding: 4px 10px;
+    border-radius: 16px;
+  }
+  
+  .propertyLabel {
+    font-size: 11px;
+  }
+  
+  .propertyValue {
+    font-size: 12px;
+  }
+  
+  .badge {
+    font-size: 10px;
+    padding: 1px 6px;
   }
   
   .palletsTable {

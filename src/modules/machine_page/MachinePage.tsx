@@ -10,7 +10,7 @@ import {
   InactiveStatus, 
   MaintenanceStatus 
 } from './components/loader/spiner';
-import { useMachine } from '../hooks/machinNoSmenHook/useMachine';
+import { useMachine } from '../hooks/machinhook/useMachine';
 
 import styles from './MachinePage.module.css';
 

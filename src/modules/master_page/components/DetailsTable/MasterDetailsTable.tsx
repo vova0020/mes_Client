@@ -17,6 +17,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   // Состояние для боковой панели с поддонами
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
+  const [selectedInfoDetailForPallets, setSelectedInfoDetailForPallets] = useState([]);
   
   // Используем хук для получения данных о деталях
   const { details, loading, error, fetchDetails } = useDetails();
@@ -117,9 +118,10 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   };
 
   // Обработчик клика по кнопке-стрелке
-  const handleArrowClick = (e: React.MouseEvent, detailId: number) => {
+  const handleArrowClick = (e: React.MouseEvent, detailId: number, detail: any) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     setSelectedDetailForPallets(detailId);
+    setSelectedInfoDetailForPallets(detail);
     setSidebarOpen(true);
   };
 
@@ -222,7 +224,8 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
         <table className={styles.detailsTable}>
           <thead>
             <tr>
-              <th>Артикул</th>
+              <th>Артикул детали</th>
+              <th>Артикул упаковки</th>
               <th>Название</th>
               <th>Материал</th>
               <th>Размер</th>
@@ -246,6 +249,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
                 onClick={() => handleRowClick(detail.id)}
               >
                 <td>{detail.articleNumber}</td>
+                <td>тут будет артикул упаковки</td>
                 <td>{detail.name}</td>
                 <td>{detail.material}</td>
                 <td>{detail.size}</td>
@@ -264,7 +268,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
                 <td>
                   <button 
                     className={styles.arrowButton}
-                    onClick={(e) => handleArrowClick(e, detail.id)}
+                    onClick={(e) => handleArrowClick(e, detail.id, detail)}
                   >
                     &#10095; {/* Символ стрелки вправо */}
                   </button>
@@ -278,6 +282,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
       {/* Боковая панель с поддо��ами */}
       <PalletsSidebar 
         detailId={selectedDetailForPallets} 
+        detailInfo={selectedInfoDetailForPallets} 
         isOpen={sidebarOpen} 
         onClose={handleCloseSidebar} 
       />

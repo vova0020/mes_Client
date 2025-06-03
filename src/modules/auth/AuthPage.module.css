@@ -1,6 +1,7 @@
+
 /* Основные переменные */
 :root {
-  --primary-bg: linear-gradient(135deg, #1a1f35, #2d3456);
+  --primary-bg: #2C3E50;  /* Изменили цвет фона на запрошенный #2C3E50 */
   --form-bg: rgba(40, 45, 75, 0.9);  /* Более насыщенный и контрастный фон формы */
   --accent-color: #4f46e5;
   --input-bg: rgba(255, 255, 255, 0.07);  /* Более заметный фон полей ввода */
@@ -38,40 +39,60 @@
   align-items: center;
   min-height: 100vh;
   width: 100%;
-  background: var(--primary-bg);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
+  background: var(--primary-bg); /* Теперь используем одиночный цвет вместо градиента */
   color: var(--text-color);
   padding: 2rem 1rem;
   position: relative;
 }
 
-@keyframes gradientBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Логотип - поднят выше */
+/* Контейнер для логотипов */
 .logoContainer {
   position: relative;
-  margin-bottom: 3rem; /* Увеличен отступ снизу для поднятия логотипа */
-  margin-top: -2rem; /* Отрицательный отступ сверху для поднятия логотипа */
+  margin-bottom: 3rem;
+  margin-top: -2rem;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: logoFloat 10s ease-in-out infinite;
 }
 
-.logo {
-  width: 350px;
-  height: auto;
+/* Стили для логотипа (иконка) */
+.logo:first-child {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
   transition: var(--transition);
-  animation: logoFloat 6s ease-in-out infinite;
+  transform-origin: center;
+  /* Удаляем анимацию движения, оставляем только вращение */
+  animation: logoRotate 3s linear infinite;
+  margin-right: 15px;
+  border-radius: 50%;
 }
 
+/* Стили для текста логотипа */
+.logo:last-child {
+  width: 210px; /* Конкретный размер для текста логотипа */
+  height: auto; /* Автоматическая высота для сохранения пропорций */
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  transition: var(--transition);
+}
+
+
+/* Анимация плавающего движения для контейнера */
 @keyframes logoFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+
+/* Анимация вращения только для логотипа */
+@keyframes logoRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
 
 /* Форма входа - добавлен эффект выпуклости и улучшен контраст */
 .loginFormContainer {
@@ -333,8 +354,12 @@
     margin-top: 0; /* Сброс отрицательного отступа на мобильных */
   }
 
-  .logo {
-    width: 180px;
+  /* Адаптивные стили для логотипов */
+  .logo:first-child,
+  .logo:last-child {
+    width: auto;
+    height: auto;
+    max-width: 80px; /* Ограничение размера на мобильных */
   }
 
   .loginFormContainer {

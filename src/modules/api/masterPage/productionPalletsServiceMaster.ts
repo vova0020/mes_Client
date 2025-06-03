@@ -162,7 +162,7 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
     return [];
   }
   try {
-    const response = await axios.get<PalletsResponseDto>(`${API_URL}/pallets/detail/${detailId}`);
+    const response = await axios.get<PalletsResponseDto>(`${API_URL}/master/pallets/${detailId}`);
     console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
     
     // Обрабатываем данные от API - убеждаемся, что currentOperation корректно определен
@@ -253,7 +253,7 @@ export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
     }
     
     // Формируем URL с обязательным параметром segmentId
-    const response = await axios.get(`${API_URL}/machin/all?segmentId=${segmentId}`);
+    const response = await axios.get(`${API_URL}/machins/master/all?segmentId=${segmentId}`);
     
     // Проверяем формат данных и адаптируем под него
     if (Array.isArray(response.data)) {
@@ -297,7 +297,7 @@ export const assignPalletToMachine = async (
     };
     
     const response = await axios.post<OperationResponse>(
-      `${API_URL}/pallet-operations/assign-to-machine`,
+      `${API_URL}/master/assign-to-machine`,
       payload
     );
     
@@ -321,7 +321,7 @@ export const movePalletToBuffer = async (
     };
     
     const response = await axios.post<OperationResponse>(
-      `${API_URL}/pallet-operations/move-to-buffer`,
+      `${API_URL}/master/move-to-buffer`,
       payload
     );
     

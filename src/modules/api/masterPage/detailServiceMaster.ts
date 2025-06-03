@@ -44,7 +44,7 @@ export const fetchDetailsByOrderId = async (orderId: number | null): Promise<Det
   const segmentId = getSegmentIdFromStorage();
   
   try {
-    const response = await axios.get(`${API_URL}/details/${orderId}/segment/${segmentId}`);
+    const response = await axios.get(`${API_URL}/details/master/${orderId}/segment/${segmentId}`);
     return response.data;
   } catch (error) {
     console.error('Ошибка при получении деталей:', error);

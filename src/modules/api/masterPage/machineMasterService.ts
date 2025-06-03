@@ -72,7 +72,7 @@ export const fetchMachinesBySegment = async (): Promise<Machine[]> => {
       throw new Error('Не удалось получить ID сегмента из localStorage');
     }
     
-    const response = await axios.get<Machine[]>(`${API_URL}/machine-segment/machines`, {
+    const response = await axios.get<Machine[]>(`${API_URL}/machins/master/machines`, {
       params: {
         segmentId: segmentId
       }
@@ -98,7 +98,7 @@ export const fetchMachinesBySegment = async (): Promise<Machine[]> => {
  */
 export const fetchMachineTasks = async (machineId: number): Promise<MachineTask[]> => {
   try {
-    const response = await axios.get<MachineTask[]>(`${API_URL}/machine-segment/machine-tasks`, {
+    const response = await axios.get<MachineTask[]>(`${API_URL}/master/machine-tasks`, {
       params: {
         machineId
       }
@@ -106,7 +106,7 @@ export const fetchMachineTasks = async (machineId: number): Promise<MachineTask[
     
     return response.data;
   } catch (error) {
-    console.error(`Оши��ка при получении сменного задания для станка ${machineId}:`, error);
+    console.error(`Ошибка при получении сменного задания для станка ${machineId}:`, error);
     throw error;
   }
 };
@@ -170,7 +170,7 @@ export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
     }
     
     // Формируем URL с обязательным параметром segmentId
-    const response = await axios.get(`${API_URL}/machin/all`, {
+    const response = await axios.get(`${API_URL}/machins/master/all`, {
       params: {
         segmentId
       }
