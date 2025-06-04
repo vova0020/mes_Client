@@ -109,7 +109,7 @@ const authService = {
     
     switch (role) {
       case 'admin':
-        return '/master';
+        return '/settings';
       case 'nosmen':
         return '/nosmenmachine';
       case 'ypakmaster':

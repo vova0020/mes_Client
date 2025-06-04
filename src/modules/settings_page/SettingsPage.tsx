@@ -1,0 +1,80 @@
+import React, { useEffect, useState } from 'react';
+import Header from './components/Header/Header';
+import Sidebar, { SettingSection } from './components/Sidebar/Sidebar';
+import BufferSettings from './components/blocks/BufferSettings/BufferSettings';
+
+import styles from './SettingsPage.module.css';
+import UserSettings from './components/blocks/UserSettings/UserSettings';
+
+const SettingsPage: React.FC = () => {
+  // Состояние для отслеживания текущего активного раздела
+  const [activeSection, setActiveSection] = useState<SettingSection>(null);
+
+  // Функция для изменения активного раздела
+  const handleSectionChange = (section: SettingSection) => {
+    setActiveSection(section);
+  };
+
+  // Функция для рендеринга соответствующего компонента в зависимости от активного раздела
+  const renderActiveComponent = () => {
+    switch (activeSection) {
+      case 'buffer':
+        return <BufferSettings />;
+      case 'users':
+        return <UserSettings />;
+      case 'workplace_ypak':
+        return <div className={styles.placeholderContent}>Настройки рабочих мест УПАК (в разработке)</div>;
+      case 'machin':
+        return <div className={styles.placeholderContent}>Настройки станков (в разработке)</div>;
+      case 'technological_route':
+        return <div className={styles.placeholderContent}>Технологические маршруты (в разработке)</div>;
+      case 'technological_operations':
+        return <div className={styles.placeholderContent}>Технологические операции (в разработке)</div>;
+      case 'streams':
+        return <div className={styles.placeholderContent}>Управление потоками (в разработке)</div>;
+      case 'materials':
+        return <div className={styles.placeholderContent}>Материалы (в разработке)</div>;
+      default:
+        return (
+          <div className={styles.welcomeContent}>
+            <h2>Добро пожаловать в настройки MES системы</h2>
+            <p>Выберите раздел настроек в боковом меню</p>
+          </div>
+        );
+    }
+  };
+  useEffect(()=>{
+    console.log(activeSection);
+    
+  },[activeSection])
+
+  return (
+    <div className={styles.mesPage}>
+      {/* Боковая панель всегда отображается */}
+      <div className={styles.Sidebar_Block}>
+        <Sidebar 
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+        />
+      </div>
+      
+      {/* Основной блок контента (прижат к правому краю) */}
+      <div className={styles.Content_Block}>
+        {/* Шапка */}
+        <div className={styles.headerBlock}>
+          <Header />
+        </div>
+
+        {/* Основной контейнер с контентом */}
+        <div className={styles.mainContainer}>
+          {/* Рендер активного компонента */}
+          <div className={styles.settingsContent}>
+            {renderActiveComponent()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SettingsPage;

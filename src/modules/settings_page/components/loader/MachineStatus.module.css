@@ -1,0 +1,49 @@
+.statusContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.statusIcon {
+  font-size: 64px !important;
+  margin-bottom: 1.5rem;
+}
+
+.statusText {
+  margin-bottom: 1rem !important;
+  font-weight: 600 !important;
+}
+
+.statusSubtext {
+  margin-bottom: 1.5rem !important;
+  max-width: 500px;
+}
+
+.retryButton {
+  margin-top: 1rem !important;
+}
+
+/* Анимация для иконок */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.statusIcon {
+  animation: pulse 2s infinite ease-in-out;
+}
