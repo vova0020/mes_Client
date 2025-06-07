@@ -1,11 +1,13 @@
 
 /* Основные переменные */
 :root {
-  --primary-bg: #2C3E50;  /* Изменили цвет фона на запрошенный #2C3E50 */
-  --form-bg: rgba(40, 45, 75, 0.9);  /* Более насыщенный и контрастный фон формы */
+  --primary-bg: #2C3E50;  /* Цвет фона страницы */
+  --form-bg: rgba(255, 255, 255, 1);  /* Изменено на белый цвет */
+  --form-text: rgba(40, 45, 75, 0.9);  /* Добавлен цвет текста - прежний цвет формы */
   --accent-color: #4f46e5;
-  --input-bg: rgba(255, 255, 255, 0.07);  /* Более заметный фон полей ввода */
-  --text-color: rgba(255, 255, 255, 0.95);
+  --input-bg: rgba(255, 255, 255, 1);  /* Белый фон для полей ввода */
+  --input-border: rgba(40, 45, 75, 0.2); /* Цвет границы полей ввода */
+  --text-color: rgba(40, 45, 75, 0.9); /* Изменен цвет текста на темно-синий */
   --error-color: #ef4444;
   --success-color: #10b981;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -94,7 +96,7 @@
 
 
 
-/* Форма входа - добавлен эффект выпуклости и улучшен контраст */
+/* Форма входа - изменен фон на белый */
 .loginFormContainer {
   background: var(--form-bg);
   backdrop-filter: blur(10px);
@@ -102,24 +104,17 @@
   border-radius: 1.5rem;
   width: 100%;
   max-width: 400px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(40, 45, 75, 0.1);
   /* Улучшенная тень для эффекта выпуклости */
   box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 10px 30px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+    inset 0 1px 1px rgba(255, 255, 255, 0.8),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.05);
   animation: formAppear 0.6s ease-out;
   position: relative;
   overflow: hidden;
   margin-top: 0;
-  /* Градиент для эффекта выпуклости */
-  background-image: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(0, 0, 0, 0.05) 100%
-  );
-  background-blend-mode: overlay;
 }
 
 .loginFormContainer::before {
@@ -132,7 +127,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.5),
     transparent
   );
   transition: 0.5s;
@@ -152,9 +147,9 @@
   height: 1px;
   background: linear-gradient(
     to right,
-    rgba(255, 255, 255, 0.05),
-    rgba(255, 255, 255, 0.2),
-    rgba(255, 255, 255, 0.05)
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.5)
   );
 }
 
@@ -169,15 +164,15 @@
   }
 }
 
-/* Заголовок - улучшена видимость */
+/* Заголовок - изменен цвет на темно-синий */
 .loginTitle {
   text-align: center;
   margin-bottom: 2rem;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: var(--form-text);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
 /* Форма */
@@ -187,7 +182,7 @@
   gap: 1.5rem;
 }
 
-/* Группы полей ввода - улучшена видимость */
+/* Группы полей ввода - изменен цвет текста */
 .formGroup {
   margin-bottom: 1.5rem;
 }
@@ -196,29 +191,27 @@
   display: block;
   margin-bottom: 0.75rem;
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--form-text);
   font-weight: 600;
   transition: var(--transition);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .formGroup input {
   width: 100%;
   padding: 0.875rem;
   background: var(--input-bg);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--input-border);
   border-radius: 0.75rem;
   color: var(--text-color);
   font-size: 1rem;
   transition: var(--transition);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) inset;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .formGroup input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1) inset;
-  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
 /* Контейнер поля пароля */
@@ -232,17 +225,17 @@
   padding-right: 40px;
 }
 
-/* Кнопка переключения видимости пароля - улучшена видимость */
+/* Кнопка переключения видимости пароля - изменен цвет */
 .passwordToggle {
   position: absolute;
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(40, 45, 75, 0.05);
   border: none;
   padding: 8px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--form-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -251,9 +244,8 @@
 }
 
 .passwordToggle:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);
+  color: var(--accent-color);
+  background: rgba(40, 45, 75, 0.1);
 }
 
 .passwordToggle:focus {
@@ -261,7 +253,7 @@
   box-shadow: 0 0 0 2px var(--accent-color);
 }
 
-/* Кнопка входа - улучшена видимость и добавлен эффект выпуклости */
+/* Кнопка входа - оставляем контрастной */
 .loginButton {
   width: 100%;
   padding: 1rem;
@@ -279,7 +271,7 @@
   text-transform: uppercase;
   /* Улучшенная тень для эффекта выпуклости */
   box-shadow: 
-    0 4px 6px rgba(0, 0, 0, 0.2),
+    0 4px 6px rgba(0, 0, 0, 0.1),
     inset 0 1px 1px rgba(255, 255, 255, 0.4),
     inset 0 -1px 1px rgba(0, 0, 0, 0.1);
 }
@@ -303,7 +295,7 @@
 .loginButton:hover {
   transform: translateY(-2px);
   box-shadow: 
-    0 6px 15px rgba(79, 70, 229, 0.4),
+    0 6px 15px rgba(79, 70, 229, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.4),
     inset 0 -1px 1px rgba(0, 0, 0, 0.1);
 }
@@ -315,7 +307,7 @@
 .loginButton:active {
   transform: translateY(0);
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.1),
     inset 0 1px 1px rgba(0, 0, 0, 0.1),
     inset 0 -1px 1px rgba(255, 255, 255, 0.1);
 }
@@ -333,15 +325,15 @@
 }
 
 .errorMessage {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ff6b6b;
+  background: rgba(239, 68, 68, 0.1);
+  color: #e53e3e;
   padding: 0.75rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   text-align: center;
   font-size: 0.875rem;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Адаптивность */
@@ -386,7 +378,7 @@
 /* Поддержка Firefox */
 @-moz-document url-prefix() {
   .loginFormContainer {
-    background: rgba(40, 45, 75, 0.95);
+    background: rgba(255, 255, 255, 0.98);
   }
 }
 
@@ -395,7 +387,7 @@
 .formGroup input:-webkit-autofill:hover,
 .formGroup input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--text-color);
-  -webkit-box-shadow: 0 0 0px 1000px rgba(40, 45, 70, 0.9) inset;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.98) inset;
   transition: background-color 5000s ease-in-out 0s;
 }
 

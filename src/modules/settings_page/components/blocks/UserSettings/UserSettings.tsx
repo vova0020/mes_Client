@@ -1,57 +1,28 @@
-
 import React, { useState, useEffect } from 'react';
 import {
-    TextField,
-    Button,
-    Paper,
     Typography,
-    Grid,
-    Divider,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemAvatar,
-    ListItemSecondaryAction,
-    IconButton,
     Tabs,
     Tab,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    SelectChangeEvent,
-    Snackbar,
-    Alert,
-    Avatar,
-    Chip,
-    InputAdornment,
-    ListItemButton
+    Paper,
+    Grid
 } from '@mui/material';
-import {
-    Add,
-    Edit,
-    Delete,
-    Visibility,
-    VisibilityOff,
-    PersonAdd,
-    AdminPanelSettings,
-    Engineering,
-    Construction,
-    Person
-} from '@mui/icons-material';
 import styles from './UserSettings.module.css';
 
+// Компоненты
+import UserList from './components/UserList';
+import UserDetails from './components/UserDetails';
+import RoleList from './components/RoleList';
+import UserForm from './components/UserForm';
+import RoleForm from './components/RoleForm';
+import Notification, { NotificationSeverity } from './components/common/Notification';
+
 // Интерфейсы для данных (в реальном приложении получаются с бэкенда)
-interface IRole {
+export interface IRole {
     id: number;
     name: string;
 }
 
-interface IUserDetail {
+export interface IUserDetail {
     id: number;
     userId: number;
     fullName: string;
@@ -60,7 +31,7 @@ interface IUserDetail {
     salary: number | null;
 }
 
-interface IUser {
+export interface IUser {
     id: number;
     username: string;
     password: string;
@@ -81,38 +52,16 @@ const UserSettings: React.FC = () => {
     // Состояния для выбранных элементов
     const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
 
-    // Состояния для форм
-    const [userForm, setUserForm] = useState<Partial<IUser & { confirmPassword: string }>>({
-        username: '',
-        password: '',
-        confirmPassword: '',
-        roleId: 0
-    });
-
-    const [detailsForm, setDetailsForm] = useState<Partial<IUserDetail>>({
-        fullName: '',
-        phone: '',
-        position: '',
-        salary: null
-    });
-
-    const [roleForm, setRoleForm] = useState<Partial<IRole>>({
-        name: ''
-    });
-
     // Состояния для диалогов
     const [userDialogOpen, setUserDialogOpen] = useState(false);
     const [roleDialogOpen, setRoleDialogOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Состояние для отображения пароля
-    const [showPassword, setShowPassword] = useState(false);
-
     // Состояние для уведомлений
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
-        severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+        severity: 'success' as NotificationSeverity
     });
 
     // Имитация загрузки данных с сервера
@@ -141,99 +90,34 @@ const UserSettings: React.FC = () => {
         setUsers(mockUsers);
     }, []);
 
-    // Обработчики для формы пользователя
-    const handleUserFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setUserForm(prev => ({ ...prev, [name]: value }));
+    // Обработчик для з��крытия уведомления
+    const handleCloseSnackbar = () => {
+        setSnackbar(prev => ({ ...prev, open: false }));
     };
 
-    const handleRoleChange = (e: SelectChangeEvent<number>) => {
-        setUserForm(prev => ({ ...prev, roleId: e.target.value as number }));
+    // Получаем имя роли по ID
+    const getRoleName = (roleId: number) => {
+        const role = roles.find(r => r.id === roleId);
+        return role ? role.name : 'Неизвестная роль';
     };
 
-    const handleDetailsFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setDetailsForm(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value === '' ? null : parseFloat(e.target.value);
-        setDetailsForm(prev => ({ ...prev, salary: value }));
-    };
-
+    // Обработчики для пользователей
     const handleOpenUserDialog = (user?: IUser) => {
         if (user) {
-            // Редактирование существующего пользователя
-            setUserForm({
-                id: user.id,
-                username: user.username,
-                password: '', // Пароль не загружаем для редактирования
-                confirmPassword: '',
-                roleId: user.roleId
-            });
-
-            const userDetail = userDetails.find(detail => detail.userId === user.id);
-            if (userDetail) {
-                setDetailsForm({
-                    id: userDetail.id,
-                    userId: userDetail.userId,
-                    fullName: userDetail.fullName,
-                    phone: userDetail.phone || '',
-                    position: userDetail.position || '',
-                    salary: userDetail.salary
-                });
-            } else {
-                setDetailsForm({
-                    fullName: '',
-                    phone: '',
-                    position: '',
-                    salary: null
-                });
-            }
-
             setIsEditing(true);
         } else {
-            // Создание нового пользователя
-            setUserForm({
-                username: '',
-                password: '',
-                confirmPassword: '',
-                roleId: roles.length > 0 ? roles[0].id : 0
-            });
-
-            setDetailsForm({
-                fullName: '',
-                phone: '',
-                position: '',
-                salary: null
-            });
-
             setIsEditing(false);
         }
-
         setUserDialogOpen(true);
     };
 
     const handleCloseUserDialog = () => {
         setUserDialogOpen(false);
-        setUserForm({
-            username: '',
-            password: '',
-            confirmPassword: '',
-            roleId: 0
-        });
-        setDetailsForm({
-            fullName: '',
-            phone: '',
-            position: '',
-            salary: null
-        });
-        setShowPassword(false);
     };
 
-    const handleSaveUser = () => {
+    const handleSaveUser = (userData: Partial<IUser>, detailsData: Partial<IUserDetail>) => {
         // Валидация формы
-        if (!userForm.username) {
+        if (!userData.username) {
             setSnackbar({
                 open: true,
                 message: 'Имя пользователя обязательно',
@@ -242,7 +126,7 @@ const UserSettings: React.FC = () => {
             return;
         }
 
-        if (!isEditing && !userForm.password) {
+        if (!isEditing && !userData.password) {
             setSnackbar({
                 open: true,
                 message: 'Пароль обязателен для нового пользователя',
@@ -251,16 +135,7 @@ const UserSettings: React.FC = () => {
             return;
         }
 
-        if (!isEditing && userForm.password !== userForm.confirmPassword) {
-            setSnackbar({
-                open: true,
-                message: 'Пароли не совпадают',
-                severity: 'error'
-            });
-            return;
-        }
-
-        if (!detailsForm.fullName) {
+        if (!detailsData.fullName) {
             setSnackbar({
                 open: true,
                 message: 'ФИО обязательно',
@@ -269,7 +144,7 @@ const UserSettings: React.FC = () => {
             return;
         }
 
-        if (!userForm.roleId) {
+        if (!userData.roleId) {
             setSnackbar({
                 open: true,
                 message: 'Необходимо выбрать роль',
@@ -280,8 +155,8 @@ const UserSettings: React.FC = () => {
 
         // Проверка на уникальность имени пользователя
         const isDuplicate = users.some(u =>
-            u.username === userForm.username &&
-            (!isEditing || u.id !== userForm.id)
+            u.username === userData.username &&
+            (!isEditing || u.id !== userData.id)
         );
 
         if (isDuplicate) {
@@ -294,13 +169,13 @@ const UserSettings: React.FC = () => {
         }
 
         // Имитация сохранения на сервер
-        if (isEditing && userForm.id) {
+        if (isEditing && userData.id) {
             // Обновление существующего пользователя
             const updatedUser: IUser = {
-                id: userForm.id,
-                username: userForm.username!,
-                password: userForm.password || users.find(u => u.id === userForm.id)!.password,
-                roleId: userForm.roleId!,
+                id: userData.id,
+                username: userData.username!,
+                password: userData.password || users.find(u => u.id === userData.id)!.password,
+                roleId: userData.roleId!,
                 details: null // Будет обновлено ниже
             };
 
@@ -309,16 +184,15 @@ const UserSettings: React.FC = () => {
             ));
 
             // Обновление или создание деталей пользователя
-            if (detailsForm.id) {
+            if (detailsData.id) {
                 // Обновление существующих деталей
                 const updatedDetails: IUserDetail = {
-                    id: detailsForm.id,
-                    userId: userForm.id,
-                    fullName: detailsForm.fullName!,
-                    phone: detailsForm.phone || null,
-                    position: detailsForm.position || null,
-                    //@ts-ignore
-                    salary: detailsForm.salary
+                    id: detailsData.id,
+                    userId: userData.id,
+                    fullName: detailsData.fullName!,
+                    phone: detailsData.phone || null,
+                    position: detailsData.position || null,
+                    salary: detailsData.salary || null  
                 };
 
                 setUserDetails(prev => prev.map(d =>
@@ -327,25 +201,24 @@ const UserSettings: React.FC = () => {
 
                 // Обновляем ссылку на детали в пользователе
                 setUsers(prev => prev.map(u =>
-                    u.id === userForm.id ? { ...u, details: updatedDetails } : u
+                    u.id === userData.id ? { ...u, details: updatedDetails } : u
                 ));
             } else {
                 // Создание новых деталей
                 const newDetails: IUserDetail = {
                     id: Math.max(...userDetails.map(d => d.id), 0) + 1,
-                    userId: userForm.id,
-                    fullName: detailsForm.fullName!,
-                    phone: detailsForm.phone || null,
-                    position: detailsForm.position || null,
-                     //@ts-ignore
-                    salary: detailsForm.salary
+                    userId: userData.id,
+                    fullName: detailsData.fullName!,
+                    phone: detailsData.phone || null,
+                    position: detailsData.position || null,
+                    salary: detailsData.salary || null 
                 };
 
                 setUserDetails(prev => [...prev, newDetails]);
 
                 // Обновляем ссылку на детали в пользователе
                 setUsers(prev => prev.map(u =>
-                    u.id === userForm.id ? { ...u, details: newDetails } : u
+                    u.id === userData.id ? { ...u, details: newDetails } : u
                 ));
             }
 
@@ -362,11 +235,10 @@ const UserSettings: React.FC = () => {
             const newDetails: IUserDetail = {
                 id: Math.max(...userDetails.map(d => d.id), 0) + 1,
                 userId: newUserId,
-                fullName: detailsForm.fullName!,
-                phone: detailsForm.phone || null,
-                position: detailsForm.position || null,
-                 //@ts-ignore
-                salary: detailsForm.salary
+                fullName: detailsData.fullName!,
+                phone: detailsData.phone || null,
+                position: detailsData.position || null,
+                salary: detailsData.salary || null 
             };
 
             setUserDetails(prev => [...prev, newDetails]);
@@ -374,9 +246,9 @@ const UserSettings: React.FC = () => {
             // Создание пользователя
             const newUser: IUser = {
                 id: newUserId,
-                username: userForm.username!,
-                password: userForm.password!, // В реальном приложении здесь был бы хэш пароля
-                roleId: userForm.roleId!,
+                username: userData.username!,
+                password: userData.password!, // В реальном приложении здесь был бы хэш пароля
+                roleId: userData.roleId!,
                 details: newDetails
             };
 
@@ -412,23 +284,11 @@ const UserSettings: React.FC = () => {
         }
     };
 
-    // Обработчики для формы роли
-    const handleRoleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setRoleForm(prev => ({ ...prev, [name]: value }));
-    };
-
+    // Обработчики для ролей
     const handleOpenRoleDialog = (role?: IRole) => {
         if (role) {
-            setRoleForm({
-                id: role.id,
-                name: role.name
-            });
             setIsEditing(true);
         } else {
-            setRoleForm({
-                name: ''
-            });
             setIsEditing(false);
         }
         setRoleDialogOpen(true);
@@ -436,13 +296,10 @@ const UserSettings: React.FC = () => {
 
     const handleCloseRoleDialog = () => {
         setRoleDialogOpen(false);
-        setRoleForm({
-            name: ''
-        });
     };
 
-    const handleSaveRole = () => {
-        if (!roleForm.name) {
+    const handleSaveRole = (roleData: Partial<IRole>) => {
+        if (!roleData.name) {
             setSnackbar({
                 open: true,
                 message: 'Название роли обязательно',
@@ -453,8 +310,8 @@ const UserSettings: React.FC = () => {
 
         // Проверка на уникальность названия роли
         const isDuplicate = roles.some(r =>
-            r.name === roleForm.name &&
-            (!isEditing || r.id !== roleForm.id)
+            r.name === roleData.name &&
+            (!isEditing || r.id !== roleData.id)
         );
 
         if (isDuplicate) {
@@ -467,11 +324,11 @@ const UserSettings: React.FC = () => {
         }
 
         // Имитация сохранения на сервер
-        if (isEditing && roleForm.id) {
+        if (isEditing && roleData.id) {
             // Обновление существующей роли
             setRoles(prev => prev.map(r =>
-                r.id === roleForm.id
-                    ? { ...r, ...roleForm } as IRole
+                r.id === roleData.id
+                    ? { ...r, ...roleData } as IRole
                     : r
             ));
             setSnackbar({
@@ -483,7 +340,7 @@ const UserSettings: React.FC = () => {
             // Создание новой роли
             const newRole: IRole = {
                 id: Math.max(...roles.map(r => r.id), 0) + 1,
-                name: roleForm.name
+                name: roleData.name
             };
             setRoles(prev => [...prev, newRole]);
             setSnackbar({
@@ -517,254 +374,6 @@ const UserSettings: React.FC = () => {
         });
     };
 
-    // Обработчик для закрытия уведомления
-    const handleCloseSnackbar = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
-
-    // Получаем имя роли по ID
-    const getRoleName = (roleId: number) => {
-        const role = roles.find(r => r.id === roleId);
-        return role ? role.name : 'Неизвестная роль';
-    };
-
-    // Получаем иконку для роли
-    const getRoleIcon = (roleName: string) => {
-        switch (roleName.toLowerCase()) {
-            case 'администратор':
-                return <AdminPanelSettings />;
-            case 'оператор':
-                return <Engineering />;
-            case 'мастер':
-                return <Construction />;
-            default:
-                return <Person />;
-        }
-    };
-
-    // Рендер списка пользователей
-    const renderUserList = () => {
-        return (
-            <div className={styles.listContainer}>
-                <div className={styles.listHeader}>
-                    <Typography variant="h6" component="h2">
-                        Список пользователей
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<PersonAdd />}
-                        onClick={() => handleOpenUserDialog()}
-                        className={styles.addButton}
-                    >
-                        Добавить пользователя
-                    </Button>
-                </div>
-                <Divider />
-                {users.length === 0 ? (
-                    <Typography className={styles.emptyMessage}>
-                        Пользователи не найдены. Создайте первого пользователя.
-                    </Typography>
-                ) : (
-                    <List>
-                        {users.map((user, index) => (
-                            <ListItem 
-                                key={user.id} 
-                                className={styles.userItem}
-                                style={{ animationDelay: `${index * 0.05}s` }}
-                            >
-                                <ListItemButton
-                                    selected={selectedUser?.id === user.id}
-                                    onClick={() => setSelectedUser(user)}
-                                >
-                                    <ListItemAvatar>
-                                        <Avatar className={styles.avatar}>
-                                            {getRoleIcon(getRoleName(user.roleId))}
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={user.username}
-                                        secondary={
-                                            <>
-                                                <Chip
-                                                    label={getRoleName(user.roleId)}
-                                                    size="small"
-                                                    className={styles.roleChip}
-                                                />
-                                                {user.details && (
-                                                    <span className={styles.secondaryText}>
-                                                        {user.details.fullName}
-                                                    </span>
-                                                )}
-                                            </>
-                                        }
-                                    />
-                                </ListItemButton>
-
-                                <ListItemSecondaryAction>
-                                    <IconButton
-                                        edge="end"
-                                        onClick={() => handleOpenUserDialog(user)}
-                                        size="small"
-                                    >
-                                        <Edit />
-                                    </IconButton>
-                                    <IconButton
-                                        edge="end"
-                                        onClick={() => handleDeleteUser(user.id)}
-                                        size="small"
-                                        className={styles.deleteButton}
-                                    >
-                                        <Delete />
-                                    </IconButton>
-                                </ListItemSecondaryAction>
-                            </ListItem>
-
-                        ))}
-                    </List>
-                )}
-            </div>
-        );
-    };
-
-    // Рендер детальной информации о выбранном пользователе
-    const renderUserDetails = () => {
-        if (!selectedUser) {
-            return (
-                <Typography className={styles.selectPrompt}>
-                    Выберите пользователя для просмотра деталей
-                </Typography>
-            );
-        }
-
-        const userDetail = userDetails.find(detail => detail.userId === selectedUser.id);
-
-        return (
-            <div className={styles.userDetailsContainer}>
-                <Typography variant="h6" component="h2" className={styles.detailsTitle}>
-                    Информация о пользователе
-                </Typography>
-                <Divider className={styles.divider} />
-
-                <div className={styles.userInfo}>
-                    <div className={styles.userInfoHeader}>
-                        <Avatar className={styles.largeAvatar}>
-                            {getRoleIcon(getRoleName(selectedUser.roleId))}
-                        </Avatar>
-                        <div className={styles.userMainInfo}>
-                            <Typography variant="h5">{selectedUser.username}</Typography>
-                            <Chip
-                                label={getRoleName(selectedUser.roleId)}
-                                className={styles.roleChipLarge}
-                            />
-                        </div>
-                    </div>
-
-                    {userDetail ? (
-                        <div className={styles.userDetailInfo}>
-                            <div className={styles.detailRow}>
-                                <Typography variant="subtitle2">ФИО:</Typography>
-                                <Typography>{userDetail.fullName}</Typography>
-                            </div>
-
-                            {userDetail.position && (
-                                <div className={styles.detailRow}>
-                                    <Typography variant="subtitle2">Должность:</Typography>
-                                    <Typography>{userDetail.position}</Typography>
-                                </div>
-                            )}
-
-                            {userDetail.phone && (
-                                <div className={styles.detailRow}>
-                                    <Typography variant="subtitle2">Телефон:</Typography>
-                                    <Typography>{userDetail.phone}</Typography>
-                                </div>
-                            )}
-
-                            {userDetail.salary !== null && (
-                                <div className={styles.detailRow}>
-                                    <Typography variant="subtitle2">Оклад:</Typography>
-                                    <Typography>{userDetail.salary.toLocaleString()} руб.</Typography>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <Typography className={styles.noDetails}>
-                            Дополнительная информация отсутствует
-                        </Typography>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-    // Рендер списка ролей
-    const renderRoleList = () => {
-        return (
-            <div className={styles.listContainer}>
-                <div className={styles.listHeader}>
-                    <Typography variant="h6" component="h2">
-                        Управление ролями
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<Add />}
-                        onClick={() => handleOpenRoleDialog()}
-                        className={styles.addButton}
-                    >
-                        Добавить роль
-                    </Button>
-                </div>
-                <Divider />
-                {roles.length === 0 ? (
-                    <Typography className={styles.emptyMessage}>
-                        Роли не найдены. Создайте первую роль.
-                    </Typography>
-                ) : (
-                    <List>
-                        {roles.map((role, index) => (
-                            <ListItem 
-                                key={role.id} 
-                                className={styles.roleItem}
-                                style={{ animationDelay: `${index * 0.05}s` }}
-                            >
-                                <ListItemAvatar>
-                                    <Avatar className={styles.avatar}>
-                                        {getRoleIcon(role.name)}
-                                    </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={role.name}
-                                    secondary={
-                                        <span className={styles.secondaryText}>
-                                            Пользователей с ролью: {users.filter(u => u.roleId === role.id).length}
-                                        </span>
-                                    }
-                                />
-                                <ListItemSecondaryAction>
-                                    <IconButton
-                                        edge="end"
-                                        onClick={() => handleOpenRoleDialog(role)}
-                                        size="small"
-                                    >
-                                        <Edit />
-                                    </IconButton>
-                                    <IconButton
-                                        edge="end"
-                                        onClick={() => handleDeleteRole(role.id)}
-                                        size="small"
-                                        className={styles.deleteButton}
-                                    >
-                                        <Delete />
-                                    </IconButton>
-                                </ListItemSecondaryAction>
-                            </ListItem>
-                        ))}
-                    </List>
-                )}
-            </div>
-        );
-    };
-
     return (
         <div className={styles.userSettings}>
             <Typography variant="h5" component="h1" className={styles.mainTitle}>
@@ -782,19 +391,28 @@ const UserSettings: React.FC = () => {
 
             {activeTab === 0 ? (
                 <div className={styles.userManagement}>
-
                     <Grid spacing={2}>
                         <Grid size={{ xs: 12, md: 5 }}>
-                            {/* Список буферов */}
                             <Paper className={styles.paper}>
-                                {renderUserList()}
+                                <UserList 
+                                    users={users}
+                                    roles={roles}
+                                    selectedUser={selectedUser}
+                                    setSelectedUser={setSelectedUser}
+                                    onEdit={handleOpenUserDialog}
+                                    onDelete={handleDeleteUser}
+                                    getRoleName={getRoleName}
+                                />
                             </Paper>
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 7 }}>
-                            {/* Список ячеек */}
                             <Paper className={styles.paper}>
-                                {renderUserDetails()}
+                                <UserDetails 
+                                    selectedUser={selectedUser}
+                                    userDetails={userDetails}
+                                    getRoleName={getRoleName}
+                                />
                             </Paper>
                         </Grid>
                     </Grid>
@@ -802,227 +420,43 @@ const UserSettings: React.FC = () => {
             ) : (
                 <div className={styles.roleManagement}>
                     <Paper className={styles.paper}>
-                        {renderRoleList()}
+                        <RoleList 
+                            roles={roles}
+                            users={users}
+                            onEdit={handleOpenRoleDialog}
+                            onDelete={handleDeleteRole}
+                        />
                     </Paper>
                 </div>
             )}
 
             {/* Диалог для создания/редактирования пользователя */}
-            <Dialog
+            <UserForm 
                 open={userDialogOpen}
                 onClose={handleCloseUserDialog}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle className={styles.dialogTitle}>
-                    {isEditing ? 'Редактирование пользователя' : 'Создание нового пользователя'}
-                </DialogTitle>
-                <DialogContent className={styles.dialogContent}>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography variant="subtitle1" gutterBottom className={styles.formSectionTitle}>
-                                Учетные данные
-                            </Typography>
-
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                name="username"
-                                label="Имя пользователя"
-                                type="text"
-                                fullWidth
-                                value={userForm.username || ''}
-                                onChange={handleUserFormChange}
-                                required
-                                variant="outlined"
-                                className={styles.formField}
-                            />
-
-                            <TextField
-                                margin="dense"
-                                name="password"
-                                label={isEditing ? "Новый пароль (оставьте пустым, чтобы не менять)" : "Пароль"}
-                                type={showPassword ? "text" : "password"}
-                                fullWidth
-                                value={userForm.password || ''}
-                                onChange={handleUserFormChange}
-                                required={!isEditing}
-                                variant="outlined"
-                                className={styles.formField}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                edge="end"
-                                            >
-                                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    )
-                                }}
-                            />
-
-                            <TextField
-                                margin="dense"
-                                name="confirmPassword"
-                                label="Подтвердите пароль"
-                                type={showPassword ? "text" : "password"}
-                                fullWidth
-                                value={userForm.confirmPassword || ''}
-                                onChange={handleUserFormChange}
-                                required={!isEditing}
-                                variant="outlined"
-                                className={styles.formField}
-                                error={userForm.password !== userForm.confirmPassword && userForm.confirmPassword !== ''}
-                                helperText={userForm.password !== userForm.confirmPassword && userForm.confirmPassword !== '' ? "Пароли не совпадают" : ""}
-                            />
-
-                            <FormControl fullWidth variant="outlined" className={styles.formField}>
-                                <InputLabel id="role-select-label">Роль</InputLabel>
-                                <Select
-                                    labelId="role-select-label"
-                                    id="role-select"
-                                    value={userForm.roleId || ''}
-                                    onChange={handleRoleChange}
-                                    label="Роль"
-                                    required
-                                >
-                                    {roles.map(role => (
-                                        <MenuItem key={role.id} value={role.id}>
-                                            {role.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 6 }} >
-                            <Typography variant="subtitle1" gutterBottom className={styles.formSectionTitle}>
-                                Персональные данные
-                            </Typography>
-
-                            <TextField
-                                margin="dense"
-                                name="fullName"
-                                label="ФИО"
-                                type="text"
-                                fullWidth
-                                value={detailsForm.fullName || ''}
-                                onChange={handleDetailsFormChange}
-                                required
-                                variant="outlined"
-                                className={styles.formField}
-                            />
-
-                            <TextField
-                                margin="dense"
-                                name="position"
-                                label="Должность"
-                                type="text"
-                                fullWidth
-                                value={detailsForm.position || ''}
-                                onChange={handleDetailsFormChange}
-                                variant="outlined"
-                                className={styles.formField}
-                            />
-
-                            <TextField
-                                margin="dense"
-                                name="phone"
-                                label="Телефон"
-                                type="text"
-                                fullWidth
-                                value={detailsForm.phone || ''}
-                                onChange={handleDetailsFormChange}
-                                variant="outlined"
-                                className={styles.formField}
-                            />
-
-                            <TextField
-                                margin="dense"
-                                name="salary"
-                                label="Оклад (руб.)"
-                                type="number"
-                                fullWidth
-                                value={detailsForm.salary === null ? '' : detailsForm.salary}
-                                onChange={handleSalaryChange}
-                                variant="outlined"
-                                className={styles.formField}
-                                InputProps={{
-                                    inputProps: { min: 0 }
-                                }}
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions className={styles.dialogActions}>
-                    <Button 
-                        onClick={handleCloseUserDialog} 
-                        className={`${styles.dialogButton} ${styles.cancelButton}`}
-                    >
-                        Отмена
-                    </Button>
-                    <Button 
-                        onClick={handleSaveUser} 
-                        className={`${styles.dialogButton} ${styles.saveButton}`}
-                        variant="contained"
-                    >
-                        Сохранить
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                onSave={handleSaveUser}
+                user={isEditing ? users.find(u => u.id === selectedUser?.id) : undefined}
+                userDetails={userDetails.find(d => d.userId === selectedUser?.id)}
+                roles={roles}
+                isEditing={isEditing}
+            />
 
             {/* Диалог для создания/редактирования роли */}
-            <Dialog
+            <RoleForm 
                 open={roleDialogOpen}
                 onClose={handleCloseRoleDialog}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle className={styles.dialogTitle}>
-                    {isEditing ? 'Редактирование роли' : 'Создание новой роли'}
-                </DialogTitle>
-                <DialogContent className={styles.dialogContent}>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        name="name"
-                        label="Название роли"
-                        type="text"
-                        fullWidth
-                        value={roleForm.name || ''}
-                        onChange={handleRoleFormChange}
-                        required
-                        variant="outlined"
-                        className={styles.formField}
-                    />
-                </DialogContent>
-                <DialogActions className={styles.dialogActions}>
-                    <Button 
-                        onClick={handleCloseRoleDialog} 
-                        className={`${styles.dialogButton} ${styles.cancelButton}`}
-                    >
-                        Отмена
-                    </Button>
-                    <Button 
-                        onClick={handleSaveRole} 
-                        className={`${styles.dialogButton} ${styles.saveButton}`}
-                        variant="contained"
-                    >
-                        Сохранить
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                onSave={handleSaveRole}
+                role={isEditing ? roles.find(r => r.id === selectedUser?.roleId) : undefined}
+                isEditing={isEditing}
+            />
 
             {/* Уведомления */}
-            {snackbar.open && (
-                <div 
-                    className={snackbar.severity === 'success' ? styles.successNotification : styles.errorNotification}
-                >
-                    <span>{snackbar.message}</span>
-                </div>
-            )}
+            <Notification 
+                open={snackbar.open}
+                message={snackbar.message}
+                severity={snackbar.severity}
+                onClose={handleCloseSnackbar}
+            />
         </div>
     );
 };

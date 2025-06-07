@@ -1,0 +1,191 @@
+/* Основные переменные */
+:root {
+  --primary-bg: #2C3E50;
+  --accent-color: #4f46e5;
+  --secondary-accent: #6366f1;
+  --light-bg: #f8f9fa;
+  --text-color: #374051;
+  --text-secondary: #6b7280;
+  --border-color: rgba(40, 45, 75, 0.1);
+  --chip-primary: #4caf50;
+}
+
+.container {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 16px;
+  position: relative;
+  padding-left: 12px;
+}
+
+.title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to bottom, var(--accent-color), var(--secondary-accent));
+  border-radius: 4px;
+}
+
+.searchField {
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.searchField:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.divider {
+  margin-bottom: 16px;
+  background: linear-gradient(to right, rgba(99, 102, 241, 0.2), transparent);
+}
+
+.segmentGroup {
+  margin-bottom: 24px;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.segmentTitle {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-left: 12px;
+}
+
+.segmentTitle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--accent-color);
+  border-radius: 4px;
+}
+
+.tableContainer {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.3s ease;
+}
+
+.tableContainer:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tableHeader {
+  font-weight: 500;
+  background-color: #f5f5f5;
+}
+
+.tableRow {
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:hover {
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.operationCell {
+  color: var(--text-color);
+}
+
+.primaryCell {
+  width: 120px;
+  text-align: center;
+}
+
+.chipPrimary {
+  background-color: var(--chip-primary);
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.noDataMessage {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 16px 0;
+  text-align: center;
+  padding: 20px;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.searchIcon {
+  color: var(--text-secondary);
+}
+
+.segmentDescription {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  margin-bottom: 12px;
+  padding-left: 12px;
+}
+
+.emptyResultMessage {
+  font-style: italic;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 40px;
+}
+
+.loadingIndicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+@media screen and (max-width: 768px) {
+  .tableContainer {
+    overflow-x: auto;
+  }
+  
+  .title {
+    font-size: 1.1rem;
+  }
+  
+  .segmentTitle {
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .title {
+    font-size: 1rem;
+  }
+  
+  .segmentTitle {
+    font-size: 0.9rem;
+  }
+}

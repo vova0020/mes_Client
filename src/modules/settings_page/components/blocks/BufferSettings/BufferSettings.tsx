@@ -1,48 +1,30 @@
-
 import React, { useState, useEffect } from 'react';
 import {
-  TextField,
-  Button,
-  Paper,
   Typography,
-  // Grid,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Tabs,
   Tab,
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-  Snackbar,
-  Alert,
-  ListItemButton
+  Paper,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { Add, Edit, Delete, Refresh, ViewList } from '@mui/icons-material';
 import styles from './BufferSettings.module.css';
-// Импортируем компонент схемы размещения
+
+// Компоненты
+import BufferList from './components/bufferSettingsBloks/BufferList';
+import CellList from './components/bufferSettingsBloks/CellList';
+import BufferForm from './components/bufferSettingsBloks/BufferForm';
+import CellForm from './components/bufferSettingsBloks/CellForm';
 import BufferLayoutScheme from './BufferLayoutScheme';
+import Notification, { NotificationSeverity } from './components/common/Notification';
 
 // Интерфейсы для данных (в реальном приложении получаются с бэкенда)
-interface IBuffer {
+export interface IBuffer {
   id: number;
   name: string;
   description: string | null;
   location: string | null;
 }
 
-interface IBufferCell {
+export interface IBufferCell {
   id: number;
   code: string;
   bufferId: number;
@@ -56,25 +38,11 @@ const BufferSettings: React.FC = () => {
   const [buffers, setBuffers] = useState<IBuffer[]>([]);
   const [cells, setCells] = useState<IBufferCell[]>([]);
 
-  // Состояние для активного таба
+  // Состояние для активного т��ба
   const [activeTab, setActiveTab] = useState(0);
 
   // Состояния для выбранных элементов
   const [selectedBuffer, setSelectedBuffer] = useState<IBuffer | null>(null);
-
-  // Состояния для форм
-  const [bufferForm, setBufferForm] = useState<Partial<IBuffer>>({
-    name: '',
-    description: '',
-    location: ''
-  });
-
-  const [cellForm, setCellForm] = useState<Partial<IBufferCell>>({
-    code: '',
-    bufferId: 0,
-    status: 'AVAILABLE',
-    capacity: 1
-  });
 
   // Состояния для диалогов
   const [bufferDialogOpen, setBufferDialogOpen] = useState(false);
@@ -85,7 +53,7 @@ const BufferSettings: React.FC = () => {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+    severity: 'success' as NotificationSeverity
   });
 
   // Имитация загрузки данных с сервера
@@ -109,27 +77,21 @@ const BufferSettings: React.FC = () => {
     setCells(mockCells);
   }, []);
 
-  // Обработчики для формы буфера
-  const handleBufferFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setBufferForm(prev => ({ ...prev, [name]: value }));
+  // Обработчик для закрытия уведомления
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
+  // Получаем ячейки для выбранного буфера
+  const getBufferCells = (bufferId: number) => {
+    return cells.filter(cell => cell.bufferId === bufferId);
+  };
+
+  // Обработчики буферов
   const handleOpenBufferDialog = (buffer?: IBuffer) => {
     if (buffer) {
-      setBufferForm({
-        id: buffer.id,
-        name: buffer.name,
-        description: buffer.description || '',
-        location: buffer.location || ''
-      });
       setIsEditing(true);
     } else {
-      setBufferForm({
-        name: '',
-        description: '',
-        location: ''
-      });
       setIsEditing(false);
     }
     setBufferDialogOpen(true);
@@ -137,15 +99,10 @@ const BufferSettings: React.FC = () => {
 
   const handleCloseBufferDialog = () => {
     setBufferDialogOpen(false);
-    setBufferForm({
-      name: '',
-      description: '',
-      location: ''
-    });
   };
 
-  const handleSaveBuffer = () => {
-    if (!bufferForm.name) {
+  const handleSaveBuffer = (bufferData: Partial<IBuffer>) => {
+    if (!bufferData.name) {
       setSnackbar({
         open: true,
         message: 'Название буфера обязательно',
@@ -155,11 +112,11 @@ const BufferSettings: React.FC = () => {
     }
 
     // Имитация сохранения на сервер
-    if (isEditing && bufferForm.id) {
+    if (isEditing && bufferData.id) {
       // Обновление существующего буфера
       setBuffers(prev => prev.map(b =>
-        b.id === bufferForm.id
-          ? { ...b, ...bufferForm } as IBuffer
+        b.id === bufferData.id
+          ? { ...b, ...bufferData } as IBuffer
           : b
       ));
       setSnackbar({
@@ -171,9 +128,9 @@ const BufferSettings: React.FC = () => {
       // Создание нового буфера
       const newBuffer: IBuffer = {
         id: Math.max(...buffers.map(b => b.id), 0) + 1,
-        name: bufferForm.name!,
-        description: bufferForm.description || null,
-        location: bufferForm.location || null
+        name: bufferData.name!,
+        description: bufferData.description || null,
+        location: bufferData.location || null
       };
       setBuffers(prev => [...prev, newBuffer]);
       setSnackbar({
@@ -207,42 +164,11 @@ const BufferSettings: React.FC = () => {
     });
   };
 
-  // Обработчики для формы ячейки
-  const handleCellFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCellForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleStatusChange = (e: SelectChangeEvent<string>) => {
-    setCellForm(prev => ({
-      ...prev,
-      status: e.target.value as 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'MAINTENANCE'
-    }));
-  };
-
-  const handleBufferChange = (e: SelectChangeEvent<number>) => {
-    setCellForm(prev => ({ ...prev, bufferId: e.target.value as number }));
-  };
-
+  // Обработчики ячеек
   const handleOpenCellDialog = (cell?: IBufferCell) => {
     if (cell) {
-      setCellForm({
-        id: cell.id,
-        code: cell.code,
-        bufferId: cell.bufferId,
-        status: cell.status,
-        capacity: cell.capacity
-      });
       setIsEditing(true);
     } else {
-      // При создании новой ячейки выбираем первый буфер по умолчанию
-      const defaultBufferId = buffers.length > 0 ? buffers[0].id : 0;
-      setCellForm({
-        code: '',
-        bufferId: defaultBufferId,
-        status: 'AVAILABLE',
-        capacity: 1
-      });
       setIsEditing(false);
     }
     setCellDialogOpen(true);
@@ -250,16 +176,10 @@ const BufferSettings: React.FC = () => {
 
   const handleCloseCellDialog = () => {
     setCellDialogOpen(false);
-    setCellForm({
-      code: '',
-      bufferId: 0,
-      status: 'AVAILABLE',
-      capacity: 1
-    });
   };
 
-  const handleSaveCell = () => {
-    if (!cellForm.code) {
+  const handleSaveCell = (cellData: Partial<IBufferCell>) => {
+    if (!cellData.code) {
       setSnackbar({
         open: true,
         message: 'Код ячейки обязателен',
@@ -268,7 +188,7 @@ const BufferSettings: React.FC = () => {
       return;
     }
 
-    if (!cellForm.bufferId) {
+    if (!cellData.bufferId) {
       setSnackbar({
         open: true,
         message: 'Необходимо выбрать буфер',
@@ -279,9 +199,9 @@ const BufferSettings: React.FC = () => {
 
     // Проверка на уникальность кода ячейки в пределах буфера
     const isDuplicate = cells.some(c =>
-      c.code === cellForm.code &&
-      c.bufferId === cellForm.bufferId &&
-      (!isEditing || c.id !== cellForm.id)
+      c.code === cellData.code &&
+      c.bufferId === cellData.bufferId &&
+      (!isEditing || c.id !== cellData.id)
     );
 
     if (isDuplicate) {
@@ -294,11 +214,11 @@ const BufferSettings: React.FC = () => {
     }
 
     // Имитация сохранения на сервер
-    if (isEditing && cellForm.id) {
+    if (isEditing && cellData.id) {
       // Обновление существующей ячейки
       setCells(prev => prev.map(c =>
-        c.id === cellForm.id
-          ? { ...c, ...cellForm } as IBufferCell
+        c.id === cellData.id
+          ? { ...c, ...cellData } as IBufferCell
           : c
       ));
       setSnackbar({
@@ -310,10 +230,10 @@ const BufferSettings: React.FC = () => {
       // Создание новой ячейки
       const newCell: IBufferCell = {
         id: Math.max(...cells.map(c => c.id), 0) + 1,
-        code: cellForm.code,
-        bufferId: cellForm.bufferId,
-        status: cellForm.status || 'AVAILABLE',
-        capacity: cellForm.capacity || 1
+        code: cellData.code,
+        bufferId: cellData.bufferId,
+        status: cellData.status || 'AVAILABLE',
+        capacity: cellData.capacity || 1
       };
       setCells(prev => [...prev, newCell]);
       setSnackbar({
@@ -334,181 +254,6 @@ const BufferSettings: React.FC = () => {
       message: 'Ячейка успешно удалена',
       severity: 'success'
     });
-  };
-
-  // Обработчик для закрытия уведомления
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  };
-
-  // Получаем ячейки для выбранного буфера
-  const getBufferCells = (bufferId: number) => {
-    return cells.filter(cell => cell.bufferId === bufferId);
-  };
-
-  // Рендер списка буферов
-  const renderBufferList = () => {
-    return (
-      <div className={styles.listContainer}>
-        <div className={styles.listHeader}>
-          <Typography variant="h6" component="h2">
-            Список буферов
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => handleOpenBufferDialog()}
-            className={styles.addButton}
-          >
-            Добавить буфер
-          </Button>
-        </div>
-        <Divider />
-        {buffers.length === 0 ? (
-          <Typography className={styles.emptyMessage}>
-            Буферы не найдены. Создайте первый буфер.
-          </Typography>
-        ) : (
-          // Рендер списка буферов (исправленный фрагмент)
-          <List>
-            {buffers.map(buffer => (
-              <ListItem key={buffer.id}>
-                <ListItemButton
-                  selected={selectedBuffer?.id === buffer.id}
-                  onClick={() => setSelectedBuffer(buffer)}
-                >
-                  <ListItemText
-                    primary={buffer.name}
-                    secondary={
-                      <>
-                        {buffer.location && (
-                          <span className={styles.secondaryText}>
-                            Расположение: {buffer.location}
-                          </span>
-                        )}
-                        {buffer.description && (
-                          <span className={styles.secondaryText}>
-                            {buffer.description}
-                          </span>
-                        )}
-                      </>
-                    }
-                  />
-                </ListItemButton>
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    onClick={() => handleOpenBufferDialog(buffer)}
-                    size="small"
-                  >
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    onClick={() => handleDeleteBuffer(buffer.id)}
-                    size="small"
-                    className={styles.deleteButton}
-                  >
-                    <Delete />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-
-        )}
-      </div>
-    );
-  };
-
-  // Рендер списка ячеек для выбранного буфера
-  const renderCellList = () => {
-    if (!selectedBuffer) {
-      return (
-        <Typography className={styles.selectPrompt}>
-          Выберите буфер для просмотра ячеек
-        </Typography>
-      );
-    }
-
-    const bufferCells = getBufferCells(selectedBuffer.id);
-
-    return (
-      <div className={styles.listContainer}>
-        <div className={styles.listHeader}>
-          <Typography variant="h6" component="h2">
-            Ячейки буфера: {selectedBuffer.name}
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => handleOpenCellDialog()}
-            className={styles.addButton}
-          >
-            Добавить ячейку
-          </Button>
-        </div>
-        <Divider />
-        {bufferCells.length === 0 ? (
-          <Typography className={styles.emptyMessage}>
-            В этом буфере нет ячеек. Создайте первую ячейку.
-          </Typography>
-        ) : (
-          <List>
-            {bufferCells.map(cell => (
-              <ListItem key={cell.id} className={styles.cellItem}>
-                <ListItemText
-                  primary={`Код: ${cell.code}`}
-                  secondary={
-                    <>
-                      <span className={styles.secondaryText}>
-                        Статус: {translateStatus(cell.status)}
-                      </span>
-                      <span className={styles.secondaryText}>
-                        Вместимость: {cell.capacity}
-                      </span>
-                    </>
-                  }
-                />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    onClick={() => handleOpenCellDialog(cell)}
-                    size="small"
-                  >
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    onClick={() => handleDeleteCell(cell.id)}
-                    size="small"
-                    className={styles.deleteButton}
-                  >
-                    <Delete />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-        )}
-      </div>
-    );
-  };
-
-  // Функция для перевода статуса на русский
-  const translateStatus = (status: string) => {
-    switch (status) {
-      case 'AVAILABLE':
-        return 'Доступна';
-      case 'OCCUPIED':
-        return 'Занята';
-      case 'RESERVED':
-        return 'Зарезервирована';
-      case 'MAINTENANCE':
-        return 'На обслуживании';
-      default:
-        return status;
-    }
   };
 
   return (
@@ -532,14 +277,26 @@ const BufferSettings: React.FC = () => {
             <Grid size={{ xs: 12, md: 5 }}>
               {/* Список буферов */}
               <Paper className={styles.paper}>
-                {renderBufferList()}
+                <BufferList 
+                  buffers={buffers} 
+                  selectedBuffer={selectedBuffer}
+                  setSelectedBuffer={setSelectedBuffer}
+                  onEdit={handleOpenBufferDialog}
+                  onDelete={handleDeleteBuffer}
+                />
               </Paper>
             </Grid>
 
             <Grid size={{ xs: 12, md: 7 }}>
               {/* Список ячеек */}
               <Paper className={styles.paper}>
-                {renderCellList()}
+                <CellList 
+                  selectedBuffer={selectedBuffer}
+                  cells={getBufferCells(selectedBuffer?.id || 0)}
+                  onEdit={handleOpenCellDialog}
+                  onDelete={handleDeleteCell}
+                  onAdd={handleOpenCellDialog}
+                />
               </Paper>
             </Grid>
           </Grid>
@@ -547,164 +304,38 @@ const BufferSettings: React.FC = () => {
       ) : (
         <div className={styles.bufferVisualization}>
           <Paper className={styles.paper}>
-            {/* Интегрируем компонент схемы размещения вместо заглушки */}
             <BufferLayoutScheme buffers={buffers} />
           </Paper>
         </div>
       )}
 
       {/* Диалог для создания/редактирования буфера */}
-      <Dialog
+      <BufferForm 
         open={bufferDialogOpen}
         onClose={handleCloseBufferDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {isEditing ? 'Редактирование буфера' : 'Создание нового буфера'}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            name="name"
-            label="Название буфера"
-            type="text"
-            fullWidth
-            value={bufferForm.name || ''}
-            onChange={handleBufferFormChange}
-            required
-            variant="outlined"
-            className={styles.formField}
-          />
-          <TextField
-            margin="dense"
-            name="location"
-            label="Расположение"
-            type="text"
-            fullWidth
-            value={bufferForm.location || ''}
-            onChange={handleBufferFormChange}
-            variant="outlined"
-            className={styles.formField}
-          />
-          <TextField
-            margin="dense"
-            name="description"
-            label="Описание"
-            type="text"
-            fullWidth
-            multiline
-            rows={3}
-            value={bufferForm.description || ''}
-            onChange={handleBufferFormChange}
-            variant="outlined"
-            className={styles.formField}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseBufferDialog} color="primary">
-            Отмена
-          </Button>
-          <Button onClick={handleSaveBuffer} color="primary" variant="contained">
-            Сохранить
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onSave={handleSaveBuffer}
+        buffer={isEditing ? buffers.find(b => b.id === selectedBuffer?.id) : undefined}
+        isEditing={isEditing}
+      />
 
       {/* Диалог для создания/редактирования ячейки */}
-      <Dialog
+      <CellForm 
         open={cellDialogOpen}
         onClose={handleCloseCellDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {isEditing ? 'Редактирование ячейки' : 'Создание новой ячейки'}
-        </DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth variant="outlined" className={styles.formField}>
-            <InputLabel id="buffer-select-label">Буфер</InputLabel>
-            <Select
-              labelId="buffer-select-label"
-              id="buffer-select"
-              value={cellForm.bufferId || ''}
-              onChange={handleBufferChange}
-              label="Буфер"
-              required
-            >
-              {buffers.map(buffer => (
-                <MenuItem key={buffer.id} value={buffer.id}>
-                  {buffer.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            autoFocus
-            margin="dense"
-            name="code"
-            label="Код ячейки"
-            type="text"
-            fullWidth
-            value={cellForm.code || ''}
-            onChange={handleCellFormChange}
-            required
-            variant="outlined"
-            className={styles.formField}
-          />
-
-          <FormControl fullWidth variant="outlined" className={styles.formField}>
-            <InputLabel id="status-select-label">Статус ячейки</InputLabel>
-            <Select
-              labelId="status-select-label"
-              id="status-select"
-              value={cellForm.status || 'AVAILABLE'}
-              onChange={handleStatusChange}
-              label="Статус ячейки"
-            >
-              <MenuItem value="AVAILABLE">Доступна</MenuItem>
-              <MenuItem value="OCCUPIED">Занята</MenuItem>
-              <MenuItem value="RESERVED">Зарезервирована</MenuItem>
-              <MenuItem value="MAINTENANCE">На обслуживании</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            margin="dense"
-            name="capacity"
-            label="Вместимость"
-            type="number"
-            fullWidth
-            value={cellForm.capacity || 1}
-            onChange={handleCellFormChange}
-            InputProps={{ inputProps: { min: 1 } }}
-            variant="outlined"
-            className={styles.formField}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseCellDialog} color="primary">
-            Отмена
-          </Button>
-          <Button onClick={handleSaveCell} color="primary" variant="contained">
-            Сохранить
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onSave={handleSaveCell}
+        cell={isEditing && selectedBuffer ? cells.find(c => c.id === selectedBuffer.id) : undefined}
+        buffers={buffers}
+        isEditing={isEditing}
+        defaultBufferId={selectedBuffer?.id}
+      />
 
       {/* Уведомления */}
-      <Snackbar
+      <Notification
         open={snackbar.open}
-        autoHideDuration={6000}
+        message={snackbar.message}
+        severity={snackbar.severity}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      />
     </div>
   );
 };

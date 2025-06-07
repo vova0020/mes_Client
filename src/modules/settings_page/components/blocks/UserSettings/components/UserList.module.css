@@ -1,0 +1,148 @@
+/* Контейнер для списков */
+.listContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Заголовок списка */
+.listHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.listHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Кнопка добавления */
+.addButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  border-left: 3px solid #1c6ea4;
+  text-transform: none;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.addButton:hover {
+  background: linear-gradient(to bottom, #3caae8, #3498db);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.addButton:active {
+  background: linear-gradient(to bottom, #2980b9, #3498db);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+/* Сообщение о пустом списке */
+.emptyMessage {
+  margin-top: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 3px solid #ccc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили элементов списка */
+.userItem {
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  animation-duration: 0.4s;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.userItem:hover {
+  background: linear-gradient(to bottom, #f0f7ff, #e5f1ff);
+  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.1);
+}
+
+/* Анимация появления элементов списка */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.userItem {
+  animation-name: fadeInUp;
+}
+
+/* Кнопка удаления */
+.deleteButton {
+  color: #e74c3c;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  color: #c0392b;
+  transform: scale(1.1);
+}
+
+/* Вторичный текст */
+.secondaryText {
+  display: block;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  color: #555;
+}
+
+/* Аватар пользователя */
+.avatar {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Чипы ролей */
+.roleChip {
+  margin-right: 8px;
+  background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+  font-size: 0.75rem;
+  border-left: 2px solid #aaa;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+/* Адаптивные стили */
+@media (max-width: 960px) {
+  .listHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .addButton {
+    margin-top: 8px;
+    align-self: flex-end;
+  }
+}

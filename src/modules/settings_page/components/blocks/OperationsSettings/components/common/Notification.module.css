@@ -1,0 +1,75 @@
+/* Основные переменные */
+:root {
+  --success-color: #10b981;
+  --error-color: #e53e3e;
+  --warning-color: #f59e0b;
+  --info-color: #3b82f6;
+  --text-light: #ffffff;
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.snackbar {
+  bottom: 24px !important;
+  right: 24px !important;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.successAlert {
+  background-color: var(--success-color);
+  color: var(--text-light);
+}
+
+.errorAlert {
+  background-color: var(--error-color);
+  color: var(--text-light);
+}
+
+.warningAlert {
+  background-color: var(--warning-color);
+  color: var(--text-light);
+}
+
+.infoAlert {
+  background-color: var(--info-color);
+  color: var(--text-light);
+}
+
+.icon {
+  margin-right: 12px;
+}
+
+.message {
+  font-weight: 500;
+}
+
+.closeButton {
+  color: var(--text-light);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.closeButton:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+@media screen and (max-width: 768px) {
+  .snackbar {
+    bottom: 16px !important;
+    right: 16px !important;
+    left: 16px !important;
+    width: auto !important;
+  }
+}

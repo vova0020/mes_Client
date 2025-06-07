@@ -1,0 +1,73 @@
+.machineSettings {
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: sans-serif;
+}
+
+.mainTitle {
+    margin-bottom: 20px;
+    color: #374051;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.paper {
+    padding: 20px;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: white;
+    transition: box-shadow 0.3s ease;
+}
+
+.paper:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.machineManagement {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.typeManagement {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+/* Адаптивный дизайн */
+@media (max-width: 960px) {
+    .machineSettings {
+        padding: 15px;
+    }
+    
+    .paper {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media screen and (max-width: 575px) {
+    .machineSettings {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .mainTitle {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .paper {
+        padding: 12px;
+        border-radius: 8px;
+    }
+}

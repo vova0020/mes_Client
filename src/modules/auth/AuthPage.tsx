@@ -90,7 +90,7 @@ const AuthPage: React.FC = () => {
         <img src={logoIcon} alt="Наш логотип" className={styles.logo} />
         <img src={logo} alt="Наш текст" className={styles.logo} />
       </div>
-      <p>raskroy_op1</p>
+      {/* <p>raskroy_op1</p>
       <p>raskroy_op2</p>
       <p>pokleyka_op1</p>
       <p>pokleyka_op2</p>
@@ -103,7 +103,7 @@ const AuthPage: React.FC = () => {
       <p>packaging_master</p>
       <p>packaging_assembler</p>
       <p>packaging_operator</p>
-      <p>пароль у всех :12345</p>
+      <p>пароль у всех :12345</p> */}
 
 
 

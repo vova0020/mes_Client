@@ -13,15 +13,15 @@ import { ReactComponent as Settings_materials } from '../../../../assets/setting
 import { Button, Tooltip } from '@mui/material';
 
 // Определяем все доступные раазделы настроек
-export type SettingSection = 
-  | 'buffer' 
-  | 'users' 
-  | 'workplace_ypak' 
-  | 'machin' 
-  | 'technological_route' 
-  | 'technological_operations' 
-  | 'streams' 
-  | 'materials' 
+export type SettingSection =
+  | 'buffer'
+  | 'users'
+  | 'workplace_ypak'
+  | 'machin'
+  | 'technological_route'
+  | 'technological_operations'
+  | 'streams'
+  | 'materials'
   | null;
 
 interface SidebarProps {
@@ -39,51 +39,53 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
     <div className={styles.sidebar}>
       {/* Нижние иконки */}
       <div className={styles.footerIcon}>
-        <Tooltip title="Настройки буфера" placement="right">
-          <Button onClick={() => onSectionChange('buffer')}>
-            <Settings_buffer className={getButtonClass('buffer')} />
+
+
+        <Tooltip title="Материалы" placement="right">
+          <Button onClick={() => onSectionChange('materials')}>
+            <Settings_materials className={getButtonClass('materials')} />
           </Button>
         </Tooltip>
-        
+
         <Tooltip title="Управление потоками" placement="right">
           <Button onClick={() => onSectionChange('streams')}>
             <Settings_streams className={getButtonClass('streams')} />
           </Button>
         </Tooltip>
-        
+
         <Tooltip title="Технологические операции" placement="right">
           <Button onClick={() => onSectionChange('technological_operations')}>
             <Settings_technological_operations className={getButtonClass('technological_operations')} />
           </Button>
         </Tooltip>
-        
+
         <Tooltip title="Технологические маршруты" placement="right">
           <Button onClick={() => onSectionChange('technological_route')}>
             <Settings_technological_route className={getButtonClass('technological_route')} />
           </Button>
         </Tooltip>
-        
+
         <Tooltip title="Настройки станков" placement="right">
           <Button onClick={() => onSectionChange('machin')}>
             <Settings_machin className={getButtonClass('machin')} />
           </Button>
         </Tooltip>
 
-        <Tooltip title="Настройки рабочих мест УПАК" placement="right">
+           <Tooltip title="Настройки рабочих мест УПАК" placement="right">
           <Button onClick={() => onSectionChange('workplace_ypak')}>
             <Settings_workplace_ypak className={getButtonClass('workplace_ypak')} />
           </Button>
         </Tooltip>
-        
+
         <Tooltip title="Управление пользователями" placement="right">
           <Button onClick={() => onSectionChange('users')}>
             <Settings_users className={getButtonClass('users')} />
           </Button>
         </Tooltip>
-        
-        <Tooltip title="Материалы" placement="right">
-          <Button onClick={() => onSectionChange('materials')}>
-            <Settings_materials className={getButtonClass('materials')} />
+
+        <Tooltip title="Настройки буфера" placement="right">
+          <Button onClick={() => onSectionChange('buffer')}>
+            <Settings_buffer className={getButtonClass('buffer')} />
           </Button>
         </Tooltip>
       </div>

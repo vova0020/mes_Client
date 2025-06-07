@@ -1,0 +1,137 @@
+/* Основные переменные */
+:root {
+  --primary-bg: #2C3E50;
+  --accent-color: #4f46e5;
+  --secondary-accent: #6366f1;
+  --error-color: #e53e3e;
+  --text-color: #374051;
+  --text-secondary: #6b7280;
+  --border-color: rgba(40, 45, 75, 0.1);
+}
+
+.dialog {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialogTitle {
+  background: linear-gradient(to right, #374051, #2d3441);
+  color: white;
+  padding: 16px 24px;
+}
+
+.dialogContent {
+  padding: 24px;
+}
+
+.formField {
+  margin-bottom: 20px;
+}
+
+.formField:last-child {
+  margin-bottom: 10px;
+}
+
+.inputField {
+  transition: all 0.3s ease;
+}
+
+.inputField:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.errorText {
+  color: var(--error-color);
+  font-size: 0.75rem;
+  margin-top: 4px;
+  transition: all 0.2s ease;
+}
+
+.errorInput {
+  border-color: var(--error-color);
+}
+
+.dialogActions {
+  padding: 16px 24px;
+  background-color: #f5f5f5;
+}
+
+.cancelButton {
+  color: var(--text-color);
+  transition: background-color 0.2s;
+}
+
+.cancelButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.saveButton {
+  background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent));
+  color: white;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.saveButton:hover {
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+  transform: translateY(-2px);
+}
+
+.saveButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.label {
+  color: var(--text-color);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.multilineInput {
+  min-height: 100px;
+}
+
+/* Анимация для текстовых полей */
+.textField {
+  position: relative;
+  overflow: hidden;
+}
+
+.textField::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, var(--accent-color), var(--secondary-accent));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.textField:focus-within::after {
+  transform: scaleX(1);
+}
+
+@media screen and (max-width: 576px) {
+  .dialogContent {
+    padding: 16px;
+  }
+  
+  .dialogActions {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+  }
+}

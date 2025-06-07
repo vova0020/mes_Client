@@ -1,0 +1,197 @@
+/* RouteDetails.module.css */
+
+/* Именно этот блок скроллится при переполнении (список этапов + деталей) */
+.routeDetailsContainer {
+    flex: 1;               /* займет всё доступное место внутри <Paper> */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;      /* вертикальный скролл, когда много контента */
+    min-height: 0; 
+    height: 100%;
+
+}
+
+.selectPrompt {
+    padding: 40px 0;
+    text-align: center;
+    color: #757575;
+    font-style: italic;
+    background: linear-gradient(to bottom, #f8f8f8, #eaeaea);
+    border-radius: 8px;
+    border: 1px dashed #ccc;
+    margin: 20px 0;
+}
+
+.detailsTitle {
+    margin-bottom: 16px;
+    font-weight: 500;
+    color: #374051;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.divider {
+    margin-bottom: 20px;
+    background-color: #e0e0e0;
+}
+
+.routeInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.routeInfoHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: linear-gradient(to right, #f9f9f9, #f2f2f2);
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.largeAvatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #374051, #2d3441);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.routeMainInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stepsCountChip {
+    font-size: 0.85rem;
+    height: 24px;
+    background-color: #e8eaf6;
+    color: #374051;
+    max-width: fit-content;
+    border-radius: 12px;
+    padding: 0 12px;
+}
+
+.stepsContainer {
+    background-color: #f5f5f5;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTitle {
+    margin-bottom: 16px;
+    color: #374051;
+    font-weight: 500;
+}
+
+.stepsFlow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.stepItem {
+    padding: 10px;
+    border-radius: 8px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stepNumber {
+    font-weight: bold;
+    color: #374051;
+    background-color: #e8eaf6;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-bottom: 5px;
+}
+
+.stepName {
+    font-size: 0.9rem;
+    text-align: center;
+    color: #374051;
+}
+
+.arrowIcon {
+    color: #757575;
+}
+
+.detailsSection {
+    margin-top: 20px;
+}
+
+.detailsList {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 0;
+}
+
+.detailItem {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 16px;
+}
+
+.detailItem:last-child {
+    border-bottom: none;
+}
+
+.detailAvatar {
+    background: linear-gradient(135deg, #374051, #2d3441);
+    color: white;
+}
+
+.articleText {
+    display: block;
+    font-size: 0.75rem;
+    color: #1976d2;
+    margin-bottom: 4px;
+}
+
+.materialText {
+    display: block;
+    font-size: 0.75rem;
+    color: #757575;
+}
+
+.noSteps, .noDetails {
+    padding: 24px;
+    text-align: center;
+    color: #757575;
+    font-style: italic;
+    background: linear-gradient(to bottom, #f8f8f8, #eaeaea);
+    border-radius: 8px;
+    border: 1px dashed #ccc;
+}
+
+@media (max-width: 600px) {
+    .routeInfoHeader {
+        flex-direction: column;
+        padding: 12px;
+    }
+    .stepsFlow {
+        flex-direction: column;
+    }
+    .arrowIcon {
+        transform: rotate(90deg);
+        margin: 5px 0;
+    }
+    .stepItem {
+        width: 100%;
+    }
+}

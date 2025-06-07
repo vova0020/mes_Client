@@ -1,0 +1,169 @@
+.machineDetailsContainer {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.selectPrompt {
+    padding: 40px 0;
+    text-align: center;
+    color: #757575;
+    font-style: italic;
+    background: linear-gradient(to bottom, #f8f8f8, #eaeaea);
+    border-radius: 8px;
+    border: 1px dashed #ccc;
+    margin: 20px 0;
+}
+
+.detailsTitle {
+    margin-bottom: 16px;
+    font-weight: 500;
+    color: #374051;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.divider {
+    margin-bottom: 20px;
+    background-color: #e0e0e0;
+}
+
+.machineInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.machineInfoHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: linear-gradient(to right, #f9f9f9, #f2f2f2);
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.largeAvatar {
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+}
+
+.machineMainInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.typeChipLarge {
+    font-size: 0.85rem;
+    height: 24px;
+    background-color: #e8eaf6;
+    color: #374051;
+    max-width: fit-content;
+    border-radius: 12px;
+    padding: 0 12px;
+}
+
+.statusChip {
+    font-size: 0.85rem;
+    height: 24px;
+    max-width: fit-content;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-weight: 500;
+}
+
+.machineDetailInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: #f5f5f5;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detailRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.detailRow:last-child {
+    border-bottom: none;
+}
+
+.detailLabel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #374051;
+    min-width: 180px;
+    font-weight: 500;
+}
+
+.detailIcon {
+    font-size: 18px;
+    color: #2d3441;
+}
+
+.notesBox {
+    background-color: #ffffff;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 12px;
+    border-left: 3px solid #374051;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.notesText {
+    margin-top: 8px;
+    white-space: pre-line;
+    color: #424242;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.noDetails {
+    padding: 24px 0;
+    text-align: center;
+    color: #757575;
+    font-style: italic;
+    background: linear-gradient(to bottom, #f8f8f8, #eaeaea);
+    border-radius: 8px;
+    border: 1px dashed #ccc;
+}
+
+@media (max-width: 600px) {
+    .detailRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .detailLabel {
+        min-width: auto;
+    }
+    
+    .machineInfoHeader {
+        flex-direction: column;
+        padding: 12px;
+    }
+}
+
+@media screen and (max-width: 575px) {
+    .notesBox {
+        padding: 12px;
+    }
+    
+    .machineDetailInfo {
+        padding: 12px;
+    }
+}

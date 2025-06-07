@@ -5,6 +5,10 @@ import BufferSettings from './components/blocks/BufferSettings/BufferSettings';
 
 import styles from './SettingsPage.module.css';
 import UserSettings from './components/blocks/UserSettings/UserSettings';
+import MachineSettings from './components/blocks/MachineSettings/MachineSettings';
+import RouteSettings from './components/blocks/RouteSettings/RouteSettings';
+import OperationsSettings from './components/blocks/OperationsSettings/OperationsSettings';
+import StreamsSettings from './components/blocks/StreamsSettings/StreamsSettings';
 
 const SettingsPage: React.FC = () => {
   // Состояние для отслеживания текущего активного раздела
@@ -25,13 +29,13 @@ const SettingsPage: React.FC = () => {
       case 'workplace_ypak':
         return <div className={styles.placeholderContent}>Настройки рабочих мест УПАК (в разработке)</div>;
       case 'machin':
-        return <div className={styles.placeholderContent}>Настройки станков (в разработке)</div>;
+        return <MachineSettings/>;
       case 'technological_route':
-        return <div className={styles.placeholderContent}>Технологические маршруты (в разработке)</div>;
+        return <RouteSettings/>;
       case 'technological_operations':
-        return <div className={styles.placeholderContent}>Технологические операции (в разработке)</div>;
+        return <OperationsSettings/>;
       case 'streams':
-        return <div className={styles.placeholderContent}>Управление потоками (в разработке)</div>;
+        return <StreamsSettings/>;
       case 'materials':
         return <div className={styles.placeholderContent}>Материалы (в разработке)</div>;
       default:

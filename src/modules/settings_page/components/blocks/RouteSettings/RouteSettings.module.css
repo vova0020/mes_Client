@@ -1,0 +1,85 @@
+/* RouteSettings.module.css */
+
+.routeSettings {
+    padding: 20px;
+    flex: 1;                 /* занять всю высоту родителя (.settingsContent) */
+    display: flex;
+    flex-direction: column;
+    min-height: 0;           /* позволяет «сжиматься» в промежуточных flex-контейнерах */
+    font-family: sans-serif;
+}
+
+.mainTitle {
+    margin-bottom: 20px;
+    color: #374051;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Две колонки: слева — список, справа — детали */
+.routeManagement {
+    display: flex;
+    flex: 1;                 /* занимает всё оставшееся место под заголовком и табами */
+    overflow: hidden;        /* скрываем «лишнее» — скролл будет внутри дочерних блоков */
+    min-height: 0;           /* ключевое: разрешает flex-дочерям сжиматься */
+}
+
+.stepManagement {
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ПРАВАЯ КОЛОНКА (Grid size={{ xs:12, md:7 }}) */
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    flex: 1;                 /* займет всю высоту .routeManagement */
+    min-height: 0;           /* обязательно, чтобы дочерние блоки «ужимались» */
+}
+
+/* ОБЩИЙ СТИЛЬ ДЛЯ Paper в обоих колонках */
+.paper {
+    padding: 20px;
+    flex: 1;                 /* Paper растягивается на всю высоту родителя */
+    display: flex;           /* внутри Paper будет flex-контейнер */
+    flex-direction: column;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: white;
+    transition: box-shadow 0.3s ease;
+}
+
+.paper:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Адаптивные стили */
+@media (max-width: 960px) {
+    .routeSettings {
+        padding: 15px;
+    }
+    .paper {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 575px) {
+    .routeSettings {
+        padding: 10px;
+        font-size: 14px;
+    }
+    .mainTitle {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    .paper {
+        padding: 12px;
+        border-radius: 8px;
+    }
+}

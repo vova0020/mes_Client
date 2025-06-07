@@ -1,0 +1,166 @@
+/* Основные переменные */
+:root {
+  --primary-bg: #2C3E50;
+  --accent-color: #4f46e5;
+  --secondary-accent: #6366f1;
+  --light-bg: #f8f9fa;
+  --text-color: #374051;
+  --text-secondary: #6b7280;
+  --border-color: rgba(40, 45, 75, 0.1);
+  --hover-bg: rgba(0, 0, 0, 0.04);
+  --selected-bg: rgba(25, 118, 210, 0.12);
+  --selected-hover-bg: rgba(25, 118, 210, 0.2);
+}
+
+.container {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color);
+  position: relative;
+  padding-left: 12px;
+}
+
+.title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to bottom, var(--accent-color), var(--secondary-accent));
+  border-radius: 4px;
+}
+
+.addButton {
+  background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent));
+  color: white;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.addButton:hover {
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+  transform: translateY(-2px);
+}
+
+.addButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.listContainer {
+  max-height: 500px;
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: white;
+}
+
+.listContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.listContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.listContainer::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.listContainer::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.listItem {
+  margin-bottom: 4px;
+  transition: background-color 0.3s, transform 0.2s;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 8px 16px;
+}
+
+.listItem:hover {
+  background-color: var(--hover-bg);
+  transform: translateX(2px);
+}
+
+.selectedItem {
+  background-color: var(--selected-bg);
+  border-left: 3px solid var(--accent-color);
+}
+
+.selectedItem:hover {
+  background-color: var(--selected-hover-bg);
+}
+
+.itemText {
+  margin-right: 48px;
+}
+
+.primaryText {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.secondaryText {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.actionButton {
+  margin-left: 8px;
+  color: var(--text-secondary);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.actionButton:hover {
+  color: var(--accent-color);
+  transform: scale(1.1);
+}
+
+.deleteButton:hover {
+  color: #e53e3e;
+}
+
+.noDataMessage {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 16px 0;
+  text-align: center;
+  padding: 20px;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+@media screen and (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .addButton {
+    align-self: stretch;
+  }
+}
