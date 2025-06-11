@@ -9,6 +9,7 @@ import MachineSettings from './components/blocks/MachineSettings/MachineSettings
 import RouteSettings from './components/blocks/RouteSettings/RouteSettings';
 import OperationsSettings from './components/blocks/OperationsSettings/OperationsSettings';
 import StreamsSettings from './components/blocks/StreamsSettings/StreamsSettings';
+import { MaterialSettingsPage } from './components/blocks/MaterialSettings/MaterialSettingsPage';
 
 const SettingsPage: React.FC = () => {
   // Состояние для отслеживания текущего активного раздела
@@ -35,9 +36,9 @@ const SettingsPage: React.FC = () => {
       case 'technological_operations':
         return <OperationsSettings/>;
       case 'streams':
-        return <StreamsSettings/>;
+        return <StreamsSettings/>; 
       case 'materials':
-        return <div className={styles.placeholderContent}>Материалы (в разработке)</div>;
+        return <MaterialSettingsPage/>;
       default:
         return (
           <div className={styles.welcomeContent}>
