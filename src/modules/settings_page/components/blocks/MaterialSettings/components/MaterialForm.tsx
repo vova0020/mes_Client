@@ -2,214 +2,416 @@
 // src/modules/materials/components/MaterialForm.tsx
 // ================================================
 import React, { useState, useEffect } from 'react';
-import { getMaterialGroups, getMaterialById, createMaterial, updateMaterial } from '../api';
-import { MaterialGroup, CreateMaterialDto, UpdateMaterialDto } from '../types';
-import styles from '../MaterialSettings.module.css';
+import {
+  useMaterialGroups,
+  useMaterial,
+  useCreateMaterial,
+  useUpdateMaterial,
+} from '../api';
+import { useSocket } from '../../../../../../contexts/SocketContext';
+import { CreateMaterialDto, UpdateMaterialDto } from '../types';
+import styles from './MaterialForm.module.css';
 
 interface MaterialFormProps {
   editId?: number;
   onSaved?: () => void;
+  onCancel?: () => void;
 }
 
-export const MaterialForm: React.FC<MaterialFormProps> = ({ editId, onSaved }) => {
-  const [name, setName] = useState('');
-  const [unit, setUnit] = useState('');
-  const [groups, setGroups] = useState<MaterialGroup[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [groupsLoading, setGroupsLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+export const MaterialForm: React.FC<MaterialFormProps> = ({ 
+  editId, 
+  onSaved, 
+  onCancel 
+}) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    article: '',
+    unit: '',
+    selectedGroups: [] as number[]
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const fetchGroups = () => {
-    setGroupsLoading(true);
-    getMaterialGroups()
-      .then(res => {
-        setGroups(res.data);
-        setError('');
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setGroupsLoading(false));
+  const isEditing = !!editId;
+
+  // React Query хуки
+  const { data: groups = [], isLoading: groupsLoading } = useMaterialGroups();
+  const { data: material, isLoading: materialLoading } = useMaterial(editId || 0);
+  const createMutation = useCreateMaterial();
+  const updateMutation = useUpdateMaterial();
+
+  // Socket.IO статус
+  const { isConnected } = useSocket();
+
+  const loading = createMutation.isPending || updateMutation.isPending;
+
+  // Заполняем форму при редактировании
+  useEffect(() => {
+    if (material && editId) {
+      setFormData({
+        name: material.materialName,
+        article: material.article,
+        unit: material.unit,
+        selectedGroups: material.groups?.map(g => g.groupId) || []
+      });
+    }
+  }, [material, editId]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Название материала обязательно';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Название должно содержать минимум 2 символа';
+    }
+
+    if (!formData.article.trim()) {
+      newErrors.article = 'Артикул материала обязательно';
+    }
+    if (!formData.unit.trim()) {
+      newErrors.unit = 'Единица измерения обязательна';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const fetchMaterial = () => {
-    if (editId) {
-      setLoading(true);
-      getMaterialById(editId)
-        .then(res => {
-          setName(res.data.materialName);
-          setUnit(res.data.unit);
-          setSelected(res.data.groups?.map(g => g.groupId) || []);
-          setError('');
-        })
-        .catch(err => setError(err.message))
-        .finally(() => setLoading(false));
-    } else {
-      setName('');
-      setUnit('');
-      setSelected([]);
-    }
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
 
-  useEffect(fetchGroups, []);
-  useEffect(fetchMaterial, [editId]);
-
-  const handleSubmit = async () => {
-    if (!name.trim()) {
-      setError('Введите название материала');
-      return;
-    }
-    if (!unit.trim()) {
-      setError('Введите единицу измерения');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
+    setErrors({});
 
     try {
-      const dto: CreateMaterialDto | UpdateMaterialDto = { 
-        materialName: name.trim(), 
-        unit: unit.trim(), 
-        groupIds: selected 
+      const dto = {
+        materialName: formData.name.trim(),
+        article: formData.article.trim(),
+        unit: formData.unit.trim(),
+        groupIds: formData.selectedGroups
       };
-      
-      const action = editId 
-        ? updateMaterial(editId, dto as UpdateMaterialDto) 
-        : createMaterial(dto as CreateMaterialDto);
-      
-      await action;
-      
-      setName('');
-      setUnit('');
-      setSelected([]);
-      setError('');
-      
+
+      if (isEditing) {
+        await updateMutation.mutateAsync({ id: editId!, dto: dto as UpdateMaterialDto });
+        console.log('Материал успешно обновлен');
+      } else {
+        await createMutation.mutateAsync(dto as CreateMaterialDto);
+        console.log('Материал успешно создан');
+      }
+
+      // Вызываем callback успеха если он передан
       onSaved?.();
+      
+      // Закрываем форму
+      onCancel?.();
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Ошибка при сохранении');
-    } finally {
-      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'Ошибка при сохранении материала';
+      setErrors({ general: errorMessage });
+      console.error('Ошибка пр�� сохранении материала:', err);
     }
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const values = Array.from(e.target.selectedOptions).map(option => +option.value);
-    setSelected(values);
+  const handleGroupToggle = (groupId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedGroups: prev.selectedGroups.includes(groupId)
+        ? prev.selectedGroups.filter(id => id !== groupId)
+        : [...prev.selectedGroups, groupId]
+    }));
   };
 
-  const handleCancel = () => {
-    setName('');
-    setUnit('');
-    setSelected([]);
-    setError('');
-    onSaved?.();
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Очищаем ошибку для этого поля
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleClose = () => {
+    setFormData({
+      name: '',
+      article: '',
+      unit: '',
+      selectedGroups: []
+    });
+    setErrors({});
+    onCancel?.();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && e.ctrlKey) {
-      handleSubmit();
+      handleSubmit(e as any);
+    }
+    if (e.key === 'Escape') {
+      handleClose();
     }
   };
 
-  return (
-    <div className={`${styles.componentBlock} ${styles.materialFormContainer}`}>
-      <div className={styles.blockHeader}>
-        <h2 className={styles.blockTitle}>
-          {editId ? 'Редактировать материал' : 'Новый материал'}
-        </h2>
+  // Показываем индикатор загрузки при получении данных материала
+  if (isEditing && materialLoading) {
+    return (
+      <div className={styles.formCard}>
+        <div className={styles.formHeader}>
+          <h2 className={styles.formTitle}>
+            <span className={styles.formIcon}>✏️</span>
+            Загрузка материала...
+            {/* Socket.IO индикатор */}
+            <span className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`} />
+          </h2>
+        </div>
+        <div className={styles.formContent}>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Загружаем данные материала...</p>
+          </div>
+        </div>
       </div>
-      <div className={styles.blockContent}>
-        {error && (
-          <div className={styles.errorContainer}>
-            <p className={styles.errorText}>{error}</p>
+    );
+  }
+
+  return (
+    <div className={styles.formCard}>
+      <div className={styles.formHeader}>
+        <h2 className={styles.formTitle}>
+          <span className={styles.formIcon}>
+            {isEditing ? '✏️' : '➕'}
+          </span>
+          {isEditing ? 'Редактировать материал' : 'Создать новый материал'}
+          {/* Socket.IO индикатор */}
+          <span 
+            className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`}
+            title={isConnected ? 'Подключено к серверу' : 'Отключено от сервера'}
+          />
+        </h2>
+        <button
+          onClick={handleClose}
+          className={styles.closeButton}
+          type="button"
+          title="Закрыть"
+        >
+          ×
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className={styles.formContent}>
+        {/* Connection Warning */}
+        {!isConnected && (
+          <div className={styles.warningMessage}>
+            <span className={styles.warningIcon}>⚠️</span>
+            Отсутствует подключение к серверу. Изменения могут не синхронизироваться.
           </div>
         )}
 
+        {/* General Error */}
+        {(errors.general || createMutation.error || updateMutation.error) && (
+          <div className={styles.errorMessage}>
+            <span className={styles.errorIcon}>⚠️</span>
+            {errors.general || 
+             createMutation.error?.message || 
+             updateMutation.error?.message || 
+             'Произошла ошибка'}
+          </div>
+        )}
+
+        {/* Success indicator for real-time sync */}
+        {isConnected && (
+          <div className={styles.syncStatus}>
+            <span className={styles.syncIcon}>🌐</span>
+            <span className={styles.syncText}>Синхронизация с сервером активна</span>
+          </div>
+        )}
+
+        {/* Артикул материала */}
         <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            Артикул материала *
+          </label>
           <input
-            className={styles.formInput}
-            placeholder="Название материала"
-            value={name}
-            onChange={e => setName(e.target.value)}
+            type="text"
+            value={formData.article}
+            onChange={(e) => handleInputChange('article', e.target.value)}
             onKeyPress={handleKeyPress}
+            className={`${styles.formInput} ${errors.article ? styles.inputError : ''}`}
+            placeholder="Например: А-123"
             disabled={loading}
-            aria-label="Название материала"
+            autoFocus
           />
+          {errors.article && (
+            <div className={styles.fieldError}>
+              {errors.article}
+            </div>
+          )}
         </div>
 
+        {/* Material Name */}
         <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            Название материала *
+          </label>
           <input
-            className={styles.formInput}
-            placeholder="Единица измерения (кг, м, шт и т.д.)"
-            value={unit}
-            onChange={e => setUnit(e.target.value)}
+            type="text"
+            value={formData.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
             onKeyPress={handleKeyPress}
+            className={`${styles.formInput} ${errors.name ? styles.inputError : ''}`}
+            placeholder="Например: Сталь листовая"
             disabled={loading}
-            aria-label="Единица измерения"
           />
+          {errors.name && (
+            <div className={styles.fieldError}>
+              {errors.name}
+            </div>
+          )}
         </div>
 
+        {/* Unit */}
         <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            Единица измерения *
+          </label>
+          <input
+            type="text"
+            value={formData.unit}
+            onChange={(e) => handleInputChange('unit', e.target.value)}
+            onKeyPress={handleKeyPress}
+            className={`${styles.formInput} ${errors.unit ? styles.inputError : ''}`}
+            placeholder="кг, м, шт, л и т.д."
+            disabled={loading}
+          />
+          {errors.unit && (
+            <div className={styles.fieldError}>
+              {errors.unit}
+            </div>
+          )}
+        </div>
+
+        {/* Groups Selection */}
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            Группы материалов
+            <span className={styles.optional}>(необязательно)</span>
+            {isConnected && (
+              <span className={styles.realtimeIndicator} title="Группы обновляются в реальном времени">
+                🔄
+              </span>
+            )}
+          </label>
+          
           {groupsLoading ? (
-            <div className={styles.loadingContainer}>
-              <div className={styles.loadingSpinner}></div>
-              <p className={styles.loadingText}>Загрузка групп...</p>
+            <div className={styles.groupsLoading}>
+              <div className={styles.spinner}></div>
+              <span>Загрузка групп...</span>
+            </div>
+          ) : groups.length === 0 ? (
+            <div className={styles.noGroups}>
+              <span className={styles.noGroupsIcon}>📁</span>
+              <p>Нет доступных групп</p>
+              <p className={styles.noGroupsSubtext}>
+                Сначала создайте группы материалов
+              </p>
             </div>
           ) : (
-            <>
-              <label className={styles.fieldGroupLabel}>
-                Группы материалов:
-              </label>
-              <select
-                multiple
-                className={`${styles.formSelect} ${styles.materialFormMultiSelect}`}
-                value={selected.map(String)}
-                onChange={handleSelectChange}
-                disabled={loading}
-                aria-label="Выберите группы материалов"
-              >
-                {groups.map(g => (
-                  <option key={g.groupId} value={g.groupId}>
-                    {g.groupName} ({g.materialsCount || 0} мат.)
-                  </option>
+            <div className={styles.groupsSelector}>
+              <div className={styles.groupsGrid}>
+                {groups.map((group) => (
+                  <div
+                    key={group.groupId}
+                    className={`${styles.groupOption} ${
+                      formData.selectedGroups.includes(group.groupId) 
+                        ? styles.groupOptionSelected 
+                        : ''
+                    }`}
+                    onClick={() => handleGroupToggle(group.groupId)}
+                  >
+                    <div className={styles.groupOptionContent}>
+                      <div className={styles.groupOptionIcon}>
+                        {formData.selectedGroups.includes(group.groupId) ? '✅' : '📁'}
+                      </div>
+                      <div className={styles.groupOptionInfo}>
+                        <div className={styles.groupOptionName}>
+                          {group.groupName}
+                        </div>
+                        <div className={styles.groupOptionCount}>
+                          {group.materialsCount || 0} материалов
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </select>
-              <p className={styles.listItemSubtitle}>
-                Удерживайте Ctrl для выбора нескольких групп
-              </p>
-            </>
+              </div>
+              
+              {formData.selectedGroups.length > 0 && (
+                <div className={styles.selectedGroupsSummary}>
+                  <span className={styles.selectedGroupsLabel}>
+                    Выбрано групп: {formData.selectedGroups.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, selectedGroups: [] }))}
+                    className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonMini}`}
+                  >
+                    Очистить выбор
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        <div className={styles.buttonGroup}>
+        {/* Form Actions */}
+        <div className={styles.formActions}>
           <button
-            onClick={handleSubmit}
-            disabled={loading || !name.trim() || !unit.trim()}
-            className={`${styles.button} ${styles.buttonSuccess} ${styles.buttonMedium}`}
+            type="submit"
+            disabled={loading || !formData.name.trim() || !formData.article.trim() || !formData.unit.trim()}
+            className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonLarge}`}
           >
-            {loading ? 'Сохраняю...' : 'Сохранить'}
+            {loading ? (
+              <>
+                <span className={styles.buttonSpinner}></span>
+                {isEditing ? 'Обновляем...' : 'Создаем...'}
+              </>
+            ) : (
+              <>
+                <span className={styles.buttonIcon}>
+                  {isEditing ? '💾' : '➕'}
+                </span>
+                {isEditing ? 'Обновить материал' : 'Создать материал'}
+              </>
+            )}
           </button>
           
-          {editId && (
-            <button
-              onClick={handleCancel}
-              disabled={loading}
-              className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonMedium}`}
-            >
-              Отмена
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={loading}
+            className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonLarge}`}
+          >
+            Отмена
+          </button>
         </div>
 
-        <div className={styles.formGroup}>
-          <p className={styles.listItemSubtitle}>
-            {editId 
-              ? 'Редактируйте данные материала и нажмите "Сохранить"' 
-              : 'Заполните все поля и нажмите "Сохранить" или Ctrl+Enter'
+        {/* Help Text */}
+        <div className={styles.formHelp}>
+          <div className={styles.helpText}>
+            <span className={styles.helpIcon}>💡</span>
+            {isEditing 
+              ? 'Измените данные материала и нажмите "Обновить материал"' 
+              : 'Заполните обязательные поля и нажмите "Создать материал" или Ctrl+Enter'
             }
-          </p>
+          </div>
+          <div className={styles.helpText}>
+            <span className={styles.helpIcon}>⚡</span>
+            Используйте Escape для быстрого закрытия формы
+          </div>
+          {isConnected && (
+            <div className={styles.helpText}>
+              <span className={styles.helpIcon}>🔄</span>
+              Изменения будут синхронизированы с другими пользователями в реальном времени
+            </div>
+          )}
         </div>
-      </div>
+      </form>
     </div>
   );
 };

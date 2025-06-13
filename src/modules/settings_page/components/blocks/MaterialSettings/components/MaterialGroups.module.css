@@ -1,0 +1,408 @@
+/* ================================================
+   MATERIAL GROUPS COMPONENT STYLES
+   ================================================ */
+
+/* Import shared variables from parent */
+@import '../MaterialSettingsPage.module.css';
+
+/* === CARD COMPONENTS === */
+.groupsCard {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.groupsCard:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.cardHeader {
+  padding: var(--space-5) var(--space-6);
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardTitle {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cardIcon {
+  font-size: var(--font-lg);
+}
+
+.cardContent {
+  padding: var(--space-6);
+}
+
+/* === BADGES === */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1) var(--space-3);
+  background: var(--primary-color);
+  color: var(--white);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  min-width: 2rem;
+}
+
+/* === BUTTONS === */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  min-height: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Button Variants */
+.buttonPrimary {
+  background: var(--primary-color);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.buttonSuccess {
+  background: var(--success-color);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.buttonSuccess:hover:not(:disabled) {
+  background: var(--success-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.buttonWarning {
+  background: var(--warning-color);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.buttonWarning:hover:not(:disabled) {
+  background: var(--warning-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.buttonDanger {
+  background: var(--danger-color);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.buttonDanger:hover:not(:disabled) {
+  background: var(--danger-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.buttonSecondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+}
+
+/* Button Sizes */
+.buttonMini {
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem;
+  min-height: 1.75rem;
+}
+
+.buttonSmall {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-sm);
+  min-height: 2rem;
+}
+
+.buttonIcon {
+  font-size: 1em;
+}
+
+.buttonSpinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* === FORMS === */
+.createGroupForm {
+  margin-bottom: var(--space-6);
+}
+
+.inputGroup {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.input {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-md);
+  background: var(--white);
+  color: var(--gray-900);
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* === GROUPS === */
+.groupsList {
+  margin-top: var(--space-4);
+}
+
+.groupsGrid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.groupItem {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.groupItem:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.groupItemSelected {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.groupItemProcessing {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.groupInfo {
+  flex: 1;
+}
+
+.groupName {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.groupCount {
+  font-size: var(--font-sm);
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.groupActions {
+  display: flex;
+  gap: var(--space-2);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.groupItem:hover .groupActions {
+  opacity: 1;
+}
+
+.processingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === EDIT FORM === */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+}
+
+.editInput {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+}
+
+.editActions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* === LOADING & EMPTY STATES === */
+.loadingState,
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--gray-600);
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--gray-200);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.emptyIcon {
+  font-size: var(--font-3xl);
+  opacity: 0.5;
+}
+
+.emptySubtext {
+  font-size: var(--font-sm);
+  color: var(--gray-500);
+  margin: 0;
+}
+
+/* === ERROR MESSAGES === */
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--danger-light);
+  border: 1px solid var(--danger-color);
+  border-radius: var(--radius-md);
+  color: var(--danger-color);
+  font-size: var(--font-sm);
+  margin-bottom: var(--space-4);
+}
+
+.errorIcon {
+  font-size: var(--font-md);
+  flex-shrink: 0;
+}
+
+.errorClose {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  font-size: var(--font-lg);
+  padding: var(--space-1);
+}
+
+/* === FORM HELP === */
+.formHelp {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-200);
+}
+
+.helpText {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-sm);
+  color: var(--gray-600);
+  margin-bottom: var(--space-2);
+}
+
+.helpIcon {
+  font-size: var(--font-sm);
+}
+
+/* === ANIMATIONS === */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+  .cardContent {
+    padding: var(--space-4);
+  }
+  
+  .inputGroup {
+    flex-direction: column;
+  }
+}

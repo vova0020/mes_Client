@@ -1,71 +1,99 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  getMaterialGroups,
-  createMaterialGroup,
-  updateMaterialGroup,
-  deleteMaterialGroup,
+  useMaterialGroups,
+  useCreateMaterialGroup,
+  useUpdateMaterialGroup,
+  useDeleteMaterialGroup,
 } from '../api';
+import { useSocket } from '../../../../../../contexts/SocketContext';
 import { MaterialGroup, CreateMaterialGroupDto, UpdateMaterialGroupDto } from '../types';
-import styles from '../MaterialSettings.module.css';
+import styles from './MaterialGroups.module.css';
 
 interface MaterialGroupsProps {
   onGroupSelect?: (groupId: number) => void;
+  selectedGroupId?: number;
 }
 
-export const MaterialGroups: React.FC<MaterialGroupsProps> = ({ onGroupSelect }) => {
-  const [groups, setGroups] = useState<MaterialGroup[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+export const MaterialGroups: React.FC<MaterialGroupsProps> = ({ 
+  onGroupSelect, 
+  selectedGroupId 
+}) => {
   const [newName, setNewName] = useState('');
-  const [selectedGroupId, setSelectedGroupId] = useState<number>();
+  const [editingGroup, setEditingGroup] = useState<MaterialGroup | null>(null);
+  const [editName, setEditName] = useState('');
 
-  const fetch = () => {
-    setLoading(true);
-    setError('');
-    getMaterialGroups()
-      .then(res => {
-        setGroups(res.data);
-        setError('');
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  };
+  // React Query хуки
+  const { data: groups = [], isLoading: loading, error } = useMaterialGroups();
+  const createMutation = useCreateMaterialGroup();
+  const updateMutation = useUpdateMaterialGroup();
+  const deleteMutation = useDeleteMaterialGroup();
 
-  useEffect(fetch, []);
+  // Socket.IO статус
+  const { isConnected } = useSocket();
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newName.trim()) return;
     
-    const dto: CreateMaterialGroupDto = { groupName: newName.trim() };
-    createMaterialGroup(dto)
-      .then(() => { 
-        setNewName(''); 
-        fetch(); 
-      })
-      .catch(err => alert(err.response?.data?.message || err.message));
-  };
-
-  const handleUpdate = (group: MaterialGroup) => {
-    const name = prompt('Новое название группы:', group.groupName);
-    if (name && name.trim() && name.trim() !== group.groupName) {
-      const dto: UpdateMaterialGroupDto = { groupName: name.trim() };
-      updateMaterialGroup(group.groupId, dto)
-        .then(fetch)
-        .catch(err => alert(err.response?.data?.message || err.message));
+    try {
+      const dto: CreateMaterialGroupDto = { groupName: newName.trim() };
+      await createMutation.mutateAsync(dto);
+      setNewName('');
+      // Данные автоматически обновятся благодаря React Query и Socket.IO
+    } catch (err: any) {
+      console.error('Ошибка создания группы:', err);
     }
   };
 
-  const handleDelete = (group: MaterialGroup) => {
-    if (window.confirm(`Удалить группу "${group.groupName}"?`)) {
-      deleteMaterialGroup(group.groupId)
-        .then(fetch)
-        .catch(err => alert(err.response?.data?.message || err.message));
+  const handleStartEdit = (group: MaterialGroup) => {
+    setEditingGroup(group);
+    setEditName(group.groupName);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingGroup || !editName.trim()) return;
+
+    try {
+      const dto: UpdateMaterialGroupDto = { groupName: editName.trim() };
+      await updateMutation.mutateAsync({ id: editingGroup.groupId, dto });
+      setEditingGroup(null);
+      setEditName('');
+      // Данные автоматически обновятся благодаря React Query и Socket.IO
+    } catch (err: any) {
+      console.error('Ошибка обновления группы:', err);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingGroup(null);
+    setEditName('');
+  };
+
+  const handleDelete = async (group: MaterialGroup) => {
+    const message = group.materialsCount && group.materialsCount > 0
+      ? `Удалить группу "${group.groupName}"? В группе ${group.materialsCount} материалов. Все связи будут удалены.`
+      : `Удалить группу "${group.groupName}"?`;
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    try {
+      await deleteMutation.mutateAsync(group.groupId);
+      if (selectedGroupId === group.groupId) {
+        onGroupSelect?.(0); // Reset selection
+      }
+      // Данные автоматически обновятся благодаря React Query и Socket.IO
+    } catch (err: any) {
+      console.error('Ошибка удаления группы:', err);
     }
   };
 
   const handleGroupClick = (groupId: number) => {
-    setSelectedGroupId(groupId);
-    onGroupSelect?.(groupId);
+    if (selectedGroupId === groupId) {
+      onGroupSelect?.(0); // Deselect if clicking on selected group
+    } else {
+      onGroupSelect?.(groupId);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -74,120 +102,221 @@ export const MaterialGroups: React.FC<MaterialGroupsProps> = ({ onGroupSelect })
     }
   };
 
+  const handleEditKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit();
+    }
+    if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
+  // Определяем, какая операция выполняется
+  const isCreating = createMutation.isPending;
+  const isUpdating = updateMutation.isPending;
+  const isDeletingId = deleteMutation.isPending ? deleteMutation.variables : null;
+  const processingId = isUpdating ? editingGroup?.groupId : isDeletingId;
+
   if (loading) {
     return (
-      <div className={`${styles.componentBlock} ${styles.materialGroupsContainer}`}>
-        <div className={styles.blockHeader}>
-          <h2 className={styles.blockTitle}>Группы материалов</h2>
+      <div className={styles.groupsCard}>
+        <div className={styles.cardHeader}>
+          <h2 className={styles.cardTitle}>
+            <span className={styles.cardIcon}>📁</span>
+            Группы материалов
+            {/* Socket.IO индикатор */}
+            <span className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`} />
+          </h2>
         </div>
-        <div className={styles.blockContent}>
-          <div className={styles.loadingContainer}>
-            <div className={styles.loadingSpinner}></div>
-            <p className={styles.loadingText}>Загрузка групп...</p>
+        <div className={styles.cardContent}>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Загрузка групп...</p>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`${styles.componentBlock} ${styles.materialGroupsContainer}`}>
-        <div className={styles.blockHeader}>
-          <h2 className={styles.blockTitle}>Группы материалов</h2>
-        </div>
-        <div className={styles.blockContent}>
-          <div className={styles.errorContainer}>
-            <p className={styles.errorText}>Ошибка: {error}</p>
-          </div>
-          <button 
-            onClick={fetch}
-            className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonMedium}`}
-          >
-            Повторить
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`${styles.componentBlock} ${styles.materialGroupsContainer}`}>
-      <div className={styles.blockHeader}>
-        <h2 className={styles.blockTitle}>Группы материалов</h2>
-      </div>
-      <div className={styles.blockContent}>
-        <div className={styles.addForm}>
-          <input
-            className={`${styles.formInput} ${styles.addFormInput}`}
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Название новой группы"
-            aria-label="Название новой группы"
-          />
-          <button
-            onClick={handleCreate}
-            disabled={!newName.trim()}
-            className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonMedium} ${styles.addFormButton}`}
-          >
-            Добавить
-          </button>
+    <div className={styles.groupsCard}>
+      <div className={styles.cardHeader}>
+        <div className={styles.cardTitleSection}>
+          <h2 className={styles.cardTitle}>
+            <span className={styles.cardIcon}>📁</span>
+            Группы материалов
+            {/* Socket.IO индикатор */}
+            <span 
+              className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`}
+              title={isConnected ? 'Подключено к серверу' : 'Отключено от сервера'}
+            />
+          </h2>
         </div>
-        
-        {groups.length === 0 ? (
-          <div className={styles.loadingContainer}>
-            <p className={styles.loadingText}>Нет групп материалов</p>
+        <div className={styles.badgeGroup}>
+          <span className={styles.badge}>{groups.length}</span>
+          {/* {isConnected && (
+            <span className={styles.realtimeBadge} title="Обновления в реальном времени">
+              🔄
+            </span>
+          )} */}
+        </div>
+      </div>
+
+      <div className={styles.cardContent}>
+        {/* Create New Group */}
+        <div className={styles.createGroupForm}>
+          <div className={styles.inputGroup}>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Название новой группы"
+              className={styles.input}
+              disabled={isCreating}
+            />
+            <button
+              onClick={handleCreate}
+              disabled={!newName.trim() || isCreating}
+              className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonSmall}`}
+            >
+              {isCreating ? (
+                <span className={styles.buttonSpinner}></span>
+              ) : (
+                <span className={styles.buttonIcon}>+</span>
+              )}
+            </button>
           </div>
-        ) : (
-          <ul className={styles.itemList}>
-            {groups.map((group, index) => (
-              <li 
-                key={group.groupId} 
-                className={`${styles.listItem} ${styles.animatedItem} ${
-                  selectedGroupId === group.groupId ? styles.listItemSelected : ''
-                }`}
-                onClick={() => handleGroupClick(group.groupId)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className={styles.listItemContent}>
-                  <div className={styles.listItemInfo}>
-                    <h3 className={styles.listItemTitle}>
-                      {group.groupName}
-                      <span className={styles.badge}>
-                        {group.materialsCount || 0}
-                      </span>
-                    </h3>
-                    <p className={styles.listItemSubtitle}>
-                      Материалов в группе: {group.materialsCount || 0}
-                    </p>
-                  </div>
-                  <div className={styles.listItemActions}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleUpdate(group);
-                      }}
-                      className={`${styles.button} ${styles.buttonWarning} ${styles.buttonSmall}`}
-                      title="Редактировать группу"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(group);
-                      }}
-                      className={`${styles.button} ${styles.buttonDanger} ${styles.buttonSmall}`}
-                      title="Удалить группу"
-                    >
-                      🗑
-                    </button>
-                  </div>
+          
+          {/* Real-time status */}
+          {isConnected && (
+            <div className={styles.realtimeStatus}>
+              <span className={styles.realtimeIcon}>🌐</span>
+              <span className={styles.realtimeText}>Синхронизация включена</span>
+            </div>
+          )}
+        </div>
+
+        {/* Error Message */}
+        {(error || createMutation.error || updateMutation.error || deleteMutation.error || !isConnected) && (
+          <div className={styles.errorMessage}>
+            <span className={styles.errorIcon}>⚠️</span>
+            {!isConnected ? 'Отсутствует подключение к серверу. Данные могут быть неактуальными.' :
+             error?.message || 
+             createMutation.error?.message || 
+             updateMutation.error?.message || 
+             deleteMutation.error?.message || 
+             'Произошла ошибка'}
+          </div>
+        )}
+
+        {/* Groups List */}
+        <div className={styles.groupsList}>
+          {groups.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>📁</span>
+              <p>Нет созданных групп</p>
+              <p className={styles.emptySubtext}>Создайте первую группу для организации материалов</p>
+            </div>
+          ) : (
+            <div className={styles.groupsGrid}>
+              {groups.map((group) => (
+                <div
+                  key={group.groupId}
+                  className={`${styles.groupItem} ${
+                    selectedGroupId === group.groupId ? styles.groupItemSelected : ''
+                  } ${processingId === group.groupId ? styles.groupItemProcessing : ''}`}
+                  onClick={() => !editingGroup && handleGroupClick(group.groupId)}
+                >
+                  {editingGroup?.groupId === group.groupId ? (
+                    <div className={styles.editForm} onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyPress={handleEditKeyPress}
+                        className={styles.editInput}
+                        autoFocus
+                      />
+                      <div className={styles.editActions}>
+                        <button
+                          onClick={handleSaveEdit}
+                          className={`${styles.button} ${styles.buttonSuccess} ${styles.buttonMini}`}
+                          disabled={!editName.trim() || isUpdating}
+                        >
+                          {isUpdating ? (
+                            <span className={styles.buttonSpinner}></span>
+                          ) : (
+                            '✓'
+                          )}
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonMini}`}
+                          disabled={isUpdating}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={styles.groupInfo}>
+                        <h3 className={styles.groupName}>
+                          {group.groupName}
+                          {selectedGroupId === group.groupId && (
+                            <span style={{ marginLeft: '8px', fontSize: '14px' }}>📌</span>
+                          )}
+                        </h3>
+                        <p className={styles.groupCount}>
+                          {group.materialsCount || 0} материалов
+                        </p>
+                      </div>
+                      <div className={styles.groupActions} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleStartEdit(group)}
+                          className={`${styles.button} ${styles.buttonWarning} ${styles.buttonMini}`}
+                          disabled={processingId === group.groupId}
+                          title="Редактировать"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDelete(group)}
+                          className={`${styles.button} ${styles.buttonDanger} ${styles.buttonMini}`}
+                          disabled={processingId === group.groupId}
+                          title="Удалить"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                      {processingId === group.groupId && (
+                        <div className={styles.processingOverlay}>
+                          <div className={styles.spinner}></div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Help Text */}
+        {groups.length > 0 && (
+          <div className={styles.formHelp}>
+            <div className={styles.helpText}>
+              <span className={styles.helpIcon}>💡</span>
+              Нажмите на группу чтобы отфильтровать материалы. Повторный клик снимает фильтр.
+            </div>
+            {isConnected && (
+              <div className={styles.helpText}>
+                <span className={styles.helpIcon}>🔄</span>
+                Данные обновляются автоматически при изменениях других пользователей.
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

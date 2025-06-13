@@ -1,36 +1,53 @@
 // ================================================
 // src/modules/materials/types.ts
 // ================================================
+
 export interface MaterialGroup {
-  groupId: number;           // ID группы
-  groupName: string;         // Название группы
-  materialsCount?: number;   // Опционально: количество материалов
+  groupId: number;
+  groupName: string;
+  materialsCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Material {
   materialId: number;
   materialName: string;
+  article: string;
   unit: string;
-  groups?: Array<{ groupId: number; groupName: string }>;
+  groups?: MaterialGroup[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
+// DTO для создания группы материалов
 export interface CreateMaterialGroupDto {
   groupName: string;
 }
+
+// DTO для обновления группы материалов
 export interface UpdateMaterialGroupDto {
-  groupName?: string;
+  groupName: string;
 }
+
+// DTO для создания материала
 export interface CreateMaterialDto {
   materialName: string;
+  article: string;
   unit: string;
   groupIds?: number[];
 }
+
+// DTO для обновления материала
 export interface UpdateMaterialDto {
-  materialName?: string;
-  unit?: string;
+  materialName: string;
+  article: string;
+  unit: string;
   groupIds?: number[];
 }
+
+// DTO для связи материала с группой
 export interface LinkMaterialToGroupDto {
-  groupId: number;
   materialId: number;
+  groupId: number;
 }

@@ -1,53 +1,39 @@
-// ================================================
-// src/modules/materials/components/MaterialsList.tsx
-// ================================================
-import React, { useState, useEffect } from 'react';
-import { getMaterials, deleteMaterial } from '../api';
+import React, { useState } from 'react';
+import { useMaterials, useDeleteMaterial } from '../api';
+import { useSocket } from '../../../../../../contexts/SocketContext';
 import { Material } from '../types';
-import styles from '../MaterialSettings.module.css';
-
+import styles from './MaterialsList.module.css';
+import socketStyles from '../../../../../../styles/SocketStyles.module.css';
 interface MaterialsListProps {
   filterGroupId?: number;
   onMaterialEdit?: (materialId: number) => void;
+  onClearFilter?: () => void;
 }
 
 export const MaterialsList: React.FC<MaterialsListProps> = ({ 
   filterGroupId, 
-  onMaterialEdit 
+  onMaterialEdit,
+  onClearFilter
 }) => {
-  const [list, setList] = useState<Material[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
-  const [deletingId, setDeletingId] = useState<number>();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const fetch = () => {
-    setLoading(true);
-    setError('');
-    getMaterials(filterGroupId)
-      .then(res => {
-        setList(res.data);
-        setError('');
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  };
+  // React Query хуки
+  const { data: materials = [], isLoading: loading, error } = useMaterials(filterGroupId);
+  const deleteMutation = useDeleteMaterial();
 
-  useEffect(fetch, [filterGroupId]);
+  // Socket.IO статус
+  const { isConnected } = useSocket();
 
   const handleDelete = async (material: Material) => {
     if (!window.confirm(`Удалить материал "${material.materialName}"?`)) {
       return;
     }
 
-    setDeletingId(material.materialId);
-
     try {
-      await deleteMaterial(material.materialId);
-      fetch();
+      await deleteMutation.mutateAsync(material.materialId);
+      // Данные автоматически обновятся благодаря React Query и Socket.IO
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || 'Ошибка при удалении');
-    } finally {
-      setDeletingId(undefined);
+      console.error('Ошибка удаления материала:', err);
     }
   };
 
@@ -55,135 +41,233 @@ export const MaterialsList: React.FC<MaterialsListProps> = ({
     onMaterialEdit?.(materialId);
   };
 
+  // Filter materials by search term
+  const filteredMaterials = materials.filter(material =>
+    material.materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    material.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (material.article && material.article.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const getFilteredGroupName = () => {
+    if (!filterGroupId || materials.length === 0) return null;
+    const firstMaterial = materials[0];
+    const group = firstMaterial.groups?.find(g => g.groupId === filterGroupId);
+    return group?.groupName || `Группа ${filterGroupId}`;
+  };
+
+  const isDeletingId = deleteMutation.isPending ? deleteMutation.variables : null;
+
   if (loading) {
     return (
-      <div className={`${styles.componentBlock} ${styles.materialsListContainer}`}>
-        <div className={styles.blockHeader}>
-          <h2 className={styles.blockTitle}>
+      <div className={styles.materialsCard}>
+        <div className={styles.cardHeader}>
+          <h2 className={styles.cardTitle}>
+            <span className={styles.cardIcon}>📋</span>
             Материалы
-            {filterGroupId && (
-              <span className={styles.badge}>Фильтр: группа {filterGroupId}</span>
-            )}
+            {/* Socket.IO индикатор */}
+            <span className={`${socketStyles.connectionDot} ${isConnected ? socketStyles.connected : socketStyles.disconnected}`} />
           </h2>
         </div>
-        <div className={styles.blockContent}>
-          <div className={styles.loadingContainer}>
-            <div className={styles.loadingSpinner}></div>
-            <p className={styles.loadingText}>Загрузка материалов...</p>
+        <div className={styles.cardContent}>
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Загрузка материалов...</p>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`${styles.componentBlock} ${styles.materialsListContainer}`}>
-        <div className={styles.blockHeader}>
-          <h2 className={styles.blockTitle}>Материалы</h2>
-        </div>
-        <div className={styles.blockContent}>
-          <div className={styles.errorContainer}>
-            <p className={styles.errorText}>Ошибка: {error}</p>
-          </div>
-          <button 
-            onClick={fetch}
-            className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonMedium}`}
-          >
-            Повторить
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`${styles.componentBlock} ${styles.materialsListContainer}`}>
-      <div className={styles.blockHeader}>
-        <h2 className={styles.blockTitle}>
-          Материалы
+    <div className={styles.materialsCard}>
+      <div className={styles.cardHeader}>
+        <div className={styles.cardTitleSection}>
+          <h2 className={styles.cardTitle}>
+            <span className={styles.cardIcon}>📋</span>
+            Материалы
+            {/* Socket.IO индикатор */}
+            {/* <span 
+              className={`${socketStyles.connectionDot} ${isConnected ? socketStyles.connected : socketStyles.disconnected}`}
+              title={isConnected ? 'Подключено к серверу' : 'Отключено от сервера'}
+            /> */}
+          </h2>
           {filterGroupId && (
-            <span className={styles.badge}>Фильтр: группа {filterGroupId}</span>
+            <div className={styles.filterInfo}>
+              <span className={styles.filterLabel}>Группа:</span>
+              <span className={styles.filterValue}>{getFilteredGroupName()}</span>
+              <button
+                onClick={onClearFilter}
+                className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonMini}`}
+                title="Показать все материалы"
+              >
+                ×
+              </button>
+            </div>
           )}
-          <span className={styles.badgeSecondary}>{list.length}</span>
-        </h2>
+        </div>
+        <div className={styles.badgeGroup}>
+          <span className={styles.badge}>{filteredMaterials.length}</span>
+          {/* {isConnected && (
+            <span className={socketStyles.realtimeBadge} title="Обновления в реальном времени">
+              🔄
+            </span>
+          )} */}
+        </div>
       </div>
-      <div className={styles.blockContent}>
-        {list.length === 0 ? (
-          <div className={styles.loadingContainer}>
-            <p className={styles.loadingText}>
-              {filterGroupId 
-                ? 'В выбранной группе нет материалов' 
-                : 'Нет материалов'
-              }
+
+      <div className={styles.cardContent}>
+        {/* Search and Controls */}
+        <div className={styles.materialsControls}>
+          <div className={styles.searchBox}>
+            <span className={styles.searchIcon}>🔍</span>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Поиск по артикулу, названию или единице измерения..."
+              className={styles.searchInput}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className={styles.searchClear}
+              >
+                ×
+              </button>
+            )}
+          </div>
+          
+          {/* Real-time status */}
+          {isConnected && (
+            <div className={styles.realtimeStatus}>
+              <span className={styles.realtimeIcon}>🌐</span>
+              <span className={styles.realtimeText}>Синхронизация включена</span>
+            </div>
+          )}
+        </div>
+
+        {/* Error Message */}
+        {(error || deleteMutation.error || !isConnected) && (
+          <div className={styles.errorMessage}>
+            <span className={styles.errorIcon}>⚠️</span>
+            {!isConnected ? 'Отсутствует подключение к серверу. Данные могут быть неактуальными.' :
+             error?.message || deleteMutation.error?.message || 'Произошла ошибка'}
+          </div>
+        )}
+
+        {/* Materials Table */}
+        {filteredMaterials.length === 0 ? (
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon}>📦</span>
+            {searchTerm ? (
+              <p>Материалы не найдены по запросу "{searchTerm}"</p>
+            ) : filterGroupId ? (
+              <p>В выбранной группе нет материалов</p>
+            ) : (
+              <p>Нет созданных материалов</p>
+            )}
+            <p className={styles.emptySubtext}>
+              {!filterGroupId && !searchTerm && 'Создайте первый материал для начала работы'}
             </p>
           </div>
         ) : (
-          <ul className={styles.itemList}>
-            {list.map((material, index) => (
-              <li 
-                key={material.materialId} 
-                className={`${styles.listItem} ${styles.animatedItem}`}
-              >
-                <div className={styles.listItemContent}>
-                  <div className={styles.listItemInfo}>
-                    <h3 className={styles.listItemTitle}>
-                      {material.materialName}
-                      <span className={styles.badge}>
-                        {material.unit}
-                      </span>
-                    </h3>
-                    <p className={styles.listItemSubtitle}>
-                      {material.groups && material.groups.length > 0 
-                        ? `Группы: ${material.groups.map(g => g.groupName).join(', ')}`
-                        : 'Без группы'
-                      }
-                    </p>
-                    <p className={styles.listItemSubtitle}>
-                      ID: {material.materialId}
-                    </p>
+          <div className={styles.materialsTable}>
+            <div className={styles.tableHeader}>
+              <div className={styles.tableHeaderCell}>Артикул</div>
+              <div className={styles.tableHeaderCell}>Название</div>
+              <div className={styles.tableHeaderCell}>Единица</div>
+              <div className={styles.tableHeaderCell}>Группы</div>
+              <div className={styles.tableHeaderCell}>Действия</div>
+            </div>
+            <div className={styles.tableBody}>
+              {filteredMaterials.map((material) => (
+                <div
+                  key={material.materialId}
+                  className={`${styles.tableRow} ${
+                    isDeletingId === material.materialId ? styles.tableRowProcessing : ''
+                  }`}
+                >
+                  {/* Артикул */}
+                  <div className={styles.tableCell}>
+                    <div className={styles.materialArticle}>
+                      {material.article || 'Не указан'}
+                    </div>
                   </div>
-                  <div className={styles.listItemActions}>
-                    <button
-                      onClick={() => handleEdit(material.materialId)}
-                      className={`${styles.button} ${styles.buttonWarning} ${styles.buttonSmall}`}
-                      title="Редактировать материал"
-                      disabled={deletingId === material.materialId}
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => handleDelete(material)}
-                      disabled={deletingId === material.materialId}
-                      className={`${styles.button} ${styles.buttonDanger} ${styles.buttonSmall}`}
-                      title="Удалить материал"
-                    >
-                      {deletingId === material.materialId ? '...' : '🗑'}
-                    </button>
+                  
+                  {/* Название */}
+                  <div className={styles.tableCell}>
+                    <div className={styles.materialName}>
+                      {material.materialName}
+                    </div>
+                  </div>
+                  
+                  {/* Единица измерения */}
+                  <div className={styles.tableCell}>
+                    <span className={styles.unitBadge}>
+                      {material.unit}
+                    </span>
+                  </div>
+                  
+                  {/* Группы */}
+                  <div className={styles.tableCell}>
+                    <div className={styles.groupTags}>
+                      {material.groups && material.groups.length > 0 ? (
+                        material.groups.map((group) => (
+                          <span key={group.groupId} className={styles.groupTag}>
+                            {group.groupName}
+                          </span>
+                        ))
+                      ) : (
+                        <span className={styles.noGroups}>Без группы</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Действия */}
+                  <div className={styles.tableCell}>
+                    <div className={styles.tableActions}>
+                      <button
+                        onClick={() => handleEdit(material.materialId)}
+                        className={`${styles.button} ${styles.buttonWarning} ${styles.buttonSmall}`}
+                        disabled={isDeletingId === material.materialId}
+                        title="Редактировать материал"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(material)}
+                        disabled={isDeletingId === material.materialId}
+                        className={`${styles.button} ${styles.buttonDanger} ${styles.buttonSmall}`}
+                        title="Удалить материал"
+                      >
+                        {isDeletingId === material.materialId ? (
+                          <span className={styles.buttonSpinner}></span>
+                        ) : (
+                          '🗑️'
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          </div>
         )}
 
-        {list.length > 0 && (
-          <div className={styles.formGroup}>
-            <p className={styles.listItemSubtitle}>
-              Всего материалов: {list.length}
-              {filterGroupId && (
-                <>
-                  {' '}в группе {filterGroupId}. 
-                  <button 
-                    onClick={() => window.location.reload()} 
-                    className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonSmall}`}
-                    style={{ marginLeft: '8px' }}
-                  >
-                    Показать все
-                  </button>
-                </>
-              )}
-            </p>
+        {/* Summary */}
+        {filteredMaterials.length > 0 && (
+          <div className={styles.tableSummary}>
+            Показано {filteredMaterials.length} из {materials.length} материалов
+            {searchTerm && (
+              <span className={styles.searchSummary}>
+                {' '}по запросу "{searchTerm}"
+              </span>
+            )}
+            {isConnected && (
+              <span className={styles.syncStatus}>
+                {' '}• Синхронизировано
+              </span>
+            )}
           </div>
         )}
       </div>
