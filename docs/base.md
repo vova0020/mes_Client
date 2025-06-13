@@ -1,4 +1,3 @@
-
 // ========================================
 // 1. Модуль пользователей
 // ========================================
@@ -6,7 +5,7 @@
 model User {
   userId    Int      @id @default(autoincrement()) @map("user_id")
   login     String   @unique
-  password  String   // Зашифрованный пароль
+  password  String // Зашифрованный пароль
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -21,10 +20,10 @@ model User {
 }
 
 model UserDetail {
-  detailId  Int     @id @default(autoincrement()) @map("detail_id")
-  userId    Int     @unique @map("user_id")
-  firstName String  @map("first_name")
-  lastName  String  @map("last_name")
+  detailId  Int      @id @default(autoincrement()) @map("detail_id")
+  userId    Int      @unique @map("user_id")
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
   phone     String?
   position  String?
   salary    Decimal?
@@ -58,11 +57,11 @@ model UserRole {
 }
 
 model LoginLog {
-  logId       Int       @id @default(autoincrement()) @map("log_id")
-  userId      Int?      @map("user_id")
-  ipAddress   String    @map("ip_address")
-  deviceInfo  String?   @map("device_info")
-  attemptTime DateTime  @map("attempt_time")
+  logId       Int      @id @default(autoincrement()) @map("log_id")
+  userId      Int?     @map("user_id")
+  ipAddress   String   @map("ip_address")
+  deviceInfo  String?  @map("device_info")
+  attemptTime DateTime @map("attempt_time")
   success     Boolean
 
   // Связи
@@ -76,14 +75,14 @@ model LoginLog {
 // ========================================
 
 model Order {
-  orderId              Int      @id @default(autoincrement()) @map("order_id")
-  batchNumber          String   @map("batch_number")
-  orderName            String   @map("order_name")
-  completionPercentage Decimal  @map("completion_percentage")
-  createdAt            DateTime @default(now()) @map("created_at")
+  orderId              Int       @id @default(autoincrement()) @map("order_id")
+  batchNumber          String    @map("batch_number")
+  orderName            String    @map("order_name")
+  completionPercentage Decimal   @map("completion_percentage")
+  createdAt            DateTime  @default(now()) @map("created_at")
   completedAt          DateTime? @map("completed_at")
-  launchPermission     Boolean  @map("launch_permission")
-  isCompleted          Boolean  @map("is_completed")
+  launchPermission     Boolean   @map("launch_permission")
+  isCompleted          Boolean   @map("is_completed")
 
   // Связи
   packages Package[]
@@ -92,15 +91,15 @@ model Order {
 }
 
 model Package {
-  packageId            Int      @id @default(autoincrement()) @map("package_id")
-  orderId              Int      @map("order_id")
-  packageCode          String   @map("package_code")
-  packageName          String   @map("package_name")
-  completionPercentage Decimal  @map("completion_percentage")
+  packageId            Int     @id @default(autoincrement()) @map("package_id")
+  orderId              Int     @map("order_id")
+  packageCode          String  @map("package_code")
+  packageName          String  @map("package_name")
+  completionPercentage Decimal @map("completion_percentage")
 
   // Связи
-  order                   Order                     @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
-  productionPackageParts  ProductionPackagePart[]
+  order                  Order                   @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  productionPackageParts ProductionPackagePart[]
 
   @@map("packages")
 }
@@ -125,30 +124,30 @@ enum PartStatus {
 }
 
 model Part {
-  partId             Int         @id @default(autoincrement()) @map("part_id")
-  partCode           String      @map("part_code")
-  partName           String      @map("part_name")
-  materialId         Int         @map("material_id")
-  size               String
-  totalQuantity      Decimal     @map("total_quantity")
-  status             PartStatus
-  isSubassembly      Boolean     @default(false) @map("is_subassembly")
-  routeId            Int         @map("route_id")
-  readyForMainFlow   Boolean     @default(false) @map("ready_for_main_flow")
-  returnStageId      Int?        @map("return_stage_id")
+  partId           Int        @id @default(autoincrement()) @map("part_id")
+  partCode         String     @map("part_code")
+  partName         String     @map("part_name")
+  materialId       Int        @map("material_id")
+  size             String
+  totalQuantity    Decimal    @map("total_quantity")
+  status           PartStatus
+  isSubassembly    Boolean    @default(false) @map("is_subassembly")
+  routeId          Int        @map("route_id")
+  readyForMainFlow Boolean    @default(false) @map("ready_for_main_flow")
+  returnStageId    Int?       @map("return_stage_id")
 
   // Связи
-  material                  Material                    @relation(fields: [materialId], references: [materialId])
-  route                     Route                       @relation(fields: [routeId], references: [routeId])
-  returnStage               RouteStage?                 @relation("ReturnStage", fields: [returnStageId], references: [routeStageId])
-  pallets                   Pallet[]
-  pickerTasks               PickerTask[]
-  partRouteProgress         PartRouteProgress[]
-  productionPackageParts    ProductionPackagePart[]
-  packageParts              PackagePart[]
-  parentBillOfMaterials     BillOfMaterial[]            @relation("ParentPart")
-  childBillOfMaterials      BillOfMaterial[]            @relation("ChildPart")
-  subassemblyProgress       SubassemblyProgress[]
+  material               Material                @relation(fields: [materialId], references: [materialId])
+  route                  Route                   @relation(fields: [routeId], references: [routeId])
+  returnStage            RouteStage?             @relation("ReturnStage", fields: [returnStageId], references: [routeStageId])
+  pallets                Pallet[]
+  pickerTasks            PickerTask[]
+  partRouteProgress      PartRouteProgress[]
+  productionPackageParts ProductionPackagePart[]
+  packageParts           PackagePart[]
+  parentBillOfMaterials  BillOfMaterial[]        @relation("ParentPart")
+  childBillOfMaterials   BillOfMaterial[]        @relation("ChildPart")
+  subassemblyProgress    SubassemblyProgress[]
 
   @@map("parts")
 }
@@ -185,8 +184,8 @@ model Pallet {
 // ========================================
 
 model Buffer {
-  bufferId    Int    @id @default(autoincrement()) @map("buffer_id")
-  bufferName  String @map("buffer_name")
+  bufferId    Int     @id @default(autoincrement()) @map("buffer_id")
+  bufferName  String  @map("buffer_name")
   description String?
   location    String
 
@@ -213,10 +212,10 @@ model BufferCell {
   updatedAt   DateTime   @updatedAt @map("updated_at")
 
   // Связи
-  buffer              Buffer             @relation(fields: [bufferId], references: [bufferId], onDelete: Cascade)
-  palletBufferCells   PalletBufferCell[]
-  pickerTasksFrom     PickerTask[]       @relation("FromCell")
-  pickerTasksTo       PickerTask[]       @relation("ToCell")
+  buffer            Buffer             @relation(fields: [bufferId], references: [bufferId], onDelete: Cascade)
+  palletBufferCells PalletBufferCell[]
+  pickerTasksFrom   PickerTask[]       @relation("FromCell")
+  pickerTasksTo     PickerTask[]       @relation("ToCell")
 
   @@map("buffer_cells")
 }
@@ -246,6 +245,7 @@ model ProductionLine {
 
   // Связи
   linesStages LineStage[]
+  materials   LineMaterial[]
 
   @@map("production_lines")
 }
@@ -267,11 +267,11 @@ model ProductionStageLevel1 {
 }
 
 model ProductionStageLevel2 {
-  substageId      Int     @id @default(autoincrement()) @map("substage_id")
-  stageId         Int     @map("stage_id")
-  substageName    String  @map("substage_name")
-  description     String?
-  allowance       Decimal
+  substageId   Int     @id @default(autoincrement()) @map("substage_id")
+  stageId      Int     @map("stage_id")
+  substageName String  @map("substage_name")
+  description  String?
+  allowance    Decimal
 
   // Связи
   stage       ProductionStageLevel1 @relation(fields: [stageId], references: [stageId], onDelete: Cascade)
@@ -303,12 +303,12 @@ enum MachineStatus {
 }
 
 model Machine {
-  machineId          Int           @id @default(autoincrement()) @map("machine_id")
-  machineName        String        @map("machine_name")
-  status             MachineStatus
-  recommendedLoad    Decimal       @map("recommended_load")
-  loadUnit           String        @map("load_unit")
-  isTaskChangeable   Boolean       @map("is_task_changeable")
+  machineId        Int           @id @default(autoincrement()) @map("machine_id")
+  machineName      String        @map("machine_name")
+  status           MachineStatus
+  recommendedLoad  Decimal       @map("recommended_load")
+  loadUnit         String        @map("load_unit")
+  isTaskChangeable Boolean       @map("is_task_changeable")
 
   // Связи
   machinesStages     MachineStage[]
@@ -347,20 +347,20 @@ model Route {
 }
 
 model RouteStage {
-  routeStageId   Int @id @default(autoincrement()) @map("route_stage_id")
-  routeId        Int @map("route_id")
-  stageId        Int @map("stage_id")
-  substageId     Int? @map("substage_id")
+  routeStageId   Int     @id @default(autoincrement()) @map("route_stage_id")
+  routeId        Int     @map("route_id")
+  stageId        Int     @map("stage_id")
+  substageId     Int?    @map("substage_id")
   sequenceNumber Decimal @map("sequence_number")
 
   // Связи
-  route                 Route                    @relation(fields: [routeId], references: [routeId], onDelete: Cascade)
-  stage                 ProductionStageLevel1    @relation(fields: [stageId], references: [stageId])
-  substage              ProductionStageLevel2?   @relation(fields: [substageId], references: [substageId])
-  partRouteProgress     PartRouteProgress[]
-  palletStageProgress   PalletStageProgress[]
-  subassemblyProgress   SubassemblyProgress[]
-  returnStageParts      Part[]                   @relation("ReturnStage")
+  route               Route                  @relation(fields: [routeId], references: [routeId], onDelete: Cascade)
+  stage               ProductionStageLevel1  @relation(fields: [stageId], references: [stageId])
+  substage            ProductionStageLevel2? @relation(fields: [substageId], references: [substageId])
+  partRouteProgress   PartRouteProgress[]
+  palletStageProgress PalletStageProgress[]
+  subassemblyProgress SubassemblyProgress[]
+  returnStageParts    Part[]                 @relation("ReturnStage")
 
   @@map("route_stages")
 }
@@ -382,11 +382,13 @@ model MaterialGroup {
 model Material {
   materialId   Int    @id @default(autoincrement()) @map("material_id")
   materialName String @map("material_name")
+  article      String
   unit         String
 
   // Связи
   groupsMaterials GroupMaterial[]
   parts           Part[]
+  lines          LineMaterial[]
 
   @@map("materials")
 }
@@ -402,6 +404,18 @@ model GroupMaterial {
 
   @@map("groups_materials")
 }
+  
+model LineMaterial {
+  lineMaterialId Int             @id @default(autoincrement()) @map("line_material_id")
+  lineId         Int             @map("line_id")
+  materialId     Int             @map("material_id")
+
+  // связи
+  line     ProductionLine       @relation(fields: [lineId], references: [lineId], onDelete: Cascade)
+  material Material             @relation(fields: [materialId], references: [materialId], onDelete: Cascade)
+
+  @@map("lines_materials")
+}
 
 // ========================================
 // 8. Модуль комплектовщиков
@@ -412,7 +426,7 @@ model Picker {
   userId   Int? @map("user_id")
 
   // Связи
-  user        User?         @relation(fields: [userId], references: [userId])
+  user        User?        @relation(fields: [userId], references: [userId])
   pickerTasks PickerTask[]
 
   @@map("pickers")
@@ -499,9 +513,9 @@ model PackingTask {
   completedAt DateTime?         @map("completed_at")
 
   // Связи
-  package     PackingPackage @relation(fields: [packageId], references: [packageId], onDelete: Cascade)
-  machine     Machine        @relation(fields: [machineId], references: [machineId])
-  assignedUser User?         @relation("AssignedUser", fields: [assignedTo], references: [userId])
+  package      PackingPackage @relation(fields: [packageId], references: [packageId], onDelete: Cascade)
+  machine      Machine        @relation(fields: [machineId], references: [machineId])
+  assignedUser User?          @relation("AssignedUser", fields: [assignedTo], references: [userId])
 
   @@map("packing_tasks")
 }

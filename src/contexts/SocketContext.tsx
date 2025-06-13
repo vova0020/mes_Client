@@ -4,11 +4,15 @@ import { io, Socket } from 'socket.io-client';
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
+  connected: boolean;
   connectionAttempts: number;
   joinRoom: (roomName: string) => void;
   leaveRoom: (roomName: string) => void;
   disconnect: () => void;
   reconnect: () => void;
+  on: (event: string, handler: (data: any) => void) => void;
+  off: (event: string, handler: (data: any) => void) => void;
+  emit: (event: string, data?: any) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -27,7 +31,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Исправлено: добавлено начальное значение
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 5;
   const reconnectDelay = 3000;
 
@@ -164,6 +168,25 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
     }
   }, [socket]);
 
+  // Добавляем методы для работы с событиями
+  const on = useCallback((event: string, handler: (data: any) => void) => {
+    if (socket) {
+      socket.on(event, handler);
+    }
+  }, [socket]);
+
+  const off = useCallback((event: string, handler: (data: any) => void) => {
+    if (socket) {
+      socket.off(event, handler);
+    }
+  }, [socket]);
+
+  const emit = useCallback((event: string, data?: any) => {
+    if (socket && isConnected) {
+      socket.emit(event, data);
+    }
+  }, [socket, isConnected]);
+
   // Инициализация соединения
   useEffect(() => {
     if (autoConnect) {
@@ -184,7 +207,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
   // Автоматическое подключение к комнатам материалов при соединении
   useEffect(() => {
     if (socket && isConnected) {
-      console.log('🏠 Автоматическое подключение к комнатам материалов');
+      console.log('🏠 Автоматическое подключен��е к комнатам материалов');
       joinRoom('joinMaterialsRoom');
       joinRoom('joinMaterialGroupsRoom');
     }
@@ -193,11 +216,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
   const contextValue: SocketContextType = {
     socket,
     isConnected,
+    connected: isConnected, // Добавляем connected как alias для isConnected
     connectionAttempts,
     joinRoom,
     leaveRoom,
     disconnect,
     reconnect,
+    on,
+    off,
+    emit,
   };
 
   return (
