@@ -15,24 +15,40 @@ import {
     Checkbox,
     Divider,
     IconButton,
-    Tooltip
+    Tooltip,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    CircularProgress,
+    Alert
 } from '@mui/material';
 import {
     Engineering as EngineeringIcon,
     ArrowUpward as ArrowUpwardIcon,
-    ArrowDownward as ArrowDownwardIcon
+    ArrowDownward as ArrowDownwardIcon,
+    Delete as DeleteIcon
 } from '@mui/icons-material';
-import { IProductionRoute, IProcessStep, IRouteStep } from '../RouteSettings';
+import { Route, CreateRouteDto, AvailableStage } from '../api/routes.api';
+import { useAvailableStagesLevel2 } from '../hooks/useRoutes';
 import styles from './RouteForm.module.css';
 
 interface RouteFormProps {
     open: boolean;
     onClose: () => void;
-    onSave: (routeData: Partial<IProductionRoute>, selectedSteps: IRouteStep[]) => void;
-    route?: IProductionRoute | null;
-    steps: IProcessStep[];
-    routeSteps: IRouteStep[];
+    onSave: (routeData: CreateRouteDto) => void;
+    route?: Route | null;
+    availableStages: AvailableStage[];
     isEditing: boolean;
+    isLoading: boolean;
+}
+
+interface SelectedStage {
+    stageId: number;
+    substageId?: number;
+    sequenceNumber: number;
+    stageName: string;
+    substageName?: string;
 }
 
 const RouteForm: React.FC<RouteFormProps> = ({
@@ -40,42 +56,56 @@ const RouteForm: React.FC<RouteFormProps> = ({
     onClose,
     onSave,
     route,
-    steps,
-    routeSteps,
-    isEditing
+    availableStages,
+    isEditing,
+    isLoading
 }) => {
     // Состояние для формы маршрута
-    const [routeForm, setRouteForm] = useState<Partial<IProductionRoute>>({
-        name: ''
+    const [routeForm, setRouteForm] = useState<{ routeName: string }>({
+        routeName: ''
     });
 
     // Состояние для выбранных этапов
-    const [selectedSteps, setSelectedSteps] = useState<IRouteStep[]>([]);
+    const [selectedStages, setSelectedStages] = useState<SelectedStage[]>([]);
     
-    // Состояние для чекбоксов выбора этапов
-    const [checkedSteps, setCheckedSteps] = useState<number[]>([]);
+    // Состояние для добавления нового этапа
+    const [newStage, setNewStage] = useState({
+        stageId: 0,
+        substageId: 0
+    });
+
+    // Получаем подэтапы для выбранного этапа
+    const { data: availableSubstages = [] } = useAvailableStagesLevel2(newStage.stageId);
 
     // Инициализация формы при открытии
     useEffect(() => {
         if (route && isEditing) {
             // Редактирование существующего маршрута
             setRouteForm({
-                id: route.id,
-                name: route.name
+                routeName: route.routeName
             });
 
             // Устанавливаем выбранные этапы
-            setSelectedSteps(routeSteps.sort((a, b) => a.sequence - b.sequence));
+            const stages = route.routeStages
+                .sort((a, b) => a.sequenceNumber - b.sequenceNumber)
+                .map(stage => ({
+                    stageId: stage.stageId,
+                    substageId: stage.substageId,
+                    sequenceNumber: stage.sequenceNumber,
+                    stageName: stage.stage.stageName,
+                    substageName: stage.substage?.substageName
+                }));
             
-            // Устанавливаем чекбоксы
-            setCheckedSteps(routeSteps.map(rs => rs.processStepId));
+            setSelectedStages(stages);
         } else {
             // Создание нового маршрута
-            setRouteForm({ name: '' });
-            setSelectedSteps([]);
-            setCheckedSteps([]);
+            setRouteForm({ routeName: '' });
+            setSelectedStages([]);
         }
-    }, [route, routeSteps, isEditing, open]);
+        
+        // Сброс формы добавления этапа
+        setNewStage({ stageId: 0, substageId: 0 });
+    }, [route, isEditing, open]);
 
     // Обработчик изменения поля формы
     const handleRouteFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,76 +113,88 @@ const RouteForm: React.FC<RouteFormProps> = ({
         setRouteForm(prev => ({ ...prev, [name]: value }));
     };
 
-    // Обработчик изменения чекбокса
-    const handleToggleStep = (stepId: number) => {
-        // Проверяем, выбран ли уже этап
-        const currentIndex = checkedSteps.indexOf(stepId);
-        const newChecked = [...checkedSteps];
+    // Добавить этап к маршруту
+    const handleAddStage = () => {
+        if (newStage.stageId === 0) return;
 
-        if (currentIndex === -1) {
-            // Если этап не выбран, добавляем его
-            newChecked.push(stepId);
-            
-            // Добавляем его также в выбранные этапы с новой последовательностью
-            const newStep: IRouteStep = {
-                id: 0, // временный ID, будет заменен на сервере
-                routeId: routeForm.id || 0,
-                processStepId: stepId,
-                sequence: selectedSteps.length + 1,
-                processStep: steps.find(s => s.id === stepId)
-            };
-            
-            setSelectedSteps([...selectedSteps, newStep]);
-        } else {
-            // Если этап уже выбран, удаляем его
-            newChecked.splice(currentIndex, 1);
-            
-            // Удаляем его из выбранных этапов
-            setSelectedSteps(prev => prev.filter(step => step.processStepId !== stepId));
-        }
+        const stageInfo = availableStages.find(s => s.stageId === newStage.stageId);
+        if (!stageInfo) return;
 
-        setCheckedSteps(newChecked);
+        const substageInfo = newStage.substageId ? 
+            stageInfo.productionStagesLevel2.find(s => s.substageId === newStage.substageId) : 
+            undefined;
+
+        const newSelectedStage: SelectedStage = {
+            stageId: newStage.stageId,
+            substageId: newStage.substageId || undefined,
+            sequenceNumber: selectedStages.length + 1,
+            stageName: stageInfo.stageName,
+            substageName: substageInfo?.substageName
+        };
+
+        setSelectedStages([...selectedStages, newSelectedStage]);
+        setNewStage({ stageId: 0, substageId: 0 });
     };
 
-    // Обработчик перемещения этапа вверх
+    // Удалить этап из маршрута
+    const handleRemoveStage = (index: number) => {
+        const updatedStages = selectedStages.filter((_, i) => i !== index);
+        // Обновляем последовательность
+        const reorderedStages = updatedStages.map((stage, idx) => ({
+            ...stage,
+            sequenceNumber: idx + 1
+        }));
+        setSelectedStages(reorderedStages);
+    };
+
+    // Переместить этап вверх
     const handleMoveUp = (index: number) => {
         if (index === 0) return;
         
-        const items = Array.from(selectedSteps);
-        const temp = items[index];
-        items[index] = items[index - 1];
-        items[index - 1] = temp;
+        const stages = [...selectedStages];
+        const temp = stages[index];
+        stages[index] = stages[index - 1];
+        stages[index - 1] = temp;
         
         // Обновляем последовательность
-        const updatedItems = items.map((item, idx) => ({
-            ...item,
-            sequence: idx + 1
+        const reorderedStages = stages.map((stage, idx) => ({
+            ...stage,
+            sequenceNumber: idx + 1
         }));
         
-        setSelectedSteps(updatedItems);
+        setSelectedStages(reorderedStages);
     };
     
-    // Обработчик перемещения этапа вниз
+    // Переместить этап вниз
     const handleMoveDown = (index: number) => {
-        if (index === selectedSteps.length - 1) return;
+        if (index === selectedStages.length - 1) return;
         
-        const items = Array.from(selectedSteps);
-        const temp = items[index];
-        items[index] = items[index + 1];
-        items[index + 1] = temp;
+        const stages = [...selectedStages];
+        const temp = stages[index];
+        stages[index] = stages[index + 1];
+        stages[index + 1] = temp;
         
         // Обновляем последовательность
-        const updatedItems = items.map((item, idx) => ({
-            ...item,
-            sequence: idx + 1
+        const reorderedStages = stages.map((stage, idx) => ({
+            ...stage,
+            sequenceNumber: idx + 1
         }));
         
-        setSelectedSteps(updatedItems);
+        setSelectedStages(reorderedStages);
     };
 
     // Обработчик сохранения
     const handleSave = () => {
-        onSave(routeForm, selectedSteps);
+        const routeData: CreateRouteDto = {
+            routeName: routeForm.routeName,
+            stages: selectedStages.map(stage => ({
+                stageId: stage.stageId,
+                substageId: stage.substageId,
+                sequenceNumber: stage.sequenceNumber
+            }))
+        };
+        
+        onSave(routeData);
     };
 
     return (
@@ -169,74 +211,108 @@ const RouteForm: React.FC<RouteFormProps> = ({
                 <TextField
                     autoFocus
                     margin="dense"
-                    name="name"
+                    name="routeName"
                     label="Название маршрута"
                     type="text"
                     fullWidth
-                    value={routeForm.name || ''}
+                    value={routeForm.routeName}
                     onChange={handleRouteFormChange}
                     required
                     variant="outlined"
                     className={styles.formField}
                 />
 
-                <div className={styles.stepsSelectionContainer}>
-                    <div className={styles.availableStepsContainer}>
+                <div className={styles.stagesContainer}>
+                    {/* Форма добавления этапа */}
+                    <div className={styles.addStageForm}>
                         <Typography variant="subtitle1" className={styles.sectionTitle}>
-                            Доступные этапы обработки
+                            Добавить этап обработки
                         </Typography>
-                        <List className={styles.stepsList}>
-                            {steps.map((step) => (
-                                <ListItem key={step.id} dense>
-                                    <ListItemAvatar>
-                                        <Avatar className={styles.stepAvatar}>
-                                            <EngineeringIcon />
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={step.name}
-                                        secondary={step.description}
-                                    />
-                                    <Checkbox
-                                        edge="end"
-                                        onChange={() => handleToggleStep(step.id)}
-                                        checked={checkedSteps.indexOf(step.id) !== -1}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
+                        <div className={styles.addStageInputs}>
+                            <FormControl variant="outlined" className={styles.stageSelect}>
+                                <InputLabel>Этап обработки</InputLabel>
+                                <Select
+                                    value={newStage.stageId}
+                                    onChange={(e) => setNewStage(prev => ({ 
+                                        ...prev, 
+                                        stageId: e.target.value as number,
+                                        substageId: 0 // Сбрасываем подэтап при смене этапа
+                                    }))}
+                                    label="Этап обработки"
+                                >
+                                    <MenuItem value={0}>Выберите этап</MenuItem>
+                                    {availableStages.map(stage => (
+                                        <MenuItem key={stage.stageId} value={stage.stageId}>
+                                            {stage.stageName}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            {newStage.stageId > 0 && availableSubstages.length > 0 && (
+                                <FormControl variant="outlined" className={styles.substageSelect}>
+                                    <InputLabel>Подэтап (опционально)</InputLabel>
+                                    <Select
+                                        value={newStage.substageId}
+                                        onChange={(e) => setNewStage(prev => ({ 
+                                            ...prev, 
+                                            substageId: e.target.value as number 
+                                        }))}
+                                        label="Подэтап (опционально)"
+                                    >
+                                        <MenuItem value={0}>Не выбран</MenuItem>
+                                        {availableSubstages.map(substage => (
+                                            <MenuItem key={substage.substageId} value={substage.substageId}>
+                                                {substage.substageName}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            )}
+
+                            <Button
+                                variant="contained"
+                                onClick={handleAddStage}
+                                disabled={newStage.stageId === 0}
+                                className={styles.addStageButton}
+                            >
+                                Добавить
+                            </Button>
+                        </div>
                     </div>
 
-                    <Divider orientation="vertical" flexItem className={styles.divider} />
+                    <Divider className={styles.divider} />
 
-                    <div className={styles.selectedStepsContainer}>
+                    {/* Список выбранных этапов */}
+                    <div className={styles.selectedStagesContainer}>
                         <Typography variant="subtitle1" className={styles.sectionTitle}>
                             Выбранные этапы (порядок выполнения)
                         </Typography>
                         
-                        {selectedSteps.length === 0 ? (
-                            <Typography className={styles.noStepsSelected}>
-                                Этапы обработки не выбраны
-                            </Typography>
+                        {selectedStages.length === 0 ? (
+                            <Alert severity="info" className={styles.noStagesAlert}>
+                                Этапы обработки не выбраны. Добавьте этапы для создания маршрута.
+                            </Alert>
                         ) : (
-                            <List className={styles.selectedStepsList}>
-                                {selectedSteps.map((step, index) => (
+                            <List className={styles.selectedStagesList}>
+                                {selectedStages.map((stage, index) => (
                                     <ListItem 
-                                        key={step.processStepId} 
-                                        className={styles.selectedStepItem}
+                                        key={`${stage.stageId}-${stage.substageId || 'none'}-${index}`}
+                                        className={styles.selectedStageItem}
                                     >
-                                        <Typography className={styles.stepSequence}>
+                                        <Typography className={styles.stageSequence}>
                                             {index + 1}
                                         </Typography>
                                         <ListItemAvatar>
-                                            <Avatar className={styles.stepAvatar}>
+                                            <Avatar className={styles.stageAvatar}>
                                                 <EngineeringIcon />
                                             </Avatar>
                                         </ListItemAvatar>
                                         <ListItemText
-                                            primary={steps.find(s => s.id === step.processStepId)?.name}
+                                            primary={stage.stageName}
+                                            secondary={stage.substageName ? `→ ${stage.substageName}` : null}
                                         />
-                                        <div className={styles.stepActions}>
+                                        <div className={styles.stageActions}>
                                             <Tooltip title="Переместить вверх">
                                                 <span>
                                                     <IconButton 
@@ -253,11 +329,20 @@ const RouteForm: React.FC<RouteFormProps> = ({
                                                     <IconButton 
                                                         size="small" 
                                                         onClick={() => handleMoveDown(index)}
-                                                        disabled={index === selectedSteps.length - 1}
+                                                        disabled={index === selectedStages.length - 1}
                                                     >
                                                         <ArrowDownwardIcon />
                                                     </IconButton>
                                                 </span>
+                                            </Tooltip>
+                                            <Tooltip title="Удалить этап">
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => handleRemoveStage(index)}
+                                                    className={styles.deleteButton}
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
                                             </Tooltip>
                                         </div>
                                     </ListItem>
@@ -271,6 +356,7 @@ const RouteForm: React.FC<RouteFormProps> = ({
                 <Button 
                     onClick={onClose} 
                     className={`${styles.dialogButton} ${styles.cancelButton}`}
+                    disabled={isLoading}
                 >
                     Отмена
                 </Button>
@@ -278,9 +364,16 @@ const RouteForm: React.FC<RouteFormProps> = ({
                     onClick={handleSave} 
                     className={`${styles.dialogButton} ${styles.saveButton}`}
                     variant="contained"
-                    disabled={!routeForm.name || selectedSteps.length === 0}
+                    disabled={!routeForm.routeName || selectedStages.length === 0 || isLoading}
                 >
-                    Сохранить
+                    {isLoading ? (
+                        <>
+                            <CircularProgress size={20} style={{ marginRight: 8 }} />
+                            Сохранение...
+                        </>
+                    ) : (
+                        'Сохранить'
+                    )}
                 </Button>
             </DialogActions>
         </Dialog>

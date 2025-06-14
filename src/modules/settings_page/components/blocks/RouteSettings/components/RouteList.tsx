@@ -11,36 +11,51 @@ import {
     IconButton,
     Avatar,
     Chip,
-    ListItemButton
+    ListItemButton,
+    CircularProgress,
+    Tooltip
 } from '@mui/material';
 import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
-    Route as RouteIcon
+    Route as RouteIcon,
+    ContentCopy as CopyIcon
 } from '@mui/icons-material';
-import { IProductionRoute, IProcessStep } from '../RouteSettings';
+import { Route } from '../api/routes.api';
+import { useCopyRoute } from '../hooks/useRoutes';
 import styles from './RouteList.module.css';
 
 interface RouteListProps {
-    routes: IProductionRoute[];
-    steps: IProcessStep[];
-    selectedRoute: IProductionRoute | null;
-    setSelectedRoute: (route: IProductionRoute) => void;
-    onEdit: (route: IProductionRoute) => void;
+    routes: Route[];
+    selectedRoute: Route | null;
+    setSelectedRoute: (route: Route) => void;
+    onEdit: (route?: Route) => void;
     onDelete: (id: number) => void;
-    getStepName: (stepId: number) => string;
+    isDeleting: boolean;
 }
 
 const RouteList: React.FC<RouteListProps> = ({
     routes,
-    steps,
     selectedRoute,
     setSelectedRoute,
     onEdit,
     onDelete,
-    getStepName
+    isDeleting
 }) => {
+    const copyRouteMutation = useCopyRoute();
+
+    const handleCopyRoute = async (route: Route) => {
+        try {
+            await copyRouteMutation.mutateAsync({
+                id: route.routeId,
+                newRouteName: `${route.routeName} (копия)`
+            });
+        } catch (error) {
+            console.error('Ошибка при копировании маршрута:', error);
+        }
+    };
+
     return (
         <div className={styles.listContainer}>
             <div className={styles.listHeader}>
@@ -50,7 +65,7 @@ const RouteList: React.FC<RouteListProps> = ({
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    onClick={() => onEdit(undefined as any)}
+                    onClick={() => onEdit()}
                     className={styles.addButton}
                 >
                     Добавить маршрут
@@ -65,12 +80,12 @@ const RouteList: React.FC<RouteListProps> = ({
                 <List className={styles.routeList}>
                     {routes.map((route, index) => (
                         <ListItem 
-                            key={route.id} 
+                            key={route.routeId} 
                             className={styles.routeItem}
                             style={{ animationDelay: `${index * 0.05}s` }}
                         >
                             <ListItemButton
-                                selected={selectedRoute?.id === route.id}
+                                selected={selectedRoute?.routeId === route.routeId}
                                 onClick={() => setSelectedRoute(route)}
                             >
                                 <ListItemAvatar>
@@ -79,20 +94,31 @@ const RouteList: React.FC<RouteListProps> = ({
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
-                                    primary={route.name}
+                                    primary={route.routeName}
                                     secondary={
-                                        <div className={styles.stepChips}>
-                                            {route.steps && route.steps.length > 0 ? (
-                                                route.steps.map((step, idx) => (
-                                                    <Chip
-                                                        key={step.id}
-                                                        label={`${idx + 1}. ${getStepName(step.processStepId)}`}
-                                                        size="small"
-                                                        className={styles.stepChip}
-                                                    />
-                                                ))
-                                            ) : (
-                                                <span className={styles.noSteps}>Нет этапов</span>
+                                        <div className={styles.routeInfo}>
+                                            <div className={styles.stepChips}>
+                                                {route.routeStages && route.routeStages.length > 0 ? (
+                                                    route.routeStages
+                                                        .sort((a, b) => a.sequenceNumber - b.sequenceNumber)
+                                                        .map((stage, idx) => (
+                                                            <Chip
+                                                                key={stage.routeStageId}
+                                                                label={`${idx + 1}. ${stage.stage.stageName}${
+                                                                    stage.substage ? ` → ${stage.substage.substageName}` : ''
+                                                                }`}
+                                                                size="small"
+                                                                className={styles.stepChip}
+                                                            />
+                                                        ))
+                                                ) : (
+                                                    <span className={styles.noSteps}>Нет этапов</span>
+                                                )}
+                                            </div>
+                                            {route._count && (
+                                                <Typography variant="caption" className={styles.partsCount}>
+                                                    Деталей: {route._count.parts}
+                                                </Typography>
                                             )}
                                         </div>
                                     }
@@ -100,21 +126,44 @@ const RouteList: React.FC<RouteListProps> = ({
                             </ListItemButton>
 
                             <ListItemSecondaryAction>
-                                <IconButton
-                                    edge="end"
-                                    onClick={() => onEdit(route)}
-                                    size="small"
-                                >
-                                    <EditIcon />
-                                </IconButton>
-                                <IconButton
-                                    edge="end"
-                                    onClick={() => onDelete(route.id)}
-                                    size="small"
-                                    className={styles.deleteButton}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
+                                <Tooltip title="Копировать маршрут">
+                                    <IconButton
+                                        edge="end"
+                                        onClick={() => handleCopyRoute(route)}
+                                        size="small"
+                                        disabled={copyRouteMutation.isPending}
+                                    >
+                                        {copyRouteMutation.isPending ? (
+                                            <CircularProgress size={16} />
+                                        ) : (
+                                            <CopyIcon />
+                                        )}
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Редактировать маршрут">
+                                    <IconButton
+                                        edge="end"
+                                        onClick={() => onEdit(route)}
+                                        size="small"
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Удалить маршрут">
+                                    <IconButton
+                                        edge="end"
+                                        onClick={() => onDelete(route.routeId)}
+                                        size="small"
+                                        className={styles.deleteButton}
+                                        disabled={isDeleting}
+                                    >
+                                        {isDeleting ? (
+                                            <CircularProgress size={16} />
+                                        ) : (
+                                            <DeleteIcon />
+                                        )}
+                                    </IconButton>
+                                </Tooltip>
                             </ListItemSecondaryAction>
                         </ListItem>
                     ))}

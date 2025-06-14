@@ -9,40 +9,74 @@ import {
     Avatar,
     Paper,
     Box,
-    Chip
+    Chip,
+    IconButton,
+    Tooltip,
+    CircularProgress
 } from '@mui/material';
-
 import {
     Route as RouteIcon,
     ArrowForward as ArrowForwardIcon,
-    Assignment as AssignmentIcon
+    Assignment as AssignmentIcon,
+    ArrowUpward as ArrowUpwardIcon,
+    ArrowDownward as ArrowDownwardIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon
 } from '@mui/icons-material';
-import { IProductionRoute, IRouteStep, IProductionDetail } from '../RouteSettings';
+import { Route } from '../api/routes.api';
+import { useDeleteRouteStage, useMoveRouteStage } from '../hooks/useRoutes';
 import styles from './RouteDetails.module.css';
 
 interface RouteDetailsProps {
-    selectedRoute: IProductionRoute | null;
-    routeSteps: IRouteStep[];
-    details: IProductionDetail[];
-    getStepName: (stepId: number) => string;
+    selectedRoute: Route | null;
 }
 
 const RouteDetails: React.FC<RouteDetailsProps> = ({
-    selectedRoute,
-    routeSteps,
-    details,
-    getStepName
+    selectedRoute
 }) => {
+    const deleteRouteStage = useDeleteRouteStage();
+    const moveRouteStage = useMoveRouteStage();
+
+    const handleDeleteStage = async (stageId: number) => {
+        try {
+            await deleteRouteStage.mutateAsync(stageId);
+        } catch (error) {
+            console.error('Ошибка при удалении этапа:', error);
+        }
+    };
+
+    const handleMoveStage = async (stageId: number, direction: 'up' | 'down') => {
+        if (!selectedRoute) return;
+
+        const currentStage = selectedRoute.routeStages.find(s => s.routeStageId === stageId);
+        if (!currentStage) return;
+
+        const newSequenceNumber = direction === 'up' 
+            ? currentStage.sequenceNumber - 1 
+            : currentStage.sequenceNumber + 1;
+
+        try {
+            await moveRouteStage.mutateAsync({
+                stageId,
+                newSequenceNumber
+            });
+        } catch (error) {
+            console.error('Ошибка при перемещении этапа:', error);
+        }
+    };
+
     if (!selectedRoute) {
         return (
-            <Typography className={styles.selectPrompt}>
-                Выберите маршрут для просмотра деталей
-            </Typography>
+            <div className={styles.routeDetailsContainer}>
+                <Typography className={styles.selectPrompt}>
+                    Выберите маршрут для просмотра деталей
+                </Typography>
+            </div>
         );
     }
 
     // Сортируем этапы по последовательности
-    const sortedSteps = [...routeSteps].sort((a, b) => a.sequence - b.sequence);
+    const sortedStages = [...selectedRoute.routeStages].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
 
     return (
         <div className={styles.routeDetailsContainer}>
@@ -57,31 +91,78 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
                         <RouteIcon />
                     </Avatar>
                     <div className={styles.routeMainInfo}>
-                        <Typography variant="h5">{selectedRoute.name}</Typography>
+                        <Typography variant="h5">{selectedRoute.routeName}</Typography>
                         <Chip
-                            label={`Этапов: ${sortedSteps.length}`}
-                            className={styles.stepsCountChip}
+                            label={`Этапов: ${sortedStages.length}`}
+                            className={styles.stagesCountChip}
                         />
                     </div>
                 </div>
 
-                {sortedSteps.length > 0 ? (
-                    <Paper elevation={0} className={styles.stepsContainer}>
+                {sortedStages.length > 0 ? (
+                    <Paper elevation={0} className={styles.stagesContainer}>
                         <Typography variant="subtitle1" className={styles.sectionTitle}>
                             Последовательность этапов обработки
                         </Typography>
-                        <Box className={styles.stepsFlow}>
-                            {sortedSteps.map((step, index) => (
-                                <React.Fragment key={step.id}>
-                                    <Paper elevation={2} className={styles.stepItem}>
-                                        <Typography className={styles.stepNumber}>
-                                            {index + 1}
-                                        </Typography>
-                                        <Typography className={styles.stepName}>
-                                            {getStepName(step.processStepId)}
-                                        </Typography>
+                        <Box className={styles.stagesFlow}>
+                            {sortedStages.map((stage, index) => (
+                                <React.Fragment key={stage.routeStageId}>
+                                    <Paper elevation={2} className={styles.stageItem}>
+                                        <div className={styles.stageContent}>
+                                            <Typography className={styles.stageNumber}>
+                                                {index + 1}
+                                            </Typography>
+                                            <div className={styles.stageInfo}>
+                                                <Typography className={styles.stageName}>
+                                                    {stage.stage.stageName}
+                                                </Typography>
+                                                {stage.substage && (
+                                                    <Typography className={styles.substageName}>
+                                                        → {stage.substage.substageName}
+                                                    </Typography>
+                                                )}
+                                            </div>
+                                            <div className={styles.stageActions}>
+                                                <Tooltip title="Переместить вверх">
+                                                    <span>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleMoveStage(stage.routeStageId, 'up')}
+                                                            disabled={index === 0 || moveRouteStage.isPending}
+                                                        >
+                                                            <ArrowUpwardIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </span>
+                                                </Tooltip>
+                                                <Tooltip title="Переместить вниз">
+                                                    <span>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleMoveStage(stage.routeStageId, 'down')}
+                                                            disabled={index === sortedStages.length - 1 || moveRouteStage.isPending}
+                                                        >
+                                                            <ArrowDownwardIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </span>
+                                                </Tooltip>
+                                                <Tooltip title="Удалить этап">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleDeleteStage(stage.routeStageId)}
+                                                        disabled={deleteRouteStage.isPending}
+                                                        className={styles.deleteButton}
+                                                    >
+                                                        {deleteRouteStage.isPending ? (
+                                                            <CircularProgress size={16} />
+                                                        ) : (
+                                                            <DeleteIcon fontSize="small" />
+                                                        )}
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </div>
+                                        </div>
                                     </Paper>
-                                    {index < sortedSteps.length - 1 && (
+                                    {index < sortedStages.length - 1 && (
                                         <ArrowForwardIcon className={styles.arrowIcon} />
                                     )}
                                 </React.Fragment>
@@ -89,35 +170,30 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
                         </Box>
                     </Paper>
                 ) : (
-                    <Typography className={styles.noSteps}>
+                    <Typography className={styles.noStages}>
                         Этапы обработки не определены для данного маршрута
                     </Typography>
                 )}
 
-                {details.length > 0 ? (
-                    <div className={styles.detailsSection}>
+                {selectedRoute.parts && selectedRoute.parts.length > 0 ? (
+                    <div className={styles.partsSection}>
                         <Typography variant="subtitle1" className={styles.sectionTitle}>
                             Детали, использующие данный маршрут
                         </Typography>
-                        <List className={styles.detailsList}>
-                            {details.map(detail => (
-                                <ListItem key={detail.id} className={styles.detailItem}>
+                        <List className={styles.partsList}>
+                            {selectedRoute.parts.map(part => (
+                                <ListItem key={part.partId} className={styles.partItem}>
                                     <ListItemAvatar>
-                                        <Avatar className={styles.detailAvatar}>
+                                        <Avatar className={styles.partAvatar}>
                                             <AssignmentIcon />
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText
-                                        primary={detail.name}
+                                        primary={part.partName}
                                         secondary={
-                                            <>
-                                                <span className={styles.articleText}>
-                                                    Артикул: {detail.article}
-                                                </span>
-                                                <span className={styles.materialText}>
-                                                    Материал: {detail.material}, Размер: {detail.size}
-                                                </span>
-                                            </>
+                                            <span className={styles.partCodeText}>
+                                                Код: {part.partCode}
+                                            </span>
                                         }
                                     />
                                 </ListItem>
@@ -125,7 +201,7 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
                         </List>
                     </div>
                 ) : (
-                    <Typography className={styles.noDetails}>
+                    <Typography className={styles.noParts}>
                         Этот маршрут не назначен ни одной детали
                     </Typography>
                 )}
