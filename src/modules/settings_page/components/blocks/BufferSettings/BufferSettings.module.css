@@ -1,454 +1,355 @@
-/* Основные стили контейнера с градиентным фоном и тенями */
-.bufferSettings {
+.container {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: linear-gradient(135deg, #374051, #2a303c);
-  box-shadow: 
-    0 8px 30px rgba(0, 0, 0, 0.5), 
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: #fff;
-  padding: 20px;
-}
-
-/* Заголовок страницы */
-.mainTitle {
-  margin-bottom: 20px;
-  color: #ffffff;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  letter-spacing: 1.2px;
-  font-size: 22px;
-  text-transform: uppercase;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Стили для табов */
-.tabs {
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px 8px 0 0;
-}
-
-/* Контейнеры для буферов и визуализации */
-.bufferManagement, .bufferVisualization {
-  flex: 1;
-  overflow: auto;
-  padding-bottom: 16px;
-  
-  /* Стилизация полосы прокрутки для WebKit */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 3px;
-    transition: background 0.2s;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
-  }
-  
-  /* Для Firefox */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.1);
-}
-
-/* Карточки для списков */
-.paper {
-  padding: 16px;
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
-  border-radius: 10px;
-  box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(224, 224, 224, 0.8);
-  color: #333;
-}
-
-/* Контейнер для списков */
-.listContainer {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 24px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
 }
 
-/* Заголовок списка */
-.listHeader {
+.header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+.titleSection {
+  display: flex;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  gap: 16px;
 }
 
-.listHeader h2 {
+.titleSection h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
-/* Заголовок деталей */
-.sectionTitle {
-  margin-bottom: 16px;
-  font-weight: 600;
-  color: #333;
-  font-size: 18px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+.connectionStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(244, 67, 54, 0.2);
 }
 
-/* Кнопка добавления */
-.addButton {
-  background: linear-gradient(to bottom, #3498db, #2980b9);
+.connectionDot {
+  width: 8px;
+  height: 8px;
+  background: #f44336;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+}
+
+.statistics {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  min-width: 80px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.statisticsLoading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.loadingSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e3f2fd;
+  border-top: 2px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.statisticsError {
+  padding: 16px;
+  background: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+  border-radius: 12px;
+  font-size: 14px;
+  border: 1px solid rgba(244, 67, 54, 0.2);
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.createButton {
+  background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
   color: white;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  border-left: 3px solid #1c6ea4;
-  text-transform: none;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 600;
-  padding: 8px 16px;
-}
-
-.addButton:hover {
-  background: linear-gradient(to bottom, #3caae8, #3498db);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-.addButton:active {
-  background: linear-gradient(to bottom, #2980b9, #3498db);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-  transform: translateY(1px);
-}
-
-/* Сообщение о пустом списке */
-.emptyMessage {
-  margin-top: 20px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 3px solid #ccc;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Сообщение при выборе буфера */
-.selectPrompt {
-  margin-top: 20px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 3px solid #ccc;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Стили элементов списка */
-.cellItem {
-  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
   transition: all 0.3s ease;
-  animation-duration: 0.4s;
-  animation-fill-mode: forwards;
-  animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
-  animation-name: fadeInUp;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.cellItem:hover {
-  background: linear-gradient(to bottom, #f0f7ff, #e5f1ff);
-  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.1);
+.createButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
 }
 
-/* Анимация появления элементов списка */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.createButton:hover::before {
+  left: 100%;
 }
 
-/* Кнопка удаления */
-.deleteButton {
-  color: #e74c3c;
-  transition: all 0.2s ease;
-}
-
-.deleteButton:hover {
-  color: #c0392b;
-  transform: scale(1.1);
-}
-
-/* Вторичный текст */
-.secondaryText {
-  display: block;
-  font-size: 0.85rem;
-  margin-top: 6px;
-  color: #555;
-}
-
-/* Поля формы */
-.formField {
-  margin-bottom: 16px !important;
-  transition: all 0.3s ease;
-}
-
-.formField:focus-within {
+.createButton:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
 }
 
-/* Стили для схемы буфера */
-.bufferSchemeContainer {
+.createButton:active {
+  transform: translateY(0);
+}
+
+.backButton {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.content {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(145deg, #f8f8f8, #f0f0f0);
-  border-radius: 10px;
-  box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(224, 224, 224, 0.8);
-  padding: 20px;
-  margin-top: 20px;
-  min-height: 300px;
-}
-
-/* Стили для уведомлений */
-.successNotification {
-  background: linear-gradient(to bottom, #2ecc71, #27ae60);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-left: 3px solid #219653;
-  animation: slideIn 0.3s ease forwards;
-}
-
-.errorNotification {
-  background: linear-gradient(to bottom, #e74c3c, #c0392b);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-left: 3px solid #922b21;
-  animation: slideIn 0.3s ease forwards;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Кнопки в диалогах */
-.dialogButton {
-  min-width: 100px;
-  padding: 8px 16px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.cancelButton {
-  color: #7f8c8d;
-}
-
-.cancelButton:hover {
-  background-color: rgba(127, 140, 141, 0.1);
-}
-
-.saveButton {
-  background: linear-gradient(to bottom, #3498db, #2980b9);
-  color: white;
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-left: 3px solid #1c6ea4;
-}
-
-.saveButton:hover {
-  background: linear-gradient(to bottom, #3caae8, #3498db);
-  box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-.saveButton:active {
-  background: linear-gradient(to bottom, #2980b9, #3498db);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-  transform: translateY(1px);
-}
-
-/* Стили для заголовков диалогов */
-.dialogTitle {
-  background: linear-gradient(to bottom, #374051, #2a303c);
-  color: white;
-  padding: 16px !important;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-.dialogContent {
-  padding: 20px !important;
-}
-
-.dialogActions {
-  padding: 16px !important;
-  background-color: #f5f5f5;
-}
-
-/* Специальные стили для статуса ячеек */
-.statusBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.statusAvailable {
-  background: linear-gradient(to bottom, #2ecc71, #27ae60);
-  color: white;
-  border-left: 2px solid #219653;
-}
-
-.statusOccupied {
-  background: linear-gradient(to bottom, #e74c3c, #c0392b);
-  color: white;
-  border-left: 2px solid #922b21;
-}
-
-.statusReserved {
-  background: linear-gradient(to bottom, #f1c40f, #f39c12);
-  color: white;
-  border-left: 2px solid #d35400;
-}
-
-.statusMaintenance {
-  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
-  color: white;
-  border-left: 2px solid #5d6d7e;
-}
-
-/* Адаптивные стили */
-@media (max-width: 960px) {
-  .bufferManagement, .bufferVisualization {
-    padding-bottom: 8px;
-  }
-  
-  .mainTitle {
-    margin-bottom: 12px;
-    font-size: 1.4rem;
-  }
-  
-  .listHeader {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .addButton {
-    margin-top: 8px;
-    align-self: flex-end;
-  }
-}
-
-@media (max-width: 600px) {
-  .paper {
-    padding: 12px;
-  }
-  
-  .mainTitle {
-    font-size: 1.2rem;
-  }
-  
-  .sectionTitle {
-    font-size: 1rem;
-  }
-  
-  .formField {
-    margin-bottom: 8px !important;
-  }
-  
-  .bufferSchemeContainer {
-    padding: 12px;
-  }
-}
-
-/* Хелперы для доступности */
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+  flex-direction: column;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+  min-height: 0;
 }
 
-/* Улучшенные стили для фокуса для доступности */
-button:focus, 
-input:focus, 
-select:focus {
-  outline: none;
-  box-shadow: 
-    0 0 0 3px rgba(52, 152, 219, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .header {
+    padding: 20px;
+  }
+  
+  .statistics {
+    gap: 24px;
+  }
+  
+  .stat {
+    min-width: 70px;
+    padding: 12px;
+  }
+  
+  .statValue {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+    height: 100vh;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .titleSection {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .titleSection h2 {
+    font-size: 24px;
+  }
+
+  .headerActions {
+    justify-content: stretch;
+  }
+
+  .createButton,
+  .backButton {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .statistics {
+    justify-content: space-around;
+    gap: 12px;
+  }
+
+  .stat {
+    flex: 1;
+    min-width: 60px;
+    padding: 10px 8px;
+  }
+
+  .statValue {
+    font-size: 20px;
+  }
+
+  .statLabel {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .titleSection h2 {
+    font-size: 20px;
+  }
+  
+  .statistics {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .stat {
+    min-width: calc(50% - 4px);
+    padding: 8px;
+  }
+  
+  .statValue {
+    font-size: 18px;
+  }
+}
+
+/* Улучшенная прокрутка */
+.content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }

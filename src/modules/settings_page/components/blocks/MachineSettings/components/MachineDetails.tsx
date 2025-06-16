@@ -1,180 +1,441 @@
-import React from 'react';
-import {
-    Typography,
-    Avatar,
-    Chip,
-    Divider,
-    Box
-} from '@mui/material';
-import {
-    Build as BuildIcon,
-    Settings as SettingsIcon,
-    Warning as WarningIcon,
-    CheckCircle as CheckCircleIcon,
-    Cancel as CancelIcon,
-    CalendarToday as CalendarIcon,
-    Straighten as SerialNumberIcon,
-    BusinessCenter as ManufacturerIcon,
-    EventNote as NotesIcon,
-    EventNote
-} from '@mui/icons-material';
-import { IMachine, IMachineDetail } from '../MachineSettings';
+import React, { useState, useEffect } from 'react';
+import { 
+  useMachineStages, 
+  useStagesWithSubstages, 
+  useAddMachineStage, 
+  useRemoveMachineStage,
+  useAddMachineSubstage,
+  useRemoveMachineSubstage,
+  useMachines
+} from '../hooks/useMachinesQuery';
+import { Machine, MachineStatus } from '../MachineSettings';
 import styles from './MachineDetails.module.css';
 
 interface MachineDetailsProps {
-    selectedMachine: IMachine | null;
-    machineDetails: IMachineDetail[];
-    getTypeName: (typeId: number) => string;
+  selectedMachine: Machine | null;
+  onMachineUpdated?: (updatedMachine: Machine) => void;
 }
 
-const MachineDetails: React.FC<MachineDetailsProps> = ({
-    selectedMachine,
-    machineDetails,
-    getTypeName
+export const MachineDetails: React.FC<MachineDetailsProps> = ({ 
+  selectedMachine, 
+  onMachineUpdated 
 }) => {
-    if (!selectedMachine) {
-        return (
-            <Typography className={styles.selectPrompt}>
-                Выберите станок для просмо��ра деталей
-            </Typography>
-        );
+  const [activeTab, setActiveTab] = useState<'info' | 'stages'>('info');
+  const [showAddStageModal, setShowAddStageModal] = useState(false);
+  const [showAddSubstageModal, setShowAddSubstageModal] = useState(false);
+
+  const { data: machineStagesData } = useMachineStages(selectedMachine?.machineId);
+  const { data: availableStages = [] } = useStagesWithSubstages();
+  const { data: machines = [] } = useMachines();
+  
+  const addStageMutation = useAddMachineStage();
+  const removeStageMutation = useRemoveMachineStage();
+  const addSubstageMutation = useAddMachineSubstage();
+  const removeSubstageMutation = useRemoveMachineSubstage();
+
+  // Получаем актуальные данные станка из списка
+  const currentMachine = selectedMachine 
+    ? machines.find(m => m.machineId === selectedMachine.machineId) || selectedMachine
+    : null;
+
+  // Уведомляем родительский компонент об обновлении
+  useEffect(() => {
+    if (currentMachine && onMachineUpdated && selectedMachine) {
+      if (JSON.stringify(currentMachine) !== JSON.stringify(selectedMachine)) {
+        console.log('[MachineDetails] Обнаружено обновление станка, уведомляем родителя');
+        onMachineUpdated(currentMachine);
+      }
     }
+  }, [currentMachine, selectedMachine, onMachineUpdated]);
 
-    // Получаем иконку для статуса станка
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'active':
-                return <CheckCircleIcon />;
-            case 'maintenance':
-                return <BuildIcon />;
-            case 'inactive':
-                return <CancelIcon />;
-            default:
-                return <WarningIcon />;
-        }
-    };
+  const getStatusColor = (status: MachineStatus) => {
+    switch (status) {
+      case MachineStatus.ACTIVE:
+        return '#4CAF50';
+      case MachineStatus.INACTIVE:
+        return '#9E9E9E';
+      case MachineStatus.MAINTENANCE:
+        return '#FF9800';
+      default:
+        return '#9E9E9E';
+    }
+  };
 
-    // Получаем текст статуса станка
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'active':
-                return 'Активен';
-            case 'maintenance':
-                return 'На обслуживании';
-            case 'inactive':
-                return 'Неактивен';
-            default:
-                return 'Неизвестно';
-        }
-    };
+  const getStatusText = (status: MachineStatus) => {
+    switch (status) {
+      case MachineStatus.ACTIVE:
+        return 'Активен';
+      case MachineStatus.INACTIVE:
+        return 'Неактивен';
+      case MachineStatus.MAINTENANCE:
+        return 'Обслуживание';
+      default:
+        return 'Неизвестно';
+    }
+  };
 
-    // Получаем цвет для статуса
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'active':
-                return '#4caf50';
-            case 'maintenance':
-                return '#ff9800';
-            case 'inactive':
-                return '#f44336';
-            default:
-                return '#9e9e9e';
-        }
-    };
+  const handleAddStage = async (stageId: number) => {
+    if (!currentMachine) return;
+    
+    try {
+      console.log('[MachineDetails] Добавляем этап:', stageId);
+      await addStageMutation.mutateAsync({
+        machineId: currentMachine.machineId,
+        stageId
+      });
+      setShowAddStageModal(false);
+      console.log('[MachineDetails] Этап успешно добавлен');
+    } catch (error) {
+      console.error('Ошибка добавления этапа:', error);
+      alert('Ошибка добавления этапа. Попробуйте еще раз.');
+    }
+  };
 
-    const machineDetail = machineDetails.find(detail => detail.machineId === selectedMachine.id);
-    const typeName = getTypeName(selectedMachine.machineTypeId);
+  const handleRemoveStage = async (stageId: number, stageName: string) => {
+    if (!currentMachine) return;
+    
+    if (window.confirm(`Удалить этап "${stageName}" и все связанные подэтапы?`)) {
+      try {
+        console.log('[MachineDetails] Удаляем этап:', stageId);
+        await removeStageMutation.mutateAsync({
+          machineId: currentMachine.machineId,
+          stageId
+        });
+        console.log('[MachineDetails] Этап успешно удален');
+      } catch (error) {
+        console.error('Ошибка удаления этапа:', error);
+        alert('Ошибка удаления этапа. Попробуйте еще раз.');
+      }
+    }
+  };
 
+  const handleAddSubstage = async (substageId: number) => {
+    if (!currentMachine) return;
+    
+    try {
+      console.log('[MachineDetails] Добавляем подэтап:', substageId);
+      await addSubstageMutation.mutateAsync({
+        machineId: currentMachine.machineId,
+        substageId
+      });
+      setShowAddSubstageModal(false);
+      console.log('[MachineDetails] Подэтап успешно добавлен');
+    } catch (error) {
+      console.error('Ошибка добавления подэтапа:', error);
+      alert('Ошибка добавления подэтапа. Убедитесь, что этап уже привязан к станку.');
+    }
+  };
+
+  const handleRemoveSubstage = async (substageId: number, substageName: string) => {
+    if (!currentMachine) return;
+    
+    if (window.confirm(`Удалить подэтап "${substageName}"?`)) {
+      try {
+        console.log('[MachineDetails] Удаляем подэтап:', substageId);
+        await removeSubstageMutation.mutateAsync({
+          machineId: currentMachine.machineId,
+          substageId
+        });
+        console.log('[MachineDetails] Подэтап успешно удален');
+      } catch (error) {
+        console.error('Ошибка удаления подэтапа:', error);
+        alert('Ошибка удаления подэтапа. Попробуйте еще раз.');
+      }
+    }
+  };
+
+  // Получаем список доступных этапов для добавления
+  const getAvailableStagesForAdd = () => {
+    if (!currentMachine) return [];
+    
+    const connectedStageIds = currentMachine.machinesStages?.map(ms => ms.stageId) || [];
+    return availableStages.filter(stage => !connectedStageIds.includes(stage.stageId));
+  };
+
+  // Получаем список доступных подэтапов для добавления
+  const getAvailableSubstagesForAdd = () => {
+    if (!currentMachine) return [];
+    
+    const connectedStageIds = currentMachine.machinesStages?.map(ms => ms.stageId) || [];
+    const connectedSubstageIds = currentMachine.machineSubstages?.map(ms => ms.substageId) || [];
+    
+    const availableSubstages: any[] = [];
+    
+    availableStages.forEach(stage => {
+      if (connectedStageIds.includes(stage.stageId)) {
+        stage.substages?.forEach(substage => {
+          if (!connectedSubstageIds.includes(substage.substageId)) {
+            availableSubstages.push({
+              ...substage,
+              parentStage: stage
+            });
+          }
+        });
+      }
+    });
+    
+    return availableSubstages;
+  };
+
+  if (!currentMachine) {
     return (
-        <div className={styles.machineDetailsContainer}>
-            <Typography variant="h6" component="h2" className={styles.detailsTitle}>
-                Информация о станке
-            </Typography>
-            <Divider className={styles.divider} />
-
-            <div className={styles.machineInfo}>
-                <div className={styles.machineInfoHeader}>
-                    <Avatar className={styles.largeAvatar} style={{ backgroundColor: getStatusColor(selectedMachine.status) }}>
-                        {getStatusIcon(selectedMachine.status)}
-                    </Avatar>
-                    <div className={styles.machineMainInfo}>
-                        <Typography variant="h5">{selectedMachine.name}</Typography>
-                        <Chip
-                            label={typeName}
-                            className={styles.typeChipLarge}
-                        />
-                        <Chip
-                            label={getStatusText(selectedMachine.status)}
-                            className={styles.statusChip}
-                            style={{ backgroundColor: getStatusColor(selectedMachine.status), color: 'white' }}
-                        />
-                    </div>
-                </div>
-
-                {machineDetail ? (
-                    <div className={styles.machineDetailInfo}>
-                        <div className={styles.detailRow}>
-                            <Typography variant="subtitle2" className={styles.detailLabel}>
-                                <SerialNumberIcon className={styles.detailIcon} /> Серийный номер:
-                            </Typography>
-                            <Typography>{machineDetail.serialNumber}</Typography>
-                        </div>
-
-                        {machineDetail.manufacturer && (
-                            <div className={styles.detailRow}>
-                                <Typography variant="subtitle2" className={styles.detailLabel}>
-                                    <ManufacturerIcon className={styles.detailIcon} /> Производитель:
-                                </Typography>
-                                <Typography>{machineDetail.manufacturer}</Typography>
-                            </div>
-                        )}
-
-                        {machineDetail.purchaseDate && (
-                            <div className={styles.detailRow}>
-                                <Typography variant="subtitle2" className={styles.detailLabel}>
-                                    <CalendarIcon className={styles.detailIcon} /> Дата приобретения:
-                                </Typography>
-                                <Typography>{new Date(machineDetail.purchaseDate).toLocaleDateString('ru-RU')}</Typography>
-                            </div>
-                        )}
-
-                        {machineDetail.lastMaintenance && (
-                            <div className={styles.detailRow}>
-                                <Typography variant="subtitle2" className={styles.detailLabel}>
-                                    <BuildIcon className={styles.detailIcon} /> Последнее ТО:
-                                </Typography>
-                                <Typography>{new Date(machineDetail.lastMaintenance).toLocaleDateString('ru-RU')}</Typography>
-                            </div>
-                        )}
-
-                        {machineDetail.nextMaintenance && (
-                            <div className={styles.detailRow}>
-                                <Typography variant="subtitle2" className={styles.detailLabel}>
-                                    <CalendarIcon className={styles.detailIcon} /> Следующее ТО:
-                                </Typography>
-                                <Typography>{new Date(machineDetail.nextMaintenance).toLocaleDateString('ru-RU')}</Typography>
-                            </div>
-                        )}
-
-                        {machineDetail.notes && (
-                            <Box className={styles.notesBox}>
-                                <Typography variant="subtitle2" className={styles.detailLabel}>
-                                    <EventNote className={styles.detailIcon} /> Примечания:
-                                </Typography>
-                                <Typography className={styles.notesText}>
-                                    {machineDetail.notes}
-                                </Typography>
-                            </Box>
-                        )}
-                    </div>
-                ) : (
-                    <Typography className={styles.noDetails}>
-                        Дополнительная информация отсутствует
-                    </Typography>
-                )}
-            </div>
+      <div className={styles.container}>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>🔧</div>
+          <h3>Выберите станок</h3>
+          <p>Выберите станок из списка для просмотра детальной информации</p>
         </div>
+      </div>
     );
-};
+  }
 
-export default MachineDetails;
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div className={styles.titleSection}>
+          <h2 className={styles.title}>{currentMachine.machineName}</h2>
+          <div 
+            className={styles.statusBadge}
+            style={{ backgroundColor: getStatusColor(currentMachine.status) }}
+          >
+            {getStatusText(currentMachine.status)}
+          </div>
+        </div>
+        
+        <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${activeTab === 'info' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('info')}
+          >
+            Информация
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'stages' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('stages')}
+          >
+            Этапы и подэтапы
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.content}>
+        {activeTab === 'info' && (
+          <div className={styles.infoTab}>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoCard}>
+                <h3 className={styles.infoCardTitle}>Основная информация</h3>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>ID:</span>
+                  <span className={styles.infoValue}>{currentMachine.machineId}</span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Название:</span>
+                  <span className={styles.infoValue}>{currentMachine.machineName}</span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Статус:</span>
+                  <span className={styles.infoValue}>{getStatusText(currentMachine.status)}</span>
+                </div>
+              </div>
+
+              <div className={styles.infoCard}>
+                <h3 className={styles.infoCardTitle}>Характеристики</h3>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Рекомендуемая нагрузка:</span>
+                  <span className={styles.infoValue}>
+                    {currentMachine.recommendedLoad} {currentMachine.loadUnit}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Единица измерения:</span>
+                  <span className={styles.infoValue}>{currentMachine.loadUnit}</span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Изменяемые задачи:</span>
+                  <span className={styles.infoValue}>
+                    {currentMachine.isTaskChangeable ? 'Да' : 'Нет'}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.infoCard}>
+                <h3 className={styles.infoCardTitle}>Статистика связей</h3>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Этапов:</span>
+                  <span className={styles.infoValue}>
+                    {currentMachine.machinesStages?.length || 0}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Подэтапов:</span>
+                  <span className={styles.infoValue}>
+                    {currentMachine.machineSubstages?.length || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'stages' && (
+          <div className={styles.stagesTab}>
+            <div className={styles.stagesSection}>
+              <div className={styles.sectionHeader}>
+                <h3 className={styles.sectionTitle}>Привязанные этапы</h3>
+                <button
+                  onClick={() => setShowAddStageModal(true)}
+                  className={styles.addButton}
+                  disabled={getAvailableStagesForAdd().length === 0}
+                >
+                  + Добавить этап
+                </button>
+              </div>
+              
+              <div className={styles.stagesList}>
+                {(!currentMachine.machinesStages || currentMachine.machinesStages.length === 0) ? (
+                  <div className={styles.emptyList}>
+                    <p>Этапы не привязаны</p>
+                  </div>
+                ) : (
+                  currentMachine.machinesStages.map((machineStage) => (
+                    <div key={machineStage.machineStageId} className={styles.stageItem}>
+                      <div className={styles.stageInfo}>
+                        <h4 className={styles.stageName}>{machineStage.stage.stageName}</h4>
+                        <p className={styles.stageDescription}>{machineStage.stage.description}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveStage(machineStage.stageId, machineStage.stage.stageName)}
+                        className={styles.removeButton}
+                        disabled={removeStageMutation.isPending}
+                      >
+                        {removeStageMutation.isPending ? '⏳' : '🗑️'}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className={styles.substagesSection}>
+              <div className={styles.sectionHeader}>
+                <h3 className={styles.sectionTitle}>Привязанные подэтапы</h3>
+                <button
+                  onClick={() => setShowAddSubstageModal(true)}
+                  className={styles.addButton}
+                  disabled={getAvailableSubstagesForAdd().length === 0}
+                >
+                  + Добавить подэтап
+                </button>
+              </div>
+              
+              <div className={styles.substagesList}>
+                {(!currentMachine.machineSubstages || currentMachine.machineSubstages.length === 0) ? (
+                  <div className={styles.emptyList}>
+                    <p>Подэтапы не привязаны</p>
+                  </div>
+                ) : (
+                  currentMachine.machineSubstages.map((machineSubstage) => (
+                    <div key={machineSubstage.machineSubstageId} className={styles.substageItem}>
+                      <div className={styles.substageInfo}>
+                        <h4 className={styles.substageName}>{machineSubstage.substage.substageName}</h4>
+                        <p className={styles.substageDescription}>{machineSubstage.substage.description}</p>
+                        <span className={styles.substageParent}>
+                          Этап: {machineSubstage.substage.stage?.stageName}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveSubstage(
+                          machineSubstage.substageId, 
+                          machineSubstage.substage.substageName
+                        )}
+                        className={styles.removeButton}
+                        disabled={removeSubstageMutation.isPending}
+                      >
+                        {removeSubstageMutation.isPending ? '⏳' : '🗑️'}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Модальное окно добавления этапа */}
+      {showAddStageModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowAddStageModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Добавить этап</h3>
+              <button 
+                onClick={() => setShowAddStageModal(false)}
+                className={styles.closeButton}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalContent}>
+              <div className={styles.stageOptions}>
+                {getAvailableStagesForAdd().map((stage) => (
+                  <div key={stage.stageId} className={styles.stageOption}>
+                    <div className={styles.stageOptionInfo}>
+                      <h4>{stage.stageName}</h4>
+                      <p>{stage.description}</p>
+                    </div>
+                    <button
+                      onClick={() => handleAddStage(stage.stageId)}
+                      className={styles.selectButton}
+                      disabled={addStageMutation.isPending}
+                    >
+                      {addStageMutation.isPending ? 'Добавление...' : 'Добавить'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно добавления подэтапа */}
+      {showAddSubstageModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowAddSubstageModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Добавить подэтап</h3>
+              <button 
+                onClick={() => setShowAddSubstageModal(false)}
+                className={styles.closeButton}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalContent}>
+              <div className={styles.substageOptions}>
+                {getAvailableSubstagesForAdd().map((substage) => (
+                  <div key={substage.substageId} className={styles.substageOption}>
+                    <div className={styles.substageOptionInfo}>
+                      <h4>{substage.substageName}</h4>
+                      <p>{substage.description}</p>
+                      <span className={styles.parentStageInfo}>
+                        Этап: {substage.parentStage.stageName}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleAddSubstage(substage.substageId)}
+                      className={styles.selectButton}
+                      disabled={addSubstageMutation.isPending}
+                    >
+                      {addSubstageMutation.isPending ? 'Добавление...' : 'Добавить'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

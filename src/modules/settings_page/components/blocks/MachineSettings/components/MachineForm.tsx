@@ -1,300 +1,305 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Grid,
-    Typography,
-    SelectChangeEvent
-} from '@mui/material';
-import { IMachine, IMachineDetail, IMachineType } from '../MachineSettings';
+import { useMachine, useCreateMachine, useUpdateMachine } from '../hooks/useMachinesQuery';
+import { MachineStatus, CreateMachineDto, UpdateMachineDto } from '../MachineSettings';
 import styles from './MachineForm.module.css';
 
 interface MachineFormProps {
-    open: boolean;
-    onClose: () => void;
-    onSave: (machineData: Partial<IMachine>, detailsData: Partial<IMachineDetail>) => void;
-    machine?: IMachine;
-    machineDetails?: IMachineDetail;
-    machineTypes: IMachineType[];
-    isEditing: boolean;
+  editId?: number;
+  onSaved: () => void;
+  onCancel: () => void;
 }
 
-const MachineForm: React.FC<MachineFormProps> = ({
-    open,
-    onClose,
-    onSave,
-    machine,
-    machineDetails,
-    machineTypes,
-    isEditing
+interface FormData {
+  machineName: string;
+  status: MachineStatus;
+  recommendedLoad: string;
+  loadUnit: string;
+  isTaskChangeable: boolean;
+}
+
+interface FormErrors {
+  machineName?: string;
+  status?: string;
+  recommendedLoad?: string;
+  loadUnit?: string;
+}
+
+export const MachineForm: React.FC<MachineFormProps> = ({
+  editId,
+  onSaved,
+  onCancel,
 }) => {
-    // Состояние для фор��ы станка
-    const [machineForm, setMachineForm] = useState<Partial<IMachine>>({
-        name: '',
-        status: 'inactive',
-        machineTypeId: 0
-    });
+  const [formData, setFormData] = useState<FormData>({
+    machineName: '',
+    status: MachineStatus.INACTIVE,
+    recommendedLoad: '',
+    loadUnit: 'кг',
+    isTaskChangeable: false,
+  });
 
-    // Состояние для формы деталей станка
-    const [detailsForm, setDetailsForm] = useState<Partial<IMachineDetail>>({
-        serialNumber: '',
-        manufacturer: '',
-        purchaseDate: '',
-        lastMaintenance: '',
-        nextMaintenance: '',
-        notes: ''
-    });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Инициализация формы при открытии
-    useEffect(() => {
-        if (machine && isEditing) {
-            // Редактирование существующего станка
-            setMachineForm({
-                id: machine.id,
-                name: machine.name,
-                status: machine.status,
-                machineTypeId: machine.machineTypeId
-            });
+  const { data: existingMachine, isLoading: isLoadingMachine } = useMachine(editId);
+  const createMachineMutation = useCreateMachine();
+  const updateMachineMutation = useUpdateMachine();
 
-            if (machineDetails) {
-                setDetailsForm({
-                    id: machineDetails.id,
-                    machineId: machineDetails.machineId,
-                    serialNumber: machineDetails.serialNumber,
-                    manufacturer: machineDetails.manufacturer || '',
-                    purchaseDate: machineDetails.purchaseDate || '',
-                    lastMaintenance: machineDetails.lastMaintenance || '',
-                    nextMaintenance: machineDetails.nextMaintenance || '',
-                    notes: machineDetails.notes || ''
-                });
-            } else {
-                setDetailsForm({
-                    serialNumber: '',
-                    manufacturer: '',
-                    purchaseDate: '',
-                    lastMaintenance: '',
-                    nextMaintenance: '',
-                    notes: ''
-                });
-            }
-        } else {
-            // Создание нового станка
-            setMachineForm({
-                name: '',
-                status: 'inactive',
-                machineTypeId: machineTypes.length > 0 ? machineTypes[0].id : 0
-            });
+  const isEditing = !!editId;
+  const title = isEditing ? 'Редактировать станок' : 'Создать станок';
 
-            setDetailsForm({
-                serialNumber: '',
-                manufacturer: '',
-                purchaseDate: '',
-                lastMaintenance: '',
-                nextMaintenance: '',
-                notes: ''
-            });
-        }
-    }, [machine, machineDetails, machineTypes, isEditing, open]);
+  // Заполняем форму данными существующего станка при редактировании
+  useEffect(() => {
+    if (isEditing && existingMachine) {
+      setFormData({
+        machineName: existingMachine.machineName,
+        status: existingMachine.status,
+        recommendedLoad: existingMachine.recommendedLoad.toString(),
+        loadUnit: existingMachine.loadUnit,
+        isTaskChangeable: existingMachine.isTaskChangeable,
+      });
+    }
+  }, [isEditing, existingMachine]);
 
-    // Обработчики изменения полей формы
-    const handleMachineFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setMachineForm(prev => ({ ...prev, [name]: value }));
-    };
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
-    const handleStatusChange = (e: SelectChangeEvent<string>) => {
-        setMachineForm(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' | 'maintenance' }));
-    };
+    // Валидация названия
+    if (!formData.machineName.trim()) {
+      newErrors.machineName = 'Название станка обязательно';
+    } else if (formData.machineName.length < 3) {
+      newErrors.machineName = 'Название должно содержать минимум 3 символа';
+    } else if (formData.machineName.length > 100) {
+      newErrors.machineName = 'Название не должно превышать 100 символов';
+    }
 
-    const handleTypeChange = (e: SelectChangeEvent<number>) => {
-        setMachineForm(prev => ({ ...prev, machineTypeId: e.target.value as number }));
-    };
+    // Валидация статуса
+    if (!Object.values(MachineStatus).includes(formData.status)) {
+      newErrors.status = 'Выберите корректный статус';
+    }
 
-    const handleDetailsFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setDetailsForm(prev => ({ ...prev, [name]: value }));
-    };
+    // Валидация нагрузки
+    const loadValue = parseFloat(formData.recommendedLoad);
+    if (!formData.recommendedLoad.trim()) {
+      newErrors.recommendedLoad = 'Рекомендуемая нагрузка обязательна';
+    } else if (isNaN(loadValue)) {
+      newErrors.recommendedLoad = 'Нагрузка должна быть числом';
+    } else if (loadValue <= 0) {
+      newErrors.recommendedLoad = 'Нагрузка должна быть положительным числом';
+    } else if (loadValue > 10000) {
+      newErrors.recommendedLoad = 'Нагрузка не может превышать 10000';
+    }
 
-    // Обработчик сохранения
-    const handleSave = () => {
-        onSave(machineForm, detailsForm);
-    };
+    // Валидация единицы измерения
+    if (!formData.loadUnit.trim()) {
+      newErrors.loadUnit = 'Единица измерения обязательна';
+    } else if (formData.loadUnit.length > 20) {
+      newErrors.loadUnit = 'Единица измерения не должна превышат�� 20 символов';
+    }
 
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Очищаем ошибку для этого поля при изменении
+    if (errors[field as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const machineData = {
+        machineName: formData.machineName.trim(),
+        status: formData.status,
+        recommendedLoad: parseFloat(formData.recommendedLoad),
+        loadUnit: formData.loadUnit.trim(),
+        isTaskChangeable: formData.isTaskChangeable,
+      };
+
+      if (isEditing && editId) {
+        await updateMachineMutation.mutateAsync({
+          id: editId,
+          data: machineData as UpdateMachineDto,
+        });
+      } else {
+        await createMachineMutation.mutateAsync(machineData as CreateMachineDto);
+      }
+
+      onSaved();
+    } catch (error: any) {
+      console.error('Ошибка сохранения станка:', error);
+      
+      // Показываем ошибку пользователю
+      if (error.message) {
+        alert(`Ошибка: ${error.message}`);
+      } else {
+        alert('Произошла ошибка при сохранении станка. Попробуйте еще раз.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isEditing && isLoadingMachine) {
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            maxWidth="md"
-            fullWidth
-        >
-            <DialogTitle className={styles.dialogTitle}>
-                {isEditing ? 'Редактирование станка' : 'Добавление нового станка'}
-            </DialogTitle>
-            <DialogContent className={styles.dialogContent}>
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="subtitle1" gutterBottom className={styles.formSectionTitle}>
-                            Основная информация
-                        </Typography>
-
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            name="name"
-                            label="Название станка"
-                            type="text"
-                            fullWidth
-                            value={machineForm.name || ''}
-                            onChange={handleMachineFormChange}
-                            required
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <FormControl fullWidth variant="outlined" className={styles.formField}>
-                            <InputLabel id="status-select-label">Статус</InputLabel>
-                            <Select
-                                labelId="status-select-label"
-                                id="status-select"
-                                value={machineForm.status || 'inactive'}
-                                onChange={handleStatusChange}
-                                label="Статус"
-                                required
-                            >
-                                <MenuItem value="active">Активен</MenuItem>
-                                <MenuItem value="maintenance">На обслуживании</MenuItem>
-                                <MenuItem value="inactive">Неактивен</MenuItem>
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth variant="outlined" className={styles.formField}>
-                            <InputLabel id="type-select-label">Тип станка</InputLabel>
-                            <Select
-                                labelId="type-select-label"
-                                id="type-select"
-                                value={machineForm.machineTypeId || ''}
-                                onChange={handleTypeChange}
-                                label="Тип станка"
-                                required
-                            >
-                                {machineTypes.map(type => (
-                                    <MenuItem key={type.id} value={type.id}>
-                                        {type.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="subtitle1" gutterBottom className={styles.formSectionTitle}>
-                            Технические данные
-                        </Typography>
-
-                        <TextField
-                            margin="dense"
-                            name="serialNumber"
-                            label="Серийный номер"
-                            type="text"
-                            fullWidth
-                            value={detailsForm.serialNumber || ''}
-                            onChange={handleDetailsFormChange}
-                            required
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="manufacturer"
-                            label="Производитель"
-                            type="text"
-                            fullWidth
-                            value={detailsForm.manufacturer || ''}
-                            onChange={handleDetailsFormChange}
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="purchaseDate"
-                            label="Дата приобретения"
-                            type="date"
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                            value={detailsForm.purchaseDate || ''}
-                            onChange={handleDetailsFormChange}
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="lastMaintenance"
-                            label="Дата последнего ТО"
-                            type="date"
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                            value={detailsForm.lastMaintenance || ''}
-                            onChange={handleDetailsFormChange}
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="nextMaintenance"
-                            label="Дата следующего ТО"
-                            type="date"
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                            value={detailsForm.nextMaintenance || ''}
-                            onChange={handleDetailsFormChange}
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="notes"
-                            label="Примечания"
-                            multiline
-                            rows={4}
-                            fullWidth
-                            value={detailsForm.notes || ''}
-                            onChange={handleDetailsFormChange}
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-                    </Grid>
-                </Grid>
-            </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button 
-                    onClick={onClose} 
-                    className={`${styles.dialogButton} ${styles.cancelButton}`}
-                >
-                    Отмена
-                </Button>
-                <Button 
-                    onClick={handleSave} 
-                    className={`${styles.dialogButton} ${styles.saveButton}`}
-                    variant="contained"
-                >
-                    Сохранить
-                </Button>
-            </DialogActions>
-        </Dialog>
+      <div className={styles.form}>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Загрузка данных станка...</p>
+        </div>
+      </div>
     );
-};
+  }
 
-export default MachineForm;
+  return (
+    <div className={styles.form}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>{title}</h2>
+        <button onClick={onCancel} className={styles.closeButton}>
+          ✕
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className={styles.formContent}>
+        {/* Название станка */}
+        <div className={styles.field}>
+          <label htmlFor="machineName" className={styles.label}>
+            Название станка *
+          </label>
+          <input
+            id="machineName"
+            type="text"
+            value={formData.machineName}
+            onChange={(e) => handleInputChange('machineName', e.target.value)}
+            className={`${styles.input} ${errors.machineName ? styles.inputError : ''}`}
+            placeholder="Введите название станка"
+            maxLength={100}
+          />
+          {errors.machineName && (
+            <span className={styles.errorText}>{errors.machineName}</span>
+          )}
+        </div>
+
+        {/* Статус */}
+        <div className={styles.field}>
+          <label htmlFor="status" className={styles.label}>
+            Статус *
+          </label>
+          <select
+            id="status"
+            value={formData.status}
+            onChange={(e) => handleInputChange('status', e.target.value as MachineStatus)}
+            className={`${styles.select} ${errors.status ? styles.selectError : ''}`}
+          >
+            <option value={MachineStatus.ACTIVE}>Активен</option>
+            <option value={MachineStatus.INACTIVE}>Неактивен</option>
+            <option value={MachineStatus.MAINTENANCE}>Обслуживание</option>
+          </select>
+          {errors.status && (
+            <span className={styles.errorText}>{errors.status}</span>
+          )}
+        </div>
+
+        {/* Рекомендуемая нагрузка */}
+        <div className={styles.field}>
+          <label htmlFor="recommendedLoad" className={styles.label}>
+            Рекомендуемая нагрузка *
+          </label>
+          <input
+            id="recommendedLoad"
+            type="number"
+            step="0.1"
+            min="0.1"
+            max="10000"
+            value={formData.recommendedLoad}
+            onChange={(e) => handleInputChange('recommendedLoad', e.target.value)}
+            className={`${styles.input} ${errors.recommendedLoad ? styles.inputError : ''}`}
+            placeholder="Введите нагрузку"
+          />
+          {errors.recommendedLoad && (
+            <span className={styles.errorText}>{errors.recommendedLoad}</span>
+          )}
+        </div>
+
+        {/* Единица измерения */}
+        <div className={styles.field}>
+          <label htmlFor="loadUnit" className={styles.label}>
+            Единица измерения *
+          </label>
+          <select
+            id="loadUnit"
+            value={formData.loadUnit}
+            onChange={(e) => handleInputChange('loadUnit', e.target.value)}
+            className={`${styles.select} ${errors.loadUnit ? styles.selectError : ''}`}
+          >
+            <option value="кг">кг</option>
+            <option value="т">т</option>
+            <option value="шт">шт</option>
+            <option value="м">м</option>
+            <option value="м²">м²</option>
+            <option value="м³">м³</option>
+            <option value="л">л</option>
+          </select>
+          {errors.loadUnit && (
+            <span className={styles.errorText}>{errors.loadUnit}</span>
+          )}
+        </div>
+
+        {/* Изменяемые задачи */}
+        <div className={styles.field}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={formData.isTaskChangeable}
+              onChange={(e) => handleInputChange('isTaskChangeable', e.target.checked)}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkboxText}>
+              Возможность изменения задач
+            </span>
+          </label>
+          <div className={styles.fieldHelp}>
+            Если включено, задачи для этого станка можно будет изменять в процессе работы
+          </div>
+        </div>
+
+        {/* Кнопки */}
+        <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={onCancel}
+            className={styles.cancelButton}
+            disabled={isSubmitting}
+          >
+            Отмена
+          </button>
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className={styles.submitSpinner}></span>
+                {isEditing ? 'Сохранение...' : 'Создание...'}
+              </>
+            ) : (
+              isEditing ? 'Сохранить' : 'Создать'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};

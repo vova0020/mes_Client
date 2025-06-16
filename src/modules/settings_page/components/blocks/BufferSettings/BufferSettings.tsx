@@ -1,342 +1,237 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Typography,
-  Tabs,
-  Tab,
-  Paper,
-} from '@mui/material';
-import Grid from '@mui/material/Grid';
+import React, { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SocketProvider } from '../../../../../contexts/SocketContext';
+import { BufferResponse, BufferDetailResponse } from './types/buffers.types';
+import BuffersList from './components/BuffersList';
+import BufferForm from './components/BufferForm';
+import BufferDetail from './components/BufferDetail';
+import { useBuffersStatistics } from './hooks/useBuffersQuery';
+import { useBuffersSocket } from './hooks/useBuffersSocket';
 import styles from './BufferSettings.module.css';
 
-// Компоненты
-import BufferList from './components/bufferSettingsBloks/BufferList';
-import CellList from './components/bufferSettingsBloks/CellList';
-import BufferForm from './components/bufferSettingsBloks/BufferForm';
-import CellForm from './components/bufferSettingsBloks/CellForm';
-import BufferLayoutScheme from './BufferLayoutScheme';
-import Notification, { NotificationSeverity } from './components/common/Notification';
+type ViewMode = 'list' | 'create' | 'edit' | 'detail';
 
-// Интерфейсы для данных (в реальном приложении получаются с бэкенда)
-export interface IBuffer {
-  id: number;
-  name: string;
-  description: string | null;
-  location: string | null;
+interface BufferSettingsState {
+  viewMode: ViewMode;
+  selectedBuffer?: BufferResponse | BufferDetailResponse;
 }
 
-export interface IBufferCell {
-  id: number;
-  code: string;
-  bufferId: number;
-  status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'MAINTENANCE';
-  capacity: number;
-}
+// Создаем локальный QueryClient для BufferSettings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 1000 * 60 * 5, // 5 минут
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
-// Компонент настроек буфера
-const BufferSettings: React.FC = () => {
-  // Состояния для списков
-  const [buffers, setBuffers] = useState<IBuffer[]>([]);
-  const [cells, setCells] = useState<IBufferCell[]>([]);
-
-  // Состояние для активного т��ба
-  const [activeTab, setActiveTab] = useState(0);
-
-  // Состояния для выбранных элементов
-  const [selectedBuffer, setSelectedBuffer] = useState<IBuffer | null>(null);
-
-  // Состояния для диалогов
-  const [bufferDialogOpen, setBufferDialogOpen] = useState(false);
-  const [cellDialogOpen, setCellDialogOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Состояние для уведомлений
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as NotificationSeverity
+// Внутренний компонент с хуками React Query и Socket
+const BufferSettingsContent: React.FC = () => {
+  const [state, setState] = useState<BufferSettingsState>({
+    viewMode: 'list'
   });
 
-  // Имитация загрузки данных с сервера
-  useEffect(() => {
-    // Здесь должен быть запрос к API для получения списка буферов
-    const mockBuffers: IBuffer[] = [
-      { id: 1, name: 'Основной буфер', description: 'Буфер для основного цеха', location: 'Цех №1' },
-      { id: 2, name: 'Вспомогательный буфер', description: 'Буфер для вспомогательных операций', location: 'Цех №2' }
-    ];
+  // Подключаем WebSocket для real-time обновлений
+  const { isConnected } = useBuffersSocket();
 
-    const mockCells: IBufferCell[] = [
-      { id: 1, code: 'A1', bufferId: 1, status: 'AVAILABLE', capacity: 1 },
-      { id: 2, code: 'A2', bufferId: 1, status: 'OCCUPIED', capacity: 1 },
-      { id: 3, code: 'B1', bufferId: 1, status: 'RESERVED', capacity: 2 },
-      { id: 4, code: 'B2', bufferId: 1, status: 'MAINTENANCE', capacity: 1 },
-      { id: 5, code: 'A1', bufferId: 2, status: 'AVAILABLE', capacity: 1 },
-      { id: 6, code: 'A2', bufferId: 2, status: 'OCCUPIED', capacity: 2 }
-    ];
+  const { 
+    data: statistics, 
+    isLoading: statisticsLoading, 
+    error: statisticsError 
+  } = useBuffersStatistics();
 
-    setBuffers(mockBuffers);
-    setCells(mockCells);
-  }, []);
-
-  // Обработчик для закрытия уведомления
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  };
-
-  // Получаем ячейки для выбранного буфера
-  const getBufferCells = (bufferId: number) => {
-    return cells.filter(cell => cell.bufferId === bufferId);
-  };
-
-  // Обработчики буферов
-  const handleOpenBufferDialog = (buffer?: IBuffer) => {
-    if (buffer) {
-      setIsEditing(true);
-    } else {
-      setIsEditing(false);
-    }
-    setBufferDialogOpen(true);
-  };
-
-  const handleCloseBufferDialog = () => {
-    setBufferDialogOpen(false);
-  };
-
-  const handleSaveBuffer = (bufferData: Partial<IBuffer>) => {
-    if (!bufferData.name) {
-      setSnackbar({
-        open: true,
-        message: 'Название буфера обязательно',
-        severity: 'error'
-      });
-      return;
-    }
-
-    // Имитация сохранения на сервер
-    if (isEditing && bufferData.id) {
-      // Обновление существующего буфера
-      setBuffers(prev => prev.map(b =>
-        b.id === bufferData.id
-          ? { ...b, ...bufferData } as IBuffer
-          : b
-      ));
-      setSnackbar({
-        open: true,
-        message: 'Буфер успешно обновлен',
-        severity: 'success'
-      });
-    } else {
-      // Создание нового буфера
-      const newBuffer: IBuffer = {
-        id: Math.max(...buffers.map(b => b.id), 0) + 1,
-        name: bufferData.name!,
-        description: bufferData.description || null,
-        location: bufferData.location || null
-      };
-      setBuffers(prev => [...prev, newBuffer]);
-      setSnackbar({
-        open: true,
-        message: 'Буфер успешно создан',
-        severity: 'success'
-      });
-    }
-
-    handleCloseBufferDialog();
-  };
-
-  const handleDeleteBuffer = (id: number) => {
-    // Проверка на наличие ячеек в буфере
-    const hasBufferCells = cells.some(cell => cell.bufferId === id);
-    if (hasBufferCells) {
-      setSnackbar({
-        open: true,
-        message: 'Невозможно удалить буфер, содержащий ячейки',
-        severity: 'error'
-      });
-      return;
-    }
-
-    // Имитация удаления на сервере
-    setBuffers(prev => prev.filter(b => b.id !== id));
-    setSnackbar({
-      open: true,
-      message: 'Буфер успешно удален',
-      severity: 'success'
+  const handleSelectBuffer = (buffer: BufferResponse) => {
+    setState({
+      viewMode: 'detail',
+      selectedBuffer: buffer
     });
   };
 
-  // Обработчики ячеек
-  const handleOpenCellDialog = (cell?: IBufferCell) => {
-    if (cell) {
-      setIsEditing(true);
-    } else {
-      setIsEditing(false);
-    }
-    setCellDialogOpen(true);
+  const handleEditBuffer = (buffer: BufferResponse) => {
+    setState({
+      viewMode: 'edit',
+      selectedBuffer: buffer
+    });
   };
 
-  const handleCloseCellDialog = () => {
-    setCellDialogOpen(false);
+  const handleCreateBuffer = () => {
+    setState({
+      viewMode: 'create',
+      selectedBuffer: undefined
+    });
   };
 
-  const handleSaveCell = (cellData: Partial<IBufferCell>) => {
-    if (!cellData.code) {
-      setSnackbar({
-        open: true,
-        message: 'Код ячейки обязателен',
-        severity: 'error'
-      });
-      return;
+  const handleBackToList = () => {
+    setState({
+      viewMode: 'list',
+      selectedBuffer: undefined
+    });
+  };
+
+  const handleFormSuccess = () => {
+    setState({
+      viewMode: 'list',
+      selectedBuffer: undefined
+    });
+  };
+
+  const renderContent = () => {
+    switch (state.viewMode) {
+      case 'create':
+        return (
+          <BufferForm
+            onSuccess={handleFormSuccess}
+            onCancel={handleBackToList}
+          />
+        );
+
+      case 'edit':
+        return (
+          <BufferForm
+            buffer={state.selectedBuffer as BufferDetailResponse}
+            onSuccess={handleFormSuccess}
+            onCancel={handleBackToList}
+          />
+        );
+
+      case 'detail':
+        return (
+          <BufferDetail
+            buffer={state.selectedBuffer as BufferResponse}
+            onEdit={() => handleEditBuffer(state.selectedBuffer as BufferResponse)}
+            onBack={handleBackToList}
+          />
+        );
+
+      case 'list':
+      default:
+        return (
+          <BuffersList
+            onSelectBuffer={handleSelectBuffer}
+            onEditBuffer={handleEditBuffer}
+            selectedBufferId={state.selectedBuffer?.bufferId}
+          />
+        );
+    }
+  };
+
+  const renderStatistics = () => {
+    if (statisticsLoading) {
+      return (
+        <div className={styles.statisticsLoading}>
+          <span className={styles.loadingSpinner}></span>
+          Загрузка статистики...
+        </div>
+      );
     }
 
-    if (!cellData.bufferId) {
-      setSnackbar({
-        open: true,
-        message: 'Необходимо выбрать буфер',
-        severity: 'error'
-      });
-      return;
+    if (statisticsError) {
+      return (
+        <div className={styles.statisticsError}>
+          Ошибка загрузки статистики
+        </div>
+      );
     }
 
-    // Проверка на уникальность кода ячейки в пределах буфера
-    const isDuplicate = cells.some(c =>
-      c.code === cellData.code &&
-      c.bufferId === cellData.bufferId &&
-      (!isEditing || c.id !== cellData.id)
+    if (!statistics) {
+      return null;
+    }
+
+    return (
+      <div className={styles.statistics}>
+        <div className={styles.stat}>
+          <span className={styles.statValue}>{statistics.buffers}</span>
+          <span className={styles.statLabel}>Буферов</span>
+        </div>
+        <div className={styles.stat}>
+          <span className={styles.statValue}>{statistics.bufferCells}</span>
+          <span className={styles.statLabel}>Ячеек</span>
+        </div>
+        <div className={styles.stat}>
+          <span className={styles.statValue}>{statistics.availableCells}</span>
+          <span className={styles.statLabel}>Доступно</span>
+        </div>
+        <div className={styles.stat}>
+          <span className={styles.statValue}>{statistics.occupiedCells}</span>
+          <span className={styles.statLabel}>Занято</span>
+        </div>
+        <div className={styles.stat}>
+          <span className={styles.statValue}>{statistics.reservedCells}</span>
+          <span className={styles.statLabel}>Зарезервировано</span>
+        </div>
+      </div>
     );
-
-    if (isDuplicate) {
-      setSnackbar({
-        open: true,
-        message: 'Ячейка с таким кодом уже существует в выбранном буфере',
-        severity: 'error'
-      });
-      return;
-    }
-
-    // Имитация сохранения на сервер
-    if (isEditing && cellData.id) {
-      // Обновление существующей ячейки
-      setCells(prev => prev.map(c =>
-        c.id === cellData.id
-          ? { ...c, ...cellData } as IBufferCell
-          : c
-      ));
-      setSnackbar({
-        open: true,
-        message: 'Ячейка успешно обновлена',
-        severity: 'success'
-      });
-    } else {
-      // Создание новой ячейки
-      const newCell: IBufferCell = {
-        id: Math.max(...cells.map(c => c.id), 0) + 1,
-        code: cellData.code,
-        bufferId: cellData.bufferId,
-        status: cellData.status || 'AVAILABLE',
-        capacity: cellData.capacity || 1
-      };
-      setCells(prev => [...prev, newCell]);
-      setSnackbar({
-        open: true,
-        message: 'Ячейка успешно создана',
-        severity: 'success'
-      });
-    }
-
-    handleCloseCellDialog();
-  };
-
-  const handleDeleteCell = (id: number) => {
-    // Имитация удаления на сервере
-    setCells(prev => prev.filter(c => c.id !== id));
-    setSnackbar({
-      open: true,
-      message: 'Ячейка успешно удалена',
-      severity: 'success'
-    });
   };
 
   return (
-    <div className={styles.bufferSettings}>
-      <Typography variant="h5" component="h1" className={styles.mainTitle}>
-        Настройки буферной системы
-      </Typography>
-
-      <Tabs
-        value={activeTab}
-        onChange={(_, newValue) => setActiveTab(newValue)}
-        className={styles.tabs}
-      >
-        <Tab label="Управление буферами" />
-        <Tab label="Схема размещения" />
-      </Tabs>
-
-      {activeTab === 0 ? (
-        <div className={styles.bufferManagement}>
-          <Grid spacing={2}>
-            <Grid size={{ xs: 12, md: 5 }}>
-              {/* Список буферов */}
-              <Paper className={styles.paper}>
-                <BufferList 
-                  buffers={buffers} 
-                  selectedBuffer={selectedBuffer}
-                  setSelectedBuffer={setSelectedBuffer}
-                  onEdit={handleOpenBufferDialog}
-                  onDelete={handleDeleteBuffer}
-                />
-              </Paper>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 7 }}>
-              {/* Список ячеек */}
-              <Paper className={styles.paper}>
-                <CellList 
-                  selectedBuffer={selectedBuffer}
-                  cells={getBufferCells(selectedBuffer?.id || 0)}
-                  onEdit={handleOpenCellDialog}
-                  onDelete={handleDeleteCell}
-                  onAdd={handleOpenCellDialog}
-                />
-              </Paper>
-            </Grid>
-          </Grid>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div className={styles.headerContent}>
+          <div className={styles.titleSection}>
+            <h2>Управление буферами</h2>
+            {!isConnected && (
+              <div className={styles.connectionStatus}>
+                <span className={styles.connectionDot} />
+                Соединение потеряно
+              </div>
+            )}
+          </div>
+          
+          {renderStatistics()}
         </div>
-      ) : (
-        <div className={styles.bufferVisualization}>
-          <Paper className={styles.paper}>
-            <BufferLayoutScheme buffers={buffers} />
-          </Paper>
+
+        <div className={styles.headerActions}>
+          {state.viewMode === 'list' && (
+            <button
+              className={styles.createButton}
+              onClick={handleCreateBuffer}
+            >
+              + Создать буфер
+            </button>
+          )}
+          
+          {state.viewMode !== 'list' && (
+            <button
+              className={styles.backButton}
+              onClick={handleBackToList}
+            >
+              ← Назад к списку
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Диалог для создания/редактирования буфера */}
-      <BufferForm 
-        open={bufferDialogOpen}
-        onClose={handleCloseBufferDialog}
-        onSave={handleSaveBuffer}
-        buffer={isEditing ? buffers.find(b => b.id === selectedBuffer?.id) : undefined}
-        isEditing={isEditing}
-      />
-
-      {/* Диалог для создания/редактирования ячейки */}
-      <CellForm 
-        open={cellDialogOpen}
-        onClose={handleCloseCellDialog}
-        onSave={handleSaveCell}
-        cell={isEditing && selectedBuffer ? cells.find(c => c.id === selectedBuffer.id) : undefined}
-        buffers={buffers}
-        isEditing={isEditing}
-        defaultBufferId={selectedBuffer?.id}
-      />
-
-      {/* Уведомления */}
-      <Notification
-        open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
-        onClose={handleCloseSnackbar}
-      />
+      <div className={styles.content}>
+        {renderContent()}
+      </div>
     </div>
+  );
+};
+
+// Промежуточный компонент с QueryClientProvider
+const BufferSettingsWithQuery: React.FC = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BufferSettingsContent />
+    </QueryClientProvider>
+  );
+};
+
+// Основной компонент с обоими провайдерами
+const BufferSettings: React.FC = () => {
+  return (
+    <SocketProvider 
+      serverUrl="http://localhost:5000" 
+      autoConnect={true}
+    >
+      <BufferSettingsWithQuery />
+    </SocketProvider>
   );
 };
 

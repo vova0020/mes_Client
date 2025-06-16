@@ -1,169 +1,268 @@
-import React from 'react';
-import {
-    Typography,
-    Button,
-    Divider,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemAvatar,
-    ListItemSecondaryAction,
-    IconButton,
-    Avatar,
-    Chip,
-    ListItemButton
-} from '@mui/material';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Build as BuildIcon,
-    Settings as SettingsIcon,
-    Warning as WarningIcon,
-    CheckCircle as CheckCircleIcon,
-    Cancel as CancelIcon
-} from '@mui/icons-material';
-import { IMachine, IMachineType } from '../MachineSettings';
+import React, { useState } from 'react';
+import { useMachines, useDeleteMachine, useStagesStatistics } from '../hooks/useMachinesQuery';
+import { Machine, MachineStatus } from '../MachineSettings';
 import styles from './MachineList.module.css';
 
 interface MachineListProps {
-    machines: IMachine[];
-    machineTypes: IMachineType[];
-    selectedMachine: IMachine | null;
-    setSelectedMachine: (machine: IMachine) => void;
-    onEdit: (machine: IMachine) => void;
-    onDelete: (id: number) => void;
-    getTypeName: (typeId: number) => string;
+  onMachineSelect: (machine: Machine) => void;
+  onMachineEdit: (machineId: number) => void;
+  onMachineDeleted: (machineId: number) => void;
+  selectedMachineId?: number;
 }
 
-const MachineList: React.FC<MachineListProps> = ({
-    machines,
-    machineTypes,
-    selectedMachine,
-    setSelectedMachine,
-    onEdit,
-    onDelete,
-    getTypeName
+export const MachineList: React.FC<MachineListProps> = ({
+  onMachineSelect,
+  onMachineEdit,
+  onMachineDeleted,
+  selectedMachineId,
 }) => {
-    // Получаем иконку для статуса станка
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'active':
-                return <CheckCircleIcon style={{ color: '#4caf50' }} />;
-            case 'maintenance':
-                return <BuildIcon style={{ color: '#ff9800' }} />;
-            case 'inactive':
-                return <CancelIcon style={{ color: '#f44336' }} />;
-            default:
-                return <WarningIcon />;
-        }
+  const [filter, setFilter] = useState<{
+    status?: MachineStatus;
+    search?: string;
+  }>({});
+
+  const { data: machines = [], isLoading, error } = useMachines();
+  const { data: statistics } = useStagesStatistics();
+  const deleteMachineMutation = useDeleteMachine();
+
+  // Фильтрация станков
+  const filteredMachines = machines.filter(machine => {
+    if (filter.status && machine.status !== filter.status) {
+      return false;
+    }
+    if (filter.search && !machine.machineName.toLowerCase().includes(filter.search.toLowerCase())) {
+      return false;
+    }
+    return true;
+  });
+
+  const handleDeleteMachine = async (machineId: number, machineName: string) => {
+    if (window.confirm(`Вы уверены, что хотите удалить станок "${machineName}"?`)) {
+      try {
+        await deleteMachineMutation.mutateAsync(machineId);
+        onMachineDeleted(machineId);
+      } catch (error) {
+        console.error('Ошибка удаления станка:', error);
+        alert('Ошибка удаления станка. Попробуйте еще раз.');
+      }
+    }
+  };
+
+  const getStatusBadge = (status: MachineStatus) => {
+    const statusConfig = {
+      [MachineStatus.ACTIVE]: { text: 'Активен', className: styles.statusActive },
+      [MachineStatus.INACTIVE]: { text: 'Неактивен', className: styles.statusInactive },
+      [MachineStatus.MAINTENANCE]: { text: 'Обслуживание', className: styles.statusMaintenance },
     };
 
-    // Получаем текст статуса станка
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'active':
-                return 'Активен';
-            case 'maintenance':
-                return 'На обслуживании';
-            case 'inactive':
-                return 'Неактивен';
-            default:
-                return 'Неизвестно';
-        }
-    };
-
-    // Получаем цвет для статуса
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'active':
-                return '#4caf50';
-            case 'maintenance':
-                return '#ff9800';
-            case 'inactive':
-                return '#f44336';
-            default:
-                return '#9e9e9e';
-        }
-    };
-
+    const config = statusConfig[status];
     return (
-        <div className={styles.listContainer}>
-            <div className={styles.listHeader}>
-                <Typography variant="h6" component="h2">
-                    Список станков
-                </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => onEdit(undefined as any)}
-                    className={styles.addButton}
-                >
-                    Добавить станок
-                </Button>
-            </div>
-            <Divider />
-            {machines.length === 0 ? (
-                <Typography className={styles.emptyMessage}>
-                    Станки не найдены. Добавьте первый станок.
-                </Typography>
-            ) : (
-                <List>
-                    {machines.map((machine, index) => (
-                        <ListItem 
-                            key={machine.id} 
-                            className={styles.machineItem}
-                            style={{ animationDelay: `${index * 0.05}s` }}
-                        >
-                            <ListItemButton
-                                selected={selectedMachine?.id === machine.id}
-                                onClick={() => setSelectedMachine(machine)}
-                            >
-                                <ListItemAvatar>
-                                    <Avatar className={styles.avatar} style={{ backgroundColor: getStatusColor(machine.status) }}>
-                                        {getStatusIcon(machine.status)}
-                                    </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={machine.name}
-                                    secondary={
-                                        <>
-                                            <Chip
-                                                label={getTypeName(machine.machineTypeId)}
-                                                size="small"
-                                                className={styles.typeChip}
-                                            />
-                                            <span className={styles.statusText}>
-                                                {getStatusText(machine.status)}
-                                            </span>
-                                        </>
-                                    }
-                                />
-                            </ListItemButton>
-
-                            <ListItemSecondaryAction>
-                                <IconButton
-                                    edge="end"
-                                    onClick={() => onEdit(machine)}
-                                    size="small"
-                                >
-                                    <EditIcon />
-                                </IconButton>
-                                <IconButton
-                                    edge="end"
-                                    onClick={() => onDelete(machine.id)}
-                                    size="small"
-                                    className={styles.deleteButton}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </ListItemSecondaryAction>
-                        </ListItem>
-                    ))}
-                </List>
-            )}
-        </div>
+      <div className={`${styles.machineStatus} ${config.className}`}>
+        <span className={styles.statusDot}></span>
+        {config.text}
+      </div>
     );
-};
+  };
 
-export default MachineList;
+  const getStagesCount = (machine: Machine) => {
+    const stagesCount = machine.machinesStages?.length || 0;
+    const substagesCount = machine.machineSubstages?.length || 0;
+    return `${stagesCount} этапов, ${substagesCount} подэтапов`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.machineListContainer}>
+        <div className={styles.listHeader}>
+          <h2 className={styles.formTitle}>Станки</h2>
+        </div>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+          <p>Загрузка станков...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.machineListContainer}>
+        <div className={styles.listHeader}>
+          <h2 className={styles.formTitle}>Станки</h2>
+        </div>
+        <div className={styles.errorContainer}>
+          <p>Ошибка загрузки: {error.message}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className={styles.submitButton}
+          >
+            Повторить
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.machineListContainer}>
+      <div className={styles.listHeader}>
+        <div className={styles.searchContainer}>
+          <span className={styles.searchIcon}>🔍</span>
+          <input
+            type="text"
+            placeholder="Поиск по названию..."
+            value={filter.search || ''}
+            onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
+            className={styles.searchInput}
+          />
+        </div>
+        
+        <div className={styles.resultsCount}>
+          Найдено: {filteredMachines.length} из {machines.length}
+        </div>
+        
+        {statistics && (
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon}>🏭</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statValue}>{statistics.machines}</div>
+                <div className={styles.statLabel}>всего станков</div>
+              </div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon}>🔗</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statValue}>{statistics.machineStageConnections}</div>
+                <div className={styles.statLabel}>связей этапов</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Фильтры */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Фильтр по статусу:</label>
+          <select
+            value={filter.status || ''}
+            onChange={(e) => setFilter(prev => ({ 
+              ...prev, 
+              status: e.target.value as MachineStatus || undefined 
+            }))}
+            className={styles.filterSelect}
+          >
+            <option value="">Все статусы</option>
+            <option value={MachineStatus.ACTIVE}>Активен</option>
+            <option value={MachineStatus.INACTIVE}>Неактивен</option>
+            <option value={MachineStatus.MAINTENANCE}>Обслуживание</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Список станков */}
+      <div className={styles.machinesList}>
+        {filteredMachines.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyStateIcon}>🏭</div>
+            <h3 className={styles.emptyStateTitle}>Станки не найдены</h3>
+            <p className={styles.emptyStateDescription}>
+              {filter.search || filter.status 
+                ? 'Попробуйте изменить фильтры поиска'
+                : 'Добавьте первый станок, нажав кнопку "Создать станок"'
+              }
+            </p>
+          </div>
+        ) : (
+          filteredMachines.map((machine) => (
+            <div
+              key={machine.machineId}
+              className={`${styles.machineCard} ${
+                selectedMachineId === machine.machineId ? styles.machineSelected : ''
+              }`}
+              onClick={() => onMachineSelect(machine)}
+            >
+              <div className={styles.machineInfo}>
+                <div className={styles.machineHeader}>
+                  <h3 className={styles.machineName}>{machine.machineName}</h3>
+                  {getStatusBadge(machine.status)}
+                </div>
+
+                <div className={styles.machineDetails}>
+                  <div className={styles.loadInfo}>
+                    <span className={styles.loadLabel}>Нагрузка:</span>
+                    <div className={styles.loadValue}>
+                      {machine.recommendedLoad}
+                      <span className={styles.loadUnit}>{machine.loadUnit}</span>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.stagesInfo}>
+                    <span className={styles.stagesLabel}>Связи:</span>
+                    <span className={styles.stagesCount}>
+                      {getStagesCount(machine)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Краткий список этапов */}
+                {machine.machinesStages && machine.machinesStages.length > 0 && (
+                  <div className={styles.stagesPreview}>
+                    <span className={styles.previewLabel}>Этапы:</span>
+                    <div className={styles.stagesTags}>
+                      {machine.machinesStages.slice(0, 3).map((machineStage) => (
+                        <span key={machineStage.machineStageId} className={styles.stageTag}>
+                          {machineStage.stage.stageName}
+                        </span>
+                      ))}
+                      {machine.machinesStages.length > 3 && (
+                        <span className={styles.stageTag}>
+                          +{machine.machinesStages.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Особенности станка */}
+                <div className={styles.machineFeatures}>
+                  <span className={styles.featuresLabel}>Особенности:</span>
+                  <div className={styles.featuresTags}>
+                    <span className={`${styles.featureTag} ${machine.isTaskChangeable ? styles.taskChangeableTag : ''}`}>
+                      {machine.isTaskChangeable ? 'Изменяемые задачи' : 'Фиксированные задачи'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className={styles.machineActions}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMachineEdit(machine.machineId);
+                  }}
+                  className={`${styles.actionButton} ${styles.editButton}`}
+                  title="Редактировать"
+                >
+                  ✏ Изменить
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteMachine(machine.machineId, machine.machineName);
+                  }}
+                  className={`${styles.actionButton} ${styles.deleteButton}`}
+                  title="Удалить"
+                  disabled={deleteMachineMutation.isPending}
+                >
+                  {deleteMachineMutation.isPending ? '⏳' : '🗑️'}
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
