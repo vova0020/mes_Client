@@ -53,11 +53,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
           </Button>
         </Tooltip>
 
-        <Tooltip title="Технологические операции" placement="right">
+        {/* <Tooltip title="Технологические операции" placement="right">
           <Button onClick={() => onSectionChange('technological_operations')}>
             <Settings_technological_operations className={getButtonClass('technological_operations')} />
           </Button>
-        </Tooltip>
+        </Tooltip> */}
 
         <Tooltip title="Технологические маршруты" placement="right">
           <Button onClick={() => onSectionChange('technological_route')}>

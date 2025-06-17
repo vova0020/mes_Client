@@ -1,258 +1,291 @@
+
+/* ================================================ */
+/* BufferDetail Component Styles */
+/* ================================================ */
+
 .container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  background: white;
 }
 
 .header {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.headerInfo h3 {
-  margin: 0 0 8px 0;
-  color: #333;
-  font-size: 24px;
-  font-weight: 600;
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .location {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
+  font-size: 0.875rem;
+  color: #6b7280;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .description {
-  margin: 8px 0 0 0;
-  color: #777;
+  font-size: 0.875rem;
+  color: #9ca3af;
   font-style: italic;
-  font-size: 14px;
-}
-
-.editButton {
-  background: #1976d2;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.editButton:hover {
-  background: #1565c0;
+  line-height: 1.4;
 }
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid #e0e0e0;
-  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
 .tab {
   background: none;
   border: none;
-  padding: 16px 24px;
+  padding: 1rem 1.5rem;
   cursor: pointer;
-  font-size: 14px;
-  color: #666;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
   transition: all 0.2s;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
 }
 
 .tab:hover {
-  background: #e9ecef;
-  color: #333;
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .activeTab {
-  color: #1976d2;
-  border-bottom-color: #1976d2;
+  color: #667eea;
+  border-bottom-color: #667eea;
   background: white;
 }
 
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 1.5rem;
+}
+
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 /* Info Tab */
-.infoTab {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
 .infoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.infoCard {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.infoCard h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .infoItem {
   display: flex;
   justify-content: space-between;
-  padding: 12px;
-  background: #f8f9fa;
+  align-items: flex-start;
+  padding: 0.75rem;
+  background: white;
   border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
-.infoItem strong {
-  color: #333;
+.infoLabel {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.infoValue {
   font-weight: 600;
-}
-
-.infoItem span {
-  color: #666;
-}
-
-.statsSection {
-  margin-top: 24px;
-}
-
-.statsSection h4 {
-  margin: 0 0 16px 0;
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.875rem;
+  text-align: right;
 }
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
 }
 
-.statCard {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
+.statItem {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 1rem;
   text-align: center;
-  border: 1px solid #e0e0e0;
 }
 
-.statCard .statValue {
+.statValue {
   display: block;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #1976d2;
-  margin-bottom: 4px;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
 }
 
-.statCard .statLabel {
-  font-size: 12px;
-  color: #666;
+.statLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* Cells Tab */
-.cellsTab {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.cellsHeader {
+/* Section Headers */
+.sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
-.cellsHeader h4 {
+.sectionHeader h4 {
   margin: 0;
-  color: #333;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
+  color: #1f2937;
 }
 
-.addCellButton {
-  background: #4caf50;
-  color: white;
+/* Buttons */
+.button {
+  padding: 0.75rem 1rem;
   border: none;
-  padding: 10px 20px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.addCellButton:hover {
-  background: #45a049;
-}
-
-.newCellForm {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.cellFormRow {
-  display: grid;
-  grid-template-columns: 1fr 100px 100px 140px auto;
-  gap: 12px;
+  transition: all 0.2s ease;
+  display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
-.cellFormRow input,
-.cellFormRow select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.cellFormRow input:focus,
-.cellFormRow select:focus {
-  outline: none;
-  border-color: #1976d2;
-  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
-}
-
-.createCellButton {
-  background: #4caf50;
+.buttonPrimary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
 }
 
-.createCellButton:hover {
-  background: #45a049;
+.buttonPrimary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+/* Cell Form */
+.cellForm {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.cellForm h5 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.cellFormGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.field input,
+.field select {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.cellFormActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Cells Grid */
 .cellsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
 }
 
 .cellCard {
   background: white;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 16px;
-  transition: all 0.2s;
+  padding: 1rem;
+  transition: all 0.2s ease;
 }
 
 .cellCard:hover {
-  border-color: #1976d2;
+  border-color: #d1d5db;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -260,19 +293,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .cellCode {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .statusBadge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: white;
   text-transform: uppercase;
@@ -281,190 +314,427 @@
 .cellInfo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .cellInfoItem {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .cellInfoItem span:first-child {
-  color: #666;
+  color: #6b7280;
 }
 
 .cellInfoItem span:last-child {
-  color: #333;
+  color: #1f2937;
   font-weight: 600;
 }
 
 .cellActions {
   display: flex;
-  justify-content: space-between;
+  gap: 0.5rem;
   align-items: center;
-  gap: 8px;
 }
 
 .statusSelect {
   flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
+  background: white;
 }
 
 .statusSelect:focus {
   outline: none;
-  border-color: #1976d2;
+  border-color: #667eea;
 }
 
-.deleteCellButton {
-  background: #f44336;
-  color: white;
+.deleteButton {
+  background: #fee2e2;
+  color: #dc2626;
   border: none;
-  padding: 6px 8px;
+  padding: 0.5rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   transition: background-color 0.2s;
-}
-
-.deleteCellButton:hover {
-  background: #d32f2f;
-}
-
-/* Stages Tab */
-.stagesTab {
+  width: 32px;
+  height: 32px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  justify-content: center;
 }
 
-.stagesTab h4 {
-  margin: 0;
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
+.deleteButton:hover:not(:disabled) {
+  background: #fecaca;
 }
 
-.stagesList {
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Stages Grid */
+.stagesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  gap: 1rem;
 }
 
 .stageCard {
   background: white;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 16px;
+  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .stageCard:hover {
-  border-color: #1976d2;
+  border-color: #d1d5db;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.stageInfo {
+.stageContent {
   flex: 1;
 }
 
-.stageInfo h5 {
-  margin: 0 0 8px 0;
-  color: #333;
-  font-size: 16px;
+.stageName {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
   font-weight: 600;
+  color: #1f2937;
 }
 
-.stageInfo p {
+.stageDescription {
   margin: 0;
-  color: #666;
-  font-size: 14px;
+  font-size: 0.875rem;
+  color: #6b7280;
   line-height: 1.4;
 }
 
 .stageId {
-  background: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #666;
+  background: #f3f4f6;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #6b7280;
   font-weight: 600;
+  margin-left: 1rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
+/* Empty States */
+.emptyState,
+.emptyCells,
+.emptyStages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #6b7280;
+  text-align: center;
+  padding: 2rem;
+}
 
-  .editButton {
-    width: 100%;
-  }
+.emptyStateIcon,
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
 
-  .tabs {
-    overflow-x: auto;
-  }
+.emptyStateTitle,
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+}
 
-  .tab {
-    flex-shrink: 0;
-    min-width: 120px;
-  }
+.emptyStateDescription,
+.emptyDescription {
+  font-size: 0.875rem;
+  margin: 0;
+  color: #6b7280;
+}
 
+/* Scrollbar Styles */
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
   .infoGrid {
     grid-template-columns: 1fr;
   }
+  
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .cellFormGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cellsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  .stagesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
 
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem;
+  }
+  
+  .content {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .tabs {
+    overflow-x: auto;
+  }
+  
+  .tab {
+    flex-shrink: 0;
+    min-width: 120px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .cellFormRow {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
+  
   .cellsGrid {
     grid-template-columns: 1fr;
   }
-
-  .stagesList {
+  
+  .stagesGrid {
     grid-template-columns: 1fr;
   }
-
+  
   .cellActions {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .cellFormGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cellFormActions {
+    justify-content: stretch;
+  }
+  
+  .button {
+    width: 100%;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .content {
-    padding: 16px;
+  .header {
+    padding: 0.75rem;
   }
-
+  
+  .content {
+    padding: 0.75rem;
+  }
+  
+  .title {
+    font-size: 1.125rem;
+  }
+  
+  .tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+  
+  .cellForm {
+    padding: 1rem;
+  }
+  
+  .cellCard {
+    padding: 0.75rem;
+  }
+  
+  .stageCard {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .stageId {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+  
   .statsGrid {
     grid-template-columns: 1fr;
   }
-
-  .cellCard {
-    padding: 12px;
+  
+  .emptyState,
+  .emptyCells,
+  .emptyStages {
+    height: 250px;
+    padding: 1rem;
   }
+  
+  .emptyStateIcon,
+  .emptyIcon {
+    font-size: 2.5rem;
+  }
+}
 
+/* Animation for smooth transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tabContent {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.cellCard,
+.stageCard {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Loading states */
+.loadingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Focus styles for accessibility */
+.tab:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.button:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.deleteButton:focus {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .container {
+    border: 1px solid #000;
+  }
+  
+  .tab {
+    border: 1px solid transparent;
+  }
+  
+  .activeTab {
+    border-color: #000;
+  }
+  
+  .cellCard,
+  .stageCard,
+  .infoCard {
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .cellCard,
+  .stageCard,
+  .tab {
+    transition: none;
+  }
+  
+  .tabContent,
+  .cellCard,
   .stageCard {
-    flex-direction: column;
-    gap: 8px;
+    animation: none;
   }
+  
+  .loadingSpinner {
+    animation: none;
+  }
+}
 
-  .stageId {
-    align-self: flex-start;
+/* Print styles */
+@media print {
+  .container {
+    background: white;
+    box-shadow: none;
+  }
+  
+  .tabs,
+  .sectionHeader button,
+  .cellActions,
+  .deleteButton {
+    display: none;
+  }
+  
+  .content {
+    overflow: visible;
+    padding: 0;
+  }
+  
+  .cellCard,
+  .stageCard {
+    break-inside: avoid;
+    margin-bottom: 1rem;
   }
 }

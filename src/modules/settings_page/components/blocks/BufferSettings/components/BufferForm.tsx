@@ -1,56 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { BufferDetailResponse, CreateBufferDto, CellStatus, CreateBufferCellDto } from '../types/buffers.types';
-import { useCreateBuffer, useUpdateBuffer, useAvailableStages } from '../hooks/useBuffersQuery';
+import { 
+  useCreateBuffer, 
+  useUpdateBuffer, 
+  useAvailableStages, 
+  useBuffer,
+  useUpdateBufferStages,
+  useBufferStages
+} from '../hooks/useBuffersQuery';
 import styles from './BufferForm.module.css';
 
 interface BufferFormProps {
-  buffer?: BufferDetailResponse;
-  onSuccess?: () => void;
+  editId?: number;
+  onSaved?: () => void;
   onCancel?: () => void;
 }
 
 const BufferForm: React.FC<BufferFormProps> = ({
-  buffer,
-  onSuccess,
+  editId,
+  onSaved,
   onCancel
 }) => {
   const [formData, setFormData] = useState({
     bufferName: '',
     description: '',
     location: '',
-    cells: [] as CreateBufferCellDto[],
     stageIds: [] as number[]
   });
 
-  const [newCell, setNewCell] = useState({
-    cellCode: '',
-    capacity: 0,
-    status: CellStatus.AVAILABLE
-  });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [stagesChanged, setStagesChanged] = useState(false);
 
+  // Исправленная строка - убрал второй параметр с опциями
+  const { data: buffer } = useBuffer(editId!);
   const { data: availableStages } = useAvailableStages();
+  const { data: currentBufferStages } = useBufferStages(editId!);
+  
   const createBufferMutation = useCreateBuffer();
   const updateBufferMutation = useUpdateBuffer();
+  const updateBufferStagesMutation = useUpdateBufferStages();
 
-  const isEditing = !!buffer;
+  const isEditing = !!editId;
 
   useEffect(() => {
-    if (buffer) {
+    if (buffer && isEditing) {
       setFormData({
         bufferName: buffer.bufferName,
         description: buffer.description || '',
         location: buffer.location,
-        cells: buffer.bufferCells.map(cell => ({
-          cellCode: cell.cellCode,
-          capacity: cell.capacity,
-          status: cell.status
-        })),
         stageIds: buffer.bufferStages.map(stage => stage.stageId)
       });
     }
-  }, [buffer]);
+  }, [buffer, isEditing]);
+
+  // Отслеживаем изменения в этапах для режима редактирования
+  useEffect(() => {
+    if (isEditing && buffer && currentBufferStages) {
+      const originalStageIds = buffer.bufferStages.map(stage => stage.stageId).sort();
+      const currentStageIds = formData.stageIds.sort();
+      
+      const hasChanges = originalStageIds.length !== currentStageIds.length ||
+        originalStageIds.some((id, index) => id !== currentStageIds[index]);
+      
+      setStagesChanged(hasChanges);
+    }
+  }, [formData.stageIds, buffer, currentBufferStages, isEditing]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -71,13 +85,6 @@ const BufferForm: React.FC<BufferFormProps> = ({
       newErrors.description = 'Описание не должно превышать 500 символов';
     }
 
-    // Проверка уникальности кодов ячеек
-    const cellCodes = formData.cells.map(cell => cell.cellCode);
-    const duplicateCodes = cellCodes.filter((code, index) => cellCodes.indexOf(code) !== index);
-    if (duplicateCodes.length > 0) {
-      newErrors.cells = `Коды ячеек должны быть уникальными: ${duplicateCodes.join(', ')}`;
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -89,67 +96,40 @@ const BufferForm: React.FC<BufferFormProps> = ({
 
     try {
       if (isEditing) {
+        // Обновляем основную информацию буфера
         await updateBufferMutation.mutateAsync({
-          id: buffer.bufferId,
+          id: editId!,
           data: {
             bufferName: formData.bufferName,
             description: formData.description || undefined,
             location: formData.location
           }
         });
+
+        // Обновляем этапы, если они изменились
+        if (stagesChanged) {
+          await updateBufferStagesMutation.mutateAsync({
+            bufferId: editId!,
+            stagesData: {
+              stageIds: formData.stageIds
+            }
+          });
+        }
       } else {
+        // Создаем новый буфер
         await createBufferMutation.mutateAsync({
           bufferName: formData.bufferName,
           description: formData.description || undefined,
           location: formData.location,
-          cells: formData.cells.length > 0 ? formData.cells : undefined,
           stageIds: formData.stageIds.length > 0 ? formData.stageIds : undefined
         });
       }
 
-      onSuccess?.();
+      onSaved?.();
     } catch (error) {
       console.error('Ошибка при сохранении буфера:', error);
       alert('Ошибка при сохранении буфера');
     }
-  };
-
-  const handleAddCell = () => {
-    if (!newCell.cellCode.trim()) {
-      alert('Введите код ячейки');
-      return;
-    }
-
-    if (newCell.capacity < 0) {
-      alert('Вместимость не может быть отрицательной');
-      return;
-    }
-
-   
-
-    if (formData.cells.some(cell => cell.cellCode === newCell.cellCode)) {
-      alert('Ячейка с таким кодом уже существует');
-      return;
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      cells: [...prev.cells, { ...newCell }]
-    }));
-
-    setNewCell({
-      cellCode: '',
-      capacity: 0,
-
-      status: CellStatus.AVAILABLE
-    });
-  };
-
-  const handleRemoveCell = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      cells: prev.cells.filter((_, i) => i !== index)
-    }));
   };
 
   const handleStageToggle = (stageId: number) => {
@@ -161,7 +141,7 @@ const BufferForm: React.FC<BufferFormProps> = ({
     }));
   };
 
-  const isLoading = createBufferMutation.isPending || updateBufferMutation.isPending;
+  const isLoading = createBufferMutation.isPending || updateBufferMutation.isPending || updateBufferStagesMutation.isPending;
 
   return (
     <div className={styles.container}>
@@ -181,6 +161,7 @@ const BufferForm: React.FC<BufferFormProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, bufferName: e.target.value }))}
               className={errors.bufferName ? styles.error : ''}
               maxLength={100}
+              placeholder="Введите название буфера"
             />
             {errors.bufferName && <span className={styles.errorText}>{errors.bufferName}</span>}
           </div>
@@ -193,6 +174,7 @@ const BufferForm: React.FC<BufferFormProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
               className={errors.location ? styles.error : ''}
               maxLength={200}
+              placeholder="Укажите местоположение буфера"
             />
             {errors.location && <span className={styles.errorText}>{errors.location}</span>}
           </div>
@@ -205,109 +187,90 @@ const BufferForm: React.FC<BufferFormProps> = ({
               className={errors.description ? styles.error : ''}
               maxLength={500}
               rows={3}
+              placeholder="Описание буфера (необязательно)"
             />
             {errors.description && <span className={styles.errorText}>{errors.description}</span>}
           </div>
         </div>
 
-        {!isEditing && (
-          <>
-            {/* <div className={styles.section}>
-              <h4>Ячейки буфера</h4>
-              
-              <div className={styles.cellForm}>
-                <div className={styles.cellFormRow}>
-                  <input
-                    type="text"
-                    placeholder="Код ячейки"
-                    value={newCell.cellCode}
-                    onChange={(e) => setNewCell(prev => ({ ...prev, cellCode: e.target.value }))}
-                    maxLength={20}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Вместимость"
-                    value={newCell.capacity}
-                    onChange={(e) => setNewCell(prev => ({ ...prev, capacity: Number(e.target.value) }))}
-                    min="0"
-                  />
-                  <select
-                    value={newCell.status}
-                    onChange={(e) => setNewCell(prev => ({ ...prev, status: e.target.value as CellStatus }))}
-                  >
-                    <option value={CellStatus.AVAILABLE}>Доступна</option>
-                    <option value={CellStatus.OCCUPIED}>Занята</option>
-                    <option value={CellStatus.RESERVED}>Зарезервирована</option>
-                  </select>
-                  <button type="button" onClick={handleAddCell} className={styles.addButton}>
-                    Добавить
-                  </button>
+        <div className={styles.section}>
+          <h4>Связанные этапы</h4>
+          <p className={styles.sectionDescription}>
+            {isEditing 
+              ? 'Измените связи этапов производства с этим буфером'
+              : 'Выберите этапы производства, которые будут связаны с этим буфером'
+            }
+          </p>
+          
+          {stagesChanged && isEditing && (
+            <div className={styles.changesNotice}>
+              <span className={styles.changesIcon}>⚠️</span>
+              <span>У вас есть несохраненные изменения в этапах</span>
+            </div>
+          )}
+          
+          <div className={styles.stagesList}>
+            {availableStages?.map((stage) => (
+              <label key={stage.stageId} className={styles.stageItem}>
+                <input
+                  type="checkbox"
+                  checked={formData.stageIds.includes(stage.stageId)}
+                  onChange={() => handleStageToggle(stage.stageId)}
+                />
+                <div className={styles.stageInfo}>
+                  <span className={styles.stageName}>{stage.stageName}</span>
+                  {stage.description && (
+                    <span className={styles.stageDescription}>{stage.description}</span>
+                  )}
+                  <span className={styles.stageCount}>
+                    Связано с {stage._count.bufferStages} буферами
+                  </span>
                 </div>
-              </div>
+              </label>
+            ))}
+          </div>
 
-              {errors.cells && <span className={styles.errorText}>{errors.cells}</span>}
-
-              <div className={styles.cellsList}>
-                {formData.cells.map((cell, index) => (
-                  <div key={index} className={styles.cellItem}>
-                    <span>{cell.cellCode}</span>
-                    <span>Вместимость: {cell.capacity}</span>
-                    <span>Загрузка: {cell.currentLoad}</span>
-                    <span>Статус: {
-                      cell.status === CellStatus.AVAILABLE ? 'Доступна' :
-                      cell.status === CellStatus.OCCUPIED ? 'Занята' : 'Зарезервирована'
-                    }</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveCell(index)}
-                      className={styles.removeButton}
-                    >
-                      Удалить
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div> */}
-
-            <div className={styles.section}>
-              <h4>Связанные этапы</h4>
-              
-              <div className={styles.stagesList}>
-                {availableStages?.map((stage) => (
-                  <label key={stage.stageId} className={styles.stageItem}>
-                    <input
-                      type="checkbox"
-                      checked={formData.stageIds.includes(stage.stageId)}
-                      onChange={() => handleStageToggle(stage.stageId)}
-                    />
-                    <span>{stage.stageName}</span>
-                    {stage.description && (
-                      <span className={styles.stageDescription}>{stage.description}</span>
-                    )}
-                  </label>
-                ))}
+          {(!availableStages || availableStages.length === 0) && (
+            <div className={styles.emptyStages}>
+              <div className={styles.emptyIcon}>🔄</div>
+              <div className={styles.emptyTitle}>Нет доступных этапов</div>
+              <div className={styles.emptyDescription}>
+                Сначала создайте этапы производства
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
 
-        <div className={styles.buttons}>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={styles.submitButton}
-          >
-            {isLoading ? 'Сохранение...' : (isEditing ? 'Сохранить' : 'Создать')}
-          </button>
+        <div className={styles.actions}>
           <button
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className={styles.cancelButton}
+            className={`${styles.button} ${styles.buttonSecondary}`}
           >
             Отмена
           </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`${styles.button} ${styles.buttonPrimary}`}
+          >
+            {isLoading ? (
+              isEditing ? 'Сохранение...' : 'Создание...'
+            ) : (
+              isEditing ? 'Сохранить изменения' : 'Создать буфер'
+            )}
+          </button>
         </div>
+
+        {isEditing && stagesChanged && (
+          <div className={styles.hint}>
+            <span className={styles.hintIcon}>💡</span>
+            <span>
+              При сохранении будут обновлены как основная информация буфера, так и связи с этапами
+            </span>
+          </div>
+        )}
       </form>
     </div>
   );

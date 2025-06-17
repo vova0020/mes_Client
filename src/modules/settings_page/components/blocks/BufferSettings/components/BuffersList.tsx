@@ -6,13 +6,15 @@ import styles from './BuffersList.module.css';
 
 interface BuffersListProps {
   onSelectBuffer?: (buffer: BufferResponse) => void;
-  onEditBuffer?: (buffer: BufferResponse) => void; 
+  onEditBuffer?: (bufferId: number) => void; 
+  onBufferDeleted?: (bufferId: number) => void;
   selectedBufferId?: number;
 }
 
 const BuffersList: React.FC<BuffersListProps> = ({
   onSelectBuffer,
   onEditBuffer,
+  onBufferDeleted,
   selectedBufferId
 }) => {
   const [copyingBufferId, setCopyingBufferId] = useState<number | null>(null);
@@ -23,17 +25,18 @@ const BuffersList: React.FC<BuffersListProps> = ({
     copyStages: true
   });
 
-  const { data: buffers, isLoading, error } = useBuffers();
+  const { data: buffers = [], isLoading, error } = useBuffers();
   const deleteBufferMutation = useDeleteBuffer();
   const copyBufferMutation = useCopyBuffer();
 
   // Подключаем WebSocket
   useBuffersSocket();
 
-  const handleDeleteBuffer = async (bufferId: number) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот буфер?')) {
+  const handleDeleteBuffer = async (bufferId: number, bufferName: string) => {
+    if (window.confirm(`Вы уверены, что хотите удалить буфер "${bufferName}"?`)) {
       try {
         await deleteBufferMutation.mutateAsync(bufferId);
+        onBufferDeleted?.(bufferId);
       } catch (error) {
         console.error('Ошибка при удалении буфера:', error);
         alert('Ошибка при удалении буфера');
@@ -83,24 +86,49 @@ const BuffersList: React.FC<BuffersListProps> = ({
   };
 
   if (isLoading) {
-    return <div className={styles.loading}>Загрузка буферов...</div>;
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        Загрузка буферов...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className={styles.error}>Ошибка при загрузке буферов</div>;
+    return (
+      <div className={styles.errorContainer}>
+        <div className={styles.emptyStateIcon}>⚠️</div>
+        <div className={styles.emptyStateTitle}>Ошибка загрузки</div>
+        <div className={styles.emptyStateDescription}>
+          Не удалось загрузить список буферов
+        </div>
+      </div>
+    );
+  }
+
+  if (buffers.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <div className={styles.emptyStateIcon}>📦</div>
+        <div className={styles.emptyStateTitle}>Б��феры не найдены</div>
+        <div className={styles.emptyStateDescription}>
+          Создайте первый буфер для начала работы
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3>Список буферов</h3>
+        <h3 className={styles.title}>Буферы</h3>
         <div className={styles.stats}>
-          Всего буферов: {buffers?.length || 0}
+          Всего: {buffers.length}
         </div>
       </div>
 
       <div className={styles.list}>
-        {buffers?.map((buffer) => (
+        {buffers.map((buffer) => (
           <div
             key={buffer.bufferId}
             className={`${styles.item} ${
@@ -110,20 +138,20 @@ const BuffersList: React.FC<BuffersListProps> = ({
           >
             <div className={styles.itemContent}>
               <div className={styles.itemHeader}>
-                <h4>{buffer.bufferName}</h4>
-                <div className={styles.actions}>
+                <h4 className={styles.itemTitle}>{buffer.bufferName}</h4>
+                <div className={styles.itemActions}>
                   <button
-                    className={styles.editButton}
+                    className={`${styles.actionButton} ${styles.editButton}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onEditBuffer?.(buffer);
+                      onEditBuffer?.(buffer.bufferId);
                     }}
                     title="Редактировать"
                   >
                     ✏️
                   </button>
                   <button
-                    className={styles.copyButton}
+                    className={`${styles.actionButton} ${styles.copyButton}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleCopyBuffer(buffer.bufferId, buffer.bufferName);
@@ -133,10 +161,10 @@ const BuffersList: React.FC<BuffersListProps> = ({
                     📋
                   </button>
                   <button
-                    className={styles.deleteButton}
+                    className={`${styles.actionButton} ${styles.deleteButton}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeleteBuffer(buffer.bufferId);
+                      handleDeleteBuffer(buffer.bufferId, buffer.bufferName);
                     }}
                     title="Удалить"
                     disabled={deleteBufferMutation.isPending}
@@ -146,14 +174,22 @@ const BuffersList: React.FC<BuffersListProps> = ({
                 </div>
               </div>
               
-              <div className={styles.itemInfo}>
-                <div className={styles.location}>📍 {buffer.location}</div>
+              <div className={styles.itemDetails}>
+                <div className={styles.location}>
+                  📍 {buffer.location}
+                </div>
                 {buffer.description && (
-                  <div className={styles.description}>{buffer.description}</div>
+                  <div className={styles.description}>
+                    {buffer.description}
+                  </div>
                 )}
-                <div className={styles.stats}>
-                  <span>Ячеек: {buffer.cellsCount}</span>
-                  <span>Этапов: {buffer.stagesCount}</span>
+                <div className={styles.itemStats}>
+                  <span className={styles.statBadge}>
+                    Ячеек: {buffer.cellsCount}
+                  </span>
+                  <span className={styles.statBadge}>
+                    Этапов: {buffer.stagesCount}
+                  </span>
                 </div>
               </div>
             </div>
@@ -161,11 +197,15 @@ const BuffersList: React.FC<BuffersListProps> = ({
         ))}
       </div>
 
+      {/* Copy Modal */}
       {copyingBufferId && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h3>Копирование буфера</h3>
-            <div className={styles.form}>
+        <div className={styles.modalOverlay} onClick={handleCancelCopy}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Копирование буфера</h3>
+            </div>
+            
+            <div className={styles.modalBody}>
               <div className={styles.field}>
                 <label>Название нового буфера:</label>
                 <input
@@ -180,7 +220,7 @@ const BuffersList: React.FC<BuffersListProps> = ({
               </div>
               
               <div className={styles.field}>
-                <label>Новое местоположение (опционально):</label>
+                <label>Новое местоположение:</label>
                 <input
                   type="text"
                   value={copyFormData.newLocation}
@@ -188,12 +228,12 @@ const BuffersList: React.FC<BuffersListProps> = ({
                     ...prev,
                     newLocation: e.target.value
                   }))}
-                  placeholder="Введите местоположение"
+                  placeholder="Введите местоположение (опционально)"
                 />
               </div>
 
               <div className={styles.checkboxGroup}>
-                <label>
+                <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
                     checked={copyFormData.copyCells}
@@ -205,7 +245,7 @@ const BuffersList: React.FC<BuffersListProps> = ({
                   Копировать ячейки
                 </label>
                 
-                <label>
+                <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
                     checked={copyFormData.copyStages}
@@ -217,23 +257,23 @@ const BuffersList: React.FC<BuffersListProps> = ({
                   Копировать этапы
                 </label>
               </div>
+            </div>
 
-              <div className={styles.buttons}>
-                <button
-                  className={styles.confirmButton}
-                  onClick={handleConfirmCopy}
-                  disabled={!copyFormData.newBufferName || copyBufferMutation.isPending}
-                >
-                  {copyBufferMutation.isPending ? 'Копирование...' : 'Копировать'}
-                </button>
-                <button
-                  className={styles.cancelButton}
-                  onClick={handleCancelCopy}
-                  disabled={copyBufferMutation.isPending}
-                >
-                  Отмена
-                </button>
-              </div>
+            <div className={styles.modalActions}>
+              <button
+                className={`${styles.button} ${styles.buttonPrimary}`}
+                onClick={handleConfirmCopy}
+                disabled={!copyFormData.newBufferName || copyBufferMutation.isPending}
+              >
+                {copyBufferMutation.isPending ? 'Копирование...' : 'Копировать'}
+              </button>
+              <button
+                className={`${styles.button} ${styles.buttonSecondary}`}
+                onClick={handleCancelCopy}
+                disabled={copyBufferMutation.isPending}
+              >
+                Отмена
+              </button>
             </div>
           </div>
         </div>
