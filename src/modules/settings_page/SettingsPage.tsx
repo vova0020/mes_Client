@@ -4,7 +4,7 @@ import Sidebar, { SettingSection } from './components/Sidebar/Sidebar';
 import BufferSettings from './components/blocks/BufferSettings/BufferSettings';
 
 import styles from './SettingsPage.module.css';
-import UserSettings from './components/blocks/UserSettings/UserSettings';
+import {UserSettings} from './components/blocks/UserSettings/UserSettings';
 import MachineSettings from './components/blocks/MachineSettings/MachineSettings';
 import RouteSettings from './components/blocks/RouteSettings/RouteSettings';
 import OperationsSettings from './components/blocks/OperationsSettings/OperationsSettings';

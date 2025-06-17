@@ -1,128 +1,279 @@
-/* Основные стили контейнера с градиентным фоном и тенями */
 .userSettings {
   display: flex;
   flex-direction: column;
-  width: 100%;
   height: 100%;
-  overflow: hidden;
-  background: linear-gradient(135deg, #374051, #2a303c);
-  box-shadow: 
-    0 8px 30px rgba(0, 0, 0, 0.5), 
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
   border-radius: 12px;
-  color: #fff;
-  padding: 20px;
-}
-
-/* Заголовок страницы */
-.mainTitle {
-  margin-bottom: 20px;
-  color: #ffffff;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  letter-spacing: 1.2px;
-  font-size: 22px;
-  text-transform: uppercase;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Стили для табов */
-.tabs {
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px 8px 0 0;
-}
-
-/* Контейнеры для пользователей и роле�� */
-.userManagement, .roleManagement {
-  flex: 1;
-  overflow: auto;
-  padding-bottom: 16px;
-  
-  /* Стилизация полосы прокрутки для WebKit */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 3px;
-    transition: background 0.2s;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
-  }
-  
-  /* Для Firefox */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.1);
-}
-
-/* Карточки для списков */
-.paper {
-  padding: 16px;
-  height: 100%;
   overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.headerTitle {
+  margin: 0 0 4px 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerIcon {
+  font-size: 1.5em;
+  display: inline-block;
+}
+
+.headerSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+}
+
+.realtimeIndicator {
+  margin-left: 5px;
+  color: #10b981;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.createButton {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.createButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.createButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.leftPanel {
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.rightPanel {
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.formContainer,
+.detailsContainer {
+  height: 100%;
+  overflow: auto;
+}
+
+/* Состояния загрузки и ошибок */
+.loading {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
-  border-radius: 10px;
-  box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(224, 224, 224, 0.8);
-  color: #333;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  background: white;
+  margin: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Адаптивные стили */
-@media (max-width: 960px) {
-  .userManagement, .roleManagement {
-    padding-bottom: 8px;
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading span {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  background: white;
+  margin: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.error h3 {
+  color: #dc2626;
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+}
+
+.error p {
+  color: #64748b;
+  margin: 0 0 24px 0;
+  font-size: 1rem;
+}
+
+.error button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.error button:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .content {
+    grid-template-columns: 350px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
   
-  .mainTitle {
-    margin-bottom: 12px;
-    font-size: 1.4rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .paper {
-    padding: 12px;
+  .header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
   }
   
-  .mainTitle {
-    font-size: 1.2rem;
+  .headerTitle {
+    font-size: 1.5rem;
+    justify-content: center;
+  }
+  
+  .createButton {
+    width: 100%;
   }
 }
 
-/* Хелперы для доступности */
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+@media (max-width: 480px) {
+  .header {
+    padding: 16px;
+  }
+  
+  .createButton {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.25rem;
+  }
 }
 
-/* Улучшенные стили для фокуса для доступности */
-button:focus, 
-input:focus, 
-select:focus {
-  outline: none;
-  box-shadow: 
-    0 0 0 3px rgba(52, 152, 219, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+/* Плавные анимации */
+.userSettings {
+  animation: slideInUp 0.4s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Стили для индикатора состояния подключения */
+/* .header:has(.realtimeIndicator) {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+} */
+
+.header:has(.realtimeIndicator) .createButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* Улучшенная типографика */
+.headerTitle,
+.headerSubtitle {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Кастомные скроллбары для контента */
+.formContainer::-webkit-scrollbar,
+.detailsContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.formContainer::-webkit-scrollbar-track,
+.detailsContainer::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.formContainer::-webkit-scrollbar-thumb,
+.detailsContainer::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.formContainer::-webkit-scrollbar-thumb:hover,
+.detailsContainer::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

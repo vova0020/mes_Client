@@ -1,304 +1,416 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Grid,
-    Typography,
-    InputAdornment,
-    IconButton,
-    SelectChangeEvent
-} from '@mui/material';
-import {
-    Visibility,
-    VisibilityOff
-} from '@mui/icons-material';
-import { IUser, IUserDetail, IRole } from '../UserSettings';
+import { useUser, useCreateUser, useUpdateUser } from '../hooks/useUsersQuery';
+import { CreateUserDto, UpdateUserDto } from '../services/usersApi';
 import styles from './UserForm.module.css';
 
 interface UserFormProps {
-    open: boolean;
-    onClose: () => void;
-    onSave: (userData: Partial<IUser>, detailsData: Partial<IUserDetail>) => void;
-    user?: IUser;
-    userDetails?: IUserDetail;
-    roles: IRole[];
-    isEditing: boolean;
+  editId?: number;
+  onSaved: () => void;
+  onCancel: () => void;
 }
 
-const UserForm: React.FC<UserFormProps> = ({
-    open,
-    onClose,
-    onSave,
-    user,
-    userDetails,
-    roles,
-    isEditing
+interface FormData {
+  login: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  position: string;
+  salary: string;
+}
+
+interface FormErrors {
+  login?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  position?: string;
+  salary?: string;
+}
+
+export const UserForm: React.FC<UserFormProps> = ({
+  editId,
+  onSaved,
+  onCancel,
 }) => {
-    // Состояние для формы пользователя
-    const [userForm, setUserForm] = useState<Partial<IUser & { confirmPassword: string }>>({
-        username: '',
-        password: '',
-        confirmPassword: '',
-        roleId: 0
-    });
+  const [formData, setFormData] = useState<FormData>({
+    login: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    position: '',
+    salary: '',
+  });
 
-    // Состояние для формы деталей пользователя
-    const [detailsForm, setDetailsForm] = useState<Partial<IUserDetail>>({
-        fullName: '',
-        phone: '',
-        position: '',
-        salary: null
-    });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-    // Состояние для отображения пароля
-    const [showPassword, setShowPassword] = useState(false);
+  const { data: existingUser, isLoading: isLoadingUser } = useUser(editId);
+  const createMutation = useCreateUser();
+  const updateMutation = useUpdateUser();
 
-    // Инициализация формы при открытии
-    useEffect(() => {
-        if (user && isEditing) {
-            // Редактирование существующего пользователя
-            setUserForm({
-                id: user.id,
-                username: user.username,
-                password: '', // Пароль не загружаем для редактирования
-                confirmPassword: '',
-                roleId: user.roleId
-            });
+  const isEditing = !!editId;
+  const title = isEditing ? 'Редактировать пользователя' : 'Создать пользователя';
 
-            if (userDetails) {
-                setDetailsForm({
-                    id: userDetails.id,
-                    userId: userDetails.userId,
-                    fullName: userDetails.fullName,
-                    phone: userDetails.phone || '',
-                    position: userDetails.position || '',
-                    salary: userDetails.salary
-                });
-            } else {
-                setDetailsForm({
-                    fullName: '',
-                    phone: '',
-                    position: '',
-                    salary: null
-                });
-            }
-        } else {
-            // Создание нового пользователя
-            setUserForm({
-                username: '',
-                password: '',
-                confirmPassword: '',
-                roleId: roles.length > 0 ? roles[0].id : 0
-            });
+  // Заполняем форму данными существующего пользователя при редактировании
+  useEffect(() => {
+    if (isEditing && existingUser) {
+      setFormData({
+        login: existingUser.login,
+        password: '', // Пароль не показываем
+        firstName: existingUser.userDetail.firstName,
+        lastName: existingUser.userDetail.lastName,
+        phone: existingUser.userDetail.phone || '',
+        position: existingUser.userDetail.position || '',
+        salary: existingUser.userDetail.salary?.toString() || '',
+      });
+    }
+  }, [isEditing, existingUser]);
 
-            setDetailsForm({
-                fullName: '',
-                phone: '',
-                position: '',
-                salary: null
-            });
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    // Валидация логина
+    if (!formData.login.trim()) {
+      newErrors.login = 'Логин обязателен';
+    } else if (formData.login.length < 3) {
+      newErrors.login = 'Логин должен содержать минимум 3 символа';
+    } else if (formData.login.length > 50) {
+      newErrors.login = 'Логин не должен превышать 50 символов';
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.login)) {
+      newErrors.login = 'Логин может содержать только буквы, цифры, дефис и подчеркивание';
+    }
+
+    // Валидация пароля (только при создании или если поле заполнено)
+    if (!isEditing || formData.password.trim()) {
+      if (!formData.password.trim()) {
+        newErrors.password = 'Пароль обязателен';
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'Пароль должен содержать минимум 6 символов';
+      } else if (formData.password.length > 100) {
+        newErrors.password = 'Пароль не должен превышать 100 символов';
+      }
+    }
+
+    // Валидация имени
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'Имя обязательно';
+    } else if (formData.firstName.length < 2) {
+      newErrors.firstName = 'Имя должно содержать мин��мум 2 символа';
+    } else if (formData.firstName.length > 50) {
+      newErrors.firstName = 'Имя не должно превышать 50 символов';
+    }
+
+    // Валидация фамилии
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Фамилия обязательна';
+    } else if (formData.lastName.length < 2) {
+      newErrors.lastName = 'Фамилия должна содержать минимум 2 символа';
+    } else if (formData.lastName.length > 50) {
+      newErrors.lastName = 'Фамилия не должна превышать 50 символов';
+    }
+
+    // Валидация телефона (опционально)
+    if (formData.phone.trim() && !/^\+?[1-9]\d{1,14}$/.test(formData.phone.replace(/\s|-/g, ''))) {
+      newErrors.phone = 'Неверный формат телефона';
+    }
+
+    // Валидация должности (опционально)
+    if (formData.position.trim() && formData.position.length > 100) {
+      newErrors.position = 'Должность не должна превышать 100 символов';
+    }
+
+    // Валидация зарплаты (опционально)
+    if (formData.salary.trim()) {
+      const salaryValue = parseFloat(formData.salary);
+      if (isNaN(salaryValue)) {
+        newErrors.salary = 'Зарплата должна быть числом';
+      } else if (salaryValue < 0) {
+        newErrors.salary = 'Зарплата не может быть отрицательной';
+      } else if (salaryValue > 10000000) {
+        newErrors.salary = 'Зарплата не может превышать 10,000,000';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Очищаем ошибку для этого поля при изменении
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const userData: any = {
+        login: formData.login.trim(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+      };
+
+      // Добавляем пароль если он указан
+      if (formData.password.trim()) {
+        userData.password = formData.password;
+      }
+
+      // Добавляем опциональные поля только если они заполнены
+      if (formData.phone.trim()) {
+        userData.phone = formData.phone.trim();
+      }
+      
+      if (formData.position.trim()) {
+        userData.position = formData.position.trim();
+      }
+      
+      // Исправленная обработка зарплаты
+      if (formData.salary.trim()) {
+        const salaryValue = parseFloat(formData.salary);
+        if (!isNaN(salaryValue)) {
+          userData.salary = salaryValue; // Отправляем как число, а не строку
         }
-    }, [user, userDetails, roles, isEditing, open]);
+      }
+      // Если зарплата пустая, не добавляем это поле в userData
 
-    // Обработчики изменения полей формы
-    const handleUserFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setUserForm(prev => ({ ...prev, [name]: value }));
-    };
+      console.log('Отправляемые данные:', userData);
 
-    const handleRoleChange = (e: SelectChangeEvent<number>) => {
-        setUserForm(prev => ({ ...prev, roleId: e.target.value as number }));
-    };
+      if (isEditing && editId) {
+        await updateMutation.mutateAsync({
+          id: editId,
+          data: userData as UpdateUserDto,
+        });
+      } else {
+        await createMutation.mutateAsync(userData as CreateUserDto);
+      }
 
-    const handleDetailsFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setDetailsForm(prev => ({ ...prev, [name]: value }));
-    };
+      onSaved();
+    } catch (error: any) {
+      console.error('Ошиб��а сохранения пользователя:', error);
+      
+      // Показываем ошибку пользователю
+      if (error.response?.data?.message) {
+        const errorMessage = Array.isArray(error.response.data.message) 
+          ? error.response.data.message.join(', ')
+          : error.response.data.message;
+        alert(`Ошибка: ${errorMessage}`);
+      } else if (error.message) {
+        alert(`Ошибка: ${error.message}`);
+      } else {
+        alert('Произошла ошибка при сохранении пользователя. Попробуйте еще раз.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value === '' ? null : parseFloat(e.target.value);
-        setDetailsForm(prev => ({ ...prev, salary: value }));
-    };
-
-    // Обработчик сохранения
-    const handleSave = () => {
-        onSave(userForm, detailsForm);
-    };
-
+  if (isEditing && isLoadingUser) {
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            maxWidth="md"
-            fullWidth
-        >
-            <DialogTitle className={styles.dialogTitle}>
-                {isEditing ? 'Редактирование пользователя' : 'Создание нового пользователя'}
-            </DialogTitle>
-            <DialogContent className={styles.dialogContent}>
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="subtitle1" gutterBottom className={styles.formSectionTitle}>
-                            Учетные данные
-                        </Typography>
-
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            name="username"
-                            label="Имя пользователя"
-                            type="text"
-                            fullWidth
-                            value={userForm.username || ''}
-                            onChange={handleUserFormChange}
-                            required
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="password"
-                            label={isEditing ? "Новый пароль (оставьте пустым, чтобы не менять)" : "Пароль"}
-                            type={showPassword ? "text" : "password"}
-                            fullWidth
-                            value={userForm.password || ''}
-                            onChange={handleUserFormChange}
-                            required={!isEditing}
-                            variant="outlined"
-                            className={styles.formField}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            edge="end"
-                                        >
-                                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                )
-                            }}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="confirmPassword"
-                            label="Подтвердите пароль"
-                            type={showPassword ? "text" : "password"}
-                            fullWidth
-                            value={userForm.confirmPassword || ''}
-                            onChange={handleUserFormChange}
-                            required={!isEditing}
-                            variant="outlined"
-                            className={styles.formField}
-                            error={userForm.password !== userForm.confirmPassword && userForm.confirmPassword !== ''}
-                            helperText={userForm.password !== userForm.confirmPassword && userForm.confirmPassword !== '' ? "Пароли не совпадают" : ""}
-                        />
-
-                        <FormControl fullWidth variant="outlined" className={styles.formField}>
-                            <InputLabel id="role-select-label">Роль</InputLabel>
-                            <Select
-                                labelId="role-select-label"
-                                id="role-select"
-                                value={userForm.roleId || ''}
-                                onChange={handleRoleChange}
-                                label="Роль"
-                                required
-                            >
-                                {roles.map(role => (
-                                    <MenuItem key={role.id} value={role.id}>
-                                        {role.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 6 }} >
-                        <Typography variant="subtitle1" gutterBottom className={styles.formSectionTitle}>
-                            Персональные данные
-                        </Typography>
-
-                        <TextField
-                            margin="dense"
-                            name="fullName"
-                            label="ФИО"
-                            type="text"
-                            fullWidth
-                            value={detailsForm.fullName || ''}
-                            onChange={handleDetailsFormChange}
-                            required
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="position"
-                            label="Должность"
-                            type="text"
-                            fullWidth
-                            value={detailsForm.position || ''}
-                            onChange={handleDetailsFormChange}
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="phone"
-                            label="Телефон"
-                            type="text"
-                            fullWidth
-                            value={detailsForm.phone || ''}
-                            onChange={handleDetailsFormChange}
-                            variant="outlined"
-                            className={styles.formField}
-                        />
-
-                        <TextField
-                            margin="dense"
-                            name="salary"
-                            label="Оклад (руб.)"
-                            type="number"
-                            fullWidth
-                            value={detailsForm.salary === null ? '' : detailsForm.salary}
-                            onChange={handleSalaryChange}
-                            variant="outlined"
-                            className={styles.formField}
-                            InputProps={{
-                                inputProps: { min: 0 }
-                            }}
-                        />
-                    </Grid>
-                </Grid>
-            </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button 
-                    onClick={onClose} 
-                    className={`${styles.dialogButton} ${styles.cancelButton}`}
-                >
-                    Отмена
-                </Button>
-                <Button 
-                    onClick={handleSave} 
-                    className={`${styles.dialogButton} ${styles.saveButton}`}
-                    variant="contained"
-                >
-                    Сохранить
-                </Button>
-            </DialogActions>
-        </Dialog>
+      <div className={styles.form}>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Загрузка данных пользователя...</p>
+        </div>
+      </div>
     );
-};
+  }
 
-export default UserForm;
+  return (
+    <div className={styles.form}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>{title}</h2>
+        <button onClick={onCancel} className={styles.closeButton}>
+          ✕
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className={styles.formContent}>
+        {/* Логин */}
+        <div className={styles.field}>
+          <label htmlFor="login" className={styles.label}>
+            Логин *
+          </label>
+          <input
+            id="login"
+            type="text"
+            value={formData.login}
+            onChange={(e) => handleInputChange('login', e.target.value)}
+            className={`${styles.input} ${errors.login ? styles.inputError : ''}`}
+            placeholder="Введите логин"
+            maxLength={50}
+          />
+          {errors.login && (
+            <span className={styles.errorText}>{errors.login}</span>
+          )}
+        </div>
+
+        {/* Пароль */}
+        <div className={styles.field}>
+          <label htmlFor="password" className={styles.label}>
+            Пароль {isEditing ? '' : ' *'}
+          </label>
+          <div className={styles.passwordContainer}>
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+              placeholder={isEditing ? 'Оставьте пустым, чтобы не менять' : 'Введите пароль'}
+              maxLength={100}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className={styles.passwordToggle}
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
+          </div>
+          {errors.password && (
+            <span className={styles.errorText}>{errors.password}</span>
+          )}
+        </div>
+
+        {/* Имя */}
+        <div className={styles.field}>
+          <label htmlFor="firstName" className={styles.label}>
+            Имя *
+          </label>
+          <input
+            id="firstName"
+            type="text"
+            value={formData.firstName}
+            onChange={(e) => handleInputChange('firstName', e.target.value)}
+            className={`${styles.input} ${errors.firstName ? styles.inputError : ''}`}
+            placeholder="Введите имя"
+            maxLength={50}
+          />
+          {errors.firstName && (
+            <span className={styles.errorText}>{errors.firstName}</span>
+          )}
+        </div>
+
+        {/* Фамилия */}
+        <div className={styles.field}>
+          <label htmlFor="lastName" className={styles.label}>
+            Фамилия *
+          </label>
+          <input
+            id="lastName"
+            type="text"
+            value={formData.lastName}
+            onChange={(e) => handleInputChange('lastName', e.target.value)}
+            className={`${styles.input} ${errors.lastName ? styles.inputError : ''}`}
+            placeholder="Введите фамилию"
+            maxLength={50}
+          />
+          {errors.lastName && (
+            <span className={styles.errorText}>{errors.lastName}</span>
+          )}
+        </div>
+
+        {/* Телефон */}
+        <div className={styles.field}>
+          <label htmlFor="phone" className={styles.label}>
+            Телефон
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            className={`${styles.input} ${errors.phone ? styles.inputError : ''}`}
+            placeholder="+7 (XXX) XXX-XX-XX"
+          />
+          {errors.phone && (
+            <span className={styles.errorText}>{errors.phone}</span>
+          )}
+        </div>
+
+        {/* Должность */}
+        <div className={styles.field}>
+          <label htmlFor="position" className={styles.label}>
+            Должность
+          </label>
+          <input
+            id="position"
+            type="text"
+            value={formData.position}
+            onChange={(e) => handleInputChange('position', e.target.value)}
+            className={`${styles.input} ${errors.position ? styles.inputError : ''}`}
+            placeholder="Введите должность"
+            maxLength={100}
+          />
+          {errors.position && (
+            <span className={styles.errorText}>{errors.position}</span>
+          )}
+        </div>
+
+        {/* Зарплата */}
+        <div className={styles.field}>
+          <label htmlFor="salary" className={styles.label}>
+            Зарплата (руб.)
+          </label>
+          <input
+            id="salary"
+            type="number"
+            min="0"
+            max="10000000"
+            step="1000"
+            value={formData.salary}
+            onChange={(e) => handleInputChange('salary', e.target.value)}
+            className={`${styles.input} ${errors.salary ? styles.inputError : ''}`}
+            placeholder="Введите зарплату"
+          />
+          {errors.salary && (
+            <span className={styles.errorText}>{errors.salary}</span>
+          )}
+          <small className={styles.fieldHint}>
+            Оставьте пустым, если зарплата не указана
+          </small>
+        </div>
+
+        {/* Кнопки */}
+        <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={onCancel}
+            className={styles.cancelButton}
+            disabled={isSubmitting}
+          >
+            Отмена
+          </button>
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className={styles.submitSpinner}></span>
+                {isEditing ? 'Сохранение...' : 'Создание...'}
+              </>
+            ) : (
+              isEditing ? 'Сохранить' : 'Создать'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};

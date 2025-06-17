@@ -1,155 +1,674 @@
-/* Сообщение при выборе пользователя */
-.selectPrompt {
-  margin-top: 20px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 3px solid #ccc;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Заголовок деталей */
-.detailsTitle {
-  margin-bottom: 16px;
-  font-weight: 600;
-  color: #333;
-  font-size: 18px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.divider {
-  margin-bottom: 16px;
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Контейнер с деталями пользователя */
-.userDetailsContainer {
+.container {
   height: 100%;
+  background: white;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+}
+
+.header {
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.userAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-right: 16px;
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  border: 3px solid white;
 }
 
 .userInfo {
-  padding: 16px;
   flex: 1;
-  overflow: auto;
 }
 
-.userInfoHeader {
+.title {
+  margin: 0 0 4px 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.userLogin {
+  color: #667eea;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.tabs {
   display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  gap: 2px;
+  background: #e2e8f0;
+  border-radius: 8px;
+  padding: 4px;
 }
 
-.userMainInfo {
+.tab {
+  flex: 1;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #64748b;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: #374151;
+}
+
+.tabActive {
+  background: white !important;
+  color: #667eea !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Вкладка информации */
+.infoTab {
+  height: 100%;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  height: fit-content;
+}
+
+.infoCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.infoCard:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.infoCardTitle {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.infoValue {
+  font-weight: 600;
+  color: #1e293b;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-word;
+}
+
+/* Вкладка ролей */
+.rolesTab {
   display: flex;
   flex-direction: column;
+  gap: 32px;
 }
 
-/* Аватар пользователя большой */
-.largeAvatar {
-  width: 70px;
-  height: 70px;
-  background: linear-gradient(to bottom, #3498db, #2980b9);
-  margin-right: 24px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Чип роли большой */
-.roleChipLarge {
-  margin-top: 8px;
-  background: linear-gradient(to bottom, #3498db, #2980b9);
-  color: white;
-  border-left: 3px solid #1c6ea4;
+.globalRolesSection,
+.bindingsSection {
+  background: white;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  padding: 4px 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Блок с детальной информацией о пользователе */
-.userDetailInfo {
-  margin-top: 24px;
-  padding: 16px;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #f8f8f8, #f0f0f0);
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(224, 224, 224, 0.8);
-}
-
-.detailRow {
+.sectionHeader {
   display: flex;
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding-bottom: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
-.detailRow > :first-child {
-  width: 120px;
-  color: #555;
-  font-weight: 600;
+.sectionTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-.noDetails {
-  margin-top: 20px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
-  padding: 15px;
+.addButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
   border-radius: 8px;
-  border-left: 3px solid #ccc;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
-/* Адаптивные стили */
-@media (max-width: 960px) {
-  .userInfoHeader {
+.addButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+}
+
+.addButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rolesList,
+.bindingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emptyList {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.roleItem,
+.bindingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.roleItem:hover,
+.bindingItem:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.roleInfo,
+.bindingInfo {
+  flex: 1;
+}
+
+.roleName,
+.bindingRole {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.roleCode {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-family: 'Courier New', monospace;
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.bindingContext {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.bindingId {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-family: 'Courier New', monospace;
+}
+
+.removeButton {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  min-width: 60px;
+}
+
+.removeButton:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.removeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Модальные окна */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.closeButton {
+  background: #f1f5f9;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.closeButton:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.modalContent {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.roleOptions,
+.bindingOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roleOption,
+.contextOption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.roleOption:hover,
+.contextOption:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.roleOptionInfo,
+.contextOptionInfo {
+  flex: 1;
+}
+
+.roleOptionInfo h4 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.roleOptionInfo p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-family: 'Courier New', monospace;
+}
+
+.contextOptionInfo span {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.contextOptionInfo small {
+  display: block;
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.selectButton {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.selectButton:hover:not(:disabled) {
+  background: #5a67d8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.selectButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.contextTypeSelector {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.selectLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.roleSection {
+  margin-bottom: 24px;
+}
+
+.roleSectionTitle {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 12px;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-radius: 6px;
+  border: 1px solid #a5b4fc;
+}
+
+.contextOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Пустое состояние */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyState h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.emptyState p {
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .header {
+    padding: 16px;
+  }
+  
+  .titleSection {
     flex-direction: column;
-    align-items: center;
     text-align: center;
+    gap: 12px;
   }
   
-  .userMainInfo {
-    align-items: center;
-    margin-top: 12px;
+  .title {
+    font-size: 1.5rem;
   }
   
-  .largeAvatar {
-    margin-right: 0;
-    margin-bottom: 16px;
+  .content {
+    padding: 16px;
   }
   
-  .detailRow {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sectionHeader {
     flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
   }
   
-  .detailRow > :first-child {
+  .addButton {
     width: 100%;
-    margin-bottom: 4px;
+  }
+  
+  .modal {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .modalContent {
+    padding: 16px;
   }
 }
 
-@media (max-width: 600px) {
-  .detailsTitle {
-    font-size: 1rem;
+@media (max-width: 480px) {
+  .roleItem,
+  .bindingItem {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
   }
   
-  .userDetailInfo {
-    padding: 12px;
+  .removeButton {
+    width: 100%;
   }
   
-  .largeAvatar {
-    width: 50px;
-    height: 50px;
+  .roleOption,
+  .contextOption {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
   }
+  
+  .selectButton {
+    width: 100%;
+  }
+  
+  .tabs {
+    flex-direction: column;
+  }
+}
+
+/* Улучшенные анимации */
+.roleItem,
+.bindingItem {
+  animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.infoCard {
+  animation: fadeInScale 0.4s ease;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Кастомные скроллбары */
+.content::-webkit-scrollbar,
+.modalContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content::-webkit-scrollbar-track,
+.modalContent::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb,
+.modalContent::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb:hover,
+.modalContent::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
