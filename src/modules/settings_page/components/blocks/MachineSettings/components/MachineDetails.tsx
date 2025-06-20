@@ -251,9 +251,9 @@ export const MachineDetails: React.FC<MachineDetailsProps> = ({
                   <span className={styles.infoValue}>{currentMachine.loadUnit}</span>
                 </div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Изменяемые задачи:</span>
+                  <span className={styles.infoLabel}>Без сменного задания:</span>
                   <span className={styles.infoValue}>
-                    {currentMachine.isTaskChangeable ? 'Да' : 'Нет'}
+                    {currentMachine.noSmenTask ? 'Да' : 'Нет'}
                   </span>
                 </div>
               </div>

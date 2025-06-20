@@ -63,7 +63,7 @@ export interface Machine {
   status: MachineStatus;
   recommendedLoad: number;
   loadUnit: string;
-  isTaskChangeable: boolean;
+  noSmenTask: boolean;
   machinesStages?: MachineStageResponse[];
   machineSubstages?: MachineSubstageResponse[];
 }
@@ -73,7 +73,7 @@ export interface CreateMachineDto {
   status: MachineStatus;
   recommendedLoad: number;
   loadUnit: string;
-  isTaskChangeable: boolean;
+  noSmenTask: boolean;
 }
 
 export interface UpdateMachineDto {
@@ -81,7 +81,7 @@ export interface UpdateMachineDto {
   status?: MachineStatus;
   recommendedLoad?: number;
   loadUnit?: string;
-  isTaskChangeable?: boolean;
+  noSmenTask?: boolean;
 }
 
 export interface StageWithSubstages {

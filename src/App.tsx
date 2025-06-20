@@ -25,12 +25,15 @@ function App() {
           <Route element={<ProtectedRoute requiredRole="operator" />}>
             <Route path="/machine" element={<MachinePage />} />
           </Route>
-          <Route element={<ProtectedRoute requiredRole="admin" />}>
-            <Route path="/settings" element={<DetailsReferencePage />} />
-          </Route>
           {/* <Route element={<ProtectedRoute requiredRole="admin" />}>
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings" element={<DetailsReferencePage />} />
           </Route> */}
+          {/* 10 дешовая
+          30 
+          безлимит */}
+          <Route element={<ProtectedRoute requiredRole="admin" />}>
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
           
           {/* Защищенные маршруты для мастеров и администраторов */}
           <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} />}>

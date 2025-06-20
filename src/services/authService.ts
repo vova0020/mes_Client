@@ -66,7 +66,7 @@ const authService = {
     localStorage.setItem('authToken', authData.token);
     localStorage.setItem('user', JSON.stringify(authData.user));
     localStorage.setItem('assignments', JSON.stringify(authData.assignments));
-    
+
     // Декодируем JWT для получения срока действия
     const tokenParts = authData.token.split('.');
     if (tokenParts.length === 3) {
@@ -95,11 +95,11 @@ const authService = {
   isAuthenticated(): boolean {
     const token = localStorage.getItem('authToken');
     const tokenExpires = localStorage.getItem('tokenExpires');
-    
+
     if (!token || !tokenExpires) {
       return false;
     }
-    
+
     // Проверяем, не истек ли срок действия токена
     return Number(tokenExpires) > Date.now();
   },
@@ -138,26 +138,26 @@ const authService = {
   // Определение начальной страницы в зависимости от основной роли и привязок
   determineHomePage(user: User, assignments: Assignments): string {
     const primaryRole = user.primaryRole.toLowerCase();
-    
+
     switch (primaryRole) {
       case 'admin':
         return '/settings';
         
-      case 'nosmen':
-        return '/nosmenmachine';
-        
-      case 'ypakmaster':
-        return '/ypakmaster';
-        
-      case 'ypakoperator':
-        return '/ypakmachine';
-        
-      case 'complect':
-        return '/complect';
-        
       case 'master':
         return '/master';
-        
+
+      case 'management':
+        return '/settings';
+
+      case 'technologist':
+        return '/settings';
+
+      case 'orderPicker':
+        return '/ypakmachine';
+
+      case 'workplace':
+        return '/machine';
+
       case 'operator':
         if (assignments.machines && assignments.machines.length > 0) {
           // Если есть только один станок, направляем сразу на него
@@ -170,20 +170,20 @@ const authService = {
         } else {
           return '/machine';
         }
-        
+
       default:
         // Если основная роль не определена, проверяем доступные роли
         if (user.roles && user.roles.length > 0) {
           // Приоритет ролей для определения страницы по умолчанию
-          const rolePriority = ['admin', 'master', 'operator', 'complect', 'nosmen', 'ypakmaster', 'ypakoperator'];
-          
+          const rolePriority = ['admin', 'master', 'management', 'technologist', 'orderPicker', 'workplace', 'operator'];
+
           for (const role of rolePriority) {
             if (user.roles.includes(role)) {
               return this.determineHomePage({ ...user, primaryRole: role }, assignments);
             }
           }
         }
-        
+
         // По умолчанию направляем на страницу авторизации
         return '/login';
     }
@@ -195,12 +195,12 @@ const authService = {
     if (!user) {
       return '';
     }
-    
+
     // Используем fullName если доступно, иначе составляем из firstName и lastName
     if (user.fullName) {
       return user.fullName;
     }
-    
+
     const firstName = user.firstName || '';
     const lastName = user.lastName || '';
     return `${firstName} ${lastName}`.trim();

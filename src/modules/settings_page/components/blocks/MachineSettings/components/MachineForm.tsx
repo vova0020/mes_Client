@@ -14,7 +14,7 @@ interface FormData {
   status: MachineStatus;
   recommendedLoad: string;
   loadUnit: string;
-  isTaskChangeable: boolean;
+  noSmenTask: boolean;
 }
 
 interface FormErrors {
@@ -34,7 +34,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
     status: MachineStatus.INACTIVE,
     recommendedLoad: '',
     loadUnit: 'кг',
-    isTaskChangeable: false,
+    noSmenTask: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -55,7 +55,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
         status: existingMachine.status,
         recommendedLoad: existingMachine.recommendedLoad.toString(),
         loadUnit: existingMachine.loadUnit,
-        isTaskChangeable: existingMachine.isTaskChangeable,
+        noSmenTask: existingMachine.noSmenTask,
       });
     }
   }, [isEditing, existingMachine]);
@@ -124,7 +124,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
         status: formData.status,
         recommendedLoad: parseFloat(formData.recommendedLoad),
         loadUnit: formData.loadUnit.trim(),
-        isTaskChangeable: formData.isTaskChangeable,
+        noSmenTask: formData.noSmenTask,
       };
 
       if (isEditing && editId) {
@@ -261,16 +261,16 @@ export const MachineForm: React.FC<MachineFormProps> = ({
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={formData.isTaskChangeable}
-              onChange={(e) => handleInputChange('isTaskChangeable', e.target.checked)}
+              checked={formData.noSmenTask}
+              onChange={(e) => handleInputChange('noSmenTask', e.target.checked)}
               className={styles.checkbox}
             />
             <span className={styles.checkboxText}>
-              Возможность изменения задач
+              Без сменного задания
             </span>
           </label>
           <div className={styles.fieldHelp}>
-            Если включено, задачи для этого станка можно будет изменять в процессе работы
+            Если включено, то станок работает без сменного задания
           </div>
         </div>
 

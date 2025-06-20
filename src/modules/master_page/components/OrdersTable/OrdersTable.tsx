@@ -54,8 +54,8 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   };
 
   const calculateProgress = (order: Order) => {
-    if (order.progress !== undefined) {
-      return `${order.progress.toFixed(1)}%`;
+    if (order.completionPercentage !== undefined) {
+      return `${order.completionPercentage.toFixed(1)}%`;
     }
     if ('status' in order) {
       const status = (order as any).status;
@@ -164,7 +164,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 onClick={() => handleOrderClick(order.id)}
               >
                 <div className={styles.orderTitle}>
-                  {order.runNumber} - {order.name || 'Без названия'}
+                  {order.batchNumber} - {order.orderName || 'Без названия'}
                 </div>
                 <div className={styles.orderInfo}>
                   <div className={styles.orderAvailability}>

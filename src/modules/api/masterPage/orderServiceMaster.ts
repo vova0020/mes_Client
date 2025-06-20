@@ -5,9 +5,9 @@ import { API_URL } from '../config';
 // Интерфейс заказа (расширьте при необходимости)
 export interface Order {
   id: number;
-  runNumber: string;
-  name: string;
-  progress: number;
+  batchNumber: string;
+  orderName: string;
+  completionPercentage: number;
   // добавьте дополнительные поля, если нужно
 }
 

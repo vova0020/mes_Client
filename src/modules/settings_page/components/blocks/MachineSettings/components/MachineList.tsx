@@ -229,8 +229,8 @@ export const MachineList: React.FC<MachineListProps> = ({
                 <div className={styles.machineFeatures}>
                   <span className={styles.featuresLabel}>Особенности:</span>
                   <div className={styles.featuresTags}>
-                    <span className={`${styles.featureTag} ${machine.isTaskChangeable ? styles.taskChangeableTag : ''}`}>
-                      {machine.isTaskChangeable ? 'Изменяемые задачи' : 'Фиксированные задачи'}
+                    <span className={`${styles.featureTag} ${machine.noSmenTask ? styles.taskChangeableTag : ''}`}>
+                      {machine.noSmenTask ? 'Без сменного задания' : 'Со сменными заданиями'}
                     </span>
                   </div>
                 </div>
