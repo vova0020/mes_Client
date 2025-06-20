@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSocket } from '../../../../../../contexts/SocketContext';
 import { USERS_QUERY_KEYS } from './useUsersQuery';
-import { User } from '../services/usersApi';
+import { User, Picker } from '../services/usersApi';
 
 interface SocketUserEvents {
   'user:created': (data: { userId: number; login: string; firstName: string; lastName: string }) => void;
@@ -12,6 +12,9 @@ interface SocketUserEvents {
   'user:role:removed': (data: { userId: number; role: string; type: string }) => void;
   'user:role:binding:created': (data: { userId: number; role: string; contextType: string; contextId: number }) => void;
   'user:role:binding:removed': (data: { bindingId: number; userId: number; role: string; contextType: string; contextId: number }) => void;
+  'picker:created': (data: { pickerId: number; userId: number; userName: string }) => void;
+  'picker:updated': (data: { pickerId: number; userId: number }) => void;
+  'picker:deleted': (data: { pickerId: number; userId: number }) => void;
 }
 
 export const useUsersSocket = () => {
@@ -24,10 +27,13 @@ export const useUsersSocket = () => {
       return;
     }
 
-    console.log('[useUsersSocket] Настройка обработчиков событий пользователей');
+    console.log('[useUsersSocket] Настройка обработчиков событий пользователей и комплектовщиков');
 
-    // Присоединяемся к комнате пользователей
+    // Присоединяемся к комнатам
     joinRoom('joinUsersRoom');
+    joinRoom('joinPickersRoom');
+
+    // Обработчики событий пользователей
 
     // Обработчик создания пользователя
     const handleUserCreated = (data: any) => {
@@ -91,6 +97,7 @@ export const useUsersSocket = () => {
       // Удаляем связанные данные из кеша
       queryClient.removeQueries({ queryKey: USERS_QUERY_KEYS.detail(data.userId) });
       queryClient.removeQueries({ queryKey: USERS_QUERY_KEYS.userRoles(data.userId) });
+      queryClient.removeQueries({ queryKey: USERS_QUERY_KEYS.pickerByUser(data.userId) });
     };
 
     // Обработчик назначения роли
@@ -125,7 +132,76 @@ export const useUsersSocket = () => {
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.userRoles(data.userId) });
     };
 
-    // Регистрируем обработчики событий
+    // Обработчики событий комплектовщиков
+
+    // Обработчик создания комплектовщика
+    const handlePickerCreated = (data: any) => {
+      console.log('[useUsersSocket] Комплектовщик создан:', data);
+      
+      // Инвалидируем список комплектовщиков для обновления
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.pickersList() });
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.contextPickers() });
+      
+      // Можно также добавить комплектовщика напрямую в кеш, если есть полные данные
+      if (data.picker) {
+        queryClient.setQueryData(
+          USERS_QUERY_KEYS.pickersList(),
+          (oldData: Picker[] | undefined) => {
+            if (oldData && !oldData.find(p => p.pickerId === data.picker.pickerId)) {
+              return [...oldData, data.picker];
+            }
+            return oldData;
+          }
+        );
+      }
+    };
+
+    // Обработчик обновления комплектовщика
+    const handlePickerUpdated = (data: any) => {
+      console.log('[useUsersSocket] Комплектовщ��к обновлен:', data);
+      
+      // Инвалидируем список комплектовщиков и детали конкретного комплектовщика
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.pickersList() });
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.pickerDetail(data.pickerId) });
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.contextPickers() });
+      
+      // Обновляем данные в кеше, если есть полная информация
+      if (data.picker) {
+        queryClient.setQueryData(
+          USERS_QUERY_KEYS.pickersList(),
+          (oldData: Picker[] | undefined) => {
+            return oldData?.map(picker => 
+              picker.pickerId === data.picker.pickerId ? data.picker : picker
+            ) || [];
+          }
+        );
+        
+        queryClient.setQueryData(
+          USERS_QUERY_KEYS.pickerDetail(data.pickerId),
+          data.picker
+        );
+      }
+    };
+
+    // Обработчик удаления комплектовщика
+    const handlePickerDeleted = (data: any) => {
+      console.log('[useUsersSocket] Комплектовщик удален:', data);
+      
+      // Уда��яем комплектовщика из кеша
+      queryClient.setQueryData(
+        USERS_QUERY_KEYS.pickersList(),
+        (oldData: Picker[] | undefined) => {
+          return oldData?.filter(picker => picker.pickerId !== data.pickerId) || [];
+        }
+      );
+
+      // Удаляем связанные данные из кеша
+      queryClient.removeQueries({ queryKey: USERS_QUERY_KEYS.pickerDetail(data.pickerId) });
+      queryClient.removeQueries({ queryKey: USERS_QUERY_KEYS.pickerByUser(data.userId) });
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.contextPickers() });
+    };
+
+    // Регистрируем обработчики событий пользователей
     socket.on('user:created', handleUserCreated);
     socket.on('user:updated', handleUserUpdated);
     socket.on('user:deleted', handleUserDeleted);
@@ -134,10 +210,16 @@ export const useUsersSocket = () => {
     socket.on('user:role:binding:created', handleBindingCreated);
     socket.on('user:role:binding:removed', handleBindingRemoved);
 
+    // Регистрируем обработчики событий комплектовщиков
+    socket.on('picker:created', handlePickerCreated);
+    socket.on('picker:updated', handlePickerUpdated);
+    socket.on('picker:deleted', handlePickerDeleted);
+
     // Общие обработчики для отладки
     const handleConnect = () => {
       console.log('[useUsersSocket] Подключен к Socket.IO серверу');
       joinRoom('joinUsersRoom'); // Переподключаемся к комнате при восстановлении соединения
+      joinRoom('joinPickersRoom');
     };
 
     const handleDisconnect = (reason: string) => {
@@ -154,12 +236,13 @@ export const useUsersSocket = () => {
 
     // Очистка при размонтировании компонента
     return () => {
-      console.log('[useUsersSocket] Отключение обработчиков событий пользователей');
+      console.log('[useUsersSocket] Отключение обработчиков событий пользователей и комплектовщиков');
       
-      // Отключаемся от комнаты
+      // Отключаемся от комнат
       leaveRoom('joinUsersRoom');
+      leaveRoom('joinPickersRoom');
       
-      // Удаляем обработчики событий
+      // Удаляем обработчики событий пользователей
       socket.off('user:created', handleUserCreated);
       socket.off('user:updated', handleUserUpdated);
       socket.off('user:deleted', handleUserDeleted);
@@ -167,6 +250,12 @@ export const useUsersSocket = () => {
       socket.off('user:role:removed', handleRoleRemoved);
       socket.off('user:role:binding:created', handleBindingCreated);
       socket.off('user:role:binding:removed', handleBindingRemoved);
+      
+      // Удаляем обработчики событий комплектовщиков
+      socket.off('picker:created', handlePickerCreated);
+      socket.off('picker:updated', handlePickerUpdated);
+      socket.off('picker:deleted', handlePickerDeleted);
+      
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);

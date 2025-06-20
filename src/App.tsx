@@ -10,6 +10,7 @@ import MasterYpakPage from './modules/master_ypak_page/MasterYpakPage';
 import YpakMachinePage from './modules/ypak_machin_page/YpakMachinePage';
 import ComplectPage from './modules/complectPage/ComplectPage';
 import SettingsPage from './modules/settings_page/SettingsPage';
+import DetailsReferencePage from './modules/detailsReference/DetailsReference';
 
 
 function App() {
@@ -25,8 +26,11 @@ function App() {
             <Route path="/machine" element={<MachinePage />} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="admin" />}>
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings" element={<DetailsReferencePage />} />
           </Route>
+          {/* <Route element={<ProtectedRoute requiredRole="admin" />}>
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route> */}
           
           {/* Защищенные маршруты для мастеров и администраторов */}
           <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} />}>

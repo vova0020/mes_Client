@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useUser, useCreateUser, useUpdateUser } from '../hooks/useUsersQuery';
+import { useUser, useCreateUser, useUpdateUser, useCreatePickerWithRole } from '../hooks/useUsersQuery';
 import { CreateUserDto, UpdateUserDto } from '../services/usersApi';
 import styles from './UserForm.module.css';
 
@@ -17,6 +17,7 @@ interface FormData {
   phone: string;
   position: string;
   salary: string;
+  createPicker: boolean;
 }
 
 interface FormErrors {
@@ -42,6 +43,7 @@ export const UserForm: React.FC<UserFormProps> = ({
     phone: '',
     position: '',
     salary: '',
+    createPicker: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -51,6 +53,7 @@ export const UserForm: React.FC<UserFormProps> = ({
   const { data: existingUser, isLoading: isLoadingUser } = useUser(editId);
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
+  const createPickerWithRoleMutation = useCreatePickerWithRole();
 
   const isEditing = !!editId;
   const title = isEditing ? 'Редактировать пользователя' : 'Создать пользователя';
@@ -66,6 +69,7 @@ export const UserForm: React.FC<UserFormProps> = ({
         phone: existingUser.userDetail.phone || '',
         position: existingUser.userDetail.position || '',
         salary: existingUser.userDetail.salary?.toString() || '',
+        createPicker: false, // При редактировании не показываем опцию создания комплектовщика
       });
     }
   }, [isEditing, existingUser]);
@@ -89,7 +93,7 @@ export const UserForm: React.FC<UserFormProps> = ({
       if (!formData.password.trim()) {
         newErrors.password = 'Пароль обязателен';
       } else if (formData.password.length < 6) {
-        newErrors.password = 'Пароль должен содержать минимум 6 символов';
+        newErrors.password = 'Пароль должен содержать минимум 6 символ��в';
       } else if (formData.password.length > 100) {
         newErrors.password = 'Пароль не должен превышать 100 символов';
       }
@@ -99,7 +103,7 @@ export const UserForm: React.FC<UserFormProps> = ({
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'Имя обязательно';
     } else if (formData.firstName.length < 2) {
-      newErrors.firstName = 'Имя должно содержать мин��мум 2 символа';
+      newErrors.firstName = 'Имя должно содержать минимум 2 символа';
     } else if (formData.firstName.length > 50) {
       newErrors.firstName = 'Имя не должно превышать 50 символов';
     }
@@ -139,11 +143,11 @@ export const UserForm: React.FC<UserFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Очищаем ошибку для этого поля при изменении
-    if (errors[field]) {
+    // Очищаем ошибку для этого поля при изменении (только для строко��ых полей)
+    if (typeof value === 'string' && errors[field as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
@@ -182,25 +186,44 @@ export const UserForm: React.FC<UserFormProps> = ({
       if (formData.salary.trim()) {
         const salaryValue = parseFloat(formData.salary);
         if (!isNaN(salaryValue)) {
-          userData.salary = salaryValue; // Отправляем как число, а не строку
+          userData.salary = salaryValue; // Отп��авляем как число, а не строку
         }
       }
-      // Если зарплата пустая, не добавляем это поле в userData
 
       console.log('Отправляемые данные:', userData);
 
+      let createdUser;
+
       if (isEditing && editId) {
-        await updateMutation.mutateAsync({
+        const updatedUser = await updateMutation.mutateAsync({
           id: editId,
           data: userData as UpdateUserDto,
         });
+        console.log('Пользователь успешно обновлен:', updatedUser);
       } else {
-        await createMutation.mutateAsync(userData as CreateUserDto);
+        createdUser = await createMutation.mutateAsync(userData as CreateUserDto);
+        console.log('Пользователь успешно создан:', createdUser);
+
+        // Если выбрано создание комплектовщика, создаем его после создания пользователя
+        if (formData.createPicker && createdUser) {
+          try {
+            console.log('Создаем комплектовщика для пользователя:', createdUser.userId);
+            const pickerResponse = await createPickerWithRoleMutation.mutateAsync({
+              userId: createdUser.userId,
+              assignRole: true, // Автоматически назначаем роль комплектовщика
+            });
+            console.log('Комплектовщик успешно создан:', pickerResponse);
+          } catch (pickerError: any) {
+            console.error('Ошибка создания комплектовщика:', pickerError);
+            // Показываем предупреждение, но не блокируем завершение создания пользователя
+            alert(`Пользователь создан, но произошла ошибка при создании комплектовщика: ${pickerError.message}`);
+          }
+        }
       }
 
       onSaved();
     } catch (error: any) {
-      console.error('Ошиб��а сохранения пользователя:', error);
+      console.error('Ошибка сохранения пользователя:', error);
       
       // Показываем ошибку пользователю
       if (error.response?.data?.message) {
@@ -384,6 +407,29 @@ export const UserForm: React.FC<UserFormProps> = ({
             Оставьте пустым, если зарплата не указана
           </small>
         </div>
+
+        {/* Создать комплектовщика (только при создании нового пользователя) */}
+        {!isEditing && (
+          <div className={styles.field}>
+            <div className={styles.checkboxContainer}>
+              <input
+                id="createPicker"
+                type="checkbox"
+                checked={formData.createPicker}
+                onChange={(e) => handleInputChange('createPicker', e.target.checked)}
+                className={styles.checkbox}
+              />
+              <label htmlFor="createPicker" className={styles.checkboxLabel}>
+                <span className={styles.checkboxText}>
+                  Создать комплектовщика
+                </span>
+                <small className={styles.checkboxHint}>
+                  Автоматически создаст комплектовщика с назначенной ролью orderPicker
+                </small>
+              </label>
+            </div>
+          </div>
+        )}
 
         {/* Кнопки */}
         <div className={styles.actions}>

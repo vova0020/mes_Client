@@ -1,0 +1,224 @@
+.mesPage {
+  display: flex;
+  flex-direction: row;
+  height: 100vh; /* Высота на весь экран */
+  width: 100%;
+  font-family: sans-serif;
+  background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
+  overflow: hidden; /* Предотвращает прокрутку на уровне всей страницы */
+}
+
+/* Блок с боковой панелью */
+.Sidebar_Block {
+  width: 120px; /* Уменьшенная фиксированная ширина для сайдбара */
+  height: 100%; /* Высота на весь экран */
+  background-color: transparent; /* Прозрачный фон, чтобы был виден сайдбар */
+  padding: 10px 10px; /* Уменьшенные отступы для сайдбара */
+  box-sizing: border-box; /* Учитываем padding в общей ширине */
+  display: flex; /* Используем flex для центрирования */
+  align-items: center; /* Центрирование по вертикали */
+  justify-content: center; /* Центрирование по горизонтали */
+  overflow: hidden; /* Предотвращаем выход содержимого за границы */
+  transition: width 0.3s ease; /* Плавный переход при изменении ширины */
+}
+
+/* Основной блок контента */
+.Content_Block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Высота на весь экран */
+  padding: 10px 15px 10px 5px;
+  box-sizing: border-box; /* Учитываем padding в общей высоте */
+  overflow: hidden; /* Предотвращает прокрутку на уровне Content_Block */
+}
+
+/* Блок заголовка */
+.headerBlock {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  flex-shrink: 0; /* Запрещаем сжиматься */
+}
+
+/* Основной контейнер */
+.mainContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Занимает все доступное пространство */
+  min-height: 0; /* Важно для корректной работы flex в Firefox */
+  overflow: hidden; /* Предотвращает прокрутку на уровне mainContainer */
+}
+
+/* Контейнер для содержимого настроек */
+.settingsContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* Стили для приветственного экрана */
+.welcomeContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #555;
+}
+
+.welcomeContent h2 {
+  font-size: 28px;
+  margin-bottom: 16px;
+  color: #374051;
+}
+
+.welcomeContent p {
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+/* Стили для временных заглушек */
+.placeholderContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 20px;
+  color: #666;
+  text-align: center;
+  background: linear-gradient(to bottom, #f8f8f8, #eaeaea);
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+}
+
+/* Общие стил�� для карточек в настройках */
+.settingsCard {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.settingsCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.settingsCardHeader {
+  padding: 16px;
+  background: linear-gradient(to right, #374051, #2d3441);
+  color: white;
+  font-weight: 500;
+}
+
+.settingsCardBody {
+  padding: 16px;
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
+  /* Стили для fullWidthSection уже настроены на 100% */
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  /* Стили для fullWidthSection уже настроены на 100% */
+}
+
+/* Планшеты (от 768px до 991px) */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .Sidebar_Block {
+    width: 80px;
+    padding: 8px;
+  }
+  
+  .Content_Block {
+    padding: 8px 12px 8px 4px;
+  }
+}
+
+/* Малые планшеты и большие телефоны (от 576px до 767px) */
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .mesPage {
+    flex-direction: row; /* Сохраняем горизонтальную структуру */
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .Sidebar_Block {
+    width: 60px; /* Уменьшаем ширину сайдбара */
+    padding: 5px;
+  }
+  
+  .Content_Block {
+    padding: 8px;
+    flex: 1;
+  }
+  
+  .headerBlock {
+    margin-bottom: 10px;
+  }
+  
+  /* Уменьшаем размер шрифта для лучшей читаемости на маленьких экранах */
+  .mesPage {
+    font-size: 14px;
+  }
+  
+  .settingsContent {
+    padding: 12px;
+  }
+}
+
+/* Мобильные телефоны (до 575px) */
+@media screen and (max-width: 575px) {
+  .mesPage {
+    flex-direction: row; /* Сохраняем горизонтальную структуру */
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .Sidebar_Block {
+    width: 45px; /* Минимальная ширина сайдбара */
+    padding: 3px;
+  }
+  
+  .Content_Block {
+    padding: 5px;
+    flex: 1;
+  }
+  
+  .headerBlock {
+    margin-bottom: 8px;
+  }
+  
+  /* Уменьшаем размер шрифта для лучшей читаемости на маленьких экранах */
+  .mesPage {
+    font-size: 12px;
+  }
+  
+  .settingsContent {
+    padding: 10px;
+  }
+  
+  .welcomeContent h2 {
+    font-size: 20px;
+  }
+  
+  .welcomeContent p {
+    font-size: 14px;
+  }
+}

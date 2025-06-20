@@ -119,6 +119,33 @@ export interface UpdateUserDto {
   salary?: number;
 }
 
+// Типы для комплектовщиков
+export interface Picker {
+  pickerId: number;
+  userId: number;
+  user: User;
+  createdAt: string;
+}
+
+export interface CreatePickerDto {
+  userId: number;
+}
+
+export interface CreatePickerWithRoleDto {
+  userId: number;
+  assignRole?: boolean; // по умолчанию true
+}
+
+export interface UpdatePickerDto {
+  userId?: number;
+}
+
+export interface CreatePickerWithRoleResponse {
+  picker: Picker;
+  roleBindingId?: number;
+  message: string;
+}
+
 export interface UserRoles {
   userId: number;
   globalRoles: string[];
@@ -219,6 +246,77 @@ export class UsersApiService {
       await apiClient.delete(`${USERS_URL}/${id}`);
     } catch (error: any) {
       throw new Error(error.message || 'Ошибка удаления пользователя');
+    }
+  }
+
+  // Управление комплектовщиками
+
+  // Получить всех комплектовщиков
+  static async getAllPickers(): Promise<Picker[]> {
+    try {
+      const response = await apiClient.get<Picker[]>(`${USERS_URL}/pickers`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Ошибка получения комплектовщиков');
+    }
+  }
+
+  // Получить комплектовщика по ID
+  static async getPickerById(id: number): Promise<Picker> {
+    try {
+      const response = await apiClient.get<Picker>(`${USERS_URL}/pickers/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Ошибка получения комплектовщика');
+    }
+  }
+
+  // Получить комплектовщика по ID пользователя
+  static async getPickerByUserId(userId: number): Promise<Picker> {
+    try {
+      const response = await apiClient.get<Picker>(`${USERS_URL}/pickers/by-user/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Ошибка получения комплектовщика по ID пользователя');
+    }
+  }
+
+  // Создать комплектовщика
+  static async createPicker(data: CreatePickerDto): Promise<Picker> {
+    try {
+      const response = await apiClient.post<Picker>(`${USERS_URL}/pickers`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Ошибка создания комплектовщика');
+    }
+  }
+
+  // Создать комплектовщика с ролью
+  static async createPickerWithRole(data: CreatePickerWithRoleDto): Promise<CreatePickerWithRoleResponse> {
+    try {
+      const response = await apiClient.post<CreatePickerWithRoleResponse>(`${USERS_URL}/pickers/with-role`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Ошибка создания комплектовщика с ролью');
+    }
+  }
+
+  // Обновить комплектовщика
+  static async updatePicker(id: number, data: UpdatePickerDto): Promise<Picker> {
+    try {
+      const response = await apiClient.put<Picker>(`${USERS_URL}/pickers/${id}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Ошибка обновления комплектовщика');
+    }
+  }
+
+  // Удалить комплектовщика
+  static async deletePicker(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`${USERS_URL}/pickers/${id}`);
+    } catch (error: any) {
+      throw new Error(error.message || 'Ошибка удаления комплектовщика');
     }
   }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   useUserRoles, 
@@ -9,7 +10,10 @@ import {
   useContextMachines,
   useContextStages,
   useContextPickers,
-  useUsers
+  useUsers,
+  usePickerByUserId,
+  useCreatePickerWithRole,
+  useDeletePicker
 } from '../hooks/useUsersQuery';
 import { User, CreateRoleBindingDto } from '../services/usersApi';
 import styles from './UserDetails.module.css';
@@ -25,10 +29,11 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   selectedUser, 
   onUserUpdated 
 }) => {
-  const [activeTab, setActiveTab] = useState<'info' | 'roles'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'roles' | 'picker'>('info');
   const [showAddRoleModal, setShowAddRoleModal] = useState(false);
   const [showAddBindingModal, setShowAddBindingModal] = useState(false);
   const [selectedContextType, setSelectedContextType] = useState<ContextType>('MACHINE');
+  const [showCreatePickerModal, setShowCreatePickerModal] = useState(false);
 
   const { data: userRoles } = useUserRoles(selectedUser?.userId);
   const { data: availableRoles } = useAvailableRoles();
@@ -36,22 +41,29 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   const { data: contextStages = [] } = useContextStages();
   const { data: contextPickers = [] } = useContextPickers();
   const { data: users = [] } = useUsers();
+  const { data: userPicker, error: pickerError } = usePickerByUserId(selectedUser?.userId);
   
   const assignGlobalRoleMutation = useAssignGlobalRole();
   const removeGlobalRoleMutation = useRemoveGlobalRole();
   const createBindingMutation = useCreateRoleBinding();
   const removeBindingMutation = useRemoveRoleBinding();
+  const createPickerWithRoleMutation = useCreatePickerWithRole();
+  const deletePickerMutation = useDeletePicker();
 
   // Получаем актуальные данные пользователя из списка
   const currentUser = selectedUser 
     ? users.find(u => u.userId === selectedUser.userId) || selectedUser
     : null;
 
+  // Проверяем, есть ли у пользователя комплектовщик
+  const hasPickerRole = userRoles?.globalRoles.includes('orderPicker') || 
+    userRoles?.roleBindings.some(binding => binding.role === 'orderPicker');
+
   // Уведомляем родительский компонент об обновлении
   useEffect(() => {
     if (currentUser && onUserUpdated && selectedUser) {
       if (JSON.stringify(currentUser) !== JSON.stringify(selectedUser)) {
-        console.log('[UserDetails] Обнаружено обновление пользователя, уведомляем родителя');
+        console.log('[UserDetails] Обнаружено обновление поль��ователя, уведомляем родителя');
         onUserUpdated(currentUser);
       }
     }
@@ -124,7 +136,39 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
         console.log('[UserDetails] Контекстная привязка успешно удалена');
       } catch (error) {
         console.error('Ошибка удаления контекстной привязки:', error);
-        alert('Ошибка удаления контекстной привязки. Попробуйте еще раз.');
+        alert('Ошибка удаления контекстной привязки. Поп��обуйте еще раз.');
+      }
+    }
+  };
+
+  const handleCreatePicker = async () => {
+    if (!currentUser) return;
+    
+    try {
+      console.log('[UserDetails] Создаем ��омплектовщика для пользователя:', currentUser.userId);
+      await createPickerWithRoleMutation.mutateAsync({
+        userId: currentUser.userId,
+        assignRole: true
+      });
+      setShowCreatePickerModal(false);
+      console.log('[UserDetails] Комплектовщик успешно создан');
+    } catch (error) {
+      console.error('Ошибка создания комплект��вщика:', error);
+      alert('Ошибка создания комплектовщика. Попробуйте еще раз.');
+    }
+  };
+
+  const handleDeletePicker = async () => {
+    if (!currentUser || !userPicker) return;
+    
+    if (window.confirm('Вы уверены, что хотите удалить комплектовщика? Это действие нельзя отменить.')) {
+      try {
+        console.log('[UserDetails] Удаляем комплектовщика:', userPicker.pickerId);
+        await deletePickerMutation.mutateAsync(userPicker.pickerId);
+        console.log('[UserDetails] Комплектовщик успешно удален');
+      } catch (error) {
+        console.error('Ошибка удаления комплектовщика:', error);
+        alert('Ошибка удаления комплектовщика. Попробуйте еще раз.');
       }
     }
   };
@@ -227,6 +271,11 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               {currentUser.userDetail.firstName} {currentUser.userDetail.lastName}
             </h2>
             <div className={styles.userLogin}>@{currentUser.login}</div>
+            {userPicker && (
+              <div className={styles.userBadge}>
+                🏷️ Комплектовщик ID: {userPicker.pickerId}
+              </div>
+            )}
           </div>
         </div>
         
@@ -242,6 +291,13 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
             onClick={() => setActiveTab('roles')}
           >
             Роли и привязки
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'picker' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('picker')}
+          >
+            Комплектовщик
+            {userPicker && <span className={styles.tabBadge}>✓</span>}
           </button>
         </div>
       </div>
@@ -307,7 +363,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   </span>
                 </div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Глобальных ролей:</span>
+                  <span className={styles.infoLabel}>Глобальных р��лей:</span>
                   <span className={styles.infoValue}>
                     {userRoles?.globalRoles.length || 0}
                   </span>
@@ -404,6 +460,98 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
             </div>
           </div>
         )}
+
+        {activeTab === 'picker' && (
+          <div className={styles.pickerTab}>
+            <div className={styles.pickerSection}>
+              <div className={styles.sectionHeader}>
+                <h3 className={styles.sectionTitle}>Комплектовщик</h3>
+                {!userPicker ? (
+                  <button
+                    onClick={() => setShowCreatePickerModal(true)}
+                    className={styles.addButton}
+                  >
+                    + Создать комплектовщика
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDeletePicker}
+                    className={styles.deleteButton}
+                    disabled={deletePickerMutation.isPending}
+                  >
+                    {deletePickerMutation.isPending ? '⏳ Удаление...' : '🗑️ Удалить комплектовщика'}
+                  </button>
+                )}
+              </div>
+              
+              {!userPicker ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>📦</div>
+                  <h4>Комплектовщик не создан</h4>
+                  <p>Этот пользователь пока не является комплектовщиком</p>
+                  <p className={styles.hint}>
+                    Создайте комплектовщика, чтобы пользователь мог работать с заказами
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.pickerInfo}>
+                  <div className={styles.pickerCard}>
+                    <div className={styles.pickerHeader}>
+                      <div className={styles.pickerIcon}>📦</div>
+                      <div className={styles.pickerTitleSection}>
+                        <h4 className={styles.pickerTitle}>
+                          Комплектовщик #{userPicker.pickerId}
+                        </h4>
+                        <p className={styles.pickerSubtitle}>
+                          {userPicker.user.userDetail.firstName} {userPicker.user.userDetail.lastName}
+                        </p>
+                      </div>
+                      <div className={styles.pickerStatus}>
+                        <span className={styles.statusBadge}>
+                          {hasPickerRole ? '✅ Активен' : '⚠️ Нет роли'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.pickerDetails}>
+                      <div className={styles.pickerRow}>
+                        <span className={styles.pickerLabel}>ID комплектовщика:</span>
+                        <span className={styles.pickerValue}>{userPicker.pickerId}</span>
+                      </div>
+                      <div className={styles.pickerRow}>
+                        <span className={styles.pickerLabel}>ID пользователя:</span>
+                        <span className={styles.pickerValue}>{userPicker.userId}</span>
+                      </div>
+                      <div className={styles.pickerRow}>
+                        <span className={styles.pickerLabel}>Логин:</span>
+                        <span className={styles.pickerValue}>{userPicker.user.login}</span>
+                      </div>
+                      <div className={styles.pickerRow}>
+                        <span className={styles.pickerLabel}>Создан:</span>
+                        <span className={styles.pickerValue}>
+                          {formatDate(userPicker.createdAt)}
+                        </span>
+                      </div>
+                      <div className={styles.pickerRow}>
+                        <span className={styles.pickerLabel}>Роль назначена:</span>
+                        <span className={styles.pickerValue}>
+                          {hasPickerRole ? 'Да' : 'Нет (требуется назначить роль orderPicker)'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {!hasPickerRole && (
+                      <div className={styles.pickerWarning}>
+                        <p>⚠️ Комплектовщик создан, но роль не назначена</p>
+                        <p>Перейдите на вкладку "Роли и привязки", чтобы назначить роль orderPicker</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Модальное окно добавления глобальной роли */}
@@ -492,6 +640,48 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно создания комплектовщика */}
+      {showCreatePickerModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowCreatePickerModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Создать комплектовщика</h3>
+              <button 
+                onClick={() => setShowCreatePickerModal(false)}
+                className={styles.closeButton}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalContent}>
+              <div className={styles.confirmationContent}>
+                <div className={styles.confirmationIcon}>📦</div>
+                <h4>Создать комплектовщика для пользователя?</h4>
+                <p>
+                  Пользователь <strong>{currentUser.userDetail.firstName} {currentUser.userDetail.lastName}</strong> 
+                  станет комплектовщиком с автоматически назначенной роль orderPicker.
+                </p>
+                <div className={styles.confirmationActions}>
+                  <button
+                    onClick={() => setShowCreatePickerModal(false)}
+                    className={styles.cancelButton}
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={handleCreatePicker}
+                    className={styles.confirmButton}
+                    disabled={createPickerWithRoleMutation.isPending}
+                  >
+                    {createPickerWithRoleMutation.isPending ? 'Создание...' : 'Создать комплектовщика'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
