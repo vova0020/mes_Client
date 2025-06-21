@@ -23,12 +23,12 @@ const getSegmentIdFromStorage = (): number | null => {
     }
     
     const parsedData = JSON.parse(assignmentsData);
-    if (!parsedData.segments || parsedData.segments.length === 0) {
-      console.error('Нет данных assignments отсутствуют segments');
+    if (!parsedData.stages || parsedData.stages.length === 0) {
+      console.error('Нет данных assignments отсутствуют stages');
       return null;
     }
     
-    return parsedData.segments[0].id;
+    return parsedData.stages[0].id;
   } catch (error) {
     console.error('Ошибка при получении segmentId из localStorage:', error);
     return null;
@@ -44,7 +44,7 @@ export const fetchDetailsByOrderId = async (orderId: number | null): Promise<Det
   const segmentId = getSegmentIdFromStorage();
   
   try {
-    const response = await axios.get(`${API_URL}/details/master/${orderId}/segment/${segmentId}`);
+    const response = await axios.get(`${API_URL}/production/details/master/${orderId}/segment/${segmentId}`);
     return response.data;
   } catch (error) {
     console.error('Ошибка при получении деталей:', error);

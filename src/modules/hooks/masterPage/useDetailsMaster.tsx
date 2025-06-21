@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Detail, fetchDetailsByOrderId } from '../../api/masterPage/detailServiceMaster'; 
 
@@ -16,10 +17,12 @@ const useDetails = (initialOrderId: number | null = null): UseDetailsResult => {
   const [error, setError] = useState<Error | null>(null);
   
   // Функция для получения деталей для конкретного заказа
-  // Мемоизируем функцию с useCallback, чтобы она не пересоздавалась п��и каждом рендере
+  // Мемоизируем функцию с useCallback, чтобы она не пересоздавалась при каждом рендере
   const fetchDetails = useCallback(async (orderId: number | null) => {
     if (orderId === null) {
       setDetails([]);
+      setLoading(false);
+      setError(null);
       return;
     }
     
@@ -31,6 +34,7 @@ const useDetails = (initialOrderId: number | null = null): UseDetailsResult => {
       setDetails(fetchedDetails);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Произошла неизвестная ошибка'));
+      setDetails([]); // Очищаем детали при ошибке
     } finally {
       setLoading(false); 
     }
