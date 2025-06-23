@@ -428,7 +428,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                               disabled={mapApiStatusToUiStatus(item.status) === 'completed' || availableMachinesLoading}
                             >
                               {availableMachines.map(machine => (
-                                <option key={machine.id} value={machine.id.toString()}>
+                                <option key={machine.id} value={machine.id}>
                                   {machine.name}
                                 </option>
                               ))}

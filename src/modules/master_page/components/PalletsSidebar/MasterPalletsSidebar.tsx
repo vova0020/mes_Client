@@ -46,12 +46,12 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       }
 
       const parsedData = JSON.parse(assignmentsData);
-      if (!parsedData.segments || parsedData.segments.length === 0) {
+      if (!parsedData.stages || parsedData.stages.length === 0) {
         setProcessStepIdError('Список сегментов в локальном хранилище пуст');
         return null;
       }
 
-      const segmentId = parsedData.segments[0].id;
+      const segmentId = parsedData.stages[0].id;
       if (typeof segmentId !== 'number') {
         setProcessStepIdError('Некорректный ID сегмента в локальном хранилище');
         return null;

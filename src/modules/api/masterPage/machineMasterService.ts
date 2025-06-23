@@ -47,12 +47,12 @@ const getSegmentIdFromStorage = (): number | null => {
     }
     
     const parsedData = JSON.parse(assignmentsData);
-    if (!parsedData.segments || parsedData.segments.length === 0) {
+    if (!parsedData.stages || parsedData.stages.length === 0) {
       console.error('Нет данных assignments отсутствуют segments');
       return null;
     }
     
-    return parsedData.segments[0].id;
+    return parsedData.stages[0].id;
   } catch (error) {
     console.error('Ошибка при получении segmentId из localStorage:', error);
     return null;
@@ -180,15 +180,15 @@ export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
     if (Array.isArray(response.data)) {
       // Если сервер возвращает массив напрямую
       return response.data.map((item: any) => ({
-        id: item.id,
-        name: item.name || item.code || '',
+        id: item.machineId,
+        name: item.machineName || item.code || '',
         status: item.status || 'ACTIVE'
       }));
     } else if (response.data.machines && Array.isArray(response.data.machines)) {
       // Если сервер возвращает объект с полем machines
       return response.data.machines.map((item: any) => ({
-        id: item.id,
-        name: item.name || item.code || '',
+        id: item.machineId,
+        name: item.machineName || item.code || '',
         status: item.status || 'ACTIVE'
       }));
     } else {

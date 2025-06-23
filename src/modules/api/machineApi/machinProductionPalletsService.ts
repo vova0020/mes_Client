@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
-// Определение интерфейсов согласно документации API
+// Определение интерфейсов согласно реальной структуре данных API
 export interface BufferCellDto {
   id: number;
   code: string;
@@ -24,6 +24,35 @@ export interface MachineDto {
   status: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE';
 }
 
+// Обновленный интерфейс для этапа маршрута
+export interface RouteStageDto {
+  id: number;
+  name: string;
+  sequence: number;
+}
+
+// Интерфейс для прогресса этапа
+export interface StageProgressDto {
+  id: number;
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED' | 'ON_MACHINE';
+  completedAt: string | null;
+  routeStage: RouteStageDto;
+}
+
+// Интерфейс для статуса обработки
+export interface ProcessingStatusDto {
+  isFirstStageInRoute: boolean;
+  hasCompletedPreviousStages: boolean;
+  currentStage: {
+    id: number;
+    name: string;
+  };
+  nextStage: {
+    id: number;
+    name: string;
+  } | null;
+}
+
 export interface ProcessStepDto {
   id: number;
   name: string;
@@ -38,12 +67,13 @@ export interface OperatorDto {
   };
 }
 
+// Исправленный интерфейс OperationDto с правильным типом completedAt
 export interface OperationDto {
   id: number;
   status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED'| 'ON_MACHINE';
   completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED'| 'BUFFERED'| 'ON_MACHINE';
   startedAt: string;
-  completedAt?: string;
+  completedAt: string | null; // Изменено с string | undefined на string | null для совместимости
   quantity?: number;
   productionPallet?: {
     id: number;
@@ -59,7 +89,21 @@ export interface OperationDto {
   isCompletedForDetail?: boolean; // Добавлено согласно документации
 }
 
-// Определение интерфейса для детали (добавлено для новой структуры данных)
+// Обновленный интерфейс для детали (part)
+export interface PartDto {
+  id: number;
+  article: string;
+  name: string;
+  material: string;
+  size: string;
+  totalNumber: number;
+  completed: number;
+  readyForProcessing: number;
+  status: string;
+  isCompletedForStage: boolean;
+}
+
+// Определение интерфейса для детали (добавлено для обратной совместимости)
 export interface DetailDto {
   id: number;
   article: string;
@@ -70,22 +114,30 @@ export interface DetailDto {
   // Другие поля детали, которые могут присутствовать
 }
 
-// Определение интерфейса для производственного поддона
+// Обновленный интерфейс для производственного поддона согласно реальной структуре API
 export interface ProductionPallet {
   id: number;
   name: string;
   quantity: number;
-  detailId: number;
   bufferCell: BufferCellDto | null;
   machine: MachineDto | null;
+  
+  // Новые поля согласно реальной структуре API
+  currentStageId: number;
+  currentStageName: string;
+  currentStageProgress: StageProgressDto;
+  part: PartDto;
+  processingStatus: ProcessingStatusDto;
+  status: string;
+  
+  // Старые поля для обратной совместимости
+  detailId?: number;
   currentOperation?: OperationDto | null;
   segmentId?: number;
-  
-  // Дополнительные поля из реальной структуры данных
   currentStepId?: number;
   currentStepName?: string;
   detail?: DetailDto;
-  currentStep?: ProcessStepDto; // Добавлено согласно документации
+  currentStep?: ProcessStepDto;
 }
 
 // Интерфейс для ответа API со списком поддонов
@@ -184,7 +236,7 @@ const getSegmentIdFromStorage = (): number | null => {
       return null;
     }
     
-    return parsedData.machines[0].segmentId;
+    return parsedData.machines[0].stages[0].id;
   } catch (error) {
     console.error('Ошибка при получении segmentId из localStorage:', error);
     return null;
@@ -192,30 +244,19 @@ const getSegmentIdFromStorage = (): number | null => {
 };
 
 // Функция для получения текста статуса операции в удобном для отображения формате
-export const getOperationStatusText = (operation?: OperationDto | null): string => {
+export const getOperationStatusText = (pallet?: ProductionPallet | null): string => {
   // Отладочный вывод
-  console.log('getOperationStatusText получил операцию:', operation);
   
-  // Проверка наличия операции
-  if (!operation) {
+  console.log('getOperationStatusText получил поддон:', pallet);
+  
+  // Проверка наличия поддона
+  if (!pallet) {
     return 'Не в обработке';
   }
   
-  // // Проверка completionStatus (если есть)
-  // if (operation.completionStatus) {
-  //   switch (operation.completionStatus) {
-  //     case 'COMPLETED': return 'Готово';
-  //     case 'PARTIALLY_COMPLETED': return 'Выполнено частично';
-  //     case 'ON_MACHINE': return 'Ожидает обработки';
-  //     case 'BUFFERED': return 'В буфере';
-  //     case 'IN_PROGRESS': return 'В работе';
-  //     default: return 'В обработке';
-  //   }
-  // } 
-  
-  // Если нет completionStatus, используем status
-  if (operation.status) {
-    switch (operation.status) {
+  // Используем currentStageProgress для определения статуса
+  if (pallet) {
+    switch (pallet.status) {
       case 'IN_PROGRESS': return 'В работе';
       case 'COMPLETED': return 'Готово';
       case 'ON_MACHINE': return 'Ожидает обработки';
@@ -225,63 +266,127 @@ export const getOperationStatusText = (operation?: OperationDto | null): string 
     }
   }
   
+  // // Проверка старого формата для обратной совместимости
+  // if (pallet.currentOperation) {
+  //   const operation = pallet.currentOperation;
+  //   if (operation.status) {
+  //     switch (operation.status) {
+  //       case 'IN_PROGRESS': return 'В работе';
+  //       case 'COMPLETED': return 'Готово';
+  //       case 'ON_MACHINE': return 'Ожидает обработки';
+  //       case 'FAILED': return 'Ошибка';
+  //       case 'BUFFERED': return 'В буфере';
+  //       default: return 'Не обрабатывается';
+  //     }
+  //   }
+  // }
+  
   // Если ничего не подошло
   return 'Статус неизвестен';
 };
 
 // Функция для получения текста текущего этапа обработки
-export const getProcessStepText = (operation?: OperationDto | null): string => {
-  if (!operation || !operation.processStep) return 'Нет данных';
+export const getProcessStepText = (pallet?: ProductionPallet | null): string => {
+  if (!pallet) return 'Нет данных';
   
-  const step = operation.processStep;
-  return `${step.name}${step.sequence ? ` (этап ${step.sequence})` : ''}`;
+  // Используем новую структуру данных
+  if (pallet.currentStageName) {
+    const sequence = pallet.currentStageProgress?.routeStage?.sequence;
+    return `${pallet.currentStageName}${sequence ? ` (этап ${sequence})` : ''}`;
+  }
+  
+  // Старый формат для обратной совместимости
+  if (pallet.currentOperation?.processStep) {
+    const step = pallet.currentOperation.processStep;
+    return `${step.name}${step.sequence ? ` (этап ${step.sequence})` : ''}`;
+  }
+  
+  return 'Нет данных';
 };
 
-// Функция для получения производственных поддонов по ID детали
+// Обновленная функция для получения производственных поддонов по ID детали
 export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<ProductionPallet[]> => {
   if (detailId === null) {
     return [];
   }
+  
   const segmentId = getSegmentIdFromStorage();
-    
-    if (segmentId === null) {
-      console.error('Не удалось получить ID сегмента из localStorage');
-      throw new Error('Не удалось получить ID сегмента из localStorage');
-    }
+  if (segmentId === null) {
+    console.error('Не удалось получить ID сегмента из localStorage');
+    throw new Error('Не удалось получить ID сегмента из localStorage');
+  }
+  
   try {
-    const response = await axios.get<PalletsResponseDto>(`${API_URL}/machins/pallets/detail/pallets`,{
+    const response = await axios.get<PalletsResponseDto>(`${API_URL}/machins/pallets/detail/pallets`, {
       params: {
         detailId: detailId,
         segmentId: segmentId
       }
     });
+    
     console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
     
-    // Обрабатываем данные от API - убеждаемся, что возвращаемый формат корректен
-    if (!response.data || !response.data.pallets) {
-      console.warn('Некорректный формат ответа API:', response.data);
-      
-      // Если ответ представляет собой напрямую массив (а не объект с полем pallets)
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      
+    // Обрабатываем новую структуру ответа {pallets, total}
+    if (!response.data) {
+      console.warn('Пустой ответ от API');
       return [];
     }
     
-    // Обрабатываем данные от API - убеждаемся, что currentOperation корректно определен
-    const processedPallets = response.data.pallets.map(pallet => {
-      // Дополнительная проверка и логирование для отладки
-      console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
-        hasCurrentOperation: !!pallet.currentOperation,
-        currentOperation: pallet.currentOperation,
-        currentStepName: pallet.currentStepName
+    // Если ответ представляет собой объект с полем pallets
+    if (response.data.pallets && Array.isArray(response.data.pallets)) {
+      const processedPallets = response.data.pallets.map(pallet => {
+        // Добавляем поля для обратной совместимости
+        const processedPallet: ProductionPallet = {
+          ...pallet,
+          // Маппинг новых полей в старые для обратной совместимости
+          detailId: pallet.part?.id || detailId,
+          detail: pallet.part ? {
+            id: pallet.part.id,
+            article: pallet.part.article,
+            name: pallet.part.name,
+            material: pallet.part.material,
+            size: pallet.part.size,
+            totalNumber: pallet.part.totalNumber
+          } : undefined,
+          currentStepId: pallet.currentStageId,
+          currentStepName: pallet.currentStageName,
+          // Создаем currentOperation из currentStageProgress для совместимости
+          currentOperation: pallet.currentStageProgress ? {
+            id: pallet.currentStageProgress.id,
+            status: pallet.currentStageProgress.status,
+            startedAt: new Date().toISOString(), // Заглушка, так как нет этого поля в новой структуре
+            completedAt: pallet.currentStageProgress.completedAt, // Теперь типы совместимы: string | null
+            processStep: pallet.currentStageProgress.routeStage ? {
+              id: pallet.currentStageProgress.routeStage.id,
+              name: pallet.currentStageProgress.routeStage.name,
+              sequence: pallet.currentStageProgress.routeStage.sequence
+            } : undefined,
+            isCompletedForDetail: pallet.part?.isCompletedForStage
+          } : null
+        };
+        
+        // Дополнительная проверка и логирование для отладки
+        console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
+          hasCurrentStageProgress: !!pallet.currentStageProgress,
+          currentStageProgress: pallet.currentStageProgress,
+          currentStageName: pallet.currentStageName,
+          processedOperation: processedPallet.currentOperation
+        });
+        
+        return processedPallet;
       });
       
-      return pallet;
-    });
+      return processedPallets;
+    }
     
-    return processedPallets;
+    // Если ответ представляет собой напрямую массив (старый формат)
+    if (Array.isArray(response.data)) {
+      console.log('Получен старый формат ответа (массив)');
+      return response.data;
+    }
+    
+    console.warn('Некорректный формат ответа API:', response.data);
+    return [];
   } catch (error) {
     console.error('Ошибка при получении поддонов детали:', error);
     throw error;
@@ -407,7 +512,6 @@ export const updateBufferCell = async (palletId: number, bufferCellId: number): 
     throw error;
   }
 };
-
 
 // Функция для получения маршрутного листа поддона
 export const getPalletRouteSheet = async (palletId: number): Promise<Blob> => {

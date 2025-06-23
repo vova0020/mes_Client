@@ -9,7 +9,7 @@ import {
   fetchBufferCellsBySegmentId,
   fetchMachinBySegmentId,
   OperationDto,
-  getCurrentOperation
+  // getCurrentOperation
 } from '../../api/masterPage/productionPalletsServiceMaster';
 
 // Определение интерфейса результата хука
@@ -77,10 +77,10 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
           const palletsWithOperations = await Promise.all(
             fetchedPallets.map(async (pallet) => {
               try {
-                const operation = await getCurrentOperation(pallet.id);
+                // const operation = await getCurrentOperation(pallet.id);
                 return {
                   ...pallet,
-                  currentOperation: operation // null или данные операции
+                  // currentOperation: operation // null или данные операции
                 };
               } catch (err) {
                 console.error(`Ошибка при получении операции для поддона ${pallet.id}:`, err);
@@ -113,7 +113,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       if (currentDetailId === null) return;
       
       // Получаем текущую операцию для поддона
-      const operation = await getCurrentOperation(palletId);
+      // const operation = await getCurrentOperation(palletId);
       
       // Обновляем состояние поддона в массиве
       setPallets(prevPallets => 
@@ -121,7 +121,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
           if (pallet.id === palletId) {
             return { 
               ...pallet, 
-              currentOperation: operation // null или данные операции
+              // currentOperation: operation // null или данные операции
             };
           }
           return pallet;

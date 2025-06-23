@@ -197,11 +197,11 @@ export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> =>
     
     try {
       const parsedData = JSON.parse(assignmentsData);
-      if (!parsedData.segments || parsedData.segments.length === 0) {
+      if (!parsedData.stages || parsedData.stages.length === 0) {
         console.error('В данных assignments отсутствуют segments');
         throw new Error('В данных assignments отсутствуют segments');
       }
-      segmentId = parsedData.segments[0].id;
+      segmentId = parsedData.stages[0].id;
     } catch (parseError) {
       console.error('Ошибка при парсинге данных из localStorage:', parseError);
       throw parseError;
@@ -242,11 +242,11 @@ export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
     
     try {
       const parsedData = JSON.parse(assignmentsData);
-      if (!parsedData.segments || parsedData.segments.length === 0) {
+      if (!parsedData.stages || parsedData.stages.length === 0) {
         console.error('В данных assignments отсутствуют segments');
         throw new Error('В данных assignments отсутствуют segments');
       }
-      segmentId = parsedData.segments[0].id;
+      segmentId = parsedData.stages[0].id;
     } catch (parseError) {
       console.error('Ошибка при парсинге данных из localStorage:', parseError);
       throw parseError;
@@ -259,15 +259,15 @@ export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
     if (Array.isArray(response.data)) {
       // Если сервер возвращает массив напрямую
       return response.data.map((item: any) => ({
-        id: item.id,
-        name: item.name || item.code || '',
+        id: item.machineId,
+        name: item.machineName || item.code || '',
         status: item.status || 'ACTIVE'
       }));
     } else if (response.data.machines && Array.isArray(response.data.machines)) {
       // Если сервер возвращает объект с полем machines
       return response.data.machines.map((item: any) => ({
-        id: item.id,
-        name: item.name || item.code || '',
+        id: item.machineId,
+        name: item.machineName || item.code || '',
         status: item.status || 'ACTIVE'
       }));
     } else {

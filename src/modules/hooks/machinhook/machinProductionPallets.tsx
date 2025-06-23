@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useCallback, useEffect } from 'react';
 import { 
   ProductionPallet, 
   fetchProductionPalletsByDetailId,
@@ -51,55 +52,16 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     setCurrentDetailId(detailId);
     
     try {
-      // Получаем данные о поддонах
+      // Получаем данные о поддонах - новая структура API уже содержит всю необходимую информацию
       const fetchedPallets = await fetchProductionPalletsByDetailId(detailId);
       
       // Отладочная информация
       console.log('Полученные данные о поддонах:', fetchedPallets);
       
-      if (fetchedPallets.length > 0) {
-        // Проверяем, есть ли у первого поддона данные об операции
-        const hasExistingOperations = fetchedPallets.some(p => p.currentOperation);
-        
-        if (hasExistingOperations) {
-          console.log('Поддоны уже содержат данные об операциях');
-          
-          // Убедимся, что currentOperation определен (не undefined)
-          const normalizedPallets = fetchedPallets.map(pallet => ({
-            ...pallet,
-            // Если currentOperation === undefined, то преобразуем его в null для единообразия
-            currentOperation: pallet.currentOperation === undefined ? null : pallet.currentOperation
-          }));
-          
-          setPallets(normalizedPallets);
-        } else {
-          console.log('Требуется дополнительный запрос для получения операций');
-          
-          // Если данных об операциях нет, делаем дополнительные запросы
-          const palletsWithOperations = await Promise.all(
-            fetchedPallets.map(async (pallet) => {
-              try {
-                const operation = await getCurrentOperation(pallet.id);
-                return {
-                  ...pallet,
-                  currentOperation: operation // null или данные операции
-                };
-              } catch (err) {
-                console.error(`Ошибка при получении операции для поддона ${pallet.id}:`, err);
-                return {
-                  ...pallet,
-                  currentOperation: null
-                };
-              }
-            })
-          );
-          
-          setPallets(palletsWithOperations);
-        }
-      } else {
-        // Если поддонов нет, просто устанавливаем пустой массив
-        setPallets([]);
-      }
+      // Устанавливаем полученные данные напрямую
+      // Новая структура API уже содержит currentStageProgress и другие необходимые поля
+      setPallets(fetchedPallets || []);
+      
     } catch (err) {
       console.error('Ошибка при получении поддонов:', err);
       setError(err instanceof Error ? err : new Error('Произошла неизвестная ошибка'));
@@ -114,25 +76,14 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       // Получаем текущий список поддонов и данные для текущей детали
       if (currentDetailId === null) return;
       
-      // Получаем текущую операцию для поддона
-      const operation = await getCurrentOperation(palletId);
+      // Перезагружаем все данные о поддонах для обеспечения актуальности
+      // Это проще и надежнее, чем обновлять отдельный поддон
+      await fetchPallets(currentDetailId);
       
-      // Обновляем состояние поддона в массиве
-      setPallets(prevPallets => 
-        prevPallets.map(pallet => {
-          if (pallet.id === palletId) {
-            return { 
-              ...pallet, 
-              currentOperation: operation // null или данные операции
-            };
-          }
-          return pallet;
-        })
-      );
     } catch (err) {
       console.error(`Ошибка обновления данных поддона ${palletId}:`, err);
     }
-  }, [currentDetailId]);
+  }, [currentDetailId, fetchPallets]);
 
   // Функция для изменения буферной ячейки поддона
   const handleUpdateBufferCell = useCallback(async (palletId: number, bufferCellId: number) => {
@@ -171,36 +122,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       // Отладочный вывод для проверки структуры ответа
       console.log(`Ответ API при завершении обработки поддона ${palletId}:`, response);
       
-      // Обновляем данные о поддоне с учетом новой структуры ответа API
-      if (response && response.pallet) {
-        // Обновляем информацию о поддоне в списке
-        setPallets(prevPallets => 
-          prevPallets.map(pallet => {
-            if (pallet.id === palletId) {
-              // Создаем обновленный поддон на основе ответа API
-              const updatedPallet = response.pallet;
-              
-              // Обновляем информацию о текущей операции
-              return { 
-                ...pallet, 
-                ...updatedPallet,
-                currentOperation: response.operation,
-                currentStepId: updatedPallet.currentStepId,
-                currentStep: updatedPallet.currentStep,
-              };
-            }
-            return pallet;
-          })
-        );
-        
-        // Выводим информацию о следующем шаге
-        if (response.nextStep) {
-          console.log(`Следующий шаг для поддона ${palletId}: ${response.nextStep}`);
-        }
-      } else {
-        // Если в ответе нет полной информации о поддоне, делаем стандартное обновление
-        await refreshPalletData(palletId);
-      }
+      // Обновляем данные о всех поддонах для обеспечения актуальности
+      await refreshPalletData(palletId);
       
       return response;
     } catch (err) {
@@ -211,7 +134,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
 
   // Функция для загрузки ресурсов выбранного сегмента
   const loadSegmentResources = useCallback(async () => {
-    setLoading(true);
+    // Не устанавливаем loading здесь, так как это может конфликтовать с загрузкой поддонов
     setError(null);
 
     try {
@@ -220,14 +143,13 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       console.log('Получены данные о ячейках буфера:', bufferCellsData);
       setBufferCells(bufferCellsData);
       
-      // Примечание: в productionPalletsService.ts нет функции fetchMachinBySegmentId
+      // Примечание: в productionPalletsService.ts нет функции fetchMachinesBySegmentId
       // Поэтому оставляем пустой массив для machines
       setMachines([]);
     } catch (err) {
       console.error('Ошибка при загрузке ресурсов сегмента:', err);
-      setError(err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке ресурсов'));
-    } finally {
-      setLoading(false);
+      // Не устанавливаем error здесь, так как это вспомогательная операция
+      // setError(err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке ресурсов'));
     }
   }, []);
   

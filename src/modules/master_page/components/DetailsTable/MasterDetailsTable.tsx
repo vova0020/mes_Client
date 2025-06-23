@@ -257,12 +257,12 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
       </div>
 
       {/* Боковая панель с поддонами, временно закоментировано чтобы не мешало отладке */}
-      {/* <PalletsSidebar 
+      <PalletsSidebar 
         detailId={selectedDetailForPallets} 
         detailInfo={selectedInfoDetailForPallets} 
         isOpen={sidebarOpen} 
         onClose={handleCloseSidebar} 
-      /> */}
+      />
     </div>
   );
 };

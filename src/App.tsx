@@ -22,7 +22,7 @@ function App() {
           <Route path="/login" element={<AuthPage />} />
           
           {/* Защищенные маршруты для операторов */}
-          <Route element={<ProtectedRoute requiredRole="operator" />}>
+          <Route element={<ProtectedRoute requiredRole="workplace" />}>
             <Route path="/machine" element={<MachinePage />} />
           </Route>
           {/* <Route element={<ProtectedRoute requiredRole="admin" />}>

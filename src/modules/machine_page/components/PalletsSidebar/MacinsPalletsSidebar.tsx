@@ -358,19 +358,21 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
 
   // Функция для получения класса стиля в зависимости от статуса операции
   const getOperationStatusClass = (operation?: any): string => {
+
+    
     if (!operation) return '';
 
     // Сначала проверяем completionStatus (если есть)
-    if (operation.completionStatus) {
-      switch (operation.completionStatus) {
-        case 'ON_MACHINE': return styles.statusOnMachine;
-        case 'IN_PROGRESS': return styles.statusInProgress;
-        case 'BUFFERED': return styles.statusBuffered;
-        case 'COMPLETED': return styles.statusCompleted;
-        case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
-        default: return '';
-      }
-    } else if (operation.status) {
+    // if (operation.completionStatus) {
+    //   switch (operation.completionStatus) {
+    //     case 'ON_MACHINE': return styles.statusOnMachine;
+    //     case 'IN_PROGRESS': return styles.statusInProgress;
+    //     case 'BUFFERED': return styles.statusBuffered;
+    //     case 'COMPLETED': return styles.statusCompleted;
+    //     case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
+    //     default: return '';
+    //   }
+    // } else if (operation.status) {
       // Используем status, если completionStatus отсутствует
       switch (operation.status) {
         case 'ON_MACHINE': return styles.statusOnMachine;
@@ -380,12 +382,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
         case 'FAILED': return styles.statusFailed;
         default: return '';
       }
-    }
-    return '';
+    // }
+    // return '';
   };
 
   // Компонент для отображения статуса операции
   const OperationStatus = ({ operation }: { operation?: any }) => {
+        console.log('Статус');
+    console.log(operation);
     if (!operation) {
       return <span className={styles.noOperation}>Не в обработке</span>;
     }
@@ -530,6 +534,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                       </td>
                       <td>
                         <OperationStatus operation={pallet.currentOperation} />
+                        {pallet.currentStepName} текущий
                         {pallet.currentStepName && !pallet.currentOperation && (
                           <span className={styles.nextStep} title="Следующий этап обработки">
                             Следующий: {pallet.currentStepName}
