@@ -138,12 +138,7 @@ export const MaterialsList: React.FC<MaterialsListProps> = ({
           </div>
           
           {/* Real-time status */}
-          {isConnected && (
-            <div className={styles.realtimeStatus}>
-              <span className={styles.realtimeIcon}>🌐</span>
-              <span className={styles.realtimeText}>Синхронизация включена</span>
-            </div>
-          )}
+         
         </div>
 
         {/* Error Message */}

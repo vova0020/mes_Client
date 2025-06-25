@@ -84,11 +84,11 @@ const MaterialSettingsContent: React.FC = () => {
           </h1>
           <p className={styles.pageSubtitle}>
             Настройка справочников материалов и их группировка
-            {isConnected && (
+            {/* {isConnected && (
               <span className={styles.realtimeIndicator}>
                 • Обновления в реальном времени
               </span>
-            )}
+            )} */}
           </p>
         </div>
         <div className={styles.pageHeaderActions}>

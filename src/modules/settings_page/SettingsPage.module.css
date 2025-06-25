@@ -58,8 +58,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(to bottom, #374051, #2d3441);
+  border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
   box-sizing: border-box;
@@ -102,7 +102,7 @@
   border: 1px dashed #ccc;
 }
 
-/* Общие стил�� для карточек в настройках */
+/* Общие стили для карточек в настройках */
 .settingsCard {
   background: white;
   border-radius: 8px;
