@@ -12,7 +12,7 @@
 .listHeader {
   padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  /* background: #f9fafb; */ 
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -32,6 +32,7 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.2s ease;
+  box-shadow: 0px 0px 11px 0px rgba(0, 0, 0, 0.39);
 }
 
 .searchInput:focus {
@@ -86,6 +87,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+  
 }
 
 .emptyState {
@@ -108,7 +110,7 @@
   justify-content: space-between;
   align-items: flex-start;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+ box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.28);
 }
 
 .streamCard:hover {
