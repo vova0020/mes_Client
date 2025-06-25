@@ -35,16 +35,18 @@ function App() {
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           
-          {/* Защищенные маршруты для мастеров и администраторов */}
-          <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} />}>
+          {/* Защищенные маршруты для обычных мастеров (без финальных этапов) и администраторов */}
+          <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} excludeFinalStage={true} />}>
             <Route path="/master" element={<MasterPage />} />
           </Route>
 
           <Route element={<ProtectedRoute requiredRole="nosmen" />}>
             <Route path="/nosmenmachine" element={<MesPage />} />
           </Route>
-          <Route element={<ProtectedRoute requiredRole="ypakmaster" />}>
-            <Route path="/ypakmaster" element={<MasterYpakPage />} />
+          
+          {/* Маршрут для мастеров упаковки (с финальными этапами) */}
+          <Route element={<ProtectedRoute requiredRole="master" requireFinalStage={true} />}>
+            <Route path="/ypak" element={<MasterYpakPage />} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="ypakoperator" />}>
             <Route path="/ypakmachine" element={<YpakMachinePage />} />

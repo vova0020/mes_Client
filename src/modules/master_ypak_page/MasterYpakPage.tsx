@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
-import DetailsTable from './components/DetailsTable/MasterYpackDetailsTable';
+import DetailsYpakTable from './components/DetailsTable/MasterYpackDetailsYpackTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
 
 import styles from './MasterYpakPage.module.css';
@@ -48,7 +48,7 @@ const MasterYpakPage: React.FC = () => {
           {/* Нижний ряд с таблицей деталей на всю ширину */}
           <div className={styles.bottomRow}>
             <div className={styles.detailsSection}>
-              <DetailsTable selectedOrderId={selectedOrderId} />
+              <DetailsYpakTable selectedOrderId={selectedOrderId} />
             </div>
           </div>
         </div>

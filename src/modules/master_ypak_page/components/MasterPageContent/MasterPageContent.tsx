@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import OrdersTable from '../OrdersTable/OrdersTable';
-import DetailsTable from '../DetailsTable/MasterYpackDetailsTable';
+import DetailsTable from '../DetailsTable/MasterYpackDetailsYpackTable';
 import styles from './MasterPageContent.module.css';
 
 const MasterPageContent: React.FC = () => {

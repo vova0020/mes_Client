@@ -99,6 +99,7 @@ export interface ProductionStageLevel1 {
   stageId: number;
   stageName: string;
   description?: string;
+  finalStage: boolean;
   createdAt: string;
   updatedAt: string;
   substagesCount?: number;
@@ -126,12 +127,14 @@ export interface ProductionStageLevel2 {
 export interface CreateStageLevel1Data {
   stageName: string;
   description?: string;
+  finalStage?: boolean;
 }
 
 // Данные для обновления этапа 1 уровня
 export interface UpdateStageLevel1Data {
   stageName?: string;
   description?: string;
+  finalStage?: boolean;
 }
 
 // Данные для создания этапа 2 уровня

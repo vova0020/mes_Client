@@ -139,8 +139,15 @@ export const StagesLevel1List: React.FC<StagesLevel1ListProps> = ({
                 <div className={styles.stageCardHeader}>
                   <div className={styles.stageCardInfo}>
                     <h3 className={styles.stageCardTitle}>
-                      <span className={styles.stageCardIcon}>⚙️</span>
+                      <span className={styles.stageCardIcon}>
+                        {stage.finalStage ? '📦' : '⚙️'}
+                      </span>
                       {stage.stageName}
+                      {stage.finalStage && (
+                        <span className={styles.finalStageBadge}>
+                          Финальный
+                        </span>
+                      )}
                     </h3>
                     {stage.description && (
                       <p className={styles.stageCardDescription}>

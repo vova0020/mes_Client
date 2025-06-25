@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
-import usePackagingDetails from '../../../hooks/ypakMasterHook/packagingMasterHook';
-import PalletsSidebar from '../PalletsSidebar/MasterYpackPalletsSidebar';
+import { usePackaging } from '../../../hooks/ypakMasterHook';
+import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
 
-interface DetailsTableProps {
+interface DetailsYpakTableProps {
   selectedOrderId: number | null;
 }
 
-const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
+const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) => {
   // Состояние для отслеживания активной упаковки
   const [activePackagingId, setActivePackagingId] = useState<number | null>(null);
   
@@ -20,15 +20,12 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   
   // Используем хук для получения данных о упаковках
   const { 
-    packagingItems, 
-    workers, 
+    packages, 
     loading, 
     error, 
-    fetchPackagingItems,
-    assignWorker,
-    toggleAllowOutsidePacking,
-    updateStatus
-  } = usePackagingDetails();
+    fetchPackagesByOrderId,
+    clearPackages
+  } = usePackaging();
   
   // Ref для отслеживания предыдущего ID заказа
   const prevOrderIdRef = useRef<number | null>(null);
@@ -39,29 +36,37 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   // Загружаем упаковки при изменении выбранного заказа
   useEffect(() => {
     // Если меняется ID заказа, сначала скрываем детали с анимацией
-    if (prevOrderIdRef.current !== selectedOrderId && !loading && packagingItems.length > 0) {
+    if (prevOrderIdRef.current !== selectedOrderId && !loading && packages.length > 0) {
       setShowDetails(false);
       
       // Используем setTimeout для создания "задержки" при смене данных
       const timer = setTimeout(() => {
-        fetchPackagingItems(selectedOrderId);
+        if (selectedOrderId !== null) {
+          fetchPackagesByOrderId(selectedOrderId);
+        } else {
+          clearPackages();
+        }
         // Сбрасываем активную упаковку при смене заказа
         setActivePackagingId(null);
       }, 300); // Задержка должна быть равна или меньше времени анимации исчезновения
       
       return () => clearTimeout(timer);
     } else {
-      fetchPackagingItems(selectedOrderId);
+      if (selectedOrderId !== null) {
+        fetchPackagesByOrderId(selectedOrderId);
+      } else {
+        clearPackages();
+      }
       // Сбрасываем активную упаковку при смене заказа
       setActivePackagingId(null);
     }
     
     prevOrderIdRef.current = selectedOrderId;
-  }, [selectedOrderId, fetchPackagingItems]);
+  }, [selectedOrderId, fetchPackagesByOrderId, clearPackages]);
 
   // Показываем упаковки с анимацией после загрузки
   useEffect(() => {
-    if (!loading && packagingItems.length > 0) {
+    if (!loading && packages.length > 0) {
       // Небольшая задержка перед показом упаковок для более заметной анимации
       const timer = setTimeout(() => {
         setShowDetails(true);
@@ -69,7 +74,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
       
       return () => clearTimeout(timer);
     }
-  }, [loading, packagingItems]);
+  }, [loading, packages]);
 
   // Синхронизация выделенной строки с состоянием боковой панели
   useEffect(() => {
@@ -152,7 +157,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     const workerId = parseInt(e.target.value);
     if (!isNaN(workerId)) {
-      assignWorker(packageId, workerId);
+      // assignWorker(packageId, workerId); // TODO: Реализовать после создания соответствующего API
     }
   };
 
@@ -205,7 +210,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
           <div className={styles.errorMessage}>
             <h3>Не удалось загрузить упаковки</h3>
             <p>Произошла ошибка при получении данных с сервера</p>
-            <button onClick={() => fetchPackagingItems(selectedOrderId)} className={styles.retryButton}>
+            <button onClick={() => selectedOrderId && fetchPackagesByOrderId(selectedOrderId)} className={styles.retryButton}>
               Попробовать снова
             </button>
           </div>
@@ -236,7 +241,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
   }
 
   // Если выбран заказ, но нет упаковок
-  if (packagingItems.length === 0) {
+  if (packages.length === 0) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>Информация об упаковке</h2>
@@ -274,13 +279,13 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
               <th>Распределено</th>
               <th>Скомплектовано</th>
               <th>Упаковано</th>
-              <th>Разрешить паковать вне линии</th>
+              {/* <th>Разрешить паковать вне линии</th> */}
               <th>Назначить упаковщика</th>
               <th colSpan={4}>Действия</th>
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {packagingItems.map((packaging, index) => (
+            {packages.map((packaging, index) => (
               <tr
                 key={packaging.id}
                 className={`
@@ -290,8 +295,8 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => handleRowClick(packaging.id)}
               >
-                <td>{packaging.article}</td>
-                <td>{packaging.name}</td>
+                <td>{packaging.packageCode}</td>
+                <td>{packaging.packageName}</td>
                 <td>
                   <button 
                     className={styles.schemeButton}
@@ -300,12 +305,12 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
                     Схема укладки
                   </button>
                 </td>
-                <td>{packaging.totalQuantity}</td>
-                <td>{packaging.readyForPackaging}</td>
-                <td>{packaging.allocated}</td>
-                <td>{packaging.assembled}</td>
-                <td>{packaging.packed}</td>
-                <td>
+                <td>{packaging.parts?.length || 0}</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                {/* <td>
                   <label className={styles.checkboxContainer}>
                     <input 
                       type="checkbox" 
@@ -315,18 +320,16 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
                     />
                     <span className={styles.checkmark}></span>
                   </label>
-                </td>
+                </td> */}
                 <td>
                   <select 
                     className={styles.workerSelect}
-                    value={workers.find(w => w.name === packaging.assignedPackager)?.id || ""}
+                    value=""
                     onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <option value="">Выберите упаковщика</option>
-                    {workers.map(worker => (
-                      <option key={worker.id} value={worker.id}>{worker.name}</option>
-                    ))}
+                    {/* TODO: Загрузить список упаковщиков */}
                   </select>
                 </td>
                 <td>
@@ -367,14 +370,14 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
         </table>
       </div>
 
-      {/* Боковая панель с поддонами */}
-      {/* <PalletsSidebar 
-        detailId={selectedDetailForPallets} 
+      {/* Боковая панель с деталями и поддонами */}
+      <PackagingDetailsSidebar 
         isOpen={sidebarOpen} 
-        onClose={handleCloseSidebar} 
-      /> */}
+        onClose={handleCloseSidebar}
+        selectedPackageId={selectedDetailForPallets}
+      />
     </div>
   );
 };
 
-export default DetailsTable;
+export default DetailsYpakTable; 

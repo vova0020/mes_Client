@@ -33,9 +33,17 @@ export interface Segment {
   lineName: string;
 }
 
+// Этап производства из assignments
+export interface Stage {
+  id: number;
+  name: string;
+  finalStage: boolean; // true для финальных этапов (например, упаковка)
+}
+
 export interface Assignments {
   machines?: Machine[];
   segments?: Segment[];
+  stages?: Stage[];
 }
 
 export interface AuthResponse {
@@ -144,6 +152,13 @@ const authService = {
         return '/settings';
         
       case 'master':
+        // Проверяем, есть ли у мастера финальные этапы
+        if (assignments.stages && assignments.stages.length > 0) {
+          const hasFinalStage = assignments.stages.some(stage => stage.finalStage === true);
+          if (hasFinalStage) {
+            return '/ypak';
+          }
+        }
         return '/master';
 
       case 'management':
@@ -179,6 +194,16 @@ const authService = {
 
           for (const role of rolePriority) {
             if (user.roles.includes(role)) {
+              // Специальная обработка для роли мастер
+              if (role === 'master') {
+                if (assignments.stages && assignments.stages.length > 0) {
+                  const hasFinalStage = assignments.stages.some(stage => stage.finalStage === true);
+                  if (hasFinalStage) {
+                    return '/ypak';
+                  }
+                }
+                return '/master';
+              }
               return this.determineHomePage({ ...user, primaryRole: role }, assignments);
             }
           }
@@ -216,6 +241,24 @@ const authService = {
   getUserRoles(): string[] {
     const user = this.getUser();
     return user?.roles || [];
+  },
+
+  // Проверка наличия финальных этапов у пользователя
+  hasFinalStages(): boolean {
+    const assignments = this.getAssignments();
+    if (!assignments || !assignments.stages) {
+      return false;
+    }
+    return assignments.stages.some(stage => stage.finalStage === true);
+  },
+
+  // Получение финальных этапов пользователя
+  getFinalStages(): Stage[] {
+    const assignments = this.getAssignments();
+    if (!assignments || !assignments.stages) {
+      return [];
+    }
+    return assignments.stages.filter(stage => stage.finalStage === true);
   }
 };
 

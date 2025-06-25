@@ -21,6 +21,7 @@ export const StageLevel1Form: React.FC<StageLevel1FormProps> = ({
   const [formData, setFormData] = useState({
     stageName: '',
     description: '',
+    finalStage: false,
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,6 +71,7 @@ export const StageLevel1Form: React.FC<StageLevel1FormProps> = ({
       setFormData({
         stageName: editStage.stageName,
         description: editStage.description || '',
+        finalStage: editStage.finalStage || false,
       });
     }
   }, [editStage]);
@@ -92,10 +94,12 @@ export const StageLevel1Form: React.FC<StageLevel1FormProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
     
     // Очищаем ошибку при изменении поля
@@ -117,6 +121,7 @@ export const StageLevel1Form: React.FC<StageLevel1FormProps> = ({
     const stageData = {
       stageName: formData.stageName.trim(),
       description: formData.description.trim() || undefined,
+      finalStage: formData.finalStage,
     };
 
     if (isEditing && editId !== undefined) {
@@ -188,6 +193,26 @@ export const StageLevel1Form: React.FC<StageLevel1FormProps> = ({
             )}
             <div className={styles.characterCount}>
               {formData.description.length}/500 символов
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                name="finalStage"
+                checked={formData.finalStage}
+                onChange={handleInputChange}
+                className={styles.checkbox}
+                disabled={isLoading}
+              />
+              <span className={styles.checkboxText}>
+                <span className={styles.checkboxIcon}>📦</span>
+                Финальный этап (например, упаковка)
+              </span>
+            </label>
+            <div className={styles.checkboxDescription}>
+              Отметьте, если это завершающий этап производства
             </div>
           </div>
         </div>

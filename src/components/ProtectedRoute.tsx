@@ -7,12 +7,16 @@ interface ProtectedRouteProps {
   requiredRole?: string;
   requiredRoles?: string[];
   requirePrimaryRole?: boolean; // Флаг для проверки основной роли
+  requireFinalStage?: boolean; // Флаг для проверки наличия финальных этапов (для мастеров упаковки)
+  excludeFinalStage?: boolean; // Флаг для исключения пользователей с финальными этапами (для обычных мастеров)
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   requiredRole, 
   requiredRoles, 
-  requirePrimaryRole = false 
+  requirePrimaryRole = false,
+  requireFinalStage = false,
+  excludeFinalStage = false
 }) => {
   // Проверяем аутентификацию
   if (!authService.isAuthenticated()) {
@@ -65,6 +69,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (!hasAccess) {
+      return redirectToHomePage();
+    }
+  }
+
+  // Дополнительная проверка для финальных этапов (для мастеров упаковки)
+  if (requireFinalStage) {
+    const hasFinalStages = authService.hasFinalStages();
+    if (!hasFinalStages) {
+      return redirectToHomePage();
+    }
+  }
+
+  // Исключение пользователей с финальными этапами (для обычных мастеров)
+  if (excludeFinalStage) {
+    const hasFinalStages = authService.hasFinalStages();
+    // Исключаем только мастеров с финальными этапами, администраторы проходят
+    if (hasFinalStages && authService.hasRole('master') && !authService.hasRole('admin')) {
       return redirectToHomePage();
     }
   }

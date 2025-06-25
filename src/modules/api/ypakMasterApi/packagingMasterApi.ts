@@ -27,18 +27,20 @@ export const fetchPackagingByOrderId = async (orderId: number | null): Promise<P
   }
   
   try {
-    const response = await axios.get(`${API_URL}/ypak/packaging/order/${orderId}`);
-    return response.data.map((item: any, index: number) => ({
-      id: index + 1, // Временное решение для id, в будущем будет приходить с бэкенда
-      article: item.article || 'Н/Д',
-      name: item.name,
-      totalQuantity: item.totalQuantity,
-      readyForPackaging: item.readyForPackaging,
-      allocated: item.allocated,
-      assembled: item.assembled,
-      packed: item.packed,
-      allowPackingOutsideLine: false, // По умолчанию выключено
-      assignedPackager: undefined
+    const response = await axios.get(`${API_URL}/packaging/by-order/${orderId}`);
+    console.log(response.data);
+    
+    return response.data.packages.map((item: any, index: number) => ({
+      id: item.id, 
+      article: item.packageCode || 'Н/Д',
+      name: item.packageName,
+      // totalQuantity: item.totalQuantity,
+      // readyForPackaging: item.readyForPackaging,
+      // allocated: item.allocated,
+      // assembled: item.assembled,
+      // packed: item.packed,
+      // allowPackingOutsideLine: false, // По умолчанию выключено
+      // assignedPackager: undefined
     }));
   } catch (error) {
     console.error('Ошибка при получении данных об упаковках:', error);

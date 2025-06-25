@@ -275,23 +275,38 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       
       // Обрабатываем успешный ответ API
       if (response) {
+        console.log('Ответ от API completePalletProcessing:', response);
+        
         // Сохраняем информацию о следующем шаге
         setNextStepInfo(response.nextStep || 'Этап обработки завершен');
         
         // Формируем сообщение об успешной операции
         const pallet = response.pallet;
-        const isCompleted = !pallet.currentStepId;
+        console.log('Объект pallet из ответа:', pallet);
         
-        // Отображаем сообщение об успешном завершении
-        if (isCompleted) {
-          setSuccessMessage(`Обработка поддона ${pallet.name || `№${pallet.id}`} полностью завершена`);
+        if (pallet) {
+          const isCompleted = !pallet.currentStepId;
+          console.log('isCompleted:', isCompleted, 'currentStepId:', pallet.currentStepId);
+          
+          // Отображаем сообщение об успешном завершении
+          if (isCompleted) {
+            setSuccessMessage(`Обработка поддона ${pallet.name || `№${pallet.id}`} полностью завершена`);
+          } else {
+            const nextStepName = pallet.currentStep?.name || 'следующий этап';
+            setSuccessMessage(`Поддон ${pallet.name || `№${pallet.id}`} готов к этапу "${nextStepName}"`);
+          }
         } else {
-          const nextStepName = pallet.currentStep?.name || 'следующий этап';
-          setSuccessMessage(`Поддон ${pallet.name || `№${pallet.id}`} готов к этапу "${nextStepName}"`);
+          // Если объект pallet отсутствует в ответе
+          setSuccessMessage(`Поддон №${palletId} успешно отмечен как готовый`);
         }
       } else {
         // Если ответ пустой, показываем общее сообщение об успехе
         setSuccessMessage(`Поддон №${palletId} успешно отмечен как готовый`);
+      }
+      
+      // Обновляем данные поддонов после успешной операции
+      if (detailId) {
+        await refreshPalletData(palletId);
       }
     } catch (error) {
       console.error(`Ошибка при отметке поддона ${palletId} как готовый:`, error);
@@ -405,11 +420,11 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
         <span className={`${styles.statusBadge} ${getOperationStatusClass(operation)}`}>
           {statusText}
         </span>
-        {operation.processStep && (
+        {/* {operation.processStep && (
           <span className={styles.processStep}>
             {processStepText}
           </span>
-        )}
+        )} */}
         {operation.isCompletedForDetail && (
           <span className={styles.completedForDetail} title="Обработка детали завершена">
             ✓
@@ -534,12 +549,12 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                       </td>
                       <td>
                         <OperationStatus operation={pallet.currentOperation} />
-                        {pallet.currentStepName} текущий
-                        {pallet.currentStepName && !pallet.currentOperation && (
-                          <span className={styles.nextStep} title="Следующий этап обработки">
-                            Следующий: {pallet.currentStepName}
-                          </span>
-                        )}
+                        {/* {pallet.currentStepName} текущий */}
+                        {/* {pallet.currentStepName && !pallet.currentOperation && ( */}
+                          {/* <span className={styles.nextStep} title="Следующий этап обработки"> */}
+                            {/* Следующий: {pallet.currentStepName} */}
+                          {/* </span> */}
+                        {/* )} */}
                       </td>
                       <td className={styles.actionsCell}>
                         <button 
