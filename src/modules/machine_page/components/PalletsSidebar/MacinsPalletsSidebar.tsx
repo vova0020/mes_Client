@@ -375,7 +375,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     // } else if (operation.status) {
       // Используем status, если completionStatus отсутствует
       switch (operation.status) {
-        case 'ON_MACHINE': return styles.statusOnMachine;
+        case 'PENDING': return styles.statusOnMachine;
         case 'IN_PROGRESS': return styles.statusInProgress;
         case 'BUFFERED': return styles.statusBuffered;
         case 'COMPLETED': return styles.statusCompleted;

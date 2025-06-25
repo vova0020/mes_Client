@@ -289,27 +289,35 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     console.log('Получение класса для операции:', operation);
 
     // Сначала проверяем completionStatus (если есть)
-    if (operation.completionStatus) {
-      switch (operation.completionStatus) {
-        case 'ON_MACHINE': return styles.statusOnMachine;
+    // if (operation.completionStatus) {
+    //   switch (operation.completionStatus) {
+    //     case 'ON_MACHINE': return styles.statusOnMachine;
+    //     case 'IN_PROGRESS': return styles.statusInProgress;
+    //     case 'BUFFERED': return styles.statusBuffered;
+    //     case 'COMPLETED': return styles.statusCompleted;
+    //     case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
+    //     default: return '';
+    //   }
+    // } else if (operation.status) {
+    //   // Используем status, если completionStatus отсутствует
+    //   switch (operation.status) {
+    //     case 'ON_MACHINE': return styles.statusOnMachine;
+    //     case 'IN_PROGRESS': return styles.statusInProgress;
+    //     case 'BUFFERED': return styles.statusBuffered;
+    //     case 'COMPLETED': return styles.statusCompleted;
+    //     // case 'FAILED': return styles.statusFailed;
+    //     default: return '';
+    //   }
+    // }
+     switch (operation.status) {
+        case 'PENDING': return styles.statusOnMachine;
         case 'IN_PROGRESS': return styles.statusInProgress;
         case 'BUFFERED': return styles.statusBuffered;
         case 'COMPLETED': return styles.statusCompleted;
-        case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
+        case 'FAILED': return styles.statusFailed;
         default: return '';
       }
-    } else if (operation.status) {
-      // Используем status, если completionStatus отсутствует
-      switch (operation.status) {
-        case 'ON_MACHINE': return styles.statusOnMachine;
-        case 'IN_PROGRESS': return styles.statusInProgress;
-        case 'BUFFERED': return styles.statusBuffered;
-        case 'COMPLETED': return styles.statusCompleted;
-        // case 'FAILED': return styles.statusFailed;
-        default: return '';
-      }
-    }
-    return '';
+    // return '';
   };
 
   // Компонент для отображения состояния загрузки ресурсов
@@ -400,6 +408,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     // Проверяем, можно ли назначить поддон на станок
     // (если нет активной операции или операция в статусе BUFFERED, COMPLETED или PARTIALLY_COMPLETED)
     const canAssignToMachine = !pallet.currentOperation ||
+      pallet.currentOperation.status === 'PENDING' ||
       pallet.currentOperation.status === 'BUFFERED' ||
       pallet.currentOperation.status === 'ON_MACHINE' ||
       (pallet.currentOperation.completionStatus === 'COMPLETED') ||

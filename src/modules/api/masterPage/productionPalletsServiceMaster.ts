@@ -42,8 +42,8 @@ export interface OperatorDto {
 
 export interface OperationDto {
   id: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED'| 'ON_MACHINE';
-  completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED'| 'BUFFERED'| 'ON_MACHINE';
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED'| 'PENDING';
+  completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED'| 'BUFFERED'| 'PENDING';
   startedAt: string;
   completedAt?: string;
   quantity?: number;
@@ -125,7 +125,7 @@ export const getOperationStatusText = (operation?: OperationDto | null): string 
     switch (operation.completionStatus) {
       case 'COMPLETED': return 'Готово';
       case 'PARTIALLY_COMPLETED': return 'Выполнено частично';
-      case 'ON_MACHINE': return 'Ожидает обработки';
+      case 'PENDING': return 'Ожидает обработки';
       case 'BUFFERED': return 'В буфере';
       case 'IN_PROGRESS': return 'В работе';
       default: return 'В обработке';
@@ -137,7 +137,7 @@ export const getOperationStatusText = (operation?: OperationDto | null): string 
     switch (operation.status) {
       case 'IN_PROGRESS': return 'В работе';
       case 'COMPLETED': return 'Готово';
-      case 'ON_MACHINE': return 'Ожидает обработки';
+      case 'PENDING': return 'Ожидает обработки';
       case 'FAILED': return 'Ошибка';
       case 'BUFFERED': return 'В буфере';
       default: return 'В обработке';

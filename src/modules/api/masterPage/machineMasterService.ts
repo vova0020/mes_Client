@@ -119,7 +119,7 @@ export const fetchMachineTasks = async (machineId: number): Promise<MachineTask[
 export const deleteTask = async (operationId: number): Promise<{ message: string }> => {
   try {
     const response = await axios.delete<{ message: string }>(
-      `${API_URL}/machine-segment/task/${operationId}`
+      `${API_URL}/machins/master/task/${operationId}`
     );
     
     return response.data;
@@ -141,7 +141,7 @@ export const moveTask = async (
 ): Promise<{ message: string }> => {
   try {
     const response = await axios.post<{ message: string }>(
-      `${API_URL}/machine-segment/task/move`,
+      `${API_URL}/machins/master/task/move`,
       {
         operationId,
         targetMachineId
