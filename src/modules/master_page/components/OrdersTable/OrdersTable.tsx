@@ -151,7 +151,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
           </div>
         ) : (
           <div className={showOrders ? styles.showOrders : styles.hideOrders}>
-            {orders.map((order, index) => (
+            {orders.sort((a, b) => a.id - b.id).map((order, index) => (
               <div
                 key={order.id}
                 className={`
