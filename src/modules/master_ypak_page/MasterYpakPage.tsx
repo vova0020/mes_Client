@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
 import DetailsYpakTable from './components/DetailsTable/MasterYpackDetailsYpackTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
+import { useStageListener } from '../../componentsGlobal/Navbar/useStageListener';
 
 import styles from './MasterYpakPage.module.css';
 
 const MasterYpakPage: React.FC = () => {
   // Добавляем только состояние для отслеживания выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+
+  // Отслеживаем изменения выбранного этапа
+  const currentStage = useStageListener();
+
+  // Перезагружаем данные при смене этапа
+  useEffect(() => {
+    if (currentStage) {
+      console.log('Этап изменен в MasterYpakPage:', currentStage);
+      // Сбрасываем выбранный заказ
+      setSelectedOrderId(null);
+    }
+  }, [currentStage]);
 
   // Обработчик выбора заказа
   const handleOrderSelect = (orderId: number | null) => {

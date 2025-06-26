@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import authService from '../services/authService';
@@ -18,21 +17,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireFinalStage = false,
   excludeFinalStage = false
 }) => {
-  // Проверяем аутентификацию
+  console.log('=== PROTECTED ROUTE ===');
+  console.log('Props:', { requiredRole, requiredRoles, requirePrimaryRole, requireFinalStage, excludeFinalStage });
+
+  // Проверяем ауте��тификацию
   if (!authService.isAuthenticated()) {
+    console.log('Пользователь не аутентифицирован, перенаправление на /login');
     return <Navigate to="/login" replace />;
   }
 
   const user = authService.getUser();
   
   if (!user) {
+    console.log('Нет данных пользователя, перенаправление на /login');
     return <Navigate to="/login" replace />;
   }
 
-  // Функция для перенаправления на домашнюю страницу пользователя
+  console.log('Пользователь:', user);
+
+  // Функция для перенаправления на домашнюю страницу пользователя с учетом выбранного этапа
   const redirectToHomePage = () => {
-    const assignments = authService.getAssignments();
-    const homePage = authService.determineHomePage(user, assignments || {});
+    const homePage = authService.determineHomePageWithSelectedStage();
+    console.log('Перенаправление на домашнюю страницу:', homePage);
     return <Navigate to={homePage} replace />;
   };
 
@@ -52,6 +58,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       );
     }
 
+    console.log('Проверка множественных ролей:', requiredRoles, 'Доступ:', hasAccess);
+
     if (!hasAccess) {
       return redirectToHomePage();
     }
@@ -68,28 +76,56 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       hasAccess = authService.hasRole(requiredRole.toLowerCase());
     }
 
+    console.log('Проверка одиночной роли:', requiredRole, 'Доступ:', hasAccess);
+
     if (!hasAccess) {
       return redirectToHomePage();
     }
   }
 
-  // Дополнительная проверка для финальных этапов (для мастеров упаковки)
+  // Дополнительная проверка для финальных этапов (для мастеров упа��овки)
   if (requireFinalStage) {
-    const hasFinalStages = authService.hasFinalStages();
-    if (!hasFinalStages) {
+    // Проверяем выбранный этап, а не общее наличие финальных этапов
+    const selectedStageString = localStorage.getItem('selectedStage');
+    let hasAccessToFinalStage = false;
+    
+    if (selectedStageString) {
+      try {
+        const selectedStage = JSON.parse(selectedStageString);
+        hasAccessToFinalStage = selectedStage.finalStage;
+        console.log('Проверка финального этапа. Выбранный этап:', selectedStage, 'Финальный:', hasAccessToFinalStage);
+      } catch (error) {
+        console.error('Ошибка при парсинге выбранного этапа:', error);
+      }
+    }
+    
+    if (!hasAccessToFinalStage) {
+      console.log('Нет доступа к финальному этапу, перенаправление');
       return redirectToHomePage();
     }
   }
 
-  // Исключение пользователей с финальными этапами (для обычных мастеров)
+  // Исключение пользователей с выбранными финальными этапами (для обычных мастеров)
   if (excludeFinalStage) {
-    const hasFinalStages = authService.hasFinalStages();
-    // Исключаем только мастеров с финальными этапами, администраторы проходят
-    if (hasFinalStages && authService.hasRole('master') && !authService.hasRole('admin')) {
-      return redirectToHomePage();
+    // Проверяем выбранный этап, а не общее наличие финальных этапов
+    const selectedStageString = localStorage.getItem('selectedStage');
+    if (selectedStageString) {
+      try {
+        const selectedStage = JSON.parse(selectedStageString);
+        console.log('Проверка исключения финального этапа. Выбранный этап:', selectedStage);
+        
+        // Блокируем доступ к обычной странице, если выбран финальный этап
+        if (selectedStage.finalStage && authService.hasRole('master') && !authService.hasRole('admin')) {
+          console.log('Выбран финальный этап, но пытается зайти на обычную страницу, перенаправление');
+          return redirectToHomePage();
+        }
+      } catch (error) {
+        console.error('Ошибка при парсинге выбранного этапа в ProtectedRoute:', error);
+      }
     }
   }
 
+  console.log('Все проверки пройдены, доступ разрешен');
   // Если прошли все проверки, разрешаем доступ к дочерним маршрутам
   return <Outlet />;
 };

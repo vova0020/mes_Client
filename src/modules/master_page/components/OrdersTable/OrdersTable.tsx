@@ -24,6 +24,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       onOrderSelect(activeOrderId);
     } 
   }, [activeOrderId, onOrderSelect]);
+
+  // Сбрасываем активный заказ при изменении списка заказов (например, при смене этапа)
+  useEffect(() => {
+    if (orders.length > 0 && activeOrderId && !orders.find(order => order.id === activeOrderId)) {
+      setActiveOrderId(null);
+    }
+  }, [orders, activeOrderId]);
   
   useEffect(() => {
     if (!loading && orders.length > 0) {

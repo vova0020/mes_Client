@@ -5,6 +5,8 @@ import styles from './Header.module.css';
 import logo from '../../../../assets/logo-Photoroom.png';
 // Импортируем компонент LogoutButton вместо иконки LogoutIcon
 import LogoutButton from '../../../../componentsGlobal/LogoutButton/LogoutButton';
+// Импортируем новый компонент Navbar
+import Navbar from '../../../../componentsGlobal/Navbar/Navbar';
 
 // Интерфейс для данных сегмента из localStorage
 interface SegmentData {
@@ -26,9 +28,29 @@ const Header: React.FC = () => {
   const [productionLineName, setProductionLineName] = useState<string>('Производственная линия');
 
   // Загрузка данных из localStorage при монтировании компонента
-  useEffect(() => {
+  // Функция для загрузки данных этапа
+  const loadStageData = () => {
     try {
-      // Получаем данные из localStorage
+      // Получаем выбранный этап из localStorage
+      const selectedStageString = localStorage.getItem('selectedStage');
+      
+      if (selectedStageString) {
+        const selectedStage = JSON.parse(selectedStageString);
+        setTechStageName(selectedStage.name);
+        console.log('Загружен выбранный этап:', selectedStage);
+      } else {
+        // Если выбранный этап не найден, используем данные из assignments
+        const assignmentsDataString = localStorage.getItem('assignments');
+        if (assignmentsDataString) {
+          const assignmentsData: AssignmentsData = JSON.parse(assignmentsDataString);
+          if (assignmentsData.segments && assignmentsData.segments.length > 0) {
+            setTechStageName(assignmentsData.segments[0].name);
+          }
+        }
+        console.warn('Выбранный этап не найден, используется этап по умолчанию');
+      }
+
+      // Получаем данные о производственной линии из assignments
       const assignmentsDataString = localStorage.getItem('assignments');
       
       if (assignmentsDataString) {
@@ -40,12 +62,11 @@ const Header: React.FC = () => {
           // Берем данные из первого сегмента (если их несколько)
           const segment = assignmentsData.segments[0];
           
-          // Обновляем состояния
-          setTechStageName(segment.name);
+          // Обновляем название производственной линии
           setProductionLineName(segment.lineName);
           
           // Отладочный вывод
-          console.log('Загружены данные из localStorage:', segment);
+          console.log('Загружены данные о производственной линии:', segment.lineName);
         } else {
           console.warn('В данных assignments отсутствуют сегменты');
         }
@@ -55,6 +76,24 @@ const Header: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при загрузке данных из localStorage:', error);
     }
+  };
+
+  useEffect(() => {
+    loadStageData();
+  }, []);
+
+  // Подписка на изменения выбранного этапа
+  useEffect(() => {
+    const handleStageChange = (event: CustomEvent) => {
+      console.log('Получено событие изменения этапа:', event.detail);
+      loadStageData();
+    };
+
+    window.addEventListener('stageChanged', handleStageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('stageChanged', handleStageChange as EventListener);
+    };
   }, []);
 
   return (
@@ -66,7 +105,7 @@ const Header: React.FC = () => {
         </div>
         <div className={styles.navButtons}>
           <button className={styles.navButton}>{productionLineName}</button>
-          <button className={styles.navButton}>СТАНОК</button>
+          <Navbar />
         </div>
       </div>
 

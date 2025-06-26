@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
@@ -6,6 +6,7 @@ import DetailsTable from './components/DetailsTable/MasterDetailsTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
 import PackagingModal from './components/PackagingModal/PackagingModal';
 import useOrders from '../hooks/masterPage/useOrdersMaster';
+import { useStageListener } from '../../componentsGlobal/Navbar/useStageListener';
 
 import styles from './MasterPage.module.css';
 
@@ -18,8 +19,21 @@ const MasterPage: React.FC = () => {
   const [packagingOrderId, setPackagingOrderId] = useState<number | null>(null);
   const [packagingOrderName, setPackagingOrderName] = useState<string>('');
 
+  // Отслеживаем изменения выбранного этапа
+  const currentStage = useStageListener();
+
   // Получаем данные заказов для поиска названия
   const { orders } = useOrders();
+
+  // Сбрасываем выбранный заказ при смене этапа
+  useEffect(() => {
+    if (currentStage) {
+      console.log('Этап изменен в MasterPage:', currentStage);
+      // Сбрасываем выбранный заказ
+      setSelectedOrderId(null);
+      // НЕ вызываем fetchOrders здесь, так как хук useOrders уже делает это
+    }
+  }, [currentStage]);
 
   // Обработчик выбора заказа
   const handleOrderSelect = (orderId: number | null) => {

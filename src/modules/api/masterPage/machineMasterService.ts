@@ -35,11 +35,19 @@ export interface MachineTask {
 }
 
 /**
- * Получает ID сегмента из localStorage
- * @returns ID сегмента или null, если не удалось получить
+ * Получает ID выбранного этапа из localStorage
+ * @returns ID этапа или null, если не удалось получить
  */
-const getSegmentIdFromStorage = (): number | null => {
+const getSelectedStageIdFromStorage = (): number | null => {
   try {
+    // Сначала пытаемся получить выбранный этап
+    const selectedStageData = localStorage.getItem('selectedStage');
+    if (selectedStageData) {
+      const selectedStage = JSON.parse(selectedStageData);
+      return selectedStage.id;
+    }
+    
+    // Если выбранный этап не найден, берем первый доступный из assignments
     const assignmentsData = localStorage.getItem('assignments');
     if (!assignmentsData) {
       console.error('Отсутствуют данные assignments в localStorage');
@@ -48,33 +56,33 @@ const getSegmentIdFromStorage = (): number | null => {
     
     const parsedData = JSON.parse(assignmentsData);
     if (!parsedData.stages || parsedData.stages.length === 0) {
-      console.error('Нет данных assignments отсутствуют segments');
+      console.error('В данных assignments отсутствуют stages');
       return null;
     }
     
     return parsedData.stages[0].id;
   } catch (error) {
-    console.error('Ошибка при получении segmentId из localStorage:', error);
+    console.error('Ошибка при получении ID этапа из localStorage:', error);
     return null;
   }
 };
 
 /**
- * Получает данные о станках для выбранного сегмента
+ * Получает данные о станках для выбранного этапа
  * @returns Массив станков
  */
 export const fetchMachinesBySegment = async (): Promise<Machine[]> => {
   try {
-    const segmentId = getSegmentIdFromStorage();
+    const stageId = getSelectedStageIdFromStorage();
     
-    if (segmentId === null) {
-      console.error('Не удалось получить ID сегмента из localStorage');
-      throw new Error('Не удалось получить ID сегмента из localStorage');
+    if (stageId === null) {
+      console.error('Не удалось получить ID этапа из localStorage');
+      throw new Error('Не удалось получить ID этапа из localStorage');
     }
     
     const response = await axios.get<Machine[]>(`${API_URL}/machins/master/machines`, {
       params: {
-        segmentId: segmentId
+        stageId: stageId
       }
     });
     
@@ -114,7 +122,7 @@ export const fetchMachineTasks = async (machineId: number): Promise<MachineTask[
 /**
  * Удаляет задание по ID операции
  * @param operationId ID операции
- * @returns С��общение об успешном удалении
+ * @returns Сообщение об успешном удалении
  */
 export const deleteTask = async (operationId: number): Promise<{ message: string }> => {
   try {
@@ -156,29 +164,29 @@ export const moveTask = async (
 };
 
 /**
- * Получает список всех станков сегмента для выбора
+ * Получает список всех станков этапа для выбора
  * @returns Массив DTO станков
  */
 export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
   try {
-    // Получаем segmentId из локального хранилища
-    const segmentId = getSegmentIdFromStorage();
+    // Получаем stageId из локального хранилища
+    const stageId = getSelectedStageIdFromStorage();
     
-    if (segmentId === null) {
-      console.error('Не удалось получить ID сегмента из localStorage');
-      throw new Error('Не удалось получить ID сегмента из localStorage');
+    if (stageId === null) {
+      console.error('Не удалось получить ID этапа из localStorage');
+      throw new Error('Не удалось получить ID этапа из localStorage');
     }
     
-    // Формируем URL с обязательным параметром segmentId
+    // Формируем URL с обязательным параметром stageId
     const response = await axios.get(`${API_URL}/machins/master/all`, {
       params: {
-        segmentId
+        stageId
       }
     });
     
     // Проверяем формат данных и адаптируем под него
     if (Array.isArray(response.data)) {
-      // Если сервер возвращает массив напрямую
+      // Если сервер возвращает массив напрям��ю
       return response.data.map((item: any) => ({
         id: item.machineId,
         name: item.machineName || item.code || '',

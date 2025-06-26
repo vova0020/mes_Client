@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Machine, 
   fetchMachinesBySegment, 
@@ -51,8 +51,18 @@ const useMachines = (): UseMachinesResult => {
   const [availableMachines, setAvailableMachines] = useState<MachineDto[]>([]);
   const [availableMachinesLoading, setAvailableMachinesLoading] = useState<boolean>(false);
 
+  // Ref для предотвращения множественных запросов
+  const isLoadingRef = useRef<boolean>(false);
+
   // Функция для получения данных о станках
   const fetchMachines = useCallback(async () => {
+    // Предотвращаем множественные одновременные запросы
+    if (isLoadingRef.current) {
+      console.log('Запрос машин уже выполняется, пропускаем...');
+      return;
+    }
+
+    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
     
@@ -64,6 +74,7 @@ const useMachines = (): UseMachinesResult => {
       setError(err instanceof Error ? err : new Error('Неизвестная ошибка при получении данных о станках'));
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   }, []);
   
@@ -108,7 +119,7 @@ const useMachines = (): UseMachinesResult => {
   const transferTask = useCallback(async (operationId: number, targetMachineId: number): Promise<boolean> => {
     try {
       await moveTask(operationId, targetMachineId);
-      // Обновляем локальное состояние, удаляя перемещенное задание из списка текущего станка
+      // О��новляем локальное состояние, удаляя перемещенное задание из списка текущего станка
       setMachineTasks(prev => prev.filter(task => task.operationId !== operationId));
       return true;
     } catch (err) {
@@ -134,6 +145,23 @@ const useMachines = (): UseMachinesResult => {
   // Загрузка данных о станках при первом рендере
   useEffect(() => {
     fetchMachines();
+  }, [fetchMachines]);
+
+  // Подписка на изменения выбранного этапа
+  useEffect(() => {
+    const handleStageChange = (event: CustomEvent) => {
+      console.log('Получено событие изменения этапа в useMachines:', event.detail);
+      // Добавляем небольшую задержку для предотвращения множественных запросов
+      setTimeout(() => {
+        fetchMachines(); // Перезагружаем данные о станках при изменении этапа
+      }, 150);
+    };
+
+    window.addEventListener('stageChanged', handleStageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('stageChanged', handleStageChange as EventListener);
+    };
   }, [fetchMachines]);
   
   return {

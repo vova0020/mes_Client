@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // Типы данных для авторизации
@@ -75,6 +74,13 @@ const authService = {
     localStorage.setItem('user', JSON.stringify(authData.user));
     localStorage.setItem('assignments', JSON.stringify(authData.assignments));
 
+    // Устанавливаем первый доступный этап как выбранный для роли master
+    if (authData.user.primaryRole === 'master' && authData.assignments.stages && authData.assignments.stages.length > 0) {
+      const firstStage = authData.assignments.stages[0];
+      localStorage.setItem('selectedStage', JSON.stringify(firstStage));
+      console.log('Установлен первый этап при авторизации:', firstStage);
+    }
+
     // Декодируем JWT для получения срока действия
     const tokenParts = authData.token.split('.');
     if (tokenParts.length === 3) {
@@ -123,6 +129,7 @@ const authService = {
     localStorage.removeItem('user');
     localStorage.removeItem('assignments');
     localStorage.removeItem('tokenExpires');
+    localStorage.removeItem('selectedStage');
   },
 
   // Проверка наличия определенной роли у пользователя
@@ -143,7 +150,7 @@ const authService = {
     return user.primaryRole === roleName;
   },
 
-  // Определение начальной страницы в зависимости от основной роли и привязок
+  // Определение начальной страницы в зави��имости от основной роли и привязок
   determineHomePage(user: User, assignments: Assignments): string {
     const primaryRole = user.primaryRole.toLowerCase();
 
@@ -152,13 +159,8 @@ const authService = {
         return '/settings';
         
       case 'master':
-        // Проверяем, есть ли у мастера финальные этапы
-        if (assignments.stages && assignments.stages.length > 0) {
-          const hasFinalStage = assignments.stages.some(stage => stage.finalStage === true);
-          if (hasFinalStage) {
-            return '/ypak';
-          }
-        }
+        // Для мастеров всегда направляем на обычную страницу по умолчанию
+        // Конкретная страница будет определена на основе выбранного этапа
         return '/master';
 
       case 'management':
@@ -196,12 +198,6 @@ const authService = {
             if (user.roles.includes(role)) {
               // Специальная обработка для роли мастер
               if (role === 'master') {
-                if (assignments.stages && assignments.stages.length > 0) {
-                  const hasFinalStage = assignments.stages.some(stage => stage.finalStage === true);
-                  if (hasFinalStage) {
-                    return '/ypak';
-                  }
-                }
                 return '/master';
               }
               return this.determineHomePage({ ...user, primaryRole: role }, assignments);
@@ -259,6 +255,49 @@ const authService = {
       return [];
     }
     return assignments.stages.filter(stage => stage.finalStage === true);
+  },
+
+  // Определение домашней страницы с учетом выбранного этапа
+  determineHomePageWithSelectedStage(): string {
+    const user = this.getUser();
+    const assignments = this.getAssignments();
+    
+    console.log('=== ОПРЕДЕЛЕНИЕ ДОМАШНЕЙ СТРАНИЦЫ ===');
+    console.log('Пользователь:', user);
+    console.log('Assignments:', assignments);
+    
+    if (!user || !assignments) {
+      console.log('Нет данных пользователя или assignments, перенаправление на /login');
+      return '/login';
+    }
+
+    // Для мастеров проверяем выбранный этап
+    if (user.primaryRole.toLowerCase() === 'master') {
+      const selectedStageString = localStorage.getItem('selectedStage');
+      console.log('Выбранный этап (строка):', selectedStageString);
+      
+      if (selectedStageString) {
+        try {
+          const selectedStage = JSON.parse(selectedStageString);
+          console.log('Выбранный этап (объект):', selectedStage);
+          const targetPage = selectedStage.finalStage ? '/ypak' : '/master';
+          console.log('Целевая страница:', targetPage);
+          return targetPage;
+        } catch (error) {
+          console.error('Ошибка при парсинге выбранного этапа:', error);
+          // При ошибке парсинга используем /master по умолчанию
+          return '/master';
+        }
+      } else {
+        console.log('Нет выбранного этапа, используем /master по умолчанию');
+        return '/master';
+      }
+    }
+
+    // Для остальных ролей используем стандартную логику
+    const homePage = this.determineHomePage(user, assignments);
+    console.log('Домашняя страница для роли', user.primaryRole, ':', homePage);
+    return homePage;
   }
 };
 
