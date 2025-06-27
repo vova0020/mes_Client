@@ -384,7 +384,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
           </option>
         )}
         {/* Добавляем все остальные ячейки буфера, которые не являются текущей */}
-        {bufferCells.map((cell) => {
+        {bufferCells.sort((a, b) => a.id - b.id).map((cell) => {
           // Пропускаем текущую ячейку буфера, так как она уже добавлена выше
           if (cell.code === currentBufferCellCode) {
             return null;
@@ -468,7 +468,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
           </option>
         )}
         {/* Добавляем все остальные станки, которые не являются текущим */}
-        {machines.map((machine) => {
+        {machines.sort((a, b) => a.id - b.id).map((machine) => {
           // Пропускаем текущий станок, так как он уже добавлен выше
           if (machine.name === currentMachineName) {
             return null;
@@ -599,7 +599,7 @@ return (
                 </tr>
               </thead>
               <tbody>
-                {pallets.map((pallet, index) => (
+                {pallets.sort((a, b) => a.id - b.id).map((pallet, index) => (
                   <tr
                     key={pallet.id}
                     className={`${styles.animatedRow} ${processingPalletId === pallet.id ? styles.processingRow : ''}`}

@@ -285,7 +285,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {packages.map((packaging, index) => (
+            {packages.sort((a, b) => a.id - b.id).map((packaging, index) => (
               <tr
                 key={packaging.id}
                 className={`

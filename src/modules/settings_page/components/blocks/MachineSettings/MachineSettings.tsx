@@ -8,6 +8,7 @@ import { MachineForm } from './components/MachineForm';
 import { useMachinesSocket } from './hooks/useMachinesSocket';
 import { useMachines } from './hooks/useMachinesQuery';
 import styles from './MachineSettings.module.css';
+import { API_URL } from '../../../../api/config';
 
 // Создаем Query Client
 const queryClient = new QueryClient({
@@ -232,7 +233,7 @@ const MachineSettingsContent: React.FC = () => {
 
 export const MachineSettings: React.FC = () => {
   return (
-    <SocketProvider serverUrl="http://localhost:5000" autoConnect={true}>
+    <SocketProvider serverUrl={API_URL} autoConnect={true}>
       <QueryClientProvider client={queryClient}>
         <MachineSettingsContent />
       </QueryClientProvider>

@@ -269,7 +269,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {pallets.map((pallet, index) => (
+                          {pallets.sort((a, b) => a.palletId - b.palletId).map((pallet, index) => (
                             <tr
                               key={pallet.palletId}
                               className={styles.animatedRow}

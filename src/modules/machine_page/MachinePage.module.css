@@ -6,7 +6,8 @@
   font-family: sans-serif;
   background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
   overflow: hidden; /* Предотвращает прокрутку на уровне всей страницы */
-  
+  padding-top: 28px; /* Отступ сверху для информационной строки Socket.IO */
+  box-sizing: border-box;
 }
 
 /* Блок с боковой панелью */
@@ -228,6 +229,28 @@
   text-align: center;
   font-size: 12px;
   z-index: 1000;
+}
+
+.socketStatusIndicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background-color: currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Остальные стили остаются без изменений */

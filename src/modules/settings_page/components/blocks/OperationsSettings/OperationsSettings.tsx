@@ -18,6 +18,7 @@ import MachineOperationsList from './components/MachineOperationsList';
 import SegmentOperationsList from './components/SegmentOperationsList';
 import Notification, { NotificationSeverity } from './components/common/Notification';
 
+
 // Интерфейсы для данных
 export interface IProcessStep {
     id: number;

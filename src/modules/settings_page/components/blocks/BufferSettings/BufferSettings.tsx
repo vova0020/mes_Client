@@ -9,6 +9,7 @@ import BufferDetail from './components/BufferDetail';
 import { useBuffersStatistics } from './hooks/useBuffersQuery';
 import { useBuffersSocket } from './hooks/useBuffersSocket';
 import styles from './BufferSettings.module.css';
+import { API_URL } from '../../../../api/config';
 
 // Создаем Query Client
 const queryClient = new QueryClient({
@@ -201,7 +202,7 @@ const BufferSettingsWithQuery: React.FC = () => {
 const BufferSettings: React.FC = () => {
   return (
     <SocketProvider 
-      serverUrl="http://localhost:5000" 
+      serverUrl= {API_URL} 
       autoConnect={true}
     >
       <BufferSettingsWithQuery />

@@ -26,11 +26,11 @@ import {
 } from '../types/streams.types';
 
 export const useStreamsSocket = () => {
-  const socket = useSocket();
+  const { socket, isConnected } = useSocket();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     // ====================================
     // ОБРАБОТЧИКИ СОБЫТИЙ ПОТОКОВ
@@ -393,13 +393,13 @@ export const useStreamsSocket = () => {
     socket.on('materialGroupUpdated', handleMaterialGroupUpdated);
     socket.on('materialGroupDeleted', handleMaterialGroupDeleted);
 
-    // Подключение к комнатам
-    socket.emit('join', 'production-lines');
-    socket.emit('join', 'productionStages');
-    socket.emit('join', 'materials');
-    socket.emit('join', 'materialGroups');
+    // Подключение к комнатам согласно новой документации
+    socket.emit('joinRoom', { room: 'settings-production-lines' });
+    socket.emit('joinRoom', { room: 'settings-production-stages' });
+    socket.emit('joinRoom', { room: 'settings-materials' });
+    socket.emit('joinRoom', { room: 'settings-materialGroups' });
 
-    console.log('🔌 Подключились к комнатам: production-lines, productionStages, materials, materialGroups');
+    console.log('🔌 Подключились к комнатам: settings-production-lines, settings-production-stages, settings-materials, settings-materialGroups');
 
     // Очистка при размонтировании
     return () => {
@@ -433,9 +433,9 @@ export const useStreamsSocket = () => {
 
       console.log('🔌 Отключились от Socket.IO событий');
     };
-  }, [socket, queryClient]);
+  }, [socket, isConnected, queryClient]);
 
   return {
-    isConnected: socket?.connected || false,
+    isConnected,
   };
 };

@@ -10,6 +10,7 @@ import { MaterialsList } from './components/MaterialsList';
 import { MaterialForm } from './components/MaterialForm';
 import { useMaterialsSocket } from './hooks/useMaterialsSocket';
 import styles from './MaterialSettingsPage.module.css';
+import { API_URL } from '../../../../api/config';
 
 // Создаем Query Client
 const queryClient = new QueryClient({
@@ -140,7 +141,7 @@ const MaterialSettingsContent: React.FC = () => {
 
 export const MaterialSettingsPage: React.FC = () => {
   return (
-    <SocketProvider serverUrl="http://localhost:5000" autoConnect={true}>
+    <SocketProvider serverUrl={API_URL} autoConnect={true}>
       <QueryClientProvider client={queryClient}>
         <MaterialSettingsContent />
       </QueryClientProvider>

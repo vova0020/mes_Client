@@ -115,7 +115,7 @@ export const useMachine = (machineId?: number): UseMachineResult => {
   // Инициализация Socket.IO и настройка обработчиков событий
   useEffect(() => {
     if (!effectiveId) {
-      console.warn('effectiveId не определен, не инициализируем сокет');
+      console.warn('effectiveId не определен, не инициализируем с��кет');
       return;
     }
     
@@ -125,25 +125,38 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       // Инициализируем сокет
       const socket = socketService.initialize();
       
-      // Присоединяемся к комнате для получения обновлений станков
+      // Присоединяемся к комнате product-machines для получения обновлений статуса станков
+      console.log('Подключение к комнате product-machines для получения обновлений статуса станков');
       socketService.joinMachinesRoom();
       
       // Устанавливаем обработчики событий
       socketService.setHandlers({
         onConnect: () => {
-          console.log('Socket.IO подключен успешно');
+          console.log('Socket.IO подключен успешно для станка');
           setIsSocketConnected(true);
+          // При подключении заново присоединяемся к комнате
+          socketService.joinMachinesRoom();
         },
         onDisconnect: () => {
-          console.log('Socket.IO отключен');
+          console.log('Socket.IO отключен для станка');
           setIsSocketConnected(false);
         },
         onError: (error) => {
-          console.error('Socket.IO ошибка:', error);
+          console.error('Socket.IO ошибка для станка:', error);
+          setIsSocketConnected(false);
           // Если возникла ошибка сокета, попробуем загрузить данные через REST API
           fetchMachine();
         },
-        onMachineStatusUpdate: handleMachineStatusUpdate
+        onMachineStatusUpdate: handleMachineStatusUpdate,
+        onRoomJoined: (room) => {
+          console.log(`Успешно присоединились к комнате: ${room}`);
+          if (room === 'product-machines') {
+            console.log('Подключение к комнате product-machines подтверждено');
+          }
+        },
+        onRoomLeft: (room) => {
+          console.log(`Покинули комнату: ${room}`);
+        }
       });
       
       // Проверяем текущее состояние соединения
@@ -154,11 +167,12 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       
       // Очистка при размонтировании компонента
       return () => {
-        console.log('Очистка обработчиков Socket.IO');
+        console.log('Очистка обработчиков Socket.IO для станка');
         socketService.clearHandlers();
       };
     } catch (error) {
-      console.error('Ошибка при инициализации Socket.IO:', error);
+      console.error('Ошибка при инициализации Socket.IO для станка:', error);
+      setIsSocketConnected(false);
       // В случае ошибки с сокетом, используем обычный REST API
       fetchMachine();
     }

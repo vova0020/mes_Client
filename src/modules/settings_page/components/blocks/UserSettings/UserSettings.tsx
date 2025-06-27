@@ -10,6 +10,8 @@ import { UserForm } from './components/UserForm';
 import { UserDetails } from './components/UserDetails';
 import { User } from './services/usersApi';
 import styles from './UserSettings.module.css';
+import { API_URL } from '../../../../api/config';
+
 
 // Создаем Query Client для управления пользователями
 const queryClient = new QueryClient({
@@ -200,7 +202,7 @@ interface UserSettingsProps {
 
 export const UserSettings: React.FC<UserSettingsProps> = ({ className }) => {
   return (
-    <SocketProvider serverUrl="http://localhost:5000" autoConnect={true}>
+    <SocketProvider serverUrl={API_URL} autoConnect={true}>
       <QueryClientProvider client={queryClient}>
         <UserSettingsContent className={className} />
       </QueryClientProvider>

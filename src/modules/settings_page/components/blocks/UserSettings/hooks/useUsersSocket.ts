@@ -5,16 +5,16 @@ import { USERS_QUERY_KEYS } from './useUsersQuery';
 import { User, Picker } from '../services/usersApi';
 
 interface SocketUserEvents {
-  'user:created': (data: { userId: number; login: string; firstName: string; lastName: string }) => void;
-  'user:updated': (data: { userId: number; login: string }) => void;
-  'user:deleted': (data: { userId: number; login: string }) => void;
-  'user:role:assigned': (data: { userId: number; role: string; type: string }) => void;
-  'user:role:removed': (data: { userId: number; role: string; type: string }) => void;
-  'user:role:binding:created': (data: { userId: number; role: string; contextType: string; contextId: number }) => void;
-  'user:role:binding:removed': (data: { bindingId: number; userId: number; role: string; contextType: string; contextId: number }) => void;
-  'picker:created': (data: { pickerId: number; userId: number; userName: string }) => void;
-  'picker:updated': (data: { pickerId: number; userId: number }) => void;
-  'picker:deleted': (data: { pickerId: number; userId: number }) => void;
+  'userCreated': (data: { userId: number; login: string; firstName: string; lastName: string }) => void;
+  'userUpdated': (data: { userId: number; login: string }) => void;
+  'userDeleted': (data: { userId: number; login: string }) => void;
+  'userRoleAssigned': (data: { userId: number; role: string; type: string }) => void;
+  'userRoleRemoved': (data: { userId: number; role: string; type: string }) => void;
+  'userRoleBindingCreated': (data: { userId: number; role: string; contextType: string; contextId: number }) => void;
+  'userRoleBindingRemoved': (data: { bindingId: number; userId: number; role: string; contextType: string; contextId: number }) => void;
+  'pickerCreated': (data: { pickerId: number; userId: number; userName: string }) => void;
+  'pickerUpdated': (data: { pickerId: number; userId: number }) => void;
+  'pickerDeleted': (data: { pickerId: number; userId: number }) => void;
 }
 
 export const useUsersSocket = () => {
@@ -30,8 +30,7 @@ export const useUsersSocket = () => {
     console.log('[useUsersSocket] Настройка обработчиков событий пользователей и комплектовщиков');
 
     // Присоединяемся к комнатам
-    joinRoom('joinUsersRoom');
-    joinRoom('joinPickersRoom');
+    joinRoom('settings-user');
 
     // Обработчики событий пользователей
 
@@ -201,25 +200,24 @@ export const useUsersSocket = () => {
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.contextPickers() });
     };
 
-    // Регистрируем обработчики событий пользователей
-    socket.on('user:created', handleUserCreated);
-    socket.on('user:updated', handleUserUpdated);
-    socket.on('user:deleted', handleUserDeleted);
-    socket.on('user:role:assigned', handleRoleAssigned);
-    socket.on('user:role:removed', handleRoleRemoved);
-    socket.on('user:role:binding:created', handleBindingCreated);
-    socket.on('user:role:binding:removed', handleBindingRemoved);
+    // Регистрируем обработчики событий пользователей (согласно новой документации)
+    socket.on('userCreated', handleUserCreated);
+    socket.on('userUpdated', handleUserUpdated);
+    socket.on('userDeleted', handleUserDeleted);
+    socket.on('userRoleAssigned', handleRoleAssigned);
+    socket.on('userRoleRemoved', handleRoleRemoved);
+    socket.on('userRoleBindingCreated', handleBindingCreated);
+    socket.on('userRoleBindingRemoved', handleBindingRemoved);
 
-    // Регистрируем обработчики событий комплектовщиков
-    socket.on('picker:created', handlePickerCreated);
-    socket.on('picker:updated', handlePickerUpdated);
-    socket.on('picker:deleted', handlePickerDeleted);
+    // Регистрируем обработчики событий комплектовщиков (согласно новой документации)
+    socket.on('pickerCreated', handlePickerCreated);
+    socket.on('pickerUpdated', handlePickerUpdated);
+    socket.on('pickerDeleted', handlePickerDeleted);
 
     // Общие обработчики для отладки
     const handleConnect = () => {
       console.log('[useUsersSocket] Подключен к Socket.IO серверу');
-      joinRoom('joinUsersRoom'); // Переподключаемся к комнате при восстановлении соединения
-      joinRoom('joinPickersRoom');
+      joinRoom('settings-user'); // Переподключаемся к комнате при восстановлении соединения
     };
 
     const handleDisconnect = (reason: string) => {
@@ -239,22 +237,21 @@ export const useUsersSocket = () => {
       console.log('[useUsersSocket] Отключение обработчиков событий пользователей и комплектовщиков');
       
       // Отключаемся от комнат
-      leaveRoom('joinUsersRoom');
-      leaveRoom('joinPickersRoom');
+      leaveRoom('settings-user');
       
       // Удаляем обработчики событий пользователей
-      socket.off('user:created', handleUserCreated);
-      socket.off('user:updated', handleUserUpdated);
-      socket.off('user:deleted', handleUserDeleted);
-      socket.off('user:role:assigned', handleRoleAssigned);
-      socket.off('user:role:removed', handleRoleRemoved);
-      socket.off('user:role:binding:created', handleBindingCreated);
-      socket.off('user:role:binding:removed', handleBindingRemoved);
+      socket.off('userCreated', handleUserCreated);
+      socket.off('userUpdated', handleUserUpdated);
+      socket.off('userDeleted', handleUserDeleted);
+      socket.off('userRoleAssigned', handleRoleAssigned);
+      socket.off('userRoleRemoved', handleRoleRemoved);
+      socket.off('userRoleBindingCreated', handleBindingCreated);
+      socket.off('userRoleBindingRemoved', handleBindingRemoved);
       
-      // Удаляем обработчики событий комплектовщиков
-      socket.off('picker:created', handlePickerCreated);
-      socket.off('picker:updated', handlePickerUpdated);
-      socket.off('picker:deleted', handlePickerDeleted);
+      // Удаляем обра��отчики событий комплектовщиков
+      socket.off('pickerCreated', handlePickerCreated);
+      socket.off('pickerUpdated', handlePickerUpdated);
+      socket.off('pickerDeleted', handlePickerDeleted);
       
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);

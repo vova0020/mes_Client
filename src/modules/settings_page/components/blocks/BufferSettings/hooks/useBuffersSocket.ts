@@ -95,8 +95,8 @@ export const useBuffersSocket = () => {
 
     console.log('[BuffersSocket] Подключение к комнате буферов...');
     
-    // Присоединяемся к комнате буферов
-    socket.emit('joinBuffersRoom');
+    // Присоединяемся к комнате буферов согласно новой документации
+    socket.emit('joinRoom', { room: 'settings-buffers' });
 
     // === ОБРАБОТЧИКИ СОБЫТИЙ БУФЕРОВ ===
 

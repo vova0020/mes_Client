@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-
+import { API_URL } from '../modules/api/config';
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
@@ -19,13 +19,13 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 interface SocketProviderProps {
   children: React.ReactNode;
-  serverUrl?: string;
+  serverUrl?: any;
   autoConnect?: boolean;
 }
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({
   children,
-  serverUrl = 'http://localhost:5000',
+  serverUrl = {API_URL},
   autoConnect = true,
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -108,6 +108,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
       console.log('🗑️ Группа материалов удалена:', data);
     });
 
+    // Обработчики событий станков из комнаты product-machines
+    newSocket.on('machineStatusUpdated', (data) => {
+      console.log('🏭 Статус станка обновлен:', data);
+      // Событие будет обработано в useMachine хуке
+    });
+
     return newSocket;
   }, [serverUrl]);
 
@@ -135,7 +141,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
   const joinRoom = useCallback((roomName: string) => {
     if (socket && isConnected) {
       console.log('🏠 Подключение к комнате:', roomName);
-      socket.emit(roomName);
+      socket.emit('joinRoom', { room: roomName });
     } else {
       console.warn('⚠️ Socket не подключен, невозможно присоединиться к комнате:', roomName);
     }
@@ -144,7 +150,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
   const leaveRoom = useCallback((roomName: string) => {
     if (socket && isConnected) {
       console.log('🚪 Отключение от комнаты:', roomName);
-      socket.emit(`leave${roomName.charAt(0).toUpperCase() + roomName.slice(1)}`);
+      socket.emit('leaveRoom', { room: roomName });
     }
   }, [socket, isConnected]);
 
@@ -204,12 +210,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
     }
   }, [createSocket, autoConnect]);
 
-  // Автоматическое подключение к комнатам материалов при соединении
+  // Автоматическое подключение к комнатам при соединении
   useEffect(() => {
     if (socket && isConnected) {
-      console.log('🏠 Автоматическое подключен��е к комнатам материалов');
-      joinRoom('joinMaterialsRoom');
-      joinRoom('joinMaterialGroupsRoom');
+      console.log('🏠 Автоматическое подключение к комнатам');
+      joinRoom('settings-materials');
+      joinRoom('settings-materialGroups');
+      joinRoom('product-machines'); // Добавляем подключение к комнате станков
     }
   }, [socket, isConnected, joinRoom]);
 

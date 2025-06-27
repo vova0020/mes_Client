@@ -10,7 +10,7 @@ import { StreamForm } from './components/StreamForm';
 import { StagesManagement } from './components/stages/StagesManagement';
 import { useStreamsSocket } from './hooks/useStreamsSocket';
 import styles from './StreamsSettingsPage.module.css';
-
+import { API_URL } from '../../../../api/config';
 // Создаем Query Client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -158,7 +158,7 @@ const StreamsSettingsContent: React.FC = () => {
 
 export const StreamsSettingsPage: React.FC = () => {
   return (
-    <SocketProvider serverUrl="http://localhost:5000" autoConnect={true}>
+    <SocketProvider serverUrl={API_URL} autoConnect={true}>
       <QueryClientProvider client={queryClient}>
         <StreamsSettingsContent />
       </QueryClientProvider>

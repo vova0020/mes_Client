@@ -42,6 +42,10 @@ export const useMaterialsSocket = () => {
     if (!socket || !isConnected) return;
 
     console.log('🔔 Настройка Socket.IO обработчиков для материалов');
+    
+    // Подключаемся к комнатам материалов согласно новой документации
+    socket.emit('joinRoom', { room: 'settings-materials' });
+    socket.emit('joinRoom', { room: 'settings-materialGroups' });
 
     // =============== МАТЕРИАЛЫ ===============
 

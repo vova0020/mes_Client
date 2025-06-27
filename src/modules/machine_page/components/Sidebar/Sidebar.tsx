@@ -187,6 +187,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           <Button disabled={areIconButtonsDisabled}>
             <ReclamaciIcon className={styles.icon} />
           </Button>
+          
+          {/* Индикатор подключения к сокету */}
+          <Tooltip title={isSocketConnected ? "Подключен к серверу обновлений" : "Отключен от сервера обновлений"}>
+            <div className={`${styles.socketIndicator} ${isSocketConnected ? styles.socketConnected : styles.socketDisconnected}`}>
+              <WifiIcon className={styles.wifiIcon} />
+            </div>
+          </Tooltip>
         </div>
       </div>
     </div>

@@ -215,7 +215,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {details.map((detail, index) => (
+            {details.sort((a, b) => a.id - b.id).map((detail, index) => (
               <tr
                 key={detail.id}
                 className={`

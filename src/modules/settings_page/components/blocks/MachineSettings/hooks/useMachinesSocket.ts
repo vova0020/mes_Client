@@ -50,8 +50,8 @@ export const useMachinesSocket = () => {
 
     console.log('[MachinesSocket] Подключение к комнате станков...');
     
-    // Присоединяемся к комнате станков
-    socket.emit('joinMachinesRoom');
+    // Присоединяемся к комнате станков согласно новой документации
+    socket.emit('joinRoom', { room: 'settings-machines' });
 
     // Обработчик создания станка
     const handleMachineCreated = (data: MachineSocketEvents['machineCreated']) => {

@@ -550,4 +550,86 @@
   animation: pulseBroken 2s infinite ease-in-out;
 }
 
+/* Стили для индикатора подключения к сокету */
+.socketIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.socketConnected {
+  background-color: rgba(76, 175, 80, 0.2);
+  border: 2px solid #4caf50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+.socketDisconnected {
+  background-color: rgba(244, 67, 54, 0.2);
+  border: 2px solid #f44336;
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.4);
+}
+
+.wifiIcon {
+  width: 20px;
+  height: 20px;
+  transition: all 0.3s ease;
+}
+
+.socketConnected .wifiIcon {
+  fill: #4caf50;
+  filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.6));
+}
+
+.socketDisconnected .wifiIcon {
+  fill: #f44336;
+  filter: drop-shadow(0 0 2px rgba(244, 67, 54, 0.6));
+}
+
+/* Анимация для подключенного состояния */
+@keyframes pulseConnected {
+  0% {
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(76, 175, 80, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+  }
+}
+
+.socketConnected {
+  animation: pulseConnected 3s infinite ease-in-out;
+}
+
+/* Адаптивные стили для индикатора сокета */
+@media screen and (max-width: 767px) {
+  .socketIndicator {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .wifiIcon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media screen and (max-width: 575px) {
+  .socketIndicator {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .wifiIcon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 }

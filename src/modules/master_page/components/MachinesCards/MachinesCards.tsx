@@ -151,7 +151,7 @@ const MachinesCards: React.FC = () => {
         
         <div className={styles.tableContainer}>
           <div className={styles.cardsWrapper}>
-            {machines.map(machine => (
+            {machines.sort((a, b) => a.id - b.id).map(machine => (
               <div 
                 key={machine.id} 
                 className={styles.machineCard}
