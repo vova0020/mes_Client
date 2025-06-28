@@ -183,7 +183,7 @@ const MachinesCards: React.FC = () => {
                           {machine.completedQuantity} шт. ({calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%)
                           <div className={styles.progressBar}>
                             <div 
-                              className={styles.progressFill} 
+                              className={styles.progressFill}  
                               style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%` }}
                             />
                           </div>

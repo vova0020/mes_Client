@@ -5,7 +5,20 @@ import useMachines from '../../../../../hooks/masterPage/useMachinesMaster';
 import { MachineTask } from '../../../../../api/masterPage/machineMasterService';
 
 // Типы статусов деталей
-type TaskStatus = 'pending' | 'processing' | 'completed';
+type TaskStatus = 'PENDING' | 'BUFFERED' | 'ON_MACHINE' |  'COMPLETED' | 'PARTIALLY_COMPLETED' ;
+
+// Интерфейс для сгруппированной детали
+interface GroupedDetail {
+  detailArticle: string;
+  detailName: string;
+  detailMaterial: string;
+  detailSize: string;
+  orderName: string;
+  priority: number | null;
+  partId: number;
+  totalQuantity: number;
+  pallets: MachineTask[];
+}
 
 // Интерфейс для модального окна частичной обработки
 interface PartialProcessingModalProps {
@@ -13,6 +26,15 @@ interface PartialProcessingModalProps {
   onClose: () => void;
   taskItem: MachineTask | null;
   onConfirm: (taskId: number, quantity: number) => void;
+}
+
+// Интерфейс для модального окна редактирования приоритета
+interface PriorityEditModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  groupedDetail: GroupedDetail | null;
+  machineId: number;
+  onConfirm: (partId: number, machineId: number, priority: number) => void;
 }
 
 interface TaskSidebarProps {
@@ -140,6 +162,131 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   );
 };
 
+// Компонент модального окна для редактирования приоритета
+const PriorityEditModal: React.FC<PriorityEditModalProps> = ({ 
+  isOpen, 
+  onClose,
+  groupedDetail,
+  machineId,
+  onConfirm
+}) => {
+  const [priority, setPriority] = useState<number>(0);
+  
+  // Устанавливаем текущий приоритет при открытии модального окна
+  useEffect(() => {
+    if (isOpen && groupedDetail) {
+      setPriority(groupedDetail.priority || 0);
+    }
+  }, [isOpen, groupedDetail]);
+  
+  // Обработчик изменения приоритета
+  const handlePriorityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value >= 0) {
+      setPriority(value);
+    }
+  };
+  
+  // Обработчик подтверждения
+  const handleConfirm = () => {
+    if (groupedDetail && priority >= 0) {
+      // Используем operationId первого поддона как partId
+      const partId = groupedDetail.partId;
+      if (partId) {
+        onConfirm(partId, machineId, priority);
+        onClose();
+      }
+    }
+  };
+  
+  if (!isOpen || !groupedDetail) return null;
+  
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalHeader}>
+          <h3>Редактирование приоритета</h3>
+          <button className={styles.modalCloseButton} onClick={onClose}>&times;</button>
+        </div>
+        
+        <div className={styles.modalBody}>
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Деталь:</span>
+            <span className={styles.modalValue}>{groupedDetail.detailName}</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Артикул:</span>
+            <span className={styles.modalValue}>{groupedDetail.detailArticle}</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Материал:</span>
+            <span className={styles.modalValue}>{groupedDetail.detailMaterial}</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Заказ:</span>
+            <span className={styles.modalValue}>{groupedDetail.orderName}</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Текущий приоритет:</span>
+            <span className={styles.modalValue}>{groupedDetail.priority || 'Не установлен'}</span>
+          </div>
+          
+          <div className={styles.quantityInputContainer}>
+            <label className={styles.quantityLabel} htmlFor="priority-input">
+              Новый приоритет:
+            </label>
+            <div className={styles.quantityInputWrapper}>
+              <button 
+                className={styles.quantityButton}
+                onClick={() => priority > 0 && setPriority(priority - 1)}
+                disabled={priority <= 0}
+              >
+                -
+              </button>
+              <input
+                id="priority-input"
+                type="number"
+                className={styles.quantityInput}
+                value={priority}
+                onChange={handlePriorityChange}
+                min={0}
+                max={999}
+              />
+              <button 
+                className={styles.quantityButton}
+                onClick={() => priority < 999 && setPriority(priority + 1)}
+                disabled={priority >= 999}
+              >
+                +
+              </button>
+            </div>
+            <div className={styles.priorityHint}>
+              Чем меньше число, тем выше приоритет (1 - самый высокий)
+            </div>
+          </div>
+        </div>
+        
+        <div className={styles.modalFooter}>
+          <button className={styles.modalCancelButton} onClick={onClose}>
+            Отмена
+          </button>
+          <button 
+            className={styles.modalConfirmButton} 
+            onClick={handleConfirm}
+            disabled={priority < 0}
+          >
+            Сохранить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TaskSidebar: React.FC<TaskSidebarProps> = ({ 
   isOpen, 
   onClose, 
@@ -154,6 +301,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     fetchTasks,
     removeTask,
     transferTask,
+    updatePriority,
     availableMachines,
     availableMachinesLoading,
     fetchAvailableMachines
@@ -162,6 +310,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   // Состояние для модального окна частичной обработки
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<MachineTask | null>(null);
+  
+  // Состояние для модального окна редактирования приоритета
+  const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
+  const [selectedGroupForPriority, setSelectedGroupForPriority] = useState<GroupedDetail | null>(null);
+  
+  // Состояние для отслеживания развернутых групп деталей
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   
   // Загрузка данных сменного задания при открытии
   useEffect(() => {
@@ -173,6 +328,24 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       fetchAvailableMachines();
     }
   }, [isOpen, machineId, fetchTasks, fetchAvailableMachines]);
+  
+  // Автоматическое разворачивание групп с высоким приоритетом
+  useEffect(() => {
+    if (machineTasks.length > 0) {
+      const groupedDetails = groupTasksByDetail(machineTasks);
+      const highPriorityGroups = new Set<string>();
+      
+      groupedDetails.forEach(group => {
+        const groupKey = `${group.detailArticle}-${group.detailName}-${group.orderName}`;
+        // Разворачиваем группы с приоритетом 1 или 2 (высокий приоритет)
+        if (group.priority !== null && group.priority <= 2) {
+          highPriorityGroups.add(groupKey);
+        }
+      });
+      
+      setExpandedGroups(highPriorityGroups);
+    }
+  }, [machineTasks]);
   
   // Обработчик частичной обработки
   const handlePartialProcessing = (operationId: number) => {
@@ -194,6 +367,31 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     if (task && task.quantity - quantity <= 0) {
       // Если все детали обработаны, удаляем задание
       handleDeleteItem(operationId);
+    }
+  };
+  
+  // Обработчик открытия модального окна редактирования приоритета
+  const handleEditPriority = (group: GroupedDetail) => {
+    setSelectedGroupForPriority(group);
+    setIsPriorityModalOpen(true);
+  };
+  
+  // Обработчик подтверждения изменения приоритета
+  const handleConfirmPriorityChange = async (partId: number, machineId: number, priority: number) => {
+    console.log(`Изменение приоритета для детали ${partId} на станке ${machineId}: ${priority}`);
+    
+    try {
+      const success = await updatePriority(partId, machineId, priority);
+      if (success) {
+        // Перезагружаем задания для отображения обновленного приоритета
+        await fetchTasks(machineId);
+        alert('Приоритет успешно обновлен');
+      } else {
+        alert('Произошла ошибка при обновлении приоритета');
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении приоритета:', error);
+      alert('Произошла ошибка при обновлении приоритета');
     }
   };
   
@@ -241,17 +439,22 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     }
   };
   
-  // Маппинг статусов API к статусам UI
+  // Маппинг статусов API к статусам UI (теперь используем статусы напрямую с сервера)
   const mapApiStatusToUiStatus = (status: string): TaskStatus => {
-    switch (status.toUpperCase()) {
+    const upperStatus = status.toUpperCase();
+    switch (upperStatus) {
+      case 'PENDING':
+        return 'PENDING';
+      case 'BUFFERED':
+        return 'BUFFERED';
       case 'ON_MACHINE':
-        return 'pending';
-      case 'IN_PROGRESS':
-        return 'processing';
+        return 'ON_MACHINE';
       case 'COMPLETED':
-        return 'completed';
+        return 'COMPLETED';
+      case 'PARTIALLY_COMPLETED':
+        return 'PARTIALLY_COMPLETED';
       default:
-        return 'pending';
+        return 'PENDING';
     }
   };
   
@@ -283,7 +486,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     return styles.normalPriority;
   };
   
-  // Функция для отображения статуса
+  // Функция для отображения стату��а
   const renderStatusIndicator = (status: string) => {
     const uiStatus = mapApiStatusToUiStatus(status);
     
@@ -291,17 +494,25 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     let statusText = '';
     
     switch (uiStatus) {
-      case 'pending':
+      case 'PENDING':
         statusClass = styles.statusPending;
         statusText = 'Ожидание';
         break;
-      case 'processing':
-        statusClass = styles.statusProcessing;
-        statusText = 'В обработке';
+      case 'BUFFERED':
+        statusClass = styles.statusBuffered;
+        statusText = 'В буфере';
         break;
-      case 'completed':
+      case 'ON_MACHINE':
+        statusClass = styles.statusOnMachine;
+        statusText = 'На станке';
+        break;
+      case 'COMPLETED':
         statusClass = styles.statusCompleted;
         statusText = 'Завершено';
+        break;
+      case 'PARTIALLY_COMPLETED':
+        statusClass = styles.statusPartiallyCompleted;
+        statusText = 'Частично завершено';
         break;
       default:
         statusClass = styles.statusPending;
@@ -328,6 +539,57 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     alert('Экспорт данных в Excel...');
   };
   
+  // Функция для группировки заданий по деталям
+  const groupTasksByDetail = (tasks: MachineTask[]): GroupedDetail[] => {
+    const grouped = tasks.reduce((acc, task) => {
+      const key = `${task.detailArticle}-${task.detailName}-${task.detailMaterial}-${task.detailSize}-${task.orderName}`;
+      const taskPriority = task.priority && task.priority > 0 ? task.priority : null;
+
+      if (!acc[key]) {
+        acc[key] = {
+          detailArticle: task.detailArticle,
+          detailName: task.detailName,
+          detailMaterial: task.detailMaterial,
+          detailSize: task.detailSize,
+          orderName: task.orderName,
+          priority: taskPriority,
+          partId: task.partId,
+          totalQuantity: 0,
+          pallets: []
+        };
+      }
+      
+      acc[key].totalQuantity += task.quantity;
+      acc[key].pallets.push(task);
+      
+      // Устанавливаем наивысший приоритет для группы (меньшее число = выше приоритет)
+      if (taskPriority !== null && (acc[key].priority === null || taskPriority < acc[key].priority!)) {
+        acc[key].priority = taskPriority;
+      }
+      
+      return acc;
+    }, {} as Record<string, GroupedDetail>);
+    
+    // Сортируем группы по приоритету (меньшее число = выше приоритет)
+    return Object.values(grouped).sort((a, b) => {
+      if (a.priority === null && b.priority === null) return 0;
+      if (a.priority === null) return 1;
+      if (b.priority === null) return -1;
+      return a.priority - b.priority; 
+    });
+  };
+  
+  // Обработчик переключения развернутости группы
+  const toggleGroupExpansion = (groupKey: string) => {
+    const newExpandedGroups = new Set(expandedGroups);
+    if (newExpandedGroups.has(groupKey)) {
+      newExpandedGroups.delete(groupKey);
+    } else {
+      newExpandedGroups.add(groupKey);
+    }
+    setExpandedGroups(newExpandedGroups);
+  };
+  
   // Функция сортировки заданий по приоритету
   const handleSortByPriority = () => {
     // Данную функцию оставляем как есть, поскольку сортировка 
@@ -348,6 +610,27 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               title="Сортировать по приоритету"
             >
               ↑↓
+            </button>
+            <button 
+              className={styles.expandAllButton} 
+              onClick={() => {
+                const groupedDetails = groupTasksByDetail(machineTasks);
+                if (expandedGroups.size === groupedDetails.length) {
+                  // Если все развернуты, сворачиваем все
+                  setExpandedGroups(new Set());
+                } else {
+                  // Иначе разворачиваем все
+                  const allGroups = new Set(
+                    groupedDetails.map(group => 
+                      `${group.detailArticle}-${group.detailName}-${group.orderName}`
+                    )
+                  );
+                  setExpandedGroups(allGroups);
+                }
+              }}
+              title={expandedGroups.size === groupTasksByDetail(machineTasks).length ? "Свернуть все" : "Развернуть все"}
+            >
+              {expandedGroups.size === groupTasksByDetail(machineTasks).length ? "▲▲" : "▼▼"}
             </button>
             <button className={styles.closeButton} onClick={onClose}>×</button>
           </div>
@@ -377,77 +660,165 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               </p>
             </div>
           ) : (
-            <div className={styles.tableContainer}>
-              <div className={styles.tableScrollContainer}>
-                <table className={styles.tasksTable}>
-                  <thead>
-                    <tr>
-                      <th className={styles.priorityColumn}>Приоритет</th>
-                      <th>Заказ</th>
-                      <th>Артикул</th>
-                      <th>Наименование</th>
-                      <th>Материал</th>
-                      <th>Размер</th>
-                      <th>№ поддона</th>
-                      <th>Кол-во</th>
-                      <th className={styles.statusColumn}>Статус</th>
-                      <th className={styles.actionsColumn}>Действия</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {machineTasks.map(item => (
-                      <tr key={item.operationId} className={styles[`status-${mapApiStatusToUiStatus(item.status)}`]}>
-                        <td className={styles.priorityCell}>
-                          {renderPriorityIndicator(item.priority)}
-                        </td>
-                        <td>{item.orderName}</td>
-                        <td>{item.detailArticle}</td>
-                        <td>{item.detailName}</td>
-                        <td>{item.detailMaterial}</td>
-                        <td>{item.detailSize}</td>
-                        <td className={styles.palletCell}>{item.palletName}</td>
-                        <td className={styles.quantityCell}>{item.quantity} шт.</td>
-                        <td className={styles.statusCell}>
-                          {renderStatusIndicator(item.status)}
-                        </td>
-                        <td className={styles.actionsCell}>
-                          <div className={styles.actionButtonsContainer}>
-                            <button 
-                              className={`${styles.actionButton} ${styles.partialButton}`}
-                              onClick={() => handlePartialProcessing(item.operationId)}
-                              title="Частичная обработка"
-                              disabled={mapApiStatusToUiStatus(item.status) === 'completed'}
-                            >
-                              Частично
-                            </button>
-                            
-                            <select 
-                              className={styles.machineSelect}
-                              onChange={(e) => handleMachineChange(item.operationId, e.target.value)}
-                              defaultValue={machineId.toString()}
-                              disabled={mapApiStatusToUiStatus(item.status) === 'completed' || availableMachinesLoading}
-                            >
-                              {availableMachines.map(machine => (
-                                <option key={machine.id} value={machine.id}>
-                                  {machine.name}
-                                </option>
-                              ))}
-                            </select>
-                            
-                            <button 
-                              className={`${styles.actionButton} ${styles.deleteButton}`}
-                              onClick={() => handleDeleteItem(item.operationId)}
-                              title="Удалить из сменного задания"
-                            >
-                              Удалить
-                            </button>
+            <div className={styles.groupedTasksContainer}>
+              {groupTasksByDetail(machineTasks).map((group, groupIndex) => {
+                const groupKey = `${group.detailArticle}-${group.detailName}-${group.orderName}`;
+                const isExpanded = expandedGroups.has(groupKey);
+                
+                return (
+                  <div 
+                    key={groupKey} 
+                    className={`${styles.detailGroup} ${group.priority !== null && group.priority <= 2 ? styles.highPriorityGroup : ''}`}
+                    style={{ animationDelay: `${groupIndex * 0.1}s` }}
+                  >
+                    {/* Заголовок группы детали */}
+                    <div 
+                      className={styles.detailGroupHeader}
+                      onClick={() => toggleGroupExpansion(groupKey)}
+                    >
+                      <div className={`${styles.expandIcon} ${isExpanded ? styles.expanded : ''}`}>
+                        {isExpanded ? '▼' : '▶'}
+                      </div>
+                      
+                      <div className={styles.detailGroupInfo}>
+                        <div className={styles.detailGroupMainInfo}>
+                          <div className={styles.detailGroupPriority}>
+                            {renderPriorityIndicator(group.priority)}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          <div className={styles.detailGroupTitle}>
+                            <span className={styles.detailName}>{group.detailName}</span>
+                            <span className={styles.detailArticle}>({group.detailArticle})</span>
+                          </div>
+                          <button 
+                            className={styles.editPriorityButton}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Предотвращаем сворачивание/разворачивание группы
+                              handleEditPriority(group);
+                            }}
+                            title="Редактировать приоритет"
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                        
+                        <div className={styles.detailGroupSecondaryInfo}>
+                          <span className={styles.orderName}>Заказ: {group.orderName}</span>
+                          <span className={styles.detailMaterial}>Материал: {group.detailMaterial}</span>
+                          <span className={styles.detailSize}>Размер: {group.detailSize}</span>
+                          <span className={styles.totalQuantity}>
+                            Всего: {group.totalQuantity} шт. ({group.pallets.length} поддонов)
+                          </span>
+                          <span className={styles.statusSummary}>
+                            {(() => {
+                              const statusCounts = group.pallets.reduce((acc, pallet) => {
+                                const status = mapApiStatusToUiStatus(pallet.status);
+                                acc[status] = (acc[status] || 0) + 1;
+                                return acc;
+                              }, {} as Record<TaskStatus, number>);
+                              
+                              const parts = [];
+                              if (statusCounts.PENDING) parts.push(`Ожидание: ${statusCounts.PENDING}`);
+                              if (statusCounts.BUFFERED) parts.push(`В буфере: ${statusCounts.BUFFERED}`);
+                              if (statusCounts.ON_MACHINE) parts.push(`На станке: ${statusCounts.ON_MACHINE}`);
+                              if (statusCounts.PARTIALLY_COMPLETED) parts.push(`Частично: ${statusCounts.PARTIALLY_COMPLETED}`);
+                              if (statusCounts.COMPLETED) parts.push(`Готово: ${statusCounts.COMPLETED}`);
+                              
+                              return parts.join(' | ');
+                            })()}
+                          </span>
+                          <div className={styles.progressContainer}>
+                            {(() => {
+                              const completedCount = group.pallets.filter(p => 
+                                mapApiStatusToUiStatus(p.status) === 'COMPLETED'
+                              ).length;
+                              const partiallyCompletedCount = group.pallets.filter(p => 
+                                mapApiStatusToUiStatus(p.status) === 'PARTIALLY_COMPLETED'
+                              ).length;
+                              const totalProgress = completedCount + (partiallyCompletedCount * 0.5); // Частично завершенные считаем как 50%
+                              const progressPercent = Math.round((totalProgress / group.pallets.length) * 100);
+                              
+                              return (
+                                <>
+                                  <div className={styles.progressBar}>
+                                    <div 
+                                      className={styles.progressFill} 
+                                      style={{ width: `${progressPercent}%` }}
+                                    />
+                                  </div>
+                                  <span className={styles.progressText}>
+                                    {completedCount}/{group.pallets.length} ({progressPercent}%)
+                                    {partiallyCompletedCount > 0 && ` + ${partiallyCompletedCount} частично`}
+                                  </span>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Список поддонов (отображается при развертывании) */}
+                    {isExpanded && (
+                      <div className={styles.palletsContainer}>
+                        <div className={styles.palletsHeader}>
+                          <span className={styles.palletHeaderItem}>№ поддона</span>
+                          <span className={styles.palletHeaderItem}>Количество</span>
+                          {/* <span className={styles.palletHeaderItem}>Адрес</span> */}
+                          <span className={styles.palletHeaderItem}>Статус</span>
+                          <span className={styles.palletHeaderItem}>Действия</span>
+                        </div>
+                        
+                        {group.pallets.map(pallet => (
+                          <div 
+                            key={pallet.operationId} 
+                            className={`${styles.palletRow} ${styles[`status-${mapApiStatusToUiStatus(pallet.status).toLowerCase()}`]}`}
+                          >
+                            <div className={styles.palletInfo}>
+                              <span className={styles.palletName}>{pallet.palletName}</span>
+                              <span className={styles.palletQuantity}>{pallet.quantity} шт.</span>
+                              <div className={styles.palletStatus}>
+                                {renderStatusIndicator(pallet.status)}
+                              </div>
+                            </div>
+                            
+                            <div className={styles.palletActions}>
+                              <button 
+                                className={`${styles.actionButton} ${styles.partialButton}`}
+                                onClick={() => handlePartialProcessing(pallet.operationId)}
+                                title="Частичная обработка"
+                                disabled={mapApiStatusToUiStatus(pallet.status) === 'COMPLETED'}
+                              >
+                                Частично
+                              </button>
+             
+                              <select 
+                                className={styles.machineSelect}
+                                onChange={(e) => handleMachineChange(pallet.operationId, e.target.value)}
+                                defaultValue={machineId.toString()}
+                                disabled={mapApiStatusToUiStatus(pallet.status) === 'COMPLETED' || availableMachinesLoading}
+                              >
+                                {availableMachines.map(machine => (
+                                  <option key={machine.id} value={machine.id}>
+                                    {machine.name}
+                                  </option>
+                                ))}
+                              </select>
+                              
+                              <button 
+                                className={`${styles.actionButton} ${styles.deleteButton}`}
+                                onClick={() => handleDeleteItem(pallet.operationId)}
+                                title="Удалить из сменного задания"
+                              >
+                                Удалить
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -455,7 +826,11 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         <div className={styles.sidebarFooter}>
           <div className={styles.footerInfo}>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Всего позиций:</span>
+              <span className={styles.infoLabel}>Деталей:</span>
+              <span className={styles.infoValue}>{groupTasksByDetail(machineTasks).length}</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>Поддонов:</span>
               <span className={styles.infoValue}>{machineTasks.length}</span>
             </div>
             <div className={styles.infoItem}>
@@ -490,6 +865,15 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         onClose={() => setIsModalOpen(false)}
         taskItem={selectedTask}
         onConfirm={handleConfirmPartialProcessing}
+      />
+      
+      {/* Модальное окно для редактирования приоритета */}
+      <PriorityEditModal
+        isOpen={isPriorityModalOpen}
+        onClose={() => setIsPriorityModalOpen(false)}
+        groupedDetail={selectedGroupForPriority}
+        machineId={machineId}
+        onConfirm={handleConfirmPriorityChange}
       />
     </>
   );

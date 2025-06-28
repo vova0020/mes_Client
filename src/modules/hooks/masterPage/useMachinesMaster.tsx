@@ -7,7 +7,8 @@ import {
   moveTask,
   MachineTask,
   fetchMachinesBySegmentId,
-  MachineDto
+  MachineDto,
+  updateTaskPriority
 } from '../../api/masterPage/machineMasterService';
 
 // Определение интерфейса результата хука
@@ -26,6 +27,7 @@ interface UseMachinesResult {
   clearTasks: () => void;
   removeTask: (operationId: number) => Promise<boolean>;
   transferTask: (operationId: number, targetMachineId: number) => Promise<boolean>;
+  updatePriority: (partId: number, machineId: number, priority: number) => Promise<boolean>;
   
   // Функции для работы с доступными станками
   availableMachines: MachineDto[];
@@ -51,7 +53,7 @@ const useMachines = (): UseMachinesResult => {
   const [availableMachines, setAvailableMachines] = useState<MachineDto[]>([]);
   const [availableMachinesLoading, setAvailableMachinesLoading] = useState<boolean>(false);
 
-  // Ref для предотвращения множественных запросов
+  // Ref ��ля предотвращения множественных запросов
   const isLoadingRef = useRef<boolean>(false);
 
   // Функция для получения данных о станках
@@ -81,7 +83,7 @@ const useMachines = (): UseMachinesResult => {
   // Функция для обновления данных о станках (алиас для fetchMachines для улучшения читаемости кода)
   const refreshMachines = fetchMachines;
 
-  // Функция для получения заданий для станка
+  // ��ункция для получения заданий для станка
   const fetchTasks = useCallback(async (machineId: number) => {
     setTasksLoading(true);
     setTasksError(null);
@@ -110,7 +112,7 @@ const useMachines = (): UseMachinesResult => {
       setMachineTasks(prev => prev.filter(task => task.operationId !== operationId));
       return true;
     } catch (err) {
-      console.error(`Ошибка при удалении задания ${operationId}:`, err);
+      console.error(`Ошибка при удалении за��ания ${operationId}:`, err);
       return false;
     }
   }, []);
@@ -119,11 +121,26 @@ const useMachines = (): UseMachinesResult => {
   const transferTask = useCallback(async (operationId: number, targetMachineId: number): Promise<boolean> => {
     try {
       await moveTask(operationId, targetMachineId);
-      // О��новляем локальное состояние, удаляя перемещенное задание из списка текущего станка
+      // Обновляем локальное состояние, удаляя перемещенное задание из списка текущего станка
       setMachineTasks(prev => prev.filter(task => task.operationId !== operationId));
       return true;
     } catch (err) {
       console.error(`Ошибка при перемещении задания ${operationId} на станок ${targetMachineId}:`, err);
+      return false;
+    }
+  }, []);
+
+  // Функция для обновления приоритета задания
+  const updatePriority = useCallback(async (partId: number, machineId: number, priority: number): Promise<boolean> => {
+    try {
+      await updateTaskPriority(partId, machineId, priority);
+      // Обновляем локальное состояние - находим задание и обновляем его приоритет
+      setMachineTasks(prev => prev.map(task => 
+        task.operationId === partId ? { ...task, priority } : task
+      ));
+      return true;
+    } catch (err) {
+      console.error(`Ошибка при обновлении приоритета для детали ${partId} на станке ${machineId}:`, err);
       return false;
     }
   }, []);
@@ -179,6 +196,7 @@ const useMachines = (): UseMachinesResult => {
     clearTasks,
     removeTask,
     transferTask,
+    updatePriority,
     
     // Данные и функции для работы с доступными станками
     availableMachines,

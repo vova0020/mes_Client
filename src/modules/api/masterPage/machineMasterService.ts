@@ -22,6 +22,7 @@ export interface MachineDto {
 export interface MachineTask {
   operationId: number;
   priority: number;
+  partId: number;
   orderId: number;
   orderName: string;
   detailArticle: string;
@@ -206,6 +207,38 @@ export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
     }
   } catch (error) {
     console.error('Ошибка при получении станков:', error);
+    throw error;
+  }
+};
+
+/**
+ * Обновляет приоритет задания
+ * @param partId ID детали
+ * @param machineId ID станка
+ * @param priority Новый приоритет
+ * @returns Сообщение об успешном обновлении
+ */
+export const updateTaskPriority = async (
+  partId: number,
+  machineId: number,
+  priority: number
+): Promise<{ message: string }> => {
+  try {
+    const response = await axios.put<{ message: string }>(
+      `${API_URL}/production/details/master/part/${partId}/machine/${machineId}/priority`,
+      {
+        priority
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при обновлении приоритета для детали ${partId} на станке ${machineId}:`, error);
     throw error;
   }
 };
