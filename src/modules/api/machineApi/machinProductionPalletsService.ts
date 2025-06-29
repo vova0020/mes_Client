@@ -34,7 +34,7 @@ export interface RouteStageDto {
 // Интерфейс для прогресса этапа
 export interface StageProgressDto {
   id: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED' | 'ON_MACHINE';
+  status: 'NOT_PROCESSED' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED' | 'ON_MACHINE';
   completedAt: string | null;
   routeStage: RouteStageDto;
 }
@@ -70,8 +70,8 @@ export interface OperatorDto {
 // Исправленный интерфейс OperationDto с правильным типом completedAt
 export interface OperationDto {
   id: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED'| 'ON_MACHINE';
-  completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED'| 'BUFFERED'| 'ON_MACHINE';
+  status: 'NOT_PROCESSED' | 'PENDING' |'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'BUFFERED'| 'ON_MACHINE';
+  completionStatus?: 'NOT_PROCESSED' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED'| 'BUFFERED'| 'ON_MACHINE';
   startedAt: string;
   completedAt: string | null; // Изменено с string | undefined на string | null для совместимости
   quantity?: number;

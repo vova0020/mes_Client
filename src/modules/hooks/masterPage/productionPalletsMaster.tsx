@@ -147,7 +147,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       }
       
       // Вызываем обновленную функцию с новым API
-      const operation = await updatePalletMachine(palletId, machineName, segmentId);
+      const operation = await updatePalletMachine(palletId, machineName);
       
       // Обновляем локальное состояние после успешного обновления на сервере
       setPallets(prevPallets => 

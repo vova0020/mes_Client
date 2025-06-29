@@ -41,29 +41,21 @@ export interface MachineTask {
  */
 const getSelectedStageIdFromStorage = (): number | null => {
   try {
-    // Сначала пытаемся получить выбранный этап
     const selectedStageData = localStorage.getItem('selectedStage');
-    if (selectedStageData) {
-      const selectedStage = JSON.parse(selectedStageData);
-      return selectedStage.id;
-    }
-    
-    // Если выбранный этап не найден, берем первый доступный из assignments
-    const assignmentsData = localStorage.getItem('assignments');
-    if (!assignmentsData) {
-      console.error('Отсутствуют данные assignments в localStorage');
+    if (!selectedStageData) {
+      console.error('Отсутствуют данные selectedStage в localStorage');
       return null;
     }
     
-    const parsedData = JSON.parse(assignmentsData);
-    if (!parsedData.stages || parsedData.stages.length === 0) {
-      console.error('В данных assignments отсутствуют stages');
+    const parsedData = JSON.parse(selectedStageData);
+    if (!parsedData || parsedData.length === 0) {
+      console.error('Нет данных selectedStage отсутствуют stages');
       return null;
     }
     
-    return parsedData.stages[0].id;
+    return parsedData.id;
   } catch (error) {
-    console.error('Ошибка при получении ID этапа из localStorage:', error);
+    console.error('Ошибка при получении stageid из localStorage:', error);
     return null;
   }
 };
@@ -172,6 +164,8 @@ export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
   try {
     // Получаем stageId из локального хранилища
     const stageId = getSelectedStageIdFromStorage();
+    console.log(`ID для запроса ${stageId}`);
+    
     
     if (stageId === null) {
       console.error('Не удалось получить ID этапа из localStorage');

@@ -580,6 +580,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                           onClick={() => handleComplete(pallet.id)}
                           disabled={processingPalletId === pallet.id || 
                                  pallet.currentOperation?.status === 'COMPLETED' ||
+                                 pallet.currentOperation?.status === 'PENDING' ||
                                  !pallet.currentOperation?.status}
                           title="Готово"
                         >

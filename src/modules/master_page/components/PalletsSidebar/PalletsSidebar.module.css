@@ -845,7 +845,13 @@
 
 /* Стили для различных статусов операций */
 
-
+/* Статус 'Задание прошло предыдущий этап но еще не обрабатывалось' */
+.statusPassedPreviousStage {
+  background: linear-gradient(to bottom, #e1b035, #b9b629);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #9fa41c;
+}
 /* Статус 'Задание на станке но еще не обрабатывалось' */
 .statusOnMachine {
   background: linear-gradient(to bottom, #3498db, #2980b9);

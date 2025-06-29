@@ -310,6 +310,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     //   }
     // }
      switch (operation.status) {
+        case 'NOT_PROCESSED': return styles.statusPassedPreviousStage;
         case 'PENDING': return styles.statusOnMachine;
         case 'IN_PROGRESS': return styles.statusInProgress;
         case 'BUFFERED': return styles.statusBuffered;
@@ -408,9 +409,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     // Проверяем, можно ли назначить поддон на станок
     // (если нет активной операции или операция в статусе BUFFERED, COMPLETED или PARTIALLY_COMPLETED)
     const canAssignToMachine = !pallet.currentOperation ||
-      pallet.currentOperation.status === 'PENDING' ||
       pallet.currentOperation.status === 'BUFFERED' ||
-      pallet.currentOperation.status === 'ON_MACHINE' ||
+      pallet.currentOperation.status === 'NOT_PROCESSED' ||
       (pallet.currentOperation.completionStatus === 'COMPLETED') ||
       (pallet.currentOperation.completionStatus === 'PARTIALLY_COMPLETED');
 
@@ -418,7 +418,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     if (defaultSegmentId === null) {
       return (
         <div className={styles.bufferCellError}>
-          <span>Ошибка ID сегмента</span>
+          <span>Ошибка ID этапа</span>
         </div>
       );
     }

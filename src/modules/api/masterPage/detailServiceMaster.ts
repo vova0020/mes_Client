@@ -16,19 +16,19 @@ export interface Detail {
 
 const getSegmentIdFromStorage = (): number | null => {
   try {
-    const assignmentsData = localStorage.getItem('assignments');
+    const assignmentsData = localStorage.getItem('selectedStage');
     if (!assignmentsData) {
       console.error('Отсутствуют данные assignments в localStorage');
       return null;
     }
     
     const parsedData = JSON.parse(assignmentsData);
-    if (!parsedData.stages || parsedData.stages.length === 0) {
+    if (!parsedData || parsedData.length === 0) {
       console.error('Нет данных assignments отсутствуют stages');
       return null;
     }
     
-    return parsedData.stages[0].id;
+    return parsedData.id;
   } catch (error) {
     console.error('Ошибка при получении segmentId из localStorage:', error);
     return null;
