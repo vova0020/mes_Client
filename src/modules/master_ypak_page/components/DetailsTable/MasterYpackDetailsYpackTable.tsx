@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
 import { usePackaging } from '../../../hooks/ypakMasterHook';
+import useMachines from '../../../hooks/ypakMasterHook/useMachinesMaster';
 import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
 
 interface DetailsYpakTableProps {
@@ -26,12 +27,27 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     fetchPackagesByOrderId,
     clearPackages
   } = usePackaging();
+
+  // Используем хук для получения данных о станках
+  const {
+    availableMachines,
+    availableMachinesLoading,
+    fetchAvailableMachines,
+    assignPackageToMachine,
+    startPackingWork,
+    completePackingWork
+  } = useMachines();
   
   // Ref для отслеживания предыдущего ID заказа
   const prevOrderIdRef = useRef<number | null>(null);
   
   // Ref для контейнера таблицы, используется для определения кликов за пределами sidebar
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Загружаем станки при монтировании компонента
+  useEffect(() => {
+    fetchAvailableMachines();
+  }, [fetchAvailableMachines]);
 
   // Загружаем упаковки при изменении выбранного заказа
   useEffect(() => {
@@ -152,24 +168,105 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     // toggleAllowOutsidePacking(packageId, isChecked);
   };
 
-  // Обработчик изменения выбора упаковщика
-  const handleAssignPackagerChange = (e: React.ChangeEvent<HTMLSelectElement>, packageId: number) => {
+  // Функция для получения назначенного станка для упаковки
+  const getAssignedMachine = (packaging: any) => {
+    if (packaging.tasks && packaging.tasks.length > 0) {
+      // Берем первое задание (предполагаем, что у упаковки одно активное задание)
+      const task = packaging.tasks[0];
+      if (task.machine) {
+        return {
+          machineId: task.machine.machineId,
+          machineName: task.machine.machineName,
+          status: task.status,
+          completedAt: task.completedAt,
+          taskId: task.taskId
+        };
+      }
+    }
+    return null;
+  };
+
+  // Функция для проверки, можно ли нажать кнопку "В работу"
+  const canStartWork = (packaging: any) => {
+    const assignedMachine = getAssignedMachine(packaging);
+    if (!assignedMachine) return false;
+    
+    return (assignedMachine.status === 'PENDING' || assignedMachine.status === 'NOT_PROCESSED') && 
+           !assignedMachine.completedAt;
+  };
+
+  // Функция для проверки, можно ли нажать кнопку "Готово"
+  const canComplete = (packaging: any) => {
+    const assignedMachine = getAssignedMachine(packaging);
+    if (!assignedMachine) return false;
+    
+    return assignedMachine.status === 'IN_PROGRESS' && !assignedMachine.completedAt;
+  };
+
+  // Обработчик изменения выбора упаковщика (станка)
+  const handleAssignPackagerChange = async (e: React.ChangeEvent<HTMLSelectElement>, packageId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
-    const workerId = parseInt(e.target.value);
-    if (!isNaN(workerId)) {
-      // assignWorker(packageId, workerId); // TODO: Реализовать после создания соответствующего API
+    const machineId = parseInt(e.target.value);
+    if (!isNaN(machineId)) {
+      console.log(`Назначить ста��ок ${machineId} для упаковки ${packageId}`);
+      
+      // Отправляем запрос на назначение упаковки на станок
+      const success = await assignPackageToMachine(packageId, machineId);
+      
+      if (success) {
+        console.log(`Упаковка ${packageId} успешно назначена на станок ${machineId}`);
+        // Перезагружаем данные упаковок для обновления состояния
+        if (selectedOrderId !== null) {
+          fetchPackagesByOrderId(selectedOrderId);
+        }
+      } else {
+        console.error(`Не удалось назначить упаковку ${packageId} на станок ${machineId}`);
+        // Можно добавить уведомление об ошибке
+        // Сбрасываем выбор в селекте при ошибке
+        e.target.value = "";
+      }
     }
   };
 
   // Обработчики кнопок статусов
-  const handleInProgressClick = (e: React.MouseEvent, packageId: number) => {
+  const handleInProgressClick = async (e: React.MouseEvent, packageId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
-    // updateStatus(packageId, 'in_progress');
+    
+    // Находим упаковку и получаем ID задания
+    const packaging = packages.find(p => p.id === packageId);
+    if (packaging) {
+      const assignedMachine = getAssignedMachine(packaging);
+      if (assignedMachine && assignedMachine.taskId) {
+        const success = await startPackingWork(assignedMachine.taskId);
+        
+        if (success) {
+          // Перезагружаем данные для обновления состояния
+          if (selectedOrderId !== null) {
+            fetchPackagesByOrderId(selectedOrderId);
+          }
+        }
+      }
+    }
   };
 
-  const handleCompletedClick = (e: React.MouseEvent, packageId: number) => {
+  const handleCompletedClick = async (e: React.MouseEvent, packageId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
-    // updateStatus(packageId, 'completed');
+    
+    // Находим упаковку и получаем ID задания
+    const packaging = packages.find(p => p.id === packageId);
+    if (packaging) {
+      const assignedMachine = getAssignedMachine(packaging);
+      if (assignedMachine && assignedMachine.taskId) {
+        const success = await completePackingWork(assignedMachine.taskId);
+        
+        if (success) {
+          // Перезагружаем данные для обновления состояния
+          if (selectedOrderId !== null) {
+            fetchPackagesByOrderId(selectedOrderId);
+          }
+        }
+      }
+    }
   };
 
   const handlePartiallyCompletedClick = (e: React.MouseEvent, packageId: number) => {
@@ -280,7 +377,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
               <th>Скомплектовано</th>
               <th>Упаковано</th>
               {/* <th>Разрешить паковать вне линии</th> */}
-              <th>Назначить упаковщика</th>
+              <th>Назначить станок</th>
               <th colSpan={4}>Действия</th>
             </tr>
           </thead>
@@ -306,10 +403,10 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                   </button>
                 </td>
                 <td>{packaging.parts?.length || 0}</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
+                <td>{packaging.readyForPackaging}</td>
+                <td>{packaging.distributed}</td>
+                <td>{packaging.assembled}</td>
+                <td>{packaging.packaged}</td>
                 {/* <td>
                   <label className={styles.checkboxContainer}>
                     <input 
@@ -322,20 +419,39 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                   </label>
                 </td> */}
                 <td>
-                  <select 
-                    className={styles.workerSelect}
-                    value=""
-                    onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <option value="">Выберите упаковщика</option>
-                    {/* TODO: Загрузить список упаковщиков */}
-                  </select>
+                  {(() => {
+                    const assignedMachine = getAssignedMachine(packaging);
+                    return (
+                      <select 
+                        className={styles.workerSelect}
+                        value={assignedMachine ? assignedMachine.machineId : ""}
+                        onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={availableMachinesLoading || !!assignedMachine}
+                      >
+                        <option value="">
+                          {availableMachinesLoading ? 'Загрузка...' : 'Выберите станок'}
+                        </option>
+                        {assignedMachine ? (
+                          <option key={assignedMachine.machineId} value={assignedMachine.machineId}>
+                            {assignedMachine.machineName}
+                          </option>
+                        ) : (
+                          availableMachines.sort((a, b) => a.id - b.id).map((machine) => (
+                            <option key={machine.id} value={machine.id}>
+                              {machine.name}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    );
+                  })()}
                 </td>
                 <td>
                   <button 
                     className={`${styles.actionButton} ${styles.inProgressButton}`}
                     onClick={(e) => handleInProgressClick(e, packaging.id)}
+                    disabled={!canStartWork(packaging)}
                   >
                     В работу
                   </button>
@@ -344,6 +460,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                   <button 
                     className={`${styles.actionButton} ${styles.completedButton}`}
                     onClick={(e) => handleCompletedClick(e, packaging.id)}
+                    disabled={!canComplete(packaging)}
                   >
                     Готово
                   </button>

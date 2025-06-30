@@ -201,6 +201,7 @@
   white-space: nowrap; /* Предотвращает перенос текста в заголовках */
   overflow: hidden;
   text-overflow: ellipsis; /* Добавляем многоточие для длинного текста */
+  text-align: center;
 }
 
 /* Особые стили для некоторых колонок */
@@ -219,7 +220,7 @@
 
 /* Задаем ширину для каждой колонки */
 .tasksTable th:nth-child(2) { /* Заказ */
-  width: 110px;
+  width: 80px;
 }
 
 .tasksTable th:nth-child(3) { /* Артикул */
@@ -231,15 +232,15 @@
 }
 
 .tasksTable th:nth-child(5) { /* Материал */
-  width: 100px;
+  width: 60px;
 }
 
 .tasksTable th:nth-child(6) { /* Размер */
-  width: 90px;
+  width: 80px;
 }
 
 .tasksTable th:nth-child(7) { /* № поддона */
-  width: 80px;
+  width: 100px;
 }
 
 .tasksTable th:nth-child(8) { /* Кол-во */

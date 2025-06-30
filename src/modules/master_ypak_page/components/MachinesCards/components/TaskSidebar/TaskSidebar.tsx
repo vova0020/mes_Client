@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './TaskSidebar.module.css';
-import useMachines from '../../../../../hooks/masterPage/useMachinesMaster';
-import { MachineTask } from '../../../../../api/masterPage/machineMasterService';
+import useMachines from '../../../../../hooks/ypakMasterHook/useMachinesMaster';
+import { MachineTask } from '../../../../../api/ypakMasterApi/machineMasterService';
 
 // Типы статусов деталей
 type TaskStatus = 'pending' | 'processing' | 'completed';
@@ -30,7 +30,7 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   onConfirm
 }) => {
   const [quantity, setQuantity] = useState<number>(0);
-  const maxQuantity = taskItem?.quantity || 0;
+  const maxQuantity = taskItem?.productionPackage?.quantity || 0;
   
   // Сбрасываем количество при открытии модального окна
   useEffect(() => {
@@ -50,7 +50,7 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   // Обработчик подтверждения
   const handleConfirm = () => {
     if (taskItem && quantity > 0 && quantity <= maxQuantity) {
-      onConfirm(taskItem.operationId, quantity);
+      onConfirm(taskItem.taskId, quantity);
       onClose();
     }
   };
@@ -67,28 +67,28 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
         
         <div className={styles.modalBody}>
           <div className={styles.modalInfoRow}>
-            <span className={styles.modalLabel}>Деталь:</span>
-            <span className={styles.modalValue}>{taskItem.detailName}</span>
+            <span className={styles.modalLabel}>Заказ:</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.order.orderName}</span>
           </div>
           
           <div className={styles.modalInfoRow}>
-            <span className={styles.modalLabel}>Артикул:</span>
-            <span className={styles.modalValue}>{taskItem.detailArticle}</span>
+            <span className={styles.modalLabel}>Номер партии:</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.order.batchNumber}</span>
           </div>
           
           <div className={styles.modalInfoRow}>
-            <span className={styles.modalLabel}>Материал:</span>
-            <span className={styles.modalValue}>{taskItem.detailMaterial}</span>
+            <span className={styles.modalLabel}>Артикул упаковки:</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.packageCode}</span>
           </div>
           
           <div className={styles.modalInfoRow}>
-            <span className={styles.modalLabel}>Поддон:</span>
-            <span className={styles.modalValue}>{taskItem.palletName}</span>
+            <span className={styles.modalLabel}>Наименование упаковки:</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.packageName}</span>
           </div>
           
           <div className={styles.modalInfoRow}>
             <span className={styles.modalLabel}>Доступно:</span>
-            <span className={styles.modalValue}>{taskItem.quantity} шт.</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.quantity} шт.</span>
           </div>
           
           <div className={styles.quantityInputContainer}>
@@ -175,8 +175,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   }, [isOpen, machineId, fetchTasks, fetchAvailableMachines]);
   
   // Обработчик частичной обработки
-  const handlePartialProcessing = (operationId: number) => {
-    const task = machineTasks.find(item => item.operationId === operationId);
+  const handlePartialProcessing = (taskId: number) => {
+    const task = machineTasks.find(item => item.taskId === taskId);
     if (task) {
       setSelectedTask(task);
       setIsModalOpen(true);
@@ -184,28 +184,28 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   };
   
   // Обработчик подтверждения частичной обработки
-  const handleConfirmPartialProcessing = (operationId: number, quantity: number) => {
-    console.log(`Частичная обработка для элемента ${operationId}: ${quantity} шт.`);
+  const handleConfirmPartialProcessing = (taskId: number, quantity: number) => {
+    console.log(`Частичная обработка для элемента ${taskId}: ${quantity} шт.`);
     
     // Обрабатываем частичную обработку (в будущем может быть API)
     // Сейчас просто обновляем локальное состояние
     // Если количество становится <= 0, удаляем задание
-    const task = machineTasks.find(t => t.operationId === operationId);
-    if (task && task.quantity - quantity <= 0) {
+    const task = machineTasks.find(t => t.taskId === taskId);
+    if (task && task.productionPackage.quantity - quantity <= 0) {
       // Если все детали обработаны, удаляем задание
-      handleDeleteItem(operationId);
+      handleDeleteItem(taskId);
     }
   };
   
-  // Обработчик удаления элемента задания
-  const handleDeleteItem = async (operationId: number) => {
-    console.log(`Удаление элемента ${operationId}`);
+  // ��бработчик удаления элемента задания
+  const handleDeleteItem = async (taskId: number) => {
+    console.log(`Удаление элемента ${taskId}`);
     // Запрос подтверждения перед удалением
     if (window.confirm('Вы уверены, что хотите удалить этот элемент из сменного задания?')) {
       try {
-        const success = await removeTask(operationId);
+        const success = await removeTask(taskId);
         if (success) {
-          console.log(`Задание ${operationId} успешно удалено`);
+          console.log(`Задание ${taskId} успешно удалено`);
         } else {
           alert('Произошла ошибка при удалении задания');
         }
@@ -217,16 +217,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   };
   
   // Обработчик изменения станка
-  const handleMachineChange = async (operationId: number, targetMachineId: string) => {
+  const handleMachineChange = async (taskId: number, targetMachineId: string) => {
     const machineIdNumber = parseInt(targetMachineId, 10);
     if (isNaN(machineIdNumber) || machineIdNumber === machineId) {
       return;
     }
     
-    console.log(`Перемещение задания ${operationId} на станок ${machineIdNumber}`);
+    console.log(`Перемещение задания ${taskId} на станок ${machineIdNumber}`);
     
     try {
-      const success = await transferTask(operationId, machineIdNumber);
+      const success = await transferTask(taskId, machineIdNumber);
       if (success) {
         const targetMachine = availableMachines.find(m => m.id === machineIdNumber);
         if (targetMachine) {
@@ -381,49 +381,40 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               <div className={styles.tableScrollContainer}>
                 <table className={styles.tasksTable}>
                   <thead>
-                    <tr>
+                  <tr>
                       <th className={styles.priorityColumn}>Приоритет</th>
-                      <th>Заказ</th>
-                      <th>Артикул</th>
-                      <th>Наименование</th>
-                      <th>Материал</th>
-                      <th>Размер</th>
-                      <th>№ поддона</th>
-                      <th>Кол-во</th>
+                      <th >Заказ</th>
+                      {/* <th>Номер партии</th> */}
+                      <th >Артикул упаковки</th>
+                      <th >Наименование упаковки</th>
+                      <th >Кол-во</th>
+                      {/* <th>Процент выполнения</th> */}
+                      {/* <th>Назначено</th> */}
                       <th className={styles.statusColumn}>Статус</th>
                       <th className={styles.actionsColumn}>Действия</th>
                     </tr>
                   </thead>
                   <tbody>
                     {machineTasks.map(item => (
-                      <tr key={item.operationId} className={styles[`status-${mapApiStatusToUiStatus(item.status)}`]}>
+                      <tr key={item.taskId} className={styles[`status-${mapApiStatusToUiStatus(item.status)}`]}>
                         <td className={styles.priorityCell}>
                           {renderPriorityIndicator(item.priority)}
                         </td>
-                        <td>{item.orderName}</td>
-                        <td>{item.detailArticle}</td>
-                        <td>{item.detailName}</td>
-                        <td>{item.detailMaterial}</td>
-                        <td>{item.detailSize}</td>
-                        <td className={styles.palletCell}>{item.palletName}</td>
-                        <td className={styles.quantityCell}>{item.quantity} шт.</td>
+                        <td>{item.productionPackage?.order?.orderName || '-'}</td>
+                         {/* <td>{item.productionPackage?.order?.batchNumber || '-'}</td  > */}
+                        <td>{item.productionPackage?.packageCode || '-'}</td>
+                        <td>{item.productionPackage?.packageName || '-'}</td>
+                        <td className={styles.quantityCell}>{item.productionPackage?.quantity || 0} шт.</td>
+                        {/* <td>{item.productionPackage?.completionPercentage || 0}%</td> */}
+                        {/* <td>{item.assignedAt ? new Date(item.assignedAt).toLocaleString('ru-RU') : '-'}</td> */}
                         <td className={styles.statusCell}>
                           {renderStatusIndicator(item.status)}
                         </td>
                         <td className={styles.actionsCell}>
                           <div className={styles.actionButtonsContainer}>
-                            <button 
-                              className={`${styles.actionButton} ${styles.partialButton}`}
-                              onClick={() => handlePartialProcessing(item.operationId)}
-                              title="Частичная обработка"
-                              disabled={mapApiStatusToUiStatus(item.status) === 'completed'}
-                            >
-                              Частично
-                            </button>
-                            
                             <select 
                               className={styles.machineSelect}
-                              onChange={(e) => handleMachineChange(item.operationId, e.target.value)}
+                              onChange={(e) => handleMachineChange(item.taskId, e.target.value)}
                               defaultValue={machineId.toString()}
                               disabled={mapApiStatusToUiStatus(item.status) === 'completed' || availableMachinesLoading}
                             >
@@ -436,7 +427,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             
                             <button 
                               className={`${styles.actionButton} ${styles.deleteButton}`}
-                              onClick={() => handleDeleteItem(item.operationId)}
+                              onClick={() => handleDeleteItem(item.taskId)}
                               title="Удалить из сменного задания"
                             >
                               Удалить
@@ -461,7 +452,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Общее количество:</span>
               <span className={styles.infoValue}>
-                {machineTasks.reduce((sum, item) => sum + item.quantity, 0)} шт.
+                {machineTasks.reduce((sum, item) => sum + item.productionPackage?.quantity, 0)} шт.
               </span>
             </div>
           </div>

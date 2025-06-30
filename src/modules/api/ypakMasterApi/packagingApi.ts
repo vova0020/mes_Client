@@ -1,6 +1,21 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// Интерфейсы для заданий упаковки
+export interface PackingTaskDto {
+  taskId: number;
+  status: string;
+  priority: number;
+  assignedAt: string;
+  completedAt: string | null;
+  assignedUser: string | null;
+  machine: {
+    machineId: number;
+    machineName: string;
+    status: string;
+  } | null;
+}
+
 // Интерфейсы для упаковок
 export interface PackageDto {
   id: number;
@@ -8,12 +23,17 @@ export interface PackageDto {
   packageCode: string;
   packageName: string;
   completionPercentage: number;
+  readyForPackaging: number;
+  distributed: number;
+  assembled: number;
+  packaged: number;
   order: {
     orderName: string;
     batchNumber: string;
     isCompleted?: boolean;
   };
   parts: PartInPackageDto[];
+  tasks: PackingTaskDto[];
 }
 
 export interface PartInPackageDto {

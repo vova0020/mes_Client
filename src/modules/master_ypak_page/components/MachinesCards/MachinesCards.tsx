@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import styles from './MachinesCards.module.css';
-import useMachines from '../../../hooks/masterPage/useMachinesMaster';
+import useMachines from '../../../hooks/ypakMasterHook/useMachinesMaster';
 import TaskSidebar from './components/TaskSidebar/TaskSidebar';
 
 const MachinesCards: React.FC = () => {
