@@ -1,4 +1,5 @@
-import { axiosInstance } from './axios-instance';
+import axios from 'axios';
+// import { api } from './axios-instance';
 
 // Интерфейсы для API
 export interface Stage {
@@ -71,71 +72,77 @@ export interface AvailableStage {
   productionStagesLevel2: Substage[];
 }
 
+
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+  headers: { 'Content-Type': 'application/json' }
+});
+
 // API методы для маршрутов
 export const routesApi = {
   // Получить все маршруты
   getAllRoutes: async (): Promise<Route[]> => {
-    const response = await axiosInstance.get('/settings/routes');
+    const response = await api.get('/settings/routes');
     return response.data;
   },
 
   // Получить маршрут по ID
   getRouteById: async (id: number): Promise<Route> => {
-    const response = await axiosInstance.get(`/settings/routes/${id}`);
+    const response = await api.get(`/settings/routes/${id}`);
     return response.data;
   },
 
   // Создать новый маршрут
   createRoute: async (data: CreateRouteDto): Promise<Route> => {
-    const response = await axiosInstance.post('/settings/routes', data);
+    const response = await api.post('/settings/routes', data);
     return response.data;
   },
 
   // Обновить маршрут (только название)
   updateRoute: async (id: number, data: UpdateRouteDto): Promise<Route> => {
-    const response = await axiosInstance.put(`/settings/routes/${id}`, data);
+    const response = await api.put(`/settings/routes/${id}`, data);
     return response.data;
   },
 
   // Удалить маршрут
   deleteRoute: async (id: number): Promise<{ message: string }> => {
-    const response = await axiosInstance.delete(`/settings/routes/${id}`);
+    const response = await api.delete(`/settings/routes/${id}`);
     return response.data;
   },
 
   // Получить этапы маршрута
   getRouteStages: async (routeId: number): Promise<RouteStage[]> => {
-    const response = await axiosInstance.get(`/settings/routes/${routeId}/stages`);
+    const response = await api.get(`/settings/routes/${routeId}/stages`);
     return response.data;
   },
 
   // Добавить этап к маршруту
   addRouteStage: async (routeId: number, data: CreateRouteStageDto): Promise<RouteStage> => {
-    const response = await axiosInstance.post(`/settings/routes/${routeId}/stages`, data);
+    const response = await api.post(`/settings/routes/${routeId}/stages`, data);
     return response.data;
   },
 
   // Обновить этап маршрута
   updateRouteStage: async (stageId: number, data: UpdateRouteStageDto): Promise<RouteStage> => {
-    const response = await axiosInstance.put(`/settings/routes/stages/${stageId}`, data);
+    const response = await api.put(`/settings/routes/stages/${stageId}`, data);
     return response.data;
   },
 
   // Удалить этап маршрута
   deleteRouteStage: async (stageId: number): Promise<{ message: string }> => {
-    const response = await axiosInstance.delete(`/settings/routes/stages/${stageId}`);
+    const response = await api.delete(`/settings/routes/stages/${stageId}`);
     return response.data;
   },
 
   // Изменить порядок этапов в маршруте
   reorderRouteStages: async (routeId: number, data: ReorderRouteStagesDto): Promise<RouteStage[]> => {
-    const response = await axiosInstance.put(`/settings/routes/${routeId}/stages/reorder`, data);
+    const response = await api.put(`/settings/routes/${routeId}/stages/reorder`, data);
     return response.data;
   },
 
   // Переместить этап на новую позицию
   moveRouteStage: async (stageId: number, newSequenceNumber: number): Promise<RouteStage[]> => {
-    const response = await axiosInstance.put(`/settings/routes/stages/${stageId}/move`, {
+    const response = await api.put(`/settings/routes/stages/${stageId}/move`, {
       newSequenceNumber
     });
     return response.data;
@@ -143,19 +150,19 @@ export const routesApi = {
 
   // Получить доступные этапы уровня 1
   getAvailableStagesLevel1: async (): Promise<AvailableStage[]> => {
-    const response = await axiosInstance.get('/settings/routes/available-stages/level1');
+    const response = await api.get('/settings/routes/available-stages/level1');
     return response.data;
   },
 
   // Получить доступные этапы уровня 2
   getAvailableStagesLevel2: async (stageId: number): Promise<Substage[]> => {
-    const response = await axiosInstance.get(`/settings/routes/available-stages/level2/${stageId}`);
+    const response = await api.get(`/settings/routes/available-stages/level2/${stageId}`);
     return response.data;
   },
 
   // Скопировать маршрут
   copyRoute: async (id: number, newRouteName: string): Promise<Route> => {
-    const response = await axiosInstance.post(`/settings/routes/${id}/copy`, {
+    const response = await api.post(`/settings/routes/${id}/copy`, {
       newRouteName
     });
     return response.data;
