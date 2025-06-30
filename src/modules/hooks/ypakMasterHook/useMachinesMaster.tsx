@@ -70,7 +70,7 @@ const useMachines = (): UseMachinesResult => {
   const fetchMachines = useCallback(async () => {
     // Предотвращаем множественные одновременные запросы
     if (isLoadingRef.current) {
-      console.log('Запрос машин уже выполняется, пропускаем...');
+      // console.log('Запрос машин уже выполняется, пропускаем...');
       return;
     }
 
@@ -173,7 +173,7 @@ const useMachines = (): UseMachinesResult => {
   const assignPackageToMachine = useCallback(async (packageId: number, machineId: number): Promise<boolean> => {
     try {
       await createPackingAssignment(packageId, machineId);
-      console.log(`Упаковка ${packageId} успешно назначена на станок ${machineId}`);
+      // console.log(`Упаковка ${packageId} успешно назначена на станок ${machineId}`);
       return true;
     } catch (err) {
       console.error(`Ошибка при назначении упаковки ${packageId} на станок ${machineId}:`, err);
@@ -185,7 +185,7 @@ const useMachines = (): UseMachinesResult => {
   const startPackingWork = useCallback(async (taskId: number): Promise<boolean> => {
     try {
       await startPackingTask(taskId);
-      console.log(`Задание упаковки ${taskId} переведено в статус "В работе"`);
+      // console.log(`Задание упаковки ${taskId} переведено в статус "В работе"`);
       return true;
     } catch (err) {
       console.error(`Ошибка при запуске задания упаковки ${taskId}:`, err);
@@ -197,7 +197,7 @@ const useMachines = (): UseMachinesResult => {
   const completePackingWork = useCallback(async (taskId: number): Promise<boolean> => {
     try {
       await completePackingTask(taskId);
-      console.log(`Задание упаковки ${taskId} переведено в статус "Завершено"`);
+      // console.log(`Задание упаковки ${taskId} переведено в статус "Завершено"`);
       return true;
     } catch (err) {
       console.error(`Ошибка при завершении задания упаковки ${taskId}:`, err);
@@ -213,7 +213,7 @@ const useMachines = (): UseMachinesResult => {
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      console.log('Получено событие изменения этапа в useMachines:', event.detail);
+      // console.log('Получено событие изменения этапа в useMachines:', event.detail);
       // Добавляем небольшую задержку для предотвращения множественных запросов
       setTimeout(() => {
         fetchMachines(); // Перезагружаем данные о станках при изменении этапа

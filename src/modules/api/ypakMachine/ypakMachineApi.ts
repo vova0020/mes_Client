@@ -3,30 +3,47 @@ import { API_URL } from '../config';
 
 // Интерфейсы для типизации данных
 export interface YpakOrder {
-  id: number;
-  runNumber: string;
-  name: string;
-  progress: number | null;
+  orderId: number;
+  batchNumber: string;
+  orderName: string;
+  completionPercentage: number;
+  isCompleted: boolean;
+  launchPermission: boolean;
 }
 
-export interface YpakItem {
-  id: number;
-  article: string | null;
-  name: string;
+export interface YpakMachine {
+  machineId: number;
+  machineName: string;
+  status: string;
+}
+
+export interface YpakPackage {
+  packageId: number;
+  packageName: string;
+  status: string;
+}
+
+export interface YpakProductionPackage {
+  packageId: number;
+  packageCode: string;
+  packageName: string;
+  completionPercentage: number;
+  quantity: number;
+  order: YpakOrder;
 }
 
 export interface YpakTask {
-  operationId: number;
-  processStepId: number;
-  processStepName: string;
-  priority: number | null;
-  quantity: number;
-  status: 'ON_MACHINE' | 'IN_PROGRESS' | 'COMPLETED' | 'BUFFERED' | 'PARTIALLY_COMPLETED';
-  totalQuantity: number;
-  readyForPackaging: number;
-  packaged: number;
-  ypak: YpakItem;
-  order: YpakOrder;
+  taskId: number;
+  packageId: number;
+  machineId: number;
+  assignedTo: string | null;
+  status: 'NOT_PROCESSED' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED';
+  priority: number;
+  assignedAt: string;
+  completedAt: string | null;
+  machine: YpakMachine;
+  package: YpakPackage;
+  productionPackage: YpakProductionPackage;
 }
 
 export interface YpakMachineDetails {
@@ -70,8 +87,17 @@ export const getMachineTask = async (): Promise<YpakMachineDetails> => {
   }
   
   try {
-    const response = await axios.get(`${API_URL}/ypak/machines/${machineId}/task`);
-    return response.data;
+    const response = await axios.get(`${API_URL}/packing-assignments/by-machine/${machineId}`);
+    const tasks: YpakTask[] = response.data;
+    
+    // Формируем объект с информацией о станке и задачах
+    const machineDetails: YpakMachineDetails = {
+      machineId: machineId,
+      machineName: tasks.length > 0 ? tasks[0].machine.machineName : 'Неизвестный станок',
+      tasks: tasks
+    };
+    
+    return machineDetails;
   } catch (error) {
     console.error('Ошибка при получении данных о задачах станка упаковки:', error);
     throw error;
@@ -79,9 +105,9 @@ export const getMachineTask = async (): Promise<YpakMachineDetails> => {
 };
 
 // Отправка задачи на мониторы
-export const sendToMonitors = async (operationId: number): Promise<void> => {
+export const sendToMonitors = async (taskId: number): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/ypak/operations/${operationId}/send-to-monitors`);
+    await axios.post(`${API_URL}/packing-assignments/${taskId}/send-to-monitors`);
   } catch (error) {
     console.error('Ошибка при отправке задачи на мониторы:', error);
     throw error;
@@ -89,9 +115,9 @@ export const sendToMonitors = async (operationId: number): Promise<void> => {
 };
 
 // Перевод задачи в работу
-export const startOperation = async (operationId: number): Promise<void> => {
+export const startOperation = async (taskId: number): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/ypak/operations/${operationId}/start`);
+    await axios.put(`${API_URL}/packing-task-management/${taskId}/start`);
   } catch (error) {
     console.error('Ошибка при переводе задачи в работу:', error);
     throw error;
@@ -99,9 +125,9 @@ export const startOperation = async (operationId: number): Promise<void> => {
 };
 
 // Завершение задачи
-export const completeOperation = async (operationId: number): Promise<void> => {
+export const completeOperation = async (taskId: number): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/ypak/operations/${operationId}/complete`);
+    await axios.put(`${API_URL}/packing-task-management/${taskId}/complete`);
   } catch (error) {
     console.error('Ошибка при завершении задачи:', error);
     throw error;
@@ -109,9 +135,9 @@ export const completeOperation = async (operationId: number): Promise<void> => {
 };
 
 // Частичное завершение задачи
-export const partiallyCompleteOperation = async (operationId: number, packagedCount: number): Promise<void> => {
+export const partiallyCompleteOperation = async (taskId: number, packagedCount: number): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/ypak/operations/${operationId}/partially-complete`, {
+    await axios.put(`${API_URL}/packing-task-management/${taskId}/partially-complete`, {
       packagedCount
     });
   } catch (error) {
@@ -121,9 +147,9 @@ export const partiallyCompleteOperation = async (operationId: number, packagedCo
 };
 
 // Получение схемы укладки для упаковки
-export const getPackingScheme = async (ypakId: number): Promise<Blob> => {
+export const getPackingScheme = async (packageId: number): Promise<Blob> => {
   try {
-    const response = await axios.get(`${API_URL}/ypak/${ypakId}/packing-scheme`, {
+    const response = await axios.get(`${API_URL}/packages/${packageId}/packing-scheme`, {
       responseType: 'blob'
     });
     return response.data;

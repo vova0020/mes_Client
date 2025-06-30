@@ -53,14 +53,14 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       const fetchedPallets = await fetchProductionPalletsByDetailId(detailId);
       
       // Отладочная информация
-      console.log('Полученные данные о поддонах:', fetchedPallets);
+      // // console.log('Полученные данные о поддонах:', fetchedPallets);
       
       if (fetchedPallets.length > 0) {
         // Проверяем, есть ли у первого поддона данные об операции
         const hasExistingOperations = fetchedPallets.some(p => p.currentOperation);
         
         if (hasExistingOperations) {
-          console.log('Поддоны уже содержат данные об операциях');
+          // // console.log('Поддоны уже содержат данные об операциях');
           
           // Убедимся, что currentOperation определен (не undefined)
           const normalizedPallets = fetchedPallets.map(pallet => ({
@@ -71,7 +71,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
           
           setPallets(normalizedPallets);
         } else {
-          console.log('Требуется дополнительный запрос для получения операций');
+          // // console.log('Требуется дополнительный запрос для получения операций');
           
           // Если данных об операциях нет, делаем дополнительные запросы
           const palletsWithOperations = await Promise.all(
@@ -210,12 +210,12 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     try {
       // Загружаем данные о ячейках буфера
       const bufferCellsData = await fetchBufferCellsBySegmentId();
-      console.log('Получены данные о ячейках буфера:', bufferCellsData);
+      // // console.log('Получены данные о ячейках буфера:', bufferCellsData);
       setBufferCells(bufferCellsData);
       
       // Загружаем данные о станках
       const machinesData = await fetchMachinBySegmentId();
-      console.log('Получены данные о станках:', machinesData);
+      // // console.log('Получены данные о станках:', machinesData);
       // Данные уже должны иметь правильный формат благодаря изменениям в API
       setMachines(machinesData);
     } catch (err) {

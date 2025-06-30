@@ -56,7 +56,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       const fetchedPallets = await fetchProductionPalletsByDetailId(detailId);
       
       // Отладочная информация
-      console.log('Полученные данные о поддонах:', fetchedPallets);
+      // console.log('Полученные данные о поддонах:', fetchedPallets);
       
       // Устанавливаем полученные данные напрямую
       // Новая структура API уже содержит currentStageProgress и другие необходимые поля
@@ -120,7 +120,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       const response = await completePalletProcessing(palletId);
       
       // Отладочный вывод для проверки структуры ответа
-      console.log(`Ответ API при завершении обработки поддона ${palletId}:`, response);
+      // console.log(`Ответ API при завершении обработки поддона ${palletId}:`, response);
       
       // Обновляем данные о всех поддонах для обеспечения актуальности
       await refreshPalletData(palletId);
@@ -140,7 +140,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     try {
       // Загружаем данные о ячейках буфера
       const bufferCellsData = await fetchBufferCellsBySegmentId();
-      console.log('Получены данные о ячейках буфера:', bufferCellsData);
+      // console.log('Получены данные о ячейках буфера:', bufferCellsData);
       setBufferCells(bufferCellsData);
       
       // Примечание: в productionPalletsService.ts нет функции fetchMachinesBySegmentId

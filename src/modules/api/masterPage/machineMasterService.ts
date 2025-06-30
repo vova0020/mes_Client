@@ -164,7 +164,7 @@ export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
   try {
     // Получаем stageId из локального хранилища
     const stageId = getSelectedStageIdFromStorage();
-    console.log(`ID для запроса ${stageId}`);
+    // console.log(`ID для запроса ${stageId}`);
     
     
     if (stageId === null) {

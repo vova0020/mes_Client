@@ -18,17 +18,25 @@ const AuthPage: React.FC = () => {
 
   // При загрузке компонента проверяем, авторизован ли пользователь
   useEffect(() => {
+    // console.log('=== AUTHPAGE USEEFFECT ПРОВЕРКА ===');
     const checkAuth = async () => {
+      // console.log('Проверяем авторизацию при загрузке страницы...');
       // Если пользователь уже авторизован, перенаправляем его
       if (authService.isAuthenticated()) {
+        // console.log('Пользователь уже авторизован, получаем данные...');
         const user = authService.getUser();
         const assignments = authService.getAssignments();
+        // console.log('Данные пользователя:', user);
+        // console.log('Assignments:', assignments);
 
         if (user && assignments) {
-          const homePage = authService.determineHomePage(user, assignments);
+          // console.log('Определяем домашнюю страницу при загрузке...');
+          const homePage = authService.determineHomePageWithSelectedStage();
+          // console.log('Домашняя страница при загрузке:', homePage);
           navigate(homePage);
         }
       } else {
+        // console.log('Пользовател�� не авторизован, показываем форму входа');
         // Если не авторизован, показываем форму входа после короткой загрузки
         setTimeout(() => {
           setLoading(false);
@@ -40,27 +48,40 @@ const AuthPage: React.FC = () => {
   }, [navigate]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    // console.log('=== ОТПРАВКА ФОРМЫ АВТОРИЗАЦИИ ===');
     event.preventDefault();
     setError('');
 
     if (!username || !password) {
+      // console.log('Не заполнены поля username или password');
       setError('Пожалуйста, заполните все поля');
       return;
     }
 
+    // console.log('Начинаем процесс авторизации для пользователя:', username);
     setIsSubmitting(true);
 
     try {
       const credentials: AuthCredentials = { username, password };
+      // console.log('Вызываем authService.login...');
       const authData = await authService.login(credentials);
 
+      // console.log('Авторизация успешна! Полученные данные:', authData);
+      // console.log('Пользователь:', authData.user);
+      // console.log('Роль пользователя:', authData.user.primaryRole);
+      // console.log('Assignments:', authData.assignments);
+
       // Сохраняем данные авторизации
+      // console.log('Сохраняем данные авторизации...');
       authService.saveAuthData(authData);
 
       // Перенаправляем пользователя на соответствующую страницу
-      const homePage = authService.determineHomePage(authData.user, authData.assignments);
+      // console.log('Определяем домашнюю страницу с учетом выбранного этапа...');
+      const homePage = authService.determineHomePageWithSelectedStage();
+      // console.log('Домашняя страница определена как:', homePage);
       navigate(homePage);
     } catch (error) {
+      console.error('Ошибка при авторизации:', error);
       if (error instanceof Error) {
         setError(error.message || 'Неверный логин или пароль. Пожалуйста, проверьте введенные данные.');
       } else {

@@ -60,7 +60,7 @@ const useMachines = (): UseMachinesResult => {
   const fetchMachines = useCallback(async () => {
     // Предотвращаем множественные одновременные запросы
     if (isLoadingRef.current) {
-      console.log('Запрос машин уже выполняется, пропускаем...');
+      // console.log('Запрос машин уже выполняется, пропускаем...');
       return;
     }
 
@@ -167,7 +167,7 @@ const useMachines = (): UseMachinesResult => {
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      console.log('Получено событие изменения этапа в useMachines:', event.detail);
+      // console.log('Получено событие изменения этапа в useMachines:', event.detail);
       // Добавляем небольшую задержку для предотвращения множественных запросов
       setTimeout(() => {
         fetchMachines(); // Перезагружаем данные о станках при изменении этапа

@@ -268,7 +268,7 @@ const getMachinIdFromStorage = (): number | null => {
 export const getOperationStatusText = (pallet?: ProductionPallet | null): string => {
   // Отладочный вывод
   
-  console.log('getOperationStatusText получил поддон:', pallet);
+  // console.log('getOperationStatusText получил поддон:', pallet);
   
   // Проверка наличия поддона
   if (!pallet) {
@@ -351,7 +351,7 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
       }
     });
     
-    console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
+    // console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
     
     // Обрабатываем новую структуру ответа {pallets, total}
     if (!response.data) {
@@ -393,12 +393,12 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
         };
         
         // Дополнительная проверка и логирование для отладки
-        console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
-          hasCurrentStageProgress: !!pallet.currentStageProgress,
-          currentStageProgress: pallet.currentStageProgress,
-          currentStageName: pallet.currentStageName,
-          processedOperation: processedPallet.currentOperation
-        });
+        // console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
+        //   hasCurrentStageProgress: !!pallet.currentStageProgress,
+        //   currentStageProgress: pallet.currentStageProgress,
+        //   currentStageName: pallet.currentStageName,
+        //   processedOperation: processedPallet.currentOperation
+        // });
         
         return processedPallet;
       });
@@ -408,7 +408,7 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
     
     // Если ответ представляет собой напрямую массив (старый формат)
     if (Array.isArray(response.data)) {
-      console.log('Получен старый формат ответа (массив)');
+      // console.log('Получен старый формат ответа (массив)');
       return response.data;
     }
     
@@ -477,7 +477,7 @@ export const startPalletProcessing = async (palletId: number): Promise<Operation
       operatorId: userData.id,
     });
     
-    console.log(`Поддон ${palletId} успешно переведен в статус "В работу":`, response.data);
+    // console.log(`Поддон ${palletId} успешно переведен в статус "В работу":`, response.data);
     return response.data.operation || null;
   } catch (error) {
     console.error(`Ошибка при переводе поддона ${palletId} в статус "В работу":`, error);
@@ -514,7 +514,7 @@ export const completePalletProcessing = async (palletId: number): Promise<Comple
     // Отправляем запрос на API по новому URL
     const response = await axios.post(`${API_URL}/machins/pallets/complete-processing`, requestData);
     
-    console.log(`Поддон ${palletId} успешно переведен в статус "Готово":`, response.data);
+    // console.log(`Поддон ${palletId} успешно переведен в статус "Готово":`, response.data);
     return response.data;
   } catch (error) {
     console.error(`Ошибка при переводе поддона ${palletId} в статус "Готово":`, error);
@@ -532,7 +532,7 @@ export const updateBufferCell = async (palletId: number, bufferCellId: number): 
       bufferCellId: bufferCellId
     });
     
-    console.log(`Буферная ячейка для поддона ${palletId} успешно обновлена:`, response.data);
+    // console.log(`Буферная ячейка для поддона ${palletId} успешно обновлена:`, response.data);
     return response.data.pallet;
   } catch (error) {
     console.error(`Ошибка при обновлении буферной ячейки для поддона ${palletId}:`, error);
@@ -557,7 +557,7 @@ export const getPalletRouteSheet = async (palletId: number): Promise<Blob> => {
 export const getCurrentOperation = async (palletId: number): Promise<OperationDto | null> => {
   try {
     const response = await axios.get<{operation: OperationDto | null}>(`${API_URL}/pallets/${palletId}/current-operation`);
-    console.log(`Получена операция для поддона ${palletId}:`, response.data);
+    // console.log(`Получена операция для поддона ${palletId}:`, response.data);
     return response.data.operation;
   } catch (error) {
     console.error('Ошибка при получении текущей операции поддона:', error);

@@ -20,16 +20,16 @@ interface UseYpakMachineResult {
   loading: LoadingState;
   error: Error | null;
   refetch: () => Promise<void>;
-  sendToMonitors: (operationId: number) => Promise<void>;
-  startOperation: (operationId: number) => Promise<void>;
-  completeOperation: (operationId: number) => Promise<void>;
-  partiallyCompleteOperation: (operationId: number, packagedCount: number) => Promise<void>;
-  getPackingScheme: (ypakId: number) => Promise<string>;
+  sendToMonitors: (taskId: number) => Promise<void>;
+  startOperation: (taskId: number) => Promise<void>;
+  completeOperation: (taskId: number) => Promise<void>;
+  partiallyCompleteOperation: (taskId: number, packagedCount: number) => Promise<void>;
+  getPackingScheme: (packageId: number) => Promise<string>;
 }
 
 /**
  * Hook для работы с API станка упаковки
- * @returns Объект с данными и методам�� для работы со станком упаковки
+ * @returns Объект с данными и методами для работы со станком упаковки
  */
 export const useYpakMachine = (): UseYpakMachineResult => {
   const [machineDetails, setMachineDetails] = useState<YpakMachineDetails | null>(null);
@@ -55,21 +55,12 @@ export const useYpakMachine = (): UseYpakMachineResult => {
   // Загрузка данных при первом рендере
   useEffect(() => {
     fetchMachineDetails();
-    
-    // Настраиваем периодическое обновление данных каждые 30 секунд
-    const intervalId = setInterval(() => {
-      fetchMachineDetails();
-    }, 30000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
   }, [fetchMachineDetails]);
 
   // Функция для отправки задачи на мониторы
-  const handleSendToMonitors = useCallback(async (operationId: number): Promise<void> => {
+  const handleSendToMonitors = useCallback(async (taskId: number): Promise<void> => {
     try {
-      await sendToMonitors(operationId);
+      await sendToMonitors(taskId);
       // Обновляем данные после успешного запроса
       await fetchMachineDetails();
     } catch (error) {
@@ -79,9 +70,9 @@ export const useYpakMachine = (): UseYpakMachineResult => {
   }, [fetchMachineDetails]);
 
   // Функция для перевода задачи в работу
-  const handleStartOperation = useCallback(async (operationId: number): Promise<void> => {
+  const handleStartOperation = useCallback(async (taskId: number): Promise<void> => {
     try {
-      await startOperation(operationId);
+      await startOperation(taskId);
       // Обновляем данные после успешного запроса
       await fetchMachineDetails();
     } catch (error) {
@@ -91,9 +82,9 @@ export const useYpakMachine = (): UseYpakMachineResult => {
   }, [fetchMachineDetails]);
 
   // Функция для завершения задачи
-  const handleCompleteOperation = useCallback(async (operationId: number): Promise<void> => {
+  const handleCompleteOperation = useCallback(async (taskId: number): Promise<void> => {
     try {
-      await completeOperation(operationId);
+      await completeOperation(taskId);
       // Обновляем данные после успешного запроса
       await fetchMachineDetails();
     } catch (error) {
@@ -103,9 +94,9 @@ export const useYpakMachine = (): UseYpakMachineResult => {
   }, [fetchMachineDetails]);
 
   // Функция для частичного завершения задачи
-  const handlePartiallyCompleteOperation = useCallback(async (operationId: number, packagedCount: number): Promise<void> => {
+  const handlePartiallyCompleteOperation = useCallback(async (taskId: number, packagedCount: number): Promise<void> => {
     try {
-      await partiallyCompleteOperation(operationId, packagedCount);
+      await partiallyCompleteOperation(taskId, packagedCount);
       // Обновляем данные после успешного запроса
       await fetchMachineDetails();
     } catch (error) {
@@ -115,9 +106,9 @@ export const useYpakMachine = (): UseYpakMachineResult => {
   }, [fetchMachineDetails]);
 
   // Функция для получения схемы укладки
-  const handleGetPackingScheme = useCallback(async (ypakId: number): Promise<string> => {
+  const handleGetPackingScheme = useCallback(async (packageId: number): Promise<string> => {
     try {
-      const blob = await getPackingScheme(ypakId);
+      const blob = await getPackingScheme(packageId);
       return URL.createObjectURL(blob);
     } catch (error) {
       console.error('Ошибка при получении схемы укладки:', error);

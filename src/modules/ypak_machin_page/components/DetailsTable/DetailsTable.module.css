@@ -155,6 +155,69 @@
   transform: translateY(1px);
 }
 
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Статус 'Задание на станке но еще не обрабатывалось' */
+.statusOnMachine {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #1c6ea4;
+}
+
+/* Статус 'Станок приступил к обработке' */
+.statusInProgress {
+  background: linear-gradient(to bottom, #f1c40f, #f39c12);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #d35400;
+  /* animation: pulse 1.5s infinite; */
+}
+
+/* Статус 'Задание выполнено' */
+.statusCompleted {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #219653;
+}
+
+/* Статус 'частично выполнено' */
+.statusPartiallyCompleted {
+  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #7d3c98;
+}
+
+/* Статус 'Поддон перемещен в буфер' */
+.statusBuffered {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #5d6d7e;
+}
+
+/* Статус 'Ошибка' */
+.statusFailed {
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #922b21;
+}
+
+
 /* Кнопка-стрелка */
 .arrowButton {
   background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
@@ -723,30 +786,7 @@
 
 
 
-/* Стили для статусов операций */
-.statusOnMachine {
-  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
-}
 
-.statusInProgress {
-  background: linear-gradient(to bottom, #e8f5fe, #d6ecfd);
-  border-left: 3px solid #2196f3;
-}
-
-.statusCompleted {
-  background: linear-gradient(to bottom, #e8f8e8, #d6f5d6);
-  border-left: 3px solid #4caf50;
-}
-
-.statusBuffered {
-  background: linear-gradient(to bottom, #fff8e6, #feefcc);
-  border-left: 3px solid #ff9800;
-}
-
-.statusPartiallyCompleted {
-  background: linear-gradient(to bottom, #f5e8f7, #edd6f0);
-  border-left: 3px solid #9c27b0;
-}
 
 /* Стили для ячейки с кнопками действий */
 .actionsCell {

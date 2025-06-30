@@ -20,9 +20,10 @@ export interface User {
 export interface Machine {
   id: number;
   name: string;
-  status: string;
-  segmentId: number;
-  segmentName: string;
+  status?: string;
+  segmentId?: number;
+  segmentName?: string;
+  stages?: Stage[];
 }
 
 export interface Segment {
@@ -70,6 +71,11 @@ const authService = {
 
   // Сохранение данных авторизации в localStorage
   saveAuthData(authData: AuthResponse): void {
+    // console.log('=== СОХРАНЕНИЕ ДАННЫХ АВТОРИЗАЦИИ ===');
+    // console.log('Полные данные авторизации:', authData);
+    // console.log('Роль пользователя:', authData.user.primaryRole);
+    // console.log('Assignments:', authData.assignments);
+    
     localStorage.setItem('authToken', authData.token);
     localStorage.setItem('user', JSON.stringify(authData.user));
     localStorage.setItem('assignments', JSON.stringify(authData.assignments));
@@ -78,7 +84,42 @@ const authService = {
     if (authData.user.primaryRole === 'master' && authData.assignments.stages && authData.assignments.stages.length > 0) {
       const firstStage = authData.assignments.stages[0];
       localStorage.setItem('selectedStage', JSON.stringify(firstStage));
-      console.log('Установлен первый этап при авторизации:', firstStage);
+      // console.log('Установлен первый этап при авторизации:', firstStage);
+    }
+
+    // Устанавливаем первый доступный этап как выбранный для роли workplace (если есть этапы в машинах)
+    if (authData.user.primaryRole === 'workplace') {
+      // console.log('=== ОБРАБОТКА РОЛИ WORKPLACE ===');
+      // console.log('Machines в assignments:', authData.assignments.machines);
+      
+      if (authData.assignments.machines && authData.assignments.machines.length > 0) {
+        // console.log('Количество машин:', authData.assignments.machines.length);
+        
+        // Логируем каждую машину
+        authData.assignments.machines.forEach((machine, index) => {
+          // console.log(`Машина ${index + 1}:`, machine);
+          // console.log(`  - ID: ${machine.id}`);
+          // console.log(`  - Название: ${machine.name}`);
+          // console.log(`  - Этапы:`, machine.stages);
+        });
+        
+        // Ищем первую машину с этапами
+        const machineWithStages = authData.assignments.machines.find(machine => 
+          machine.stages && machine.stages.length > 0
+        );
+        
+        // console.log('Машина с этапами:', machineWithStages);
+        
+        if (machineWithStages && machineWithStages.stages) {
+          const firstStage = machineWithStages.stages[0];
+          localStorage.setItem('selectedStage', JSON.stringify(firstStage));
+          // console.log('Установлен первый этап для рабочего места при авторизации:', firstStage);
+        } else {
+          // console.log('Не найдено машин с этапами для workplace');
+        }
+      } else {
+        // console.log('У пользователя workplace нет машин в assignments');
+      }
     }
 
     // Декодируем JWT для получения срока действия
@@ -150,7 +191,7 @@ const authService = {
     return user.primaryRole === roleName;
   },
 
-  // Определение начальной страницы в зави��имости от основной роли и привязок
+  // Определение начальной страницы в зависимости от основной роли и привязок
   determineHomePage(user: User, assignments: Assignments): string {
     const primaryRole = user.primaryRole.toLowerCase();
 
@@ -173,6 +214,41 @@ const authService = {
         return '/ypakmachine';
 
       case 'workplace':
+        // console.log('=== ОПРЕДЕЛЕНИЕ СТРАНИЦЫ ДЛЯ WORKPLACE ===');
+        // console.log('Assignments для workplace:', assignments);
+        // console.log('Machines:', assignments.machines);
+        
+        // Для рабочих мест проверяем наличие финальных эт��пов в машинах
+        if (assignments.machines && assignments.machines.length > 0) {
+          // console.log('Найдены машины, проверяем финальные этапы...');
+          
+          // Подробно логируем каждую машину и её этапы
+          assignments.machines.forEach((machine, index) => {
+            // console.log(`Машина ${index + 1} (ID: ${machine.id}, Название: ${machine.name}):`);
+            if (machine.stages && machine.stages.length > 0) {
+              machine.stages.forEach((stage, stageIndex) => {
+                // console.log(`  Этап ${stageIndex + 1}: ${stage.name} (finalStage: ${stage.finalStage})`);
+              });
+            } else {
+              // console.log('  Нет этапов');
+            }
+          });
+          
+          const hasFinalStages = assignments.machines.some(machine => 
+            machine.stages && machine.stages.some(stage => stage.finalStage === true)
+          );
+          
+          // console.log('Есть финальные этапы:', hasFinalStages);
+          
+          if (hasFinalStages) {
+            // console.log('Перенаправляем на /ypakmachine (финальные этапы найдены)');
+            return '/ypakmachine';
+          } else {
+            // console.log('Перенаправляем на /machine (финальных этапов нет)');
+          }
+        } else {
+          // console.log('У workplace нет машин, перенаправляем на /machine');
+        }
         return '/machine';
 
       case 'operator':
@@ -257,31 +333,31 @@ const authService = {
     return assignments.stages.filter(stage => stage.finalStage === true);
   },
 
-  // Определение домашней страницы с учетом выбранного этапа
+  // Определение домашней страницы с учетом вы��ранного этапа
   determineHomePageWithSelectedStage(): string {
     const user = this.getUser();
     const assignments = this.getAssignments();
     
-    console.log('=== ОПРЕДЕЛЕНИЕ ДОМАШНЕЙ СТРАНИЦЫ ===');
-    console.log('Пользователь:', user);
-    console.log('Assignments:', assignments);
+    // console.log('=== ОПРЕДЕЛЕНИЕ ДОМАШНЕЙ СТРАНИЦЫ ===');
+    // console.log('Пользователь:', user);
+    // console.log('Assignments:', assignments);
     
     if (!user || !assignments) {
-      console.log('Нет данных пользователя или assignments, перенаправление на /login');
+      // console.log('Нет данных пользователя или assignments, перенаправление на /login');
       return '/login';
     }
 
     // Для мастеров проверяем выбранный этап
     if (user.primaryRole.toLowerCase() === 'master') {
       const selectedStageString = localStorage.getItem('selectedStage');
-      console.log('Выбранный этап (строка):', selectedStageString);
+      // console.log('Выбранный этап (строка):', selectedStageString);
       
       if (selectedStageString) {
         try {
           const selectedStage = JSON.parse(selectedStageString);
-          console.log('Выбранный этап (объект):', selectedStage);
+          // console.log('Выбранный этап (объект):', selectedStage);
           const targetPage = selectedStage.finalStage ? '/ypak' : '/master';
-          console.log('Целевая страница:', targetPage);
+          // console.log('Целевая страница:', targetPage);
           return targetPage;
         } catch (error) {
           console.error('Ошибка при парсинге выбранного этапа:', error);
@@ -289,14 +365,76 @@ const authService = {
           return '/master';
         }
       } else {
-        console.log('Нет выбранного этапа, используем /master по умолчанию');
+        // console.log('Нет выбранного этапа, используем /master по умолчанию');
         return '/master';
+      }
+    }
+
+    // Для рабочих мест (workplace) проверяем выбранный этап
+    if (user.primaryRole.toLowerCase() === 'workplace') {
+      // console.log('=== ОБРАБОТКА WORKPLACE В DETERMINEHOMEPAGE ===');
+      // console.log('Assignments для workplace:', assignments);
+      // console.log('Machines:', assignments.machines);
+      
+      // Проверяем выбранный этап из localStorage
+      const selectedStageString = localStorage.getItem('selectedStage');
+      // console.log('Выбранный этап (строка):', selectedStageString);
+      
+      if (selectedStageString) {
+        try {
+          const selectedStage = JSON.parse(selectedStageString);
+          // console.log('Выбранный этап (объект):', selectedStage);
+          
+          if (selectedStage.finalStage) {
+            // console.log('Workplace с финальным этапом, перенаправление на /ypakmachine');
+            return '/ypakmachine';
+          } else {
+            // console.log('Workplace с обычным этапом, перенаправление на /machine');
+            return '/machine';
+          }
+        } catch (error) {
+          console.error('Ошибка при парсинге выбранного этапа:', error);
+        }
+      }
+      
+      // Если нет выбранного этапа, проверяем наличие финальных этапов в машинах
+      let hasFinalStages = false;
+      
+      if (assignments.machines && assignments.machines.length > 0) {
+        // console.log('Проверяем финальные этапы в машинах...');
+        
+        // Подробно логируем каждую маши��у
+        assignments.machines.forEach((machine, index) => {
+          // console.log(`Машина ${index + 1}:`, machine);
+          if (machine.stages) {
+            // console.log(`  Этапы машины ${machine.name}:`, machine.stages);
+            machine.stages.forEach(stage => {
+              // console.log(`    - ${stage.name} (finalStage: ${stage.finalStage})`);
+            });
+          }
+        });
+        
+        hasFinalStages = assignments.machines.some(machine => 
+          machine.stages && machine.stages.some(stage => stage.finalStage === true)
+        );
+        
+        // console.log('Результат проверки финальных этапов:', hasFinalStages);
+      } else {
+        // console.log('Нет машин у workplace пользователя');
+      }
+      
+      if (hasFinalStages) {
+        // console.log('Рабочее место с финальными этапами, перенаправление на /ypakmachine');
+        return '/ypakmachine';
+      } else {
+        // console.log('Рабочее место без финальных этапов, перенаправление на /machine');
+        return '/machine';
       }
     }
 
     // Для остальных ролей используем стандартную логику
     const homePage = this.determineHomePage(user, assignments);
-    console.log('Домашняя страница для роли', user.primaryRole, ':', homePage);
+    // console.log('Домашняя страница для роли', user.primaryRole, ':', homePage);
     return homePage;
   }
 };

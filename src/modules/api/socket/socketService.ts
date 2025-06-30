@@ -58,15 +58,15 @@ class SocketService {
    */
   public initialize(): Socket {
     if (this.socket && this.socket.connected) {
-      console.log('Socket.IO соединение уже установлено');
+      // console.log('Socket.IO соединение уже установлено');
       return this.socket;
     }
 
-    console.log('Инициализация Socket.IO соединения');
+    // console.log('Инициализация Socket.IO соединения');
 
     // Закрываем существующее соединение, если оно есть
     if (this.socket) {
-      console.log('Закрытие существующего соединения Socket.IO');
+      // console.log('Закрытие существующего соединения Socket.IO');
       this.socket.disconnect();
       this.socket = null;
     }
@@ -98,13 +98,13 @@ class SocketService {
     // Настраиваем универсальный логгер для всех событий в режиме отладки
     if (this.verbose) {
       this.socket.onAny((event, ...args) => {
-        console.log(`🔄 Socket.IO получено событие: ${event}`, args);
+        // console.log(`🔄 Socket.IO получено событие: ${event}`, args);
       });
     }
 
     // Базовые события сокета
     this.socket.on(SocketEvent.CONNECT, () => {
-      console.log('Socket.IO соединение установлено');
+      // console.log('Socket.IO соединение установлено');
       this.reconnectAttempts = 0;
 
       // При переподключении заново присоединяемся к комнатам
@@ -116,7 +116,7 @@ class SocketService {
     });
 
     this.socket.on(SocketEvent.DISCONNECT, () => {
-      console.log('Socket.IO соединение разорвано');
+      // console.log('Socket.IO соединение разорвано');
 
       if (this.handlers.onDisconnect) {
         this.handlers.onDisconnect();
@@ -125,7 +125,7 @@ class SocketService {
       // Пытаемся переподключиться, если количество попыток не превышает максимум
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++;
-        console.log(`Попытка переподключения ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+        // console.log(`Попытка переподключения ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
         setTimeout(() => {
           if (!this.socket?.connected) {
             this.initialize();
@@ -143,21 +143,21 @@ class SocketService {
 
     // Системные события согласно новой документации
     this.socket.on(SocketEvent.ROOMS_AVAILABLE, (data) => {
-      console.log('🏠 Доступные комнаты:', data.rooms);
+      // console.log('🏠 Доступные комнаты:', data.rooms);
       if (this.handlers.onRoomsAvailable) {
         this.handlers.onRoomsAvailable(data.rooms);
       }
     });
 
     this.socket.on(SocketEvent.ROOM_JOINED, (data) => {
-      console.log(`✅ Присоединился к комнате: ${data.room}`);
+      // console.log(`✅ Присоединился к комнате: ${data.room}`);
       if (this.handlers.onRoomJoined) {
         this.handlers.onRoomJoined(data.room);
       }
     });
 
     this.socket.on(SocketEvent.ROOM_LEFT, (data) => {
-      console.log(`❌ Покинул комнату: ${data.room}`);
+      // console.log(`❌ Покинул комнату: ${data.room}`);
       if (this.handlers.onRoomLeft) {
         this.handlers.onRoomLeft(data.room);
       }
@@ -165,7 +165,7 @@ class SocketService {
 
     // События обновления статуса станка (согласно новой документации)
     this.socket.on(SocketEvent.MACHINE_STATUS_UPDATED, (data) => {
-      console.log(`🟢 Получено обновление статуса станка из комнаты product-machines:`, data);
+      // console.log(`🟢 Получено обновление статуса станка из комнаты product-machines:`, data);
 
       if (!data || typeof data !== 'object') {
         console.error('Недопустимые данные обновления статуса станка', data);
@@ -178,13 +178,13 @@ class SocketService {
         return;
       }
 
-      console.log(`📊 Детали обновления станка:
-        - ID: ${data.machine.id}
-        - Название: ${data.machine.name || 'Не указано'}
-        - Статус: ${data.machine.status}
-        - Сегмент ID: ${data.machine.segmentId || 'Не указан'}
-        - Сегмент: ${data.machine.segmentName || 'Не указан'}
-        - Время: ${data.timestamp || 'Не указано'}`);
+      // console.log(`📊 Детали обновления станка:
+      //   - ID: ${data.machine.id}
+      //   - Название: ${data.machine.name || 'Не указано'}
+      //   - Статус: ${data.machine.status}
+      //   - Сегмент ID: ${data.machine.segmentId || 'Не указан'}
+      //   - Сегмент: ${data.machine.segmentName || 'Не указан'}
+      //   - Время: ${data.timestamp || 'Не указано'}`);
 
       if (this.handlers.onMachineStatusUpdate) {
         this.handlers.onMachineStatusUpdate(data.machine);
@@ -199,7 +199,7 @@ class SocketService {
    */
   public joinMachinesRoom(): void {
     if (!this.socket) {
-      console.log('Соединение не инициализировано, инициализируем...');
+      // console.log('Соединение не инициализировано, инициализируем...');
       this.initialize();
     }
 
@@ -209,18 +209,18 @@ class SocketService {
     }
 
     if (this.socket.connected) {
-      console.log('Подключение к комнате станков через событие:', SocketRoom.PRODUCT_MACHINES);
+      // console.log('Подключение к комнате станков через событие:', SocketRoom.PRODUCT_MACHINES);
       this.socket.emit('joinRoom', { room: SocketRoom.PRODUCT_MACHINES });
       this.rooms.add(SocketRoom.PRODUCT_MACHINES);
 
-      console.log('Комната, к которой мы пытаемся присоединиться:', SocketRoom.PRODUCT_MACHINES);
+      // console.log('Комната, к которой мы пытаемся присоединиться:', SocketRoom.PRODUCT_MACHINES);
     } else {
-      console.log('Socket.IO не подключен. Добавляем комнату в список для автоподключения после установления соединения');
+      // console.log('Socket.IO не подключен. Добавляем комнату в список для автоподключения после установления соединения');
       this.rooms.add(SocketRoom.PRODUCT_MACHINES);
 
       // Пытаемся подключиться, если соединение не установлено
       if (!this.socket.connected) {
-        console.log('Пытаемся установить соединение...');
+        // console.log('Пытаемся установить соединение...');
         this.socket.connect();
       }
     }
@@ -231,7 +231,7 @@ class SocketService {
    */
   public joinRoom(room: SocketRoom): void {
     if (!this.socket) {
-      console.log('Соединение не инициализировано, инициализируем...');
+      // console.log('Соединение не инициализировано, инициализируем...');
       this.initialize();
     }
 
@@ -241,16 +241,16 @@ class SocketService {
     }
 
     if (this.socket.connected) {
-      console.log(`Подключение к комнате: ${room}`);
+      // console.log(`Подключение к комнате: ${room}`);
       this.socket.emit('joinRoom', { room });
       this.rooms.add(room);
     } else {
-      console.log('Socket.IO не подключен. Добавляем комнату в список для автоподключения после установления соединения');
+      // console.log('Socket.IO не подключен. Добавляем комнату в список для автоподключения после установления соединения');
       this.rooms.add(room);
 
       // Пытаемся подключиться, если соединение не установлено
       if (!this.socket.connected) {
-        console.log('Пытаемся установить соединение...');
+        // console.log('Пытаемся установить соединение...');
         this.socket.connect();
       }
     }
@@ -265,7 +265,7 @@ class SocketService {
       return;
     }
 
-    console.log(`Покидаем комнату: ${room}`);
+    // console.log(`Покидаем комнату: ${room}`);
     this.socket.emit('leaveRoom', { room });
     this.rooms.delete(room);
   }
@@ -280,14 +280,14 @@ class SocketService {
     }
 
     if (this.rooms.size === 0) {
-      console.log('Нет комнат для переподключения');
+      // console.log('Нет комнат для переподключения');
       return;
     }
 
-    console.log(`Переподключение к ${this.rooms.size} комнатам`);
+    // console.log(`Переподключение к ${this.rooms.size} комнатам`);
 
     this.rooms.forEach(room => {
-      console.log(`Переподключение к комнате: ${room}`);
+      // console.log(`Переподключение к комнате: ${room}`);
       this.socket?.emit('joinRoom', { room });
     });
   }
@@ -298,14 +298,14 @@ class SocketService {
    */
   public setHandlers(handlers: SocketHandlers): void {
     this.handlers = { ...this.handlers, ...handlers };
-    console.log('Установлены новые обработчики:', Object.keys(handlers));
+    // console.log('Установлены новые обработчики:', Object.keys(handlers));
   }
 
   /**
    * Очищает обработчики событий
    */
   public clearHandlers(): void {
-    console.log('Очистка обработчиков событий');
+    // console.log('Очистка обработчиков событий');
     this.handlers = {};
   }
 
@@ -314,11 +314,11 @@ class SocketService {
    */
   public disconnect(): void {
     if (!this.socket) {
-      console.log('Socket.IO соединение уже закрыто');
+      // console.log('Socket.IO соединение уже закрыто');
       return;
     }
 
-    console.log('Закрытие Socket.IO соединения');
+    // console.log('Закрытие Socket.IO соединения');
     this.socket.disconnect();
     this.socket = null;
     this.rooms.clear();
@@ -348,14 +348,14 @@ class SocketService {
    */
   public setVerboseLogging(enabled: boolean): void {
     this.verbose = enabled;
-    console.log(`Подробное логирование ${enabled ? 'включено' : 'отключено'}`);
+    // console.log(`Подробное логирование ${enabled ? 'включено' : 'отключено'}`);
   }
 
   /**
    * Принудительно переподключает клиент к серверу
    */
   public forceReconnect(): void {
-    console.log('Принудительное переподключение Socket.IO соединения');
+    // console.log('Принудительное переподключение Socket.IO соединения');
     this.disconnect();
     this.initialize();
   }

@@ -21,8 +21,8 @@ function App() {
           {/* Публичный маршрут для авторизации */}
           <Route path="/login" element={<AuthPage />} />
           
-          {/* Защищенные маршруты для операторов */}
-          <Route element={<ProtectedRoute requiredRole="workplace" />}>
+          {/* Защищенные маршруты для операторов workplace БЕЗ финальных этапов - ОБНОВЛЕНО */}
+          <Route element={<ProtectedRoute requiredRole="workplace" excludeFinalStage={true} />}>
             <Route path="/machine" element={<MachinePage />} />
           </Route>
           {/* <Route element={<ProtectedRoute requiredRole="admin" />}>
@@ -48,7 +48,7 @@ function App() {
           <Route element={<ProtectedRoute requiredRole="master" requireFinalStage={true} />}>
             <Route path="/ypak" element={<MasterYpakPage />} />
           </Route>
-          <Route element={<ProtectedRoute requiredRole="ypakoperator" />}>
+          <Route element={<ProtectedRoute requiredRole="workplace" requireFinalStage={true} />}>  
             <Route path="/ypakmachine" element={<YpakMachinePage />} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="complect" />}>

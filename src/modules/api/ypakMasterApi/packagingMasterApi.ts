@@ -28,7 +28,7 @@ export const fetchPackagingByOrderId = async (orderId: number | null): Promise<P
   
   try {
     const response = await axios.get(`${API_URL}/packaging/by-order/${orderId}`);
-    console.log(response.data);
+    // console.log(response.data);
     
     return response.data.packages.map((item: any, index: number) => ({
       id: item.id, 

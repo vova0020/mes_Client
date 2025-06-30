@@ -1,11 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './DetailsTable.module.css';
 import { useYpakMachine } from '../../../hooks/ypakMachine/useYpakMachine';
 import { YpakTask } from '../../../api/ypakMachine/ypakMachineApi';
-import PalletsSidebar from '../PalletsSidebar/YpackMachinPalletsSidebar';
-
-
+import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
+// import PalletsSidebar from '../PalletsSidebar/YpackMachinPalletsSidebar';
 
 const DetailsTable: React.FC = () => {
   // Состояние для отслеживания активной задачи
@@ -14,11 +12,9 @@ const DetailsTable: React.FC = () => {
   // Состояние для анимации (показывать/скрывать детали)
   const [showDetails, setShowDetails] = useState(false);
   
-  // Состояние для боковой панели поддонов
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // Состояние для позиции сайдбара
-  const [sidebarPosition, setSidebarPosition] = useState({ top: 120, right: 20 });
+ // Состояние для боковой панели с поддонами
+   const [sidebarOpen, setSidebarOpen] = useState(false);
+   const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
   
   // Состояние для модального окна частичного завершения
   const [showPartialModal, setShowPartialModal] = useState(false);
@@ -50,7 +46,7 @@ const DetailsTable: React.FC = () => {
   // Показываем детали с анимацией после загрузки
   useEffect(() => {
     if (loading === 'success' && tasks.length > 0) {
-      // Небольшая задержка перед показом деталей для более заметной анимации
+      // Небольшая задержка перед показом дет��лей для более заметной анимации
       const timer = setTimeout(() => {
         setShowDetails(true);
       }, 100);
@@ -85,109 +81,99 @@ const DetailsTable: React.FC = () => {
     // Если нажали на уже выбранную строку, сбрасываем выбор
     if (activeTaskId === taskId) {
       setActiveTaskId(null);
-      setIsSidebarOpen(false);
+      // setIsSidebarOpen(false);
     } else {
       // Иначе выбираем новую строку
       setActiveTaskId(taskId);
     }
   };
 
-  // Обработчик клика по кнопке "Схема укладки"
-  const handlePackingSchemeClick = async (e: React.MouseEvent, ypakId: number) => {
+  // Обработчик клика по кнопке "Схема уклад��и"
+  const handlePackingSchemeClick = async (e: React.MouseEvent, packageId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     
-    // try {
-    //   setProcessingTaskId(ypakId);
-    //   const schemeUrl = await getPackingScheme(ypakId);
+    try {
+      setProcessingTaskId(packageId);
+      const schemeUrl = await getPackingScheme(packageId);
       
-    //   // Открываем схему укладки в новом окне
-    //   window.open(schemeUrl, '_blank');
-    // } catch (error) {
-    //   setActionError(`Ошибка при загрузке схемы укладки: ${(error as Error).message}`);
-    // } finally {
-    //   setProcessingTaskId(null);
-    // }
+      // Открываем схему укладки в новом окне
+      window.open(schemeUrl, '_blank');
+    } catch (error) {
+      setActionError(`Ошибка при загрузке схемы укладки: ${(error as Error).message}`);
+    } finally {
+      setProcessingTaskId(null);
+    }
   };
 
-  // Обработчик клика по кнопке-стрелке для открытия сайдбара
-  const handleArrowClick = (e: React.MouseEvent, taskId: number, buttonElement: HTMLButtonElement) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
-    
-    // Получаем позицию кнопки для позиционирования сайдбара
-    const rect = buttonElement.getBoundingClientRect();
-    const top = rect.top;
-    const right = window.innerWidth - rect.right + buttonElement.offsetWidth;
-    
-    // Устанавливаем активную задачу
-    setActiveTaskId(taskId);
-    // Устанавливаем позицию сайдбара
-    setSidebarPosition({ top, right });
-    // Открываем сайдбар
-    setIsSidebarOpen(true);
-  };
-
-  // Обработчик закрытия сайдбара
-  const handleCloseSidebar = () => {
-    setIsSidebarOpen(false);
-  };
+  // Обработчик клика по кнопке-стрелке
+    const handleArrowClick = (e: React.MouseEvent, packageId: number) => {
+      e.stopPropagation(); // Предотвращаем всплытие события
+      setSelectedDetailForPallets(packageId);
+      setSidebarOpen(true);
+    };
+  
+    // Обработчик закрытия боковой панели
+    const handleCloseSidebar = () => {
+      setSidebarOpen(false);
+    };
 
   // Обработчик для кнопки "Отправить на мониторы"
   const handleSendToMonitors = async (e: React.MouseEvent, taskId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     
-    // try {
-    //   setProcessingTaskId(taskId);
-    //   setActionError(null);
+    try {
+      setProcessingTaskId(taskId);
+      setActionError(null);
       
-    //   await sendToMonitors(taskId);
-    //   setSuccessMessage('Задача успешно отправлена на мониторы');
-    // } catch (error) {
-    //   setActionError(`Ошибка при отправке на мониторы: ${(error as Error).message}`);
-    // } finally {
-    //   setProcessingTaskId(null);
-    // }
+      await sendToMonitors(taskId);
+      setSuccessMessage('Задача успешно отправлена на мониторы');
+    } catch (error) {
+      setActionError(`Ошибка при отправке на мониторы: ${(error as Error).message}`);
+    } finally {
+      setProcessingTaskId(null);
+    }
   };
 
   // Обработчик для кнопки "В работу"
   const handleStartOperation = async (e: React.MouseEvent, taskId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     
-    // try {
-    //   setProcessingTaskId(taskId);
-    //   setActionError(null);
+    try {
+      setProcessingTaskId(taskId);
+      setActionError(null);
       
-    //   await startOperation(taskId);
-    //   setSuccessMessage('Задача успешно переведена в работу');
-    // } catch (error) {
-    //   setActionError(`Ошибка при переводе в работу: ${(error as Error).message}`);
-    // } finally {
-    //   setProcessingTaskId(null);
-    // }
+      await startOperation(taskId);
+      setSuccessMessage('Задача успешно переведена в работу');
+    } catch (error) {
+      setActionError(`Ошибка при переводе в работу: ${(error as Error).message}`);
+    } finally {
+      setProcessingTaskId(null);
+    }
   };
 
   // Обработчик для кнопки "Готово"
   const handleCompleteOperation = async (e: React.MouseEvent, taskId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     
-    // try {
-    //   setProcessingTaskId(taskId);
-    //   setActionError(null);
+    try {
+      setProcessingTaskId(taskId);
+      setActionError(null);
       
-    //   await completeOperation(taskId);
-    //   setSuccessMessage('Задача успешно завершена');
-    // } catch (error) {
-    //   setActionError(`Ошибка при завершении задачи: ${(error as Error).message}`);
-    // } finally {
-    //   setProcessingTaskId(null);
-    // }
+      await completeOperation(taskId);
+      setSuccessMessage('Задача успешно завершена');
+    } catch (error) {
+      setActionError(`Ошибка при завершении задачи: ${(error as Error).message}`);
+    } finally {
+      setProcessingTaskId(null);
+    }
   };
 
   // Открытие модального окна для частичного завершения
   const handleOpenPartialModal = (e: React.MouseEvent, task: YpakTask) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     
-    setPartialCompleteTaskId(task.operationId);
-    setPackagedCount(task.packaged); // Устанавливаем текущее количество упакованных как начальное
+    setPartialCompleteTaskId(task.taskId);
+    setPackagedCount(0); // Начинаем с 0
     setShowPartialModal(true);
   };
 
@@ -202,27 +188,26 @@ const DetailsTable: React.FC = () => {
   const handleConfirmPartialComplete = async () => {
     if (partialCompleteTaskId === null) return;
     
-    // try {
-    //   setProcessingTaskId(partialCompleteTaskId);
-    //   setActionError(null);
+    try {
+      setProcessingTaskId(partialCompleteTaskId);
+      setActionError(null);
       
-    //   await partiallyCompleteOperation(partialCompleteTaskId, packagedCount);
-    //   setSuccessMessage('Задача частично завершена');
-    //   handleClosePartialModal();
-    // } catch (error) {
-    //   setActionError(`Ошибка при частичном завершении: ${(error as Error).message}`);
-    // } finally {
-    //   setProcessingTaskId(null);
-    // }
+      await partiallyCompleteOperation(partialCompleteTaskId, packagedCount);
+      setSuccessMessage('Задача частично завершена');
+      handleClosePartialModal();
+    } catch (error) {
+      setActionError(`Ошибка при частичном завершении: ${(error as Error).message}`);
+    } finally {
+      setProcessingTaskId(null);
+    }
   };
 
   // Функция для получения класса стиля в зависимости от статуса операции
   const getStatusClass = (status: string): string => {
     switch (status) {
-      case 'ON_MACHINE': return styles.statusOnMachine;
+      case 'PENDING': return styles.statusOnMachine;
       case 'IN_PROGRESS': return styles.statusInProgress;
       case 'COMPLETED': return styles.statusCompleted;
-      case 'BUFFERED': return styles.statusBuffered;
       case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
       default: return '';
     }
@@ -231,12 +216,29 @@ const DetailsTable: React.FC = () => {
   // Функция для получения текста статуса
   const getStatusText = (status: string): string => {
     switch (status) {
-      case 'ON_MACHINE': return 'На станке';
+      case 'PENDING': return 'Ожидает';
       case 'IN_PROGRESS': return 'В работе';
       case 'COMPLETED': return 'Завершено';
-      case 'BUFFERED': return 'В буфере';
-      case 'PARTIALLY_COMPLETED': return 'Частично завершено';
+      case 'PARTIALLY_COMPLETED': return 'Завершено частично';
       default: return status;
+    }
+  };
+
+  // Функция для форматирования даты
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return '-';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return '-';
     }
   };
 
@@ -330,12 +332,11 @@ const DetailsTable: React.FC = () => {
             <tr>
               <th>Приоритет</th>
               <th>Заказ</th>
-              <th>Артикул упаковки</th>
+              <th>Код упаковки</th>
               <th>Название упаковки</th>
               <th>Тех. информация</th>
-              <th>Общее кол-во</th>
-              <th>Готово к упаковке</th>
-              <th>Упаковано</th>
+              <th>Количество</th>
+              <th>Статус</th>
               <th>Действия</th>
               <th></th> {/* Колонка для кнопки-стрелки */}
             </tr>
@@ -343,52 +344,56 @@ const DetailsTable: React.FC = () => {
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
             {tasks.map((task, index) => (
               <tr
-                key={task.operationId}
+                key={task.taskId}
                 className={`
-                  ${activeTaskId === task.operationId ? styles.activeRow : ''}
+                  ${activeTaskId === task.taskId ? styles.activeRow : ''}
                   ${styles.animatedRow}
                   ${getStatusClass(task.status)}
                 `}
                 style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => handleRowClick(task.operationId)}
+                onClick={() => handleRowClick(task.taskId)}
               >
                 <td>{task.priority || '-'}</td>
-                <td>{`${task.order.runNumber} - ${task.order.name}`}</td>
-                <td>{task.ypak.article || '-'}</td>
-                <td>{task.ypak.name}</td>
+                <td>{`${task.productionPackage.order.batchNumber} - ${task.productionPackage.order.orderName}`}</td>
+                <td>{task.productionPackage.packageCode}</td>
+                <td>{task.productionPackage.packageName}</td>
                 <td>
                   <button 
                     className={styles.schemeButton}
-                    onClick={(e) => handlePackingSchemeClick(e, task.ypak.id)}
-                    disabled={processingTaskId === task.ypak.id}
+                    onClick={(e) => handlePackingSchemeClick(e, task.packageId)}
+                    disabled={processingTaskId === task.packageId}
                   >
                     Схема укладки
                   </button>
                 </td>
-                <td>{task.totalQuantity}</td>
-                <td>{task.readyForPackaging}</td>
-                <td>{task.packaged}</td>
+                <td>{task.productionPackage.quantity}</td>
+                <td>
+                  <span className={`${styles.statusBadge} ${getStatusClass(task.status)}`}>
+                    {getStatusText(task.status)}
+                  </span>
+                </td>
+           
                 <td className={styles.actionsCell}>
                   <button 
                     className={`${styles.actionButton} ${styles.monitorButton}`}
-                    onClick={(e) => handleSendToMonitors(e, task.operationId)}
-                    disabled={processingTaskId === task.operationId || task.status === 'COMPLETED'}
+                    onClick={(e) => handleSendToMonitors(e, task.taskId)}
+                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED'}
                     title="Отправить на мониторы"
                   >
                     На мониторы
                   </button>
                   <button 
                     className={`${styles.actionButton} ${styles.startButton}`}
-                    onClick={(e) => handleStartOperation(e, task.operationId)}
-                    disabled={processingTaskId === task.operationId || task.status === 'IN_PROGRESS' || task.status === 'COMPLETED'}
+                    onClick={(e) => handleStartOperation(e, task.taskId)}
+                    disabled={processingTaskId === task.taskId || task.status === 'IN_PROGRESS' || task.status === 'COMPLETED'}
                     title="Перевести задачу в работу"
                   >
-                    В работе
+                    В работу
                   </button>
                   <button 
                     className={`${styles.actionButton} ${styles.completeButton}`}
-                    onClick={(e) => handleCompleteOperation(e, task.operationId)}
-                    disabled={processingTaskId === task.operationId || task.status === 'COMPLETED' || task.status === 'ON_MACHINE'}
+                    onClick={(e) => handleCompleteOperation(e, task.taskId)}
+                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
                     title="Завершить задачу"
                   >
                     Готово
@@ -396,7 +401,7 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={`${styles.actionButton} ${styles.partialButton}`}
                     onClick={(e) => handleOpenPartialModal(e, task)}
-                    disabled={processingTaskId === task.operationId || task.status === 'COMPLETED' || task.status === 'ON_MACHINE'}
+                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
                     title="Частично завершить задачу"
                   >
                     Частично
@@ -405,7 +410,7 @@ const DetailsTable: React.FC = () => {
                 <td>
                   <button 
                     className={styles.arrowButton}
-                    onClick={(e) => handleArrowClick(e, task.operationId, e.currentTarget)}
+                    onClick={(e) => handleArrowClick(e, task.packageId)}
                   >
                     &#10095; {/* Символ стрелки вправо */}
                   </button>
@@ -414,7 +419,7 @@ const DetailsTable: React.FC = () => {
             ))}
           </tbody>
         </table>
-        </div>
+      </div>
 
       {/* Модальное окно для частичного завершения */}
       {showPartialModal && (
@@ -431,25 +436,21 @@ const DetailsTable: React.FC = () => {
               {partialCompleteTaskId && (
                 <div className={styles.taskInfo}>
                   {(() => {
-                    const task = tasks.find(t => t.operationId === partialCompleteTaskId);
+                    const task = tasks.find(t => t.taskId === partialCompleteTaskId);
                     if (task) {
                       return (
                         <>
                           <div className={styles.taskInfoItem}>
                             <span>Упаковка:</span>
-                            <span>{task.ypak.name}</span>
+                            <span>{task.productionPackage.packageName}</span>
                           </div>
                           <div className={styles.taskInfoItem}>
                             <span>Всего к упаковке:</span>
-                            <span>{task.totalQuantity}</span>
+                            <span>{task.productionPackage.quantity}</span>
                           </div>
                           <div className={styles.taskInfoItem}>
-                            <span>Готово к упаковке:</span>
-                            <span>{task.readyForPackaging}</span>
-                          </div>
-                          <div className={styles.taskInfoItem}>
-                            <span>Уже упаковано:</span>
-                            <span>{task.packaged}</span>
+                            <span>Статус:</span>
+                            <span>{getStatusText(task.status)}</span>
                           </div>
                         </>
                       );
@@ -470,8 +471,8 @@ const DetailsTable: React.FC = () => {
                     const value = parseInt(e.target.value);
                     if (!isNaN(value) && value >= 0) {
                       // Находим максимально допустимое значение из текущей задачи
-                      const task = tasks.find(t => t.operationId === partialCompleteTaskId);
-                      const maxValue = task ? task.totalQuantity : 0;
+                      const task = tasks.find(t => t.taskId === partialCompleteTaskId);
+                      const maxValue = task ? task.productionPackage.quantity : 0;
                       
                       // Ограничиваем ввод максимальным значением
                       setPackagedCount(Math.min(value, maxValue));
@@ -479,17 +480,17 @@ const DetailsTable: React.FC = () => {
                   }}
                   min="0"
                   max={(() => {
-                    const task = tasks.find(t => t.operationId === partialCompleteTaskId);
-                    return task ? task.totalQuantity : 0;
+                    const task = tasks.find(t => t.taskId === partialCompleteTaskId);
+                    return task ? task.productionPackage.quantity : 0;
                   })()}
                 />
               </div>
               
               {/* Индикатор прогресса */}
               {(() => {
-                const task = tasks.find(t => t.operationId === partialCompleteTaskId);
+                const task = tasks.find(t => t.taskId === partialCompleteTaskId);
                 if (task) {
-                  const percentage = (packagedCount / task.totalQuantity) * 100;
+                  const percentage = (packagedCount / task.productionPackage.quantity) * 100;
                   return (
                     <div className={styles.progressWrapper}>
                       <div className={styles.progressBar}>
@@ -532,14 +533,11 @@ const DetailsTable: React.FC = () => {
       )}
       
       {/* Боковая панель поддонов */}
-      {/* <PalletsSidebar 
-        detailId={activeTaskId !== null ? 
-          tasks.find(task => task.operationId === activeTaskId)?.ypak.id || null : 
-          null}
-        isOpen={isSidebarOpen}
+     <PackagingDetailsSidebar 
+        isOpen={sidebarOpen} 
         onClose={handleCloseSidebar}
-        position={sidebarPosition}
-      /> */}
+        selectedPackageId={selectedDetailForPallets}
+      />
     </div>
   );
 };

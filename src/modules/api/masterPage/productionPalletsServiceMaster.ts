@@ -134,7 +134,7 @@ const getSegmentIdFromStorage = (): number | null => {
 // Функция для получения текста статуса операции в удобном для отображения формате
 export const getOperationStatusText = (operation?: OperationDto | null): string => {
   // Отладочный вывод
-  console.log('getOperationStatusText получил операцию:', operation);
+  // console.log('getOperationStatusText получил операцию:', operation);
 
   // Проверка наличия операции
   if (!operation) {
@@ -187,15 +187,15 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
   const stageid = getSegmentIdFromStorage();
   try {
     const response = await axios.get<PalletsResponseDto>(`${API_URL}/master/pallets/${detailId}/${stageid}`);
-    console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
+    // console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
 
     // Обрабатываем данные от API - убеждаемся, что currentOperation корректно определен
     const processedPallets = response.data.pallets.map(pallet => {
       // Дополнительная проверка и логирование для отладки
-      console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
-        hasCurrentOperation: !!pallet.currentOperation,
-        currentOperation: pallet.currentOperation
-      });
+      // console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
+      //   hasCurrentOperation: !!pallet.currentOperation,
+      //   currentOperation: pallet.currentOperation
+      // });
 
       return pallet;
     });
@@ -309,7 +309,7 @@ export const assignPalletToMachine = async (
       payload
     );
 
-    console.log('Поддон успешно назначен на станок:', response.data);
+    // console.log('Поддон успешно назначен на станок:', response.data);
     return response.data.operation;
   } catch (error) {
     console.error('Ошибка при назначении поддона на станок:', error);
@@ -333,7 +333,7 @@ export const movePalletToBuffer = async (
       payload
     );
 
-    console.log('Поддон успешно перемещен в буфер:', response.data);
+    // console.log('Поддон успешно перемещен в буфер:', response.data);
     return response.data.operation;
   } catch (error) {
     console.error('Ошибка при перемещении поддона в буфер:', error);
@@ -397,7 +397,7 @@ export const getPalletRouteSheet = async (palletId: number): Promise<Blob> => {
 export const getCurrentOperation = async (palletId: number): Promise<OperationDto | null> => {
   try {
     const response = await axios.get<{ operation: OperationDto | null }>(`${API_URL}/pallets/${palletId}/current-operation`);
-    console.log(`Получена операция для поддона ${palletId}:`, response.data);
+    // console.log(`Получена операция для поддона ${palletId}:`, response.data);
     return response.data.operation;
   } catch (error) {
     console.error('Ошибка при получении текущей операции поддона:', error);

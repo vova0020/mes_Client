@@ -126,11 +126,12 @@ export const fetchMachineTasks = async (machineId: number): Promise<MachineTask[
       throw new Error('Не удалось получить ID этапа из localStorage');
     }
     
-    const response = await axios.get<MachineTask[]>(`${API_URL}/machines`, {
-      params: {
-        stageId: stageId
-      }
-    });
+    const response = await axios.get<MachineTask[]>(`${API_URL}/packing-assignments/by-machine/${machineId}`);
+    // const response = await axios.get<MachineTask[]>(`${API_URL}/machines`, {
+    //   params: {
+    //     stageId: stageId
+    //   }
+    // });
     
     // Фильтруем задания только для указанного станка
     const filteredTasks = response.data.filter(task => task.machineId === machineId);
@@ -193,7 +194,7 @@ export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
   try {
     // Получаем stageId из локального хранилища
     const stageId = getSelectedStageIdFromStorage();
-    console.log(`ID для запроса ${stageId}`);
+    // console.log(`ID для запроса ${stageId}`);
     
     
     if (stageId === null) {

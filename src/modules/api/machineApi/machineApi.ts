@@ -55,7 +55,7 @@ export const machineApi = {
    */
   getMachineById: async (id: number): Promise<Machine> => {
     try {
-      console.log(`Запрос данных о станке с ID=${id} из API`);
+      // console.log(`Запрос данных о станке с ID=${id} из API`);
       const response = await axios.get<Machine>(`${API_URL}/machins/${id}`);
       return response.data;
     } catch (error) {
@@ -72,7 +72,7 @@ export const machineApi = {
    */
   changeMachineStatus: async (machineId: number, status: MachineStatus): Promise<Machine> => {
     try {
-      console.log(`Изменение статуса станка с ID=${machineId} на ${status}`);
+      // console.log(`Изменение статуса станка с ID=${machineId} на ${status}`);
       const response = await axios.patch<Machine>(`${API_URL}/machins/status`, {
         machineId,
         status

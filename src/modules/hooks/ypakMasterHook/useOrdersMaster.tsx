@@ -13,7 +13,7 @@ const useOrders = () => {
   const fetchOrders = useCallback(async () => {
     // Предотвращаем множественные одновременные запросы
     if (isLoadingRef.current) {
-      console.log('Запрос уже выполняется, пропускаем...');
+      // console.log('Запрос уже выполняется, пропускаем...');
       return;
     }
 
@@ -42,7 +42,7 @@ const useOrders = () => {
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      console.log('Получено событие изменения этапа в useOrders (ypak):', event.detail);
+      // console.log('Получено событие изменения этапа в useOrders (ypak):', event.detail);
       // Добавляем небольшую задержку для предотвращения множественных запросов
       setTimeout(() => {
         fetchOrders(); // Перезагружаем заказы при изменении этапа

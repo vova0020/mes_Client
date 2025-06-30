@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
   requirePrimaryRole?: boolean; // Флаг для проверки основной роли
   requireFinalStage?: boolean; // Флаг для проверки наличия финальных этапов (для мастеров упаковки)
   excludeFinalStage?: boolean; // Флаг для исключения пользователей с финальными этапами (для обычных мастеров)
+  ypakMashinFinalStage?: boolean; // Флаг для исключения пользователей с финальными этапами (для обычных мастеров)
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
@@ -15,30 +16,33 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles, 
   requirePrimaryRole = false,
   requireFinalStage = false,
-  excludeFinalStage = false
+  excludeFinalStage = false,
+  ypakMashinFinalStage = false
 }) => {
-  console.log('=== PROTECTED ROUTE ===');
-  console.log('Props:', { requiredRole, requiredRoles, requirePrimaryRole, requireFinalStage, excludeFinalStage });
+  // console.log('=== PROTECTED ROUTE - ОБНОВЛЕНО ===');
+  // console.log('Props:', { requiredRole, requiredRoles, requirePrimaryRole, requireFinalStage, excludeFinalStage });
+  // console.log('excludeFinalStage значение:', excludeFinalStage);
+  // console.log('Тип excludeFinalStage:', typeof excludeFinalStage);
 
   // Проверяем ауте��тификацию
   if (!authService.isAuthenticated()) {
-    console.log('Пользователь не аутентифицирован, перенаправление на /login');
+    // console.log('Пользователь не аутентифицирован, перенаправление на /login');
     return <Navigate to="/login" replace />;
   }
 
   const user = authService.getUser();
   
   if (!user) {
-    console.log('Нет данных пользователя, перенаправление на /login');
+    // console.log('Нет данных пользователя, перенаправление на /login');
     return <Navigate to="/login" replace />;
   }
 
-  console.log('Пользователь:', user);
+  // console.log('Пользователь:', user);
 
   // Функция для перенаправления на домашнюю страницу пользователя с учетом выбранного этапа
   const redirectToHomePage = () => {
     const homePage = authService.determineHomePageWithSelectedStage();
-    console.log('Перенаправление на домашнюю страницу:', homePage);
+    // console.log('Перенаправление на домашнюю страницу:', homePage);
     return <Navigate to={homePage} replace />;
   };
 
@@ -58,7 +62,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       );
     }
 
-    console.log('Проверка множественных ролей:', requiredRoles, 'Доступ:', hasAccess);
+    // console.log('Проверка множественных ролей:', requiredRoles, 'Доступ:', hasAccess);
 
     if (!hasAccess) {
       return redirectToHomePage();
@@ -76,7 +80,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       hasAccess = authService.hasRole(requiredRole.toLowerCase());
     }
 
-    console.log('Проверка одиночной роли:', requiredRole, 'Доступ:', hasAccess);
+    // console.log('Проверка одиночной роли:', requiredRole, 'Доступ:', hasAccess);
 
     if (!hasAccess) {
       return redirectToHomePage();
@@ -93,30 +97,33 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       try {
         const selectedStage = JSON.parse(selectedStageString);
         hasAccessToFinalStage = selectedStage.finalStage;
-        console.log('Проверка финального этапа. Выбранный этап:', selectedStage, 'Финальный:', hasAccessToFinalStage);
+        // console.log('Проверка финального этапа. Выбранный этап:', selectedStage, 'Финальный:', hasAccessToFinalStage);
       } catch (error) {
         console.error('Ошибка при парсинге выбранного этапа:', error);
       }
     }
     
     if (!hasAccessToFinalStage) {
-      console.log('Нет доступа к финальному этапу, перенаправление');
+      // console.log('Нет доступа к финальному этапу, перенаправление');
       return redirectToHomePage();
     }
   }
 
-  // Исключение пользователей с выбранными финальными этапами (для обычных мастеров)
+  // Исключение пользователей с выбранными финальными этапами (для обычных мастеров и workplace)
   if (excludeFinalStage) {
     // Проверяем выбранный этап, а не общее наличие финальных этапов
     const selectedStageString = localStorage.getItem('selectedStage');
     if (selectedStageString) {
       try {
         const selectedStage = JSON.parse(selectedStageString);
-        console.log('Проверка исключения финального этапа. Выбранный этап:', selectedStage);
+        // console.log('Проверка исключения финального этапа. Выбранный этап:', selectedStage);
         
         // Блокируем доступ к обычной странице, если выбран финальный этап
-        if (selectedStage.finalStage && authService.hasRole('master') && !authService.hasRole('admin')) {
-          console.log('Выбран финальный этап, но пытается зайти на обычную страницу, перенаправление');
+        // Для мастеров (исключая админов) и для workplace
+        if (selectedStage.finalStage && 
+            ((authService.hasRole('master') && !authService.hasRole('admin')) || 
+             authService.hasRole('workplace'))) {
+          // console.log('Выбран финальный этап, но пытается зайти на обычную страницу, перенаправление');
           return redirectToHomePage();
         }
       } catch (error) {
@@ -125,7 +132,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
-  console.log('Все проверки пройдены, доступ разрешен');
+  // console.log('Все проверки пройдены, доступ разрешен');
   // Если прошли все проверки, разрешаем доступ к дочерним маршрутам
   return <Outlet />;
 };
