@@ -1,116 +1,126 @@
-import React, { useState } from 'react';
-import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
-import styles from './SeriesSection.module.css';
+// SeriesSection.tsx
+import React, { useState } from 'react'
+import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline'
+import styles from './SeriesSection.module.css'
 
 interface Series {
-  id: string;
-  name: string;
-  isExpanded: boolean;
+  id: string
+  name: string
+  isExpanded: boolean
 }
 
 interface SeriesSectionProps {
-  series: Series[];
-  onAddSeries: (name: string) => void;
-  onToggleSeries: (seriesId: string) => void;
-  selectedSeriesId: string | null;
+  series: Series[]
+  onAddSeries: (name: string) => void
+  onToggleSeries: (seriesId: string) => void
+  onExpandAll?: () => void
+  selectedSeriesId: string | null
 }
 
 export const SeriesSection: React.FC<SeriesSectionProps> = ({
   series,
   onAddSeries,
   onToggleSeries,
-  selectedSeriesId
+  onExpandAll,
+  selectedSeriesId,
 }) => {
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newSeriesName, setNewSeriesName] = useState('');
+  const [isAddingNew, setIsAddingNew] = useState(false)
+  const [newName, setNewName] = useState('')
 
-  const handleAddSeries = () => {
-    if (newSeriesName.trim()) {
-      onAddSeries(newSeriesName.trim());
-      setNewSeriesName('');
-      setIsAddingNew(false);
+  const handleAdd = () => {
+    if (newName.trim()) {
+      onAddSeries(newName.trim())
+      setNewName('')
+      setIsAddingNew(false)
     }
-  };
-
-  const handleCancel = () => {
-    setNewSeriesName('');
-    setIsAddingNew(false);
-  };
+  }
 
   return (
-    <div className={styles['series-section']}>
-      <div className={styles['section-header']}>
-        <h3>Серии</h3>
-        <button
-          className={`${styles.btn} ${styles['btn--primary']} ${styles['btn--small']}`}
-          onClick={() => setIsAddingNew(true)}
-          disabled={isAddingNew}
-        >
-          <PlusIcon className={styles.icon} />
-          Добавить серию
-        </button>
+    <div className={styles.section}>
+      <div className={styles.header}>
+        <h3>СЕРИЯ</h3>
       </div>
 
-      <div className={styles['section-content']}>
-        {/* Форма добавления новой серии */}
+      <div className={styles.content}>
+        {series.length > 0 ? (
+          <table className={styles.table}>
+            <tbody>
+              {series.map((s, idx) => (
+                <tr
+                  key={s.id}
+                  className={
+                    selectedSeriesId === s.id
+                      ? styles.rowSelected
+                      : idx % 2 === 0
+                      ? undefined
+                      : styles.rowAlt
+                  }
+                  onClick={() => onToggleSeries(s.id)}
+                >
+                  <td className={styles.cellIcon}>
+                    {s.isExpanded ? (
+                      <ChevronDownIcon className={styles.icon} />
+                    ) : (
+                      <ChevronRightIcon className={styles.icon} />
+                    )}
+                  </td>
+                  <td className={styles.cellName}>{s.name}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className={styles.empty}>
+            <p>Нет созданных серий</p>
+            <p className={styles.hint}>Добавьте первую серию для начала работы</p>
+          </div>
+        )}
+
         {isAddingNew && (
-          <div className={styles['add-form']}>
+          <div className={styles.addForm}>
             <input
               type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
               placeholder="Название серии"
-              value={newSeriesName}
-              onChange={(e) => setNewSeriesName(e.target.value)}
-              className={styles['form-input']}
+              className={styles.input}
               autoFocus
             />
-            <div className={styles['add-form__actions']}>
-              <button
-                className={`${styles.btn} ${styles['btn--primary']} ${styles['btn--small']}`}
-                onClick={handleAddSeries}
-              >
+            <div className={styles.addFormActions}>
+              <button onClick={handleAdd} className={styles.btnPrimary}>
                 Сохранить
               </button>
               <button
-                className={`${styles.btn} ${styles['btn--secondary']} ${styles['btn--small']}`}
-                onClick={handleCancel}
+                onClick={() => {
+                  setIsAddingNew(false)
+                  setNewName('')
+                }}
+                className={styles.btnSecondary}
               >
                 Отмена
               </button>
             </div>
           </div>
         )}
+      </div>
 
-        {/* Список серий */}
-        <div className={styles['series-list']}>
-          {series.map((serie) => (
-            <div
-              key={serie.id}
-              className={`${styles['series-item']} ${
-                selectedSeriesId === serie.id ? styles['series-item--selected'] : ''
-              }`}
-            >
-              <button
-                className={styles['series-item__toggle']}
-                onClick={() => onToggleSeries(serie.id)}
-              >
-                {serie.isExpanded ? (
-                  <ChevronDownIcon className={styles.icon} />
-                ) : (
-                  <ChevronRightIcon className={styles.icon} />
-                )}
-                <span className={styles['series-item__name']}>{serie.name}</span>
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {series.length === 0 && !isAddingNew && (
-          <div className={styles['empty-state']}>
-            <p>Нет созданных серий</p>
-            <p className={styles['empty-state__hint']}>Добавьте первую серию для начала работы</p>
-          </div>
-        )}
+      <div className={styles.footer}>
+        <button
+          onClick={onExpandAll}
+          className={styles.btnSecondary}
+          disabled={!onExpandAll}
+        >
+          Развернуть список
+        </button>
+        <button
+          onClick={() => setIsAddingNew(true)}
+          className={styles.btnPrimary}
+          disabled={isAddingNew}
+        >
+          <PlusIcon className={styles.plusIcon} />
+          Добавить запись
+        </button>
       </div>
     </div>
-  );
-};
+  )
+}

@@ -99,6 +99,10 @@ export const DetailsReferenceContainer: React.FC = () => {
     setPackaging(prev => [...prev, newPackaging]);
   };
 
+  const handleSelectPackaging = (packagingId: string) => {
+    setSelectedPackagingId(packagingId);
+  };
+
   // Фильтрация данных для отображения
   const selectedProducts = products.filter(p => p.seriesId === selectedSeriesId);
   const selectedPackaging = packaging.filter(p => p.productId === selectedProductId);
@@ -140,6 +144,8 @@ export const DetailsReferenceContainer: React.FC = () => {
               packaging={selectedPackaging}
               selectedProductId={selectedProductId}
               onAddPackaging={handleAddPackaging}
+              onSelectPackaging={handleSelectPackaging}
+              selectedPackagingId={selectedPackagingId}
             />
           </div>
         </div>
@@ -147,7 +153,7 @@ export const DetailsReferenceContainer: React.FC = () => {
 
       {/* Нижняя часть - Детали */}
       <div className={styles['details-reference-container__details']}>
-        <DetailsSection />
+        <DetailsSection selectedPackagingId={selectedPackagingId} />
       </div>
 
       {/* Информационная панель */}

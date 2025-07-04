@@ -1,146 +1,270 @@
-import React, { useState } from 'react';
-import { PlusIcon, DocumentIcon, MapIcon } from '@heroicons/react/24/outline';
-import styles from './PackagingSection.module.css';
+import React, { useState, useRef, useEffect } from 'react'
+import { PlusIcon, DocumentIcon, MapIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import styles from './PackagingSection.module.css'
+
 interface Packaging {
-  id: string;
-  productId: string;
-  article: string;
-  name: string;
-  detailsCount: number;
+  id: string
+  productId: string
+  article: string
+  name: string
+  detailsCount: number
 }
 
 interface PackagingSectionProps {
-  packaging: Packaging[];
-  selectedProductId: string | null;
-  onAddPackaging: (productId: string, article: string, name: string) => void;
+  packaging: Packaging[]
+  selectedProductId: string | null
+  onAddPackaging: (productId: string, article: string, name: string) => void
+  onSelectPackaging?: (packagingId: string) => void
+  selectedPackagingId?: string | null
 }
 
 export const PackagingSection: React.FC<PackagingSectionProps> = ({
   packaging,
   selectedProductId,
-  onAddPackaging
+  onAddPackaging,
+  onSelectPackaging,
+  selectedPackagingId,
 }) => {
-  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isAddingNew, setIsAddingNew] = useState(false)
   const [newPackagingData, setNewPackagingData] = useState({
     article: '',
-    name: ''
-  });
+    name: '',
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<{ article?: string; name?: string }>({})
+  const articleInputRef = useRef<HTMLInputElement>(null)
 
-  const handleAddPackaging = () => {
-    if (newPackagingData.article.trim() && newPackagingData.name.trim() && selectedProductId) {
-      onAddPackaging(
+  useEffect(() => {
+    if (isAddingNew && articleInputRef.current) {
+      articleInputRef.current.focus()
+    }
+  }, [isAddingNew])
+
+  const validateForm = () => {
+    const newErrors: { article?: string; name?: string } = {}
+    
+    if (!newPackagingData.article.trim()) {
+      newErrors.article = 'Артикул обязателен'
+    }
+    
+    if (!newPackagingData.name.trim()) {
+      newErrors.name = 'Название обязательно'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleAddPackaging = async () => {
+    if (!validateForm() || !selectedProductId) return
+    
+    setIsLoading(true)
+    try {
+      await onAddPackaging(
         selectedProductId,
         newPackagingData.article.trim(),
         newPackagingData.name.trim()
-      );
-      setNewPackagingData({ article: '', name: '' });
-      setIsAddingNew(false);
+      )
+      setNewPackagingData({ article: '', name: '' })
+      setErrors({})
+      setIsAddingNew(false)
+    } catch (error) {
+      console.error('Ошибка при добавлении упаковки:', error)
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleCancel = () => {
-    setNewPackagingData({ article: '', name: '' });
-    setIsAddingNew(false);
-  };
+    setNewPackagingData({ article: '', name: '' })
+    setErrors({})
+    setIsAddingNew(false)
+  }
+
+  const handleInputChange = (field: 'article' | 'name', value: string) => {
+    setNewPackagingData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }))
+    }
+  }
 
   const handleGeneralLayoutSchema = (packagingId: string) => {
-    console.log('Открыть общую схему укладки для упаковки:', packagingId);
-    // Здесь будет логика открытия общей схемы укладки
-  };
+    console.log('Открыть общую схему укладки для упаковки:', packagingId)
+  }
 
   const handlePostLayoutSchema = (packagingId: string) => {
-    console.log('Открыть схему укладки по постам для упаковки:', packagingId);
-    // Здесь будет логика открытия схемы укладки по постам
-  };
+    console.log('Открыть схему укладки по постам для упаковки:', packagingId)
+  }
 
-  const canAddPackaging = selectedProductId !== null;
+  const handleSelectPackaging = (packagingId: string) => {
+    onSelectPackaging?.(packagingId)
+  }
+
+  const canAdd = selectedProductId !== null
 
   return (
-    <div className={styles["packaging-section"]}>
-      <div className={styles["section-header"]}>
+    <div className={styles.section}>
+      <header className={styles.header}>
         <h3>Упаковка</h3>
-      </div>
+      </header>
 
-      <div className={styles["section-content"]}>
+      <div className={styles.content}>
         {!selectedProductId && (
-          <div className={styles["empty-state"]}>
+          <div className={styles.empty}>
             <p>Выберите изделие</p>
-            <p className={styles["empty-state__hint"]}>Для просмотра упаковок выберите изделие</p>
+            <p className={styles.hint}>
+              Для просмотра упаковок выберите изделие
+            </p>
           </div>
         )}
 
         {selectedProductId && (
           <>
-            {/* Список упаковок */}
-            <div className={styles["packaging-list"]}>
-              {packaging.map((pack) => (
-                <div key={pack.id} className={styles["packaging-item"]}>
-                  <div className={styles["packaging-item__info"]}>
-                    <div className={styles["packaging-item__main"]}>
-                      <span className={styles["packaging-item__article"]}>
-                        Артикул: {pack.article}
-                      </span>
-                      <span className={styles["packaging-item__name"]}>{pack.name}</span>
-                    </div>
-                    <div className={styles["packaging-item__details"]}>
-                      <span className={styles["packaging-item__count"]}>
-                        Внесено деталей: {pack.detailsCount}
-                      </span>
-                    </div>
+            {packaging.length > 0 && (
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Артикул</th>
+                      <th>Название упаковки</th>
+                      <th>Внесено деталей</th>
+                      <th>Схемы укладки</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {packaging.map((pack) => (
+                      <tr
+                        key={pack.id}
+                        className={`${styles.tableRow} ${
+                          selectedPackagingId === pack.id
+                            ? styles.selectedRow
+                            : ''
+                        }`}
+                        onClick={() => handleSelectPackaging(pack.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            handleSelectPackaging(pack.id)
+                          }
+                        }}
+                      >
+                        <td className={styles.articleCell}>
+                          <span className={styles.articleBadge}>{pack.article}</span>
+                        </td>
+                        <td className={styles.nameCell}>
+                          <span className={styles.packagingName}>{pack.name}</span>
+                        </td>
+                        <td className={styles.countCell}>
+                          <span className={styles.countBadge}>
+                            {pack.detailsCount}
+                          </span>
+                        </td>
+                        <td className={styles.actionsCell}>
+                          <div className={styles.actionButtons}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleGeneralLayoutSchema(pack.id)
+                              }}
+                              title="Схема укладки общая"
+                              className={styles.iconButton}
+                              aria-label="Схема укладки общая"
+                            >
+                              <DocumentIcon className={styles.icon} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handlePostLayoutSchema(pack.id)
+                              }}
+                              title="Схема укладки по постам"
+                              className={styles.iconButton}
+                              aria-label="Схема укладки по постам"
+                            >
+                              <MapIcon className={styles.icon} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {packaging.length === 0 && !isAddingNew && (
+              <div className={styles.empty}>
+                <p>Нет упаковок для выбранного изделия</p>
+                <p className={styles.hint}>Добавьте первую упаковку</p>
+              </div>
+            )}
+
+            {isAddingNew && (
+              <div className={styles.addForm}>
+                <div className={styles.formHeader}>
+                  <h4 className={styles.formTitle}>Добавить новую упаковку</h4>
+                  <button
+                    onClick={handleCancel}
+                    className={styles.closeButton}
+                    aria-label="Закрыть форму"
+                  >
+                    <XMarkIcon className={styles.closeIcon} />
+                  </button>
+                </div>
+                
+                <div className={styles.formFields}>
+                  <div className={styles.fieldGroup}>
+                    <label htmlFor="article-input" className={styles.label}>
+                      Артикул упаковки *
+                    </label>
+                    <input
+                      id="article-input"
+                      ref={articleInputRef}
+                      type="text"
+                      placeholder="Введите артикул"
+                      value={newPackagingData.article}
+                      onChange={(e) => handleInputChange('article', e.target.value)}
+                      className={`${styles.input} ${errors.article ? styles.inputError : ''}`}
+                      disabled={isLoading}
+                    />
+                    {errors.article && (
+                      <span className={styles.errorText}>{errors.article}</span>
+                    )}
                   </div>
                   
-                  <div className={styles["packaging-item__actions"]}>
-                    <button
-                      className={styles["btn btn--secondary btn--small"]}
-                      onClick={() => handleGeneralLayoutSchema(pack.id)}
-                      title="Схема укладки общая"
-                    >
-                      <DocumentIcon className={styles["icon"]} />
-                      Схема укладки общая
-                    </button>
-                    <button
-                      className={styles["btn btn--secondary btn--small"]}
-                      onClick={() => handlePostLayoutSchema(pack.id)}
-                      title="Схема укладки по постам"
-                    >
-                      <MapIcon className={styles["icon"]} />
-                      Схема укладки по постам
-                    </button>
+                  <div className={styles.fieldGroup}>
+                    <label htmlFor="name-input" className={styles.label}>
+                      Название упаковки *
+                    </label>
+                    <input
+                      id="name-input"
+                      type="text"
+                      placeholder="Введите название"
+                      value={newPackagingData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
+                      disabled={isLoading}
+                    />
+                    {errors.name && (
+                      <span className={styles.errorText}>{errors.name}</span>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Форма добавления новой упаковки */}
-            {isAddingNew && (
-              <div className={styles["add-form add-form--packaging"]}>
-                <div className={styles["add-form__fields"]}>
-                  <input
-                    type="text"
-                    placeholder="Артикул упаковки"
-                    value={newPackagingData.article}
-                    onChange={(e) => setNewPackagingData(prev => ({ ...prev, article: e.target.value }))}
-                    className="form-input"
-                    autoFocus
-                  />
-                  <input
-                    type="text"
-                    placeholder="Название упаковки"
-                    value={newPackagingData.name}
-                    onChange={(e) => setNewPackagingData(prev => ({ ...prev, name: e.target.value }))}
-                    className="form-input"
-                  />
-                </div>
-                <div className={styles["add-form__actions"]}>
-                  <button
-                    className={styles["btn btn--primary btn--small"]}
-                    onClick={handleAddPackaging}
+                
+                <div className={styles.formActions}>
+                  <button 
+                    onClick={handleAddPackaging} 
+                    className={styles.btn}
+                    disabled={isLoading}
                   >
-                    Сохранить
+                    {isLoading ? 'Сохранение...' : 'Сохранить'}
                   </button>
-                  <button
-                    className={styles["btn btn--secondary btn--small"]}
-                    onClick={handleCancel}
+                  <button 
+                    onClick={handleCancel} 
+                    className={styles.btnSecondary}
+                    disabled={isLoading}
                   >
                     Отмена
                   </button>
@@ -148,27 +272,19 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
               </div>
             )}
 
-            {/* Кнопка добавления новой упаковки */}
-            <div className={styles["section-footer"]}>
+            <footer className={styles.footer}>
               <button
-                className={styles["btn btn--primary"]}
                 onClick={() => setIsAddingNew(true)}
-                disabled={isAddingNew || !canAddPackaging}
+                disabled={!canAdd || isAddingNew}
+                className={styles.addBtn}
               >
-                <PlusIcon className={styles["icon"]} />
+                <PlusIcon className={styles.icon} />
                 Добавить запись
               </button>
-            </div>
-
-            {packaging.length === 0 && !isAddingNew && (
-              <div className={styles["empty-state"]}>
-                <p>Нет упаковок для выбранного изделия</p>
-                <p className={styles["empty-state__hint"]}>Добавьте первую упаковку</p>
-              </div>
-            )}
+            </footer>
           </>
         )}
       </div>
     </div>
-  );
-};
+  )
+}

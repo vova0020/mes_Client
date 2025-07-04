@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
-import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
-import styles from './ProductSection.module.css';
+// ProductSection.tsx
+import React, { useState } from 'react'
+import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline'
+import styles from './ProductSection.module.css'
 
 interface Product {
-  id: string;
-  seriesId: string;
-  name: string;
-  isExpanded: boolean;
+  id: string
+  seriesId: string
+  name: string
+  isExpanded: boolean
 }
 
 interface ProductSectionProps {
-  products: Product[];
-  selectedSeriesId: string | null;
-  onAddProduct: (seriesId: string, name: string) => void;
-  onToggleProduct: (productId: string) => void;
-  selectedProductId: string | null;
+  products: Product[]
+  selectedSeriesId: string | null
+  onAddProduct: (seriesId: string, name: string) => void
+  onToggleProduct: (productId: string) => void
+  selectedProductId: string | null
 }
 
 export const ProductSection: React.FC<ProductSectionProps> = ({
@@ -22,72 +23,68 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   selectedSeriesId,
   onAddProduct,
   onToggleProduct,
-  selectedProductId
+  selectedProductId,
 }) => {
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newProductName, setNewProductName] = useState('');
+  const [isAdding, setIsAdding] = useState(false)
+  const [newName, setNewName] = useState('')
 
-  const handleAddProduct = () => {
-    if (newProductName.trim() && selectedSeriesId) {
-      onAddProduct(selectedSeriesId, newProductName.trim());
-      setNewProductName('');
-      setIsAddingNew(false);
+  const handleAdd = () => {
+    if (newName.trim() && selectedSeriesId) {
+      onAddProduct(selectedSeriesId, newName.trim())
+      setNewName('')
+      setIsAdding(false)
     }
-  };
+  }
 
-  const handleCancel = () => {
-    setNewProductName('');
-    setIsAddingNew(false);
-  };
-
-  const canAddProduct = selectedSeriesId !== null;
+  const canAdd = selectedSeriesId !== null
 
   return (
-    <div className={styles['product-section']}>
-      <div className={styles['section-header']}>
-        <h3>Изделия</h3>
+    <div className={styles.section}>
+      <div className={styles.header}>
+        <h3>ИЗДЕЛИЯ</h3>
         <button
-          className={`${styles.btn} ${styles['btn--primary']} ${styles['btn--small']}`}
-          onClick={() => setIsAddingNew(true)}
-          disabled={isAddingNew || !canAddProduct}
-          title={!canAddProduct ? 'Выберите серию для добавления изделия' : ''}
+          className={styles.btnPrimary}
+          onClick={() => setIsAdding(true)}
+          disabled={isAdding || !canAdd}
+          title={!canAdd ? 'Выберите серию для добавления изделия' : ''}
         >
-          <PlusIcon className={styles.icon} />
-          Добавить изделие
+          <PlusIcon className={styles.plusIcon} />
+          Добавить
         </button>
       </div>
 
-      <div className={styles['section-content']}>
+      <div className={styles.content}>
         {!selectedSeriesId && (
-          <div className={styles['empty-state']}>
+          <div className={styles.empty}>
             <p>Выберите серию</p>
-            <p className={styles['empty-state__hint']}>Для просмотра изделий выберите серию из левого блока</p>
+            <p className={styles.hint}>
+              Для просмотра изделий выберите серию в левом блоке
+            </p>
           </div>
         )}
 
         {selectedSeriesId && (
           <>
-            {/* Форма добавления нового изделия */}
-            {isAddingNew && (
-              <div className={styles['add-form']}>
+            {isAdding && (
+              <div className={styles.addForm}>
                 <input
                   type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
                   placeholder="Название изделия"
-                  value={newProductName}
-                  onChange={(e) => setNewProductName(e.target.value)}
-                  className={styles['form-input']}
+                  className={styles.input}
                   autoFocus
                 />
-                <div className={styles['add-form__actions']}>
-                  <button
-                    className={`${styles.btn} ${styles['btn--primary']} ${styles['btn--small']}`}
-                    onClick={handleAddProduct}
-                  >
+                <div className={styles.addFormActions}>
+                  <button onClick={handleAdd} className={styles.btnPrimary}>
                     Сохранить
                   </button>
                   <button
-                    className={`${styles.btn} ${styles['btn--secondary']} ${styles['btn--small']}`}
-                    onClick={handleCancel}
+                    onClick={() => {
+                      setIsAdding(false)
+                      setNewName('')
+                    }}
+                    className={styles.btnSecondary}
                   >
                     Отмена
                   </button>
@@ -95,39 +92,42 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
               </div>
             )}
 
-            {/* Список изделий */}
-            <div className={styles['product-list']}>
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  className={`${styles['product-item']} ${
-                    selectedProductId === product.id ? styles['product-item--selected'] : ''
-                  }`}
-                >
-                  <button
-                    className={styles['product-item__toggle']}
-                    onClick={() => onToggleProduct(product.id)}
-                  >
-                    {product.isExpanded ? (
-                      <ChevronDownIcon className={styles.icon} />
-                    ) : (
-                      <ChevronRightIcon className={styles.icon} />
-                    )}
-                    <span className={styles['product-item__name']}>{product.name}</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {products.length === 0 && !isAddingNew && (
-              <div className={styles['empty-state']}>
-                <p>Нет изделий в выбранной серии</p>
-                <p className={styles['empty-state__hint']}>Добавьте первое изделие</p>
+            {products.length > 0 ? (
+              <table className={styles.table}>
+                <tbody>
+                  {products.map((p, i) => (
+                    <tr
+                      key={p.id}
+                      className={
+                        selectedProductId === p.id
+                          ? styles.rowSelected
+                          : i % 2 === 1
+                          ? styles.rowAlt
+                          : undefined
+                      }
+                      onClick={() => onToggleProduct(p.id)}
+                    >
+                      <td className={styles.cellIcon}>
+                        {p.isExpanded ? (
+                          <ChevronDownIcon className={styles.icon} />
+                        ) : (
+                          <ChevronRightIcon className={styles.icon} />
+                        )}
+                      </td>
+                      <td className={styles.cellName}>{p.name}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : !isAdding ? (
+              <div className={styles.empty}>
+                <p>Нет изделий в этой серии</p>
+                <p className={styles.hint}>Добавьте первое изделие</p>
               </div>
-            )}
+            ) : null}
           </>
         )}
       </div>
     </div>
-  );
-};
+)
+}
