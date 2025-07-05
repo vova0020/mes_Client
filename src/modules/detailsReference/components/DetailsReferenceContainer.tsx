@@ -1,148 +1,64 @@
-import React, { useState } from 'react';
-import { SeriesSection } from './blocks/SeriesSection';
-import { ProductSection } from './blocks/ProductSection';
+import React, { useState, useCallback } from 'react';
 import { PackagingSection } from './blocks/PackagingSection';
 import { DetailsSection } from './blocks/DetailsSection';
+import { usePackageDirectory } from '../../hooks/packageDirectoryHook/usePackageDirectory';
 import styles from './DetailsReferenceContainer.module.css';
 
-interface Series {
-  id: string;
-  name: string;
-  isExpanded: boolean;
-}
-
-interface Product {
-  id: string;
-  seriesId: string;
-  name: string;
-  isExpanded: boolean;
-}
-
-interface Packaging {
-  id: string;
-  productId: string;
-  article: string;
-  name: string;
-  detailsCount: number;
-}
-
 export const DetailsReferenceContainer: React.FC = () => {
-  // Состояние для всех данных
-  const [series, setSeries] = useState<Series[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [packaging, setPackaging] = useState<Packaging[]>([]);
+  // Используем хук для работы с упаковками
+  const {
+    packages,
+    loading,
+    error,
+    selectedPackage,
+    createPackage,
+    selectPackage,
+    clearSelection,
+    isCreating
+  } = usePackageDirectory();
   
-  // Состояние для выбранных элементов
-  const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  // Состояние для выбранной упаковки (используем строковый ID для совместимости с существующим интерфейсом)
   const [selectedPackagingId, setSelectedPackagingId] = useState<string | null>(null);
 
-  // Обработчики для серий
-  const handleAddSeries = (name: string) => {
-    const newSeries: Series = {
-      id: `series_${Date.now()}`,
-      name,
-      isExpanded: false
-    };
-    setSeries(prev => [...prev, newSeries]);
-  };
-
-  const handleToggleSeries = (seriesId: string) => {
-    setSeries(prev => 
-      prev.map(s => 
-        s.id === seriesId ? { ...s, isExpanded: !s.isExpanded } : s
-      )
-    );
-    
-    // При выборе новой серии сбрасываем выбранные изделие и упаковку
-    if (selectedSeriesId !== seriesId) {
-      setSelectedSeriesId(seriesId);
-      setSelectedProductId(null);
-      setSelectedPackagingId(null);
+  // Обработчик для добавления упаковки
+  const handleAddPackaging = useCallback(async (packageCode: string, packageName: string) => {
+    try {
+      await createPackage({ packageCode, packageName });
+    } catch (error) {
+      console.error('Ошибка при добавлении упаковки:', error);
+      throw error; // Пробрасываем ошибку для обработки в компоненте
     }
-  };
+  }, [createPackage]);
 
-  // Обработчики для изделий
-  const handleAddProduct = (seriesId: string, name: string) => {
-    const newProduct: Product = {
-      id: `product_${Date.now()}`,
-      seriesId,
-      name,
-      isExpanded: false
-    };
-    setProducts(prev => [...prev, newProduct]);
-  };
-
-  const handleToggleProduct = (productId: string) => {
-    setProducts(prev => 
-      prev.map(p => 
-        p.id === productId ? { ...p, isExpanded: !p.isExpanded } : p
-      )
-    );
-    
-    // При выборе нового изделия сбрасываем выбранную упаковку
-    if (selectedProductId !== productId) {
-      setSelectedProductId(productId);
-      setSelectedPackagingId(null);
-    }
-  };
-
-  // Обработчики для упаковок
-  const handleAddPackaging = (productId: string, article: string, name: string) => {
-    const newPackaging: Packaging = {
-      id: `packaging_${Date.now()}`,
-      productId,
-      article,
-      name,
-      detailsCount: 0
-    };
-    setPackaging(prev => [...prev, newPackaging]);
-  };
-
-  const handleSelectPackaging = (packagingId: string) => {
+  // Обработчик для выбора упаковки
+  const handleSelectPackaging = useCallback((packagingId: string) => {
     setSelectedPackagingId(packagingId);
-  };
+    const numericId = parseInt(packagingId, 10);
+    if (!isNaN(numericId)) {
+      selectPackage(numericId);
+    }
+  }, [selectPackage]);
 
-  // Фильтрация данных для отображения
-  const selectedProducts = products.filter(p => p.seriesId === selectedSeriesId);
-  const selectedPackaging = packaging.filter(p => p.productId === selectedProductId);
+  // Преобразуем данные из API в формат, ожидаемый компонентом PackagingSection
+  const packagingData = packages.map(pkg => ({
+    id: pkg.packageId.toString(),
+    article: pkg.packageCode,
+    name: pkg.packageName,
+    detailsCount: 0 // Пока что статическое значение, так как в API нет этого поля
+  }));
 
-  // Получение информации о выбранных элементах
-  const selectedSeries = series.find(s => s.id === selectedSeriesId);
-  const selectedProduct = products.find(p => p.id === selectedProductId);
-  const selectedPackagingItem = packaging.find(p => p.id === selectedPackagingId);
+  // Получение информации о выбранной упаковке
+  const selectedPackagingItem = packagingData.find(p => p.id === selectedPackagingId);
 
   return (
     <div className={styles['details-reference-container']}>
-      {/* Верхняя часть - Иерархия */}
+      {/* Верхняя часть - Упаковки */}
       <div className={styles['details-reference-container__hierarchy']}>
         <div className={styles['hierarchy__sections']}>
-          {/* Секция серий */}
-          <div className={styles['hierarchy__section']}>
-            <SeriesSection
-              series={series}
-              onAddSeries={handleAddSeries}
-              onToggleSeries={handleToggleSeries}
-              selectedSeriesId={selectedSeriesId}
-            />
-          </div>
-
-          {/* Секция изделий */}
-          <div className={styles['hierarchy__section']}>
-            <ProductSection
-              products={selectedProducts}
-              selectedSeriesId={selectedSeriesId}
-              onAddProduct={handleAddProduct}
-              onToggleProduct={handleToggleProduct}
-              selectedProductId={selectedProductId}
-            />
-          </div>
-
           {/* Секция упаковок */}
           <div className={styles['hierarchy__section']}>
             <PackagingSection
-              packaging={selectedPackaging}
-              selectedProductId={selectedProductId}
+              packaging={packagingData}
               onAddPackaging={handleAddPackaging}
               onSelectPackaging={handleSelectPackaging}
               selectedPackagingId={selectedPackagingId}
@@ -159,46 +75,26 @@ export const DetailsReferenceContainer: React.FC = () => {
       {/* Информационная панель */}
       <div className={styles['details-reference-container__info']}>
         <div className={styles.breadcrumb}>
-          {selectedSeries && (
-            <span className={styles['breadcrumb__item']}>
-              <span className={styles['breadcrumb__label']}>Серия:</span>
-              <span className={styles['breadcrumb__value']}>{selectedSeries.name}</span>
-            </span>
-          )}
-          {selectedProduct && (
-            <>
-              <span className={styles['breadcrumb__separator']}>→</span>
-              <span className={styles['breadcrumb__item']}>
-                <span className={styles['breadcrumb__label']}>Изделие:</span>
-                <span className={styles['breadcrumb__value']}>{selectedProduct.name}</span>
-              </span>
-            </>
-          )}
           {selectedPackagingItem && (
-            <>
-              <span className={styles['breadcrumb__separator']}>→</span>
-              <span className={styles['breadcrumb__item']}>
-                <span className={styles['breadcrumb__label']}>Упаковка:</span>
-                <span className={styles['breadcrumb__value']}>{selectedPackagingItem.name}</span>
-              </span>
-            </>
+            <span className={styles['breadcrumb__item']}>
+              <span className={styles['breadcrumb__label']}>Упаковка:</span>
+              <span className={styles['breadcrumb__value']}>{selectedPackagingItem.name}</span>
+            </span>
           )}
         </div>
         
         {/* Статистика */}
         <div className={styles.stats}>
           <div className={styles['stats__item']}>
-            <span className={styles['stats__label']}>Серий:</span>
-            <span className={styles['stats__value']}>{series.length}</span>
-          </div>
-          <div className={styles['stats__item']}>
-            <span className={styles['stats__label']}>Изделий:</span>
-            <span className={styles['stats__value']}>{products.length}</span>
-          </div>
-          <div className={styles['stats__item']}>
             <span className={styles['stats__label']}>Упаковок:</span>
-            <span className={styles['stats__value']}>{packaging.length}</span>
+            <span className={styles['stats__value']}>{packagingData.length}</span>
           </div>
+          {selectedPackagingItem && (
+            <div className={styles['stats__item']}>
+              <span className={styles['stats__label']}>Деталей:</span>
+              <span className={styles['stats__value']}>{selectedPackagingItem.detailsCount}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
