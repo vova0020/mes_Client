@@ -44,7 +44,7 @@ export const DetailsReferenceContainer: React.FC = () => {
     id: pkg.packageId.toString(),
     article: pkg.packageCode,
     name: pkg.packageName,
-    detailsCount: 0 // Пока что статическое значение, так как в API нет этого поля
+    detailsCount: pkg.detailsCount // Пока что статическое значение, так как в API нет этого поля
   }));
 
   // Получение информации о выбранной упаковке

@@ -115,7 +115,7 @@ export const usePackageDirectory = (autoFetch: boolean = true): UsePackageDirect
       setIsUpdating(true);
       setError(null);
       
-      console.log(`Обновлени�� упаковки с ID=${id}:`, updateDto);
+      console.log(`Обновление упаковки с ID=${id}:`, updateDto);
       const updatedPackage = await packageDirectoryApi.update(id, updateDto);
       console.log('Упаковка обновлена:', updatedPackage);
       

@@ -51,6 +51,8 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
+  console.log(packaging);
+  
 
   const handleAddPackaging = async () => {
     if (!validateForm()) return
@@ -103,7 +105,8 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
       </header>
 
       <div className={styles.content}>
-        {packaging.length > 0 && (
+        {!isAddingNew && (
+        packaging.length > 0 && (
           <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
@@ -140,9 +143,15 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
                       <span className={styles.packagingName}>{pack.name}</span>
                     </td>
                     <td className={styles.countCell}>
+                      {pack.detailsCount > 0 ? 
                       <span className={styles.countBadge}>
                         {pack.detailsCount}
+                      </span> : 
+                      <span className={styles.countBadgeZero}>
+                        {pack.detailsCount}
                       </span>
+                      }
+
                     </td>
                     <td className={styles.actionsCell}>
                       <div className={styles.actionButtons}>
@@ -175,8 +184,8 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
               </tbody>
             </table>
           </div>
-        )}
-
+        )
+      )}
         {packaging.length === 0 && !isAddingNew && (
           <div className={styles.empty}>
             <p>Нет созданных упаковок</p>

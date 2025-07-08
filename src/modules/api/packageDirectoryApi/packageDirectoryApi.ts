@@ -6,6 +6,7 @@ export interface PackageDirectory {
   packageId: number;
   packageCode: string;
   packageName: string;
+  detailsCount: number,
   createdAt: string;
   updatedAt: string;
 }

@@ -1,0 +1,423 @@
+/* Оверлей модального окна */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Модальное окно */
+.modal {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Заголовок */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.closeButton:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+.closeButton:hover .icon {
+  color: #ef4444;
+}
+
+.closeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Контент */
+.content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info {
+  color: #94a3b8;
+}
+
+.info p {
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.info ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.info li {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Зона перетаскивания */
+.dropZone {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 0.75rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.dropZone:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.dropZone.dragOver {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.2);
+  transform: scale(1.02);
+}
+
+.dropZone.hasFile {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* Контент зоны перетаскивания */
+.dropContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.uploadIcon {
+  width: 3rem;
+  height: 3rem;
+  color: #64748b;
+  transition: color 0.3s;
+}
+
+.dropZone:hover .uploadIcon {
+  color: #3b82f6;
+}
+
+.dropText {
+  margin: 0;
+  font-size: 1rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.clickText {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.dropSubtext {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+/* Информация о файле */
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fileIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.fileDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.fileName {
+  font-weight: 500;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.checkIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+/* Ошибка */
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 0.5rem;
+  color: #fca5a5;
+}
+
+.errorIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.error span {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Подвал */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.cancelButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.uploadButton:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.uploadButton:disabled {
+  background: #64748b;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Иконки */
+.icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.closeButton .icon {
+  color: #94a3b8;
+}
+
+.uploadButton .icon {
+  color: white;
+}
+
+/* Спиннер */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .modal {
+    margin: 0.5rem;
+  }
+
+  .header {
+    padding: 1rem 1.5rem;
+  }
+
+  .content {
+    padding: 1.5rem;
+  }
+
+  .dropZone {
+    padding: 2rem 1rem;
+  }
+
+  .footer {
+    padding: 1rem 1.5rem;
+    flex-direction: column-reverse;
+  }
+
+  .cancelButton,
+  .uploadButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: 0.5rem;
+  }
+
+  .modal {
+    margin: 0;
+    border-radius: 0.75rem;
+  }
+
+  .header h2 {
+    font-size: 1.125rem;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .dropZone {
+    padding: 1.5rem 1rem;
+  }
+
+  .uploadIcon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .dropText {
+    font-size: 0.9rem;
+  }
+
+  .fileInfo {
+    padding: 0.75rem;
+  }
+
+  .fileIcon {
+    width: 2rem;
+    height: 2rem;
+  }
+}

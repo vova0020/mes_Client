@@ -28,6 +28,8 @@
   padding: 20px;
   color: #333333;
   min-height: 200px;
+  max-height: 360px;
+  overflow: hidden;
   transition: all 0.2s ease;
 }
 
@@ -55,6 +57,8 @@
 /* Контейнер таблицы */
 .tableContainer {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 280px;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
   margin-bottom: 20px;
@@ -144,6 +148,18 @@
   align-items: center;
   justify-content: center;
   background: #52c41a;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 24px;
+}
+.countBadgeZero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #8a8a8a;
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
