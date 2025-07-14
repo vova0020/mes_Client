@@ -10,6 +10,7 @@ import RouteSettings from './components/blocks/RouteSettings/RouteSettings';
 import OperationsSettings from './components/blocks/OperationsSettings/OperationsSettings';
 import StreamsSettings from './components/blocks/StreamsSettings/StreamsSettings';
 import { MaterialSettingsPage } from './components/blocks/MaterialSettings/MaterialSettingsPage';
+import { DetailsReferenceContainer } from './components/blocks/DetailsReference/components/DetailsReferenceContainer';
 
 const SettingsPage: React.FC = () => {
   // Состояние для отслеживания текущего активного раздела
@@ -31,6 +32,8 @@ const SettingsPage: React.FC = () => {
         return <div className={styles.placeholderContent}>Настройки рабочих мест УПАК (в разработке)</div>;
       case 'machin':
         return <MachineSettings/>;
+      case 'details_reference_container':
+        return <DetailsReferenceContainer/>;
       case 'technological_route':
         return <RouteSettings/>;
       case 'technological_operations':

@@ -70,7 +70,7 @@ export interface DetailDto {
   // Другие поля детали, которые могут присутствовать
 }
 
-// Определение интерфейса для производственного поддона
+// Определение интерфейса для производственного поддона согласно новой API документации
 export interface ProductionPallet {
   id: number;
   name: string;
@@ -78,14 +78,38 @@ export interface ProductionPallet {
   detailId: number;
   bufferCell: BufferCellDto | null;
   machine: MachineDto | null;
-  currentOperation?: OperationDto | null;
+  currentOperation: CurrentOperationDto | null;
   segmentId?: number;
   
   // Дополнительные поля из реальной структуры данных
   currentStepId?: number;
   currentStepName?: string;
   detail?: DetailDto;
-  currentStep?: ProcessStepDto; // Добавлено согласно документации
+  currentStep?: ProcessStepDto;
+}
+
+// Новый интерфейс для текущей операции согласно API документации
+export interface CurrentOperationDto {
+  id: number;
+  status: TaskStatus;
+  startedAt: string;
+  completedAt?: string;
+  processStep: {
+    id: number;
+    name: string;
+    sequence: number;
+  };
+  // Добавляем для обратной совместимости
+  completionStatus?: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED'| 'BUFFERED'| 'ON_MACHINE';
+  isCompletedForDetail?: boolean;
+}
+
+// Enum для статусов задач согласно API документации
+export enum TaskStatus {
+  NOT_PROCESSED = "NOT_PROCESSED",
+  PENDING = "PENDING", 
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED"
 }
 
 // Интерфейс для ответа API со списком поддонов
@@ -129,11 +153,65 @@ export interface AssignmentsData {
   }[];
 }
 
-// Интерфейс для ответа API при завершении обработки поддона
+// Интерфейс для ответа API при завершении обработки поддона (обновлен согласно новой документации)
 export interface CompleteProcessingResponseDto {
-  operation: OperationDto;
-  pallet: ProductionPallet;
-  nextStep: string;
+  message: string;
+  assignment: {
+    assignmentId: number;
+    machineId: number;
+    palletId: number;
+    assignedAt: string;
+    completedAt: string;
+    machine: {
+      machineId: number;
+      machineName: string;
+      status: string;
+    };
+    pallet: {
+      palletId: number;
+      palletName: string;
+      partId: number;
+      part: {
+        partId: number;
+        partName: string;
+      };
+    };
+  };
+  nextStage: string;
+}
+
+// Интерфейс для ответа API при взятии поддона в работу
+export interface TakeToWorkResponseDto {
+  message: string;
+  assignment: {
+    assignmentId: number;
+    machineId: number;
+    palletId: number;
+    assignedAt: string;
+    machine: {
+      machineId: number;
+      machineName: string;
+      status: string;
+    };
+    pallet: {
+      palletId: number;
+      palletName: string;
+      partId: number;
+      part: {
+        partId: number;
+        partName: string;
+      };
+    };
+  };
+  operation: {
+    id: number;
+    status: string;
+    startedAt: string;
+    processStep: {
+      id: number;
+      name: string;
+    };
+  };
 }
 
 // Функция для получения данных пользователя из localStorage
@@ -172,90 +250,84 @@ export const getAssignmentsData = (): AssignmentsData | null => {
  */
 const getSegmentIdFromStorage = (): number | null => {
   try {
-    const assignmentsData = localStorage.getItem('assignments');
-    if (!assignmentsData) {
-      console.error('Отсутствуют данные assignments в localStorage');
+    const selectedStageData = localStorage.getItem('selectedStage');
+    if (!selectedStageData) {
+      console.error('Отсутствуют данные selectedStage в localStorage');
       return null;
     }
-    
-    const parsedData = JSON.parse(assignmentsData);
-    if (!parsedData.machines || parsedData.machines.length === 0) {
-      console.error('Нет данных assignments отсутствуют segments');
+
+    const parsedData = JSON.parse(selectedStageData);
+    if (!parsedData || parsedData.length === 0) {
+      console.error('Нет данных selectedStage отсутствуют stages');
       return null;
     }
-    
-    return parsedData.machines[0].segmentId;
+
+    return parsedData.id;
   } catch (error) {
-    console.error('Ошибка при получении segmentId из localStorage:', error);
+    console.error('Ошибка при получении stageid из localStorage:', error);
     return null;
   }
 };
 
-// Функция для получения текста статуса операции в удобном для отображения формате
-export const getOperationStatusText = (operation?: OperationDto | null): string => {
-  // Отладочный вывод
-  console.log('getOperationStatusText получил операцию:', operation);
-  
+// Функция для получения текста статуса операции в удобном для отображения формате (обновлена для новых статусов)
+export const getOperationStatusText = (operation?: CurrentOperationDto | OperationDto | null): string => {
   // Проверка наличия операции
   if (!operation) {
     return 'Не в обработке';
   }
   
-  // Проверка completionStatus (если есть)
-  if (operation.completionStatus) {
-    switch (operation.completionStatus) {
+  // Работаем с новыми статусами TaskStatus
+  if ('status' in operation && typeof operation.status === 'string') {
+    switch (operation.status) {
+      case TaskStatus.NOT_PROCESSED: return 'Не обработано';
+      case TaskStatus.PENDING: return 'Ожидает';
+      case TaskStatus.IN_PROGRESS: return 'В работе';
+      case TaskStatus.COMPLETED: return 'Готово';
+      default: 
+        // Обратная совместимость со старыми статусами
+        if (operation.status === 'ON_MACHINE') return 'На станке';
+        if (operation.status === 'BUFFERED') return 'В буфере';
+        if (operation.status === 'FAILED') return 'Ошибка';
+        return 'Неизвестный статус';
+    }
+  }
+  
+  // Проверка completionStatus для обратной совместимости
+  const legacyOperation = operation as OperationDto;
+  if (legacyOperation.completionStatus) {
+    switch (legacyOperation.completionStatus) {
       case 'COMPLETED': return 'Готово';
       case 'PARTIALLY_COMPLETED': return 'Выполнено частично';
-      case 'ON_MACHINE': return 'Ожидает обработки';
+      case 'ON_MACHINE': return 'На станке';
       case 'BUFFERED': return 'В буфере';
       case 'IN_PROGRESS': return 'В работе';
       default: return 'В обработке';
     }
-  } 
-  
-  // Если нет completionStatus, используем status
-  if (operation.status) {
-    switch (operation.status) {
-      case 'IN_PROGRESS': return 'В работе';
-      case 'COMPLETED': return 'Готово';
-      case 'ON_MACHINE': return 'Ожидает обработки';
-      case 'FAILED': return 'Ошибка';
-      case 'BUFFERED': return 'В буфере';
-      default: return 'Не обрабатывается';
-    }
   }
   
-  // Если ничего не подошло
   return 'Статус неизвестен';
 };
 
-// Функция для получения текста текущего этапа обработки
-export const getProcessStepText = (operation?: OperationDto | null): string => {
-  if (!operation || !operation.processStep) return 'Нет данных';
+// Функция для получения текста текущего этапа обработки (обновлена для новой структуры)
+export const getProcessStepText = (operation?: CurrentOperationDto | OperationDto | null): string => {
+  if (!operation) return 'Нет данных';
   
-  const step = operation.processStep;
-  return `${step.name}${step.sequence ? ` (этап ${step.sequence})` : ''}`;
+  // Проверяем новую структуру processStep
+  if (operation.processStep) {
+    const step = operation.processStep;
+    return `${step.name}${step.sequence ? ` (этап ${step.sequence})` : ''}`;
+  }
+  
+  return 'Нет данных';
 };
 
-// Функция для получения производственных поддонов по ID детали
-export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<ProductionPallet[]> => {
-  if (detailId === null) {
-    return [];
-  }
-  const segmentId = getSegmentIdFromStorage();
-    
-    if (segmentId === null) {
-      console.error('Не удалось получить ID сегмента из localStorage');
-      throw new Error('Не удалось получить ID сегмента из localStorage');
-    }
+// Функция для получения доступных поддонов для станка без сменного задания
+export const fetchAvailablePallets = async (detailId: number): Promise<ProductionPallet[]> => {
+
   try {
-    const response = await axios.get<PalletsResponseDto>(`${API_URL}/machines-no-shifts/detail/pallets`,{
-      params: {
-        detailId: detailId,
-        segmentId: segmentId
-      }
-    });
-    console.log('Ответ API fetchProductionPalletsByDetailId:', response.data);
+        const stageid = getSegmentIdFromStorage();
+    const response = await axios.get<PalletsResponseDto>(`${API_URL}/machines-no-smen/available-pallets/${detailId}/${stageid}`);
+    console.log('Ответ API fetchAvailablePallets:', response.data);
     
     // Обрабатываем данные от API - убеждаемся, что возвращаемый формат корректен
     if (!response.data || !response.data.pallets) {
@@ -269,21 +341,90 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
       return [];
     }
     
-    // Обрабатываем данные от API - убеждаемся, что currentOperation корректно определен
-    const processedPallets = response.data.pallets.map(pallet => {
-      // Дополнительная проверка и логирование для отладки
-      console.log(`Проверка данных поддона ID=${pallet.id}, имя=${pallet.name}:`, {
-        hasCurrentOperation: !!pallet.currentOperation,
-        currentOperation: pallet.currentOperation,
-        currentStepName: pallet.currentStepName
-      });
-      
-      return pallet;
+    return response.data.pallets;
+  } catch (error) {
+    console.error('Ошибка при получении доступных поддонов:', error);
+    throw error;
+  }
+};
+
+// Функция для взятия поддона в работу (новый API)
+export const takeToWork = async (palletId: number): Promise<TakeToWorkResponseDto> => {
+  try {
+    // Получаем данные пользователя из localStorage
+    const userData = getUserData();
+    if (!userData) {
+      throw new Error('Данные пользователя не найдены');
+    }
+    
+    // Получаем данные о станке из localStorage
+    const assignmentsData = getAssignmentsData();
+    if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
+      throw new Error('Данные о станке не найдены');
+    }
+    
+    const machine = assignmentsData.machines[0];
+    
+    // Отправляем запрос на новый API эндпоинт
+    const response = await axios.post<TakeToWorkResponseDto>(`${API_URL}/machines-no-smen/take-to-work`, {
+      palletId: palletId,
+      machineId: machine.id,
+      operatorId: userData.id,
     });
     
-    return processedPallets;
+    console.log(`Поддон ${palletId} успешно взят в работу:`, response.data);
+    return response.data;
   } catch (error) {
-    console.error('Ошибка при получении поддонов детали:', error);
+    console.error(`Ошибка при взятии поддона ${palletId} в работу:`, error);
+    throw error;
+  }
+};
+
+// Функция для завершения обработки поддона (новый API)
+export const completeProcessing = async (palletId: number): Promise<CompleteProcessingResponseDto> => {
+  try {
+    // Получаем данные пользователя из localStorage
+    const userData = getUserData();
+    if (!userData) {
+      throw new Error('Данные пользователя не найдены');
+    }
+    
+    // Получаем данные о станке из localStorage
+    const assignmentsData = getAssignmentsData();
+    if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
+      throw new Error('Данные о станке не найдены');
+    }
+    
+    const machine = assignmentsData.machines[0];
+    
+    // Отправляем запрос на новый API эндпоинт
+    const response = await axios.post<CompleteProcessingResponseDto>(`${API_URL}/machines-no-smen/complete-processing`, {
+      palletId: palletId,
+      machineId: machine.id,
+      operatorId: userData.id,
+    });
+    
+    console.log(`Поддон ${palletId} успешно завершен:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при завершении обработки поддона ${palletId}:`, error);
+    throw error;
+  }
+};
+
+// Функция для перемещения поддона в буфер (новый API)
+export const moveToBuffer = async (palletId: number, bufferCellId: number): Promise<{ message: string; pallet: any }> => {
+  try {
+    // Отправляем запрос на новый API эндпоинт
+    const response = await axios.post(`${API_URL}/machines-no-smen/move-to-buffer`, {
+      palletId: palletId,
+      bufferCellId: bufferCellId
+    });
+    
+    console.log(`Поддон ${palletId} успешно перемещен в буфер:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при перемещении поддона ${palletId} в буфер:`, error);
     throw error;
   }
 };
@@ -317,93 +458,6 @@ export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> =>
     }
   } catch (error) {
     console.error('Ошибка при получении ячеек буфера:', error);
-    throw error;
-  }
-};
-
-// Функция для перевода поддона в статус "В работу"
-export const startPalletProcessing = async (palletId: number): Promise<OperationDto | null> => {
-  try {
-    // Получаем данные пользователя из localStorage
-    const userData = getUserData();
-    if (!userData) {
-      throw new Error('Данные пользователя не найдены');
-    }
-    
-    // Получаем данные о станке из localStorage
-    const assignmentsData = getAssignmentsData();
-    if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
-      throw new Error('Данные о станке не найдены');
-    }
-    
-    const machine = assignmentsData.machines[0];
-    
-    // Отправляем запрос на API
-    const response = await axios.post(`${API_URL}/pallets/start-processing`, {
-      palletId: palletId,
-      machineId: machine.id,
-      operatorId: userData.id,
-    });
-    
-    console.log(`Поддон ${palletId} успешно переведен в статус "В работу":`, response.data);
-    return response.data.operation || null;
-  } catch (error) {
-    console.error(`Ошибка при переводе поддона ${palletId} в статус "В работу":`, error);
-    throw error;
-  }
-};
-
-// Функция для перевода поддона в статус "Готово"
-export const completePalletProcessing = async (palletId: number): Promise<CompleteProcessingResponseDto> => {
-  try {
-    // Получаем данные пользователя из localStorage
-    const userData = getUserData();
-    if (!userData) {
-      throw new Error('Данные пользователя не найдены');
-    }
-    
-    // Получаем данные о станке из localStorage
-    const assignmentsData = getAssignmentsData();
-    if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
-      throw new Error('Данные о станке не найдены');
-    }
-    
-    const machine = assignmentsData.machines[0];
-    
-    // Создаем объект запроса согласно документации
-    const requestData = {
-      palletId: palletId,
-      machineId: machine.id,
-      operatorId: userData.id,
-      // segmentId является опциональным, добавляем если доступен
-      segmentId: assignmentsData.machines[0].segmentId
-    };
-    
-    // Отправляем запрос на API по новому URL
-    const response = await axios.post(`${API_URL}/pallets/complete-processing`, requestData);
-    
-    console.log(`Поддон ${palletId} успешно переведен в статус "Готово":`, response.data);
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка при переводе поддона ${palletId} в статус "Готово":`, error);
-    throw error;
-  }
-};
-
-// Функция для обновления буферной ячейки поддона
-export const updateBufferCell = async (palletId: number, bufferCellId: number): Promise<ProductionPallet> => {
-  try {
-       
-    // Отправляем запрос на API
-    const response = await axios.post(`${API_URL}/pallets/move-to-buffer`, {
-      palletId: palletId,
-      bufferCellId: bufferCellId
-    });
-    
-    console.log(`Буферная ячейка для поддона ${palletId} успешно обновлена:`, response.data);
-    return response.data.pallet;
-  } catch (error) {
-    console.error(`Ошибка при обновлении буферной ячейки для поддона ${palletId}:`, error);
     throw error;
   }
 };

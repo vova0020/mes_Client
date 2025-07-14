@@ -5,51 +5,30 @@ import { API_URL } from '../config';
 // Интерфейс заказа (расширьте при необходимости)
 export interface Order {
   id: number;
-  runNumber: string;
-  name: string;
-  progress: number;
+  batchNumber: string;
+  orderName: string;
+  completionPercentage: number;
   // добавьте дополнительные поля, если нужно
 }
 
 
-/**
- * Получает ID сегмента из localStorage
- * @returns ID сегмента или null, если не удалось получить
- */
-const getSegmentIdFromStorage = (): number | null => {
-  try {
-    const assignmentsData = localStorage.getItem('assignments');
-    if (!assignmentsData) {
-      console.error('Отсутствуют данные assignments в localStorage');
-      return null;
-    }
-    
-    const parsedData = JSON.parse(assignmentsData);
-    if (!parsedData.machines || parsedData.machines.length === 0) {
-      console.error('Нет данных assignments отсутствуют segments');
-      return null;
-    }
-    
-    return parsedData.machines[0].segmentId;
-  } catch (error) {
-    console.error('Ошибка при получении segmentId из localStorage:', error);
-    return null;
-  }
-};
-
-// Получение  заказов (GET)
+// Получение всех заказов (GET)
 export const getAllOrders = async (): Promise<Order[]> => {
-  const segmentId = getSegmentIdFromStorage();
-    
-    if (segmentId === null) {
-      console.error('Не удалось получить ID сегмента из localStorage');
-      throw new Error('Не удалось получить ID сегмента из localStorage');
+  // Получаем выбранный этап из localStorage
+  const selectedStageString = localStorage.getItem('selectedStage');
+  let stageId = null;
+  
+  if (selectedStageString) {
+    try {
+      const selectedStage = JSON.parse(selectedStageString);
+      stageId = selectedStage.id;
+    } catch (error) {
+      console.error('Ошибка при парсинге выбранного этапа:', error);
     }
-  const response = await axios.get(`${API_URL}/machines-no-shifts/segment/orders`, {
-      params: {
-        segmentId: segmentId
-      }
-    });
-    
-  return response.data.orders;
-};
+  }
+  
+  // Добавляем stageId в параметры запроса, если он есть
+  const params = stageId ? { stageId } : {};
+  const response = await axios.get(`${API_URL}/orders`);
+  return response.data;
+}; 

@@ -7,7 +7,7 @@ import {
   PencilIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { ParsedDetail } from '../../../api/parserApi/parserApi';
+import { ParsedDetail } from '../../../../../../api/parserApi/parserApi';
 import styles from './ParsedDataModal.module.css';
 
 // Словарь для перевода названий полей на русский язык

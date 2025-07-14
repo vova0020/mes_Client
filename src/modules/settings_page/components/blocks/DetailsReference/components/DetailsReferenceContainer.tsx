@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { PackagingSection } from './blocks/PackagingSection';
+
 import { DetailsSection } from './blocks/DetailsSection';
-import { usePackageDirectory } from '../../hooks/packageDirectoryHook/usePackageDirectory';
+import { usePackageDirectory } from '../../../../../hooks/packageDirectoryHook/usePackageDirectory';
 import styles from './DetailsReferenceContainer.module.css';
+import { PackagingSection } from './blocks/PackagingSection';
 
 export const DetailsReferenceContainer: React.FC = () => {
   // Используем хук для работы с упаковками

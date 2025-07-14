@@ -213,7 +213,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {details.map((detail, index) => (
+            {details.sort((a, b) => a.id - b.id).map((detail, index) => (
               <tr
                 key={detail.id}
                 className={`
@@ -223,7 +223,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => handleRowClick(detail.id)}
               >
-                <td>{detail.article}</td>
+                <td>{detail.articleNumber}</td>
                 <td>{detail.name}</td>
                 <td>{detail.material}</td>
                 <td>{detail.size}</td>
@@ -235,7 +235,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
                     Чертеж
                   </button>
                 </td>
-                <td>{detail.totalNumber}</td>
+                <td>{detail.totalQuantity}</td>
                 <td>{detail.readyForProcessing}</td>
                 <td>{detail.completed}</td>
                 <td>

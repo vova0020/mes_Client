@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Header from './components/Header/Header';
-import Sidebar from './components/Sidebar/Sidebar';
 
 import styles from './DetailsReference.module.css';
 import { DetailsReferenceContainer } from './components/DetailsReferenceContainer';
@@ -34,14 +32,14 @@ const DetailsReferencePage: React.FC = () => {
     <div className={styles.mesPage}>
       {/* Боковая панель всегда отображается */}
       <div className={styles.Sidebar_Block}>
-        <Sidebar/>
+        {/* <Sidebar/> */}
       </div>
       
       {/* Основной блок контента (прижат к правому краю) */}
       <div className={styles.Content_Block}>
         {/* Шапка */}
         <div className={styles.headerBlock}>
-          <Header />
+          {/* <Header /> */}
         </div>
 
         {/* Основной контейнер с контентом */}

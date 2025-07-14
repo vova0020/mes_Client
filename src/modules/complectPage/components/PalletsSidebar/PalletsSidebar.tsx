@@ -276,19 +276,19 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       // Обрабатываем успешный ответ API
       if (response) {
         // Сохраняем информацию о следующем шаге
-        setNextStepInfo(response.nextStep || 'Этап обработки завершен');
+        // setNextStepInfo(response.nextStep || 'Этап обработки завершен');
         
         // Формируем сообщение об успешной операции
-        const pallet = response.pallet;
-        const isCompleted = !pallet.currentStepId;
+        const pallet = response.assignment.pallet;
+        // const isCompleted = !pallet.currentStepId;
         
-        // Отображаем сообщение об успешном завершении
-        if (isCompleted) {
-          setSuccessMessage(`Обработка поддона ${pallet.name || `№${pallet.id}`} полностью завершена`);
-        } else {
-          const nextStepName = pallet.currentStep?.name || 'следующий этап';
-          setSuccessMessage(`Поддон ${pallet.name || `№${pallet.id}`} готов к этапу "${nextStepName}"`);
-        }
+        // // Отображаем сообщение об успешном завершении
+        // if (isCompleted) {
+        //   setSuccessMessage(`Обработка поддона ${pallet.name || `№${pallet.id}`} полностью завершена`);
+        // } else {
+        //   const nextStepName = pallet.currentStep?.name || 'следующий этап';
+        //   setSuccessMessage(`Поддон ${pallet.name || `№${pallet.id}`} готов к этапу "${nextStepName}"`);
+        // }
       } else {
         // Если ответ пустой, показываем общее сообщение об успехе
         setSuccessMessage(`Поддон №${palletId} успешно отмечен как готовый`);

@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
   requireFinalStage?: boolean; // Флаг для проверки наличия финальных этапов (для мастеров упаковки)
   excludeFinalStage?: boolean; // Флаг для исключения пользователей с финальными этапами (для обычных мастеров)
   ypakMashinFinalStage?: boolean; // Флаг для исключения пользователей с финальными этапами (для обычных мастеров)
+  requireNoSmenTask?: boolean; // Флаг для проверки наличия noSmenTask у workplace
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
@@ -17,14 +18,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requirePrimaryRole = false,
   requireFinalStage = false,
   excludeFinalStage = false,
-  ypakMashinFinalStage = false
+  ypakMashinFinalStage = false,
+  requireNoSmenTask = false
 }) => {
   // console.log('=== PROTECTED ROUTE - ОБНОВЛЕНО ===');
   // console.log('Props:', { requiredRole, requiredRoles, requirePrimaryRole, requireFinalStage, excludeFinalStage });
   // console.log('excludeFinalStage значение:', excludeFinalStage);
   // console.log('Тип excludeFinalStage:', typeof excludeFinalStage);
 
-  // Проверяем ауте��тификацию
+  // Проверяем аутентификацию
   if (!authService.isAuthenticated()) {
     // console.log('Пользователь не аутентифицирован, перенаправление на /login');
     return <Navigate to="/login" replace />;
@@ -87,7 +89,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
-  // Дополнительная проверка для финальных этапов (для мастеров упа��овки)
+  // Дополнительная проверка для финальных этапов (для мастеров упаковки)
   if (requireFinalStage) {
     // Проверяем выбранный этап, а не общее наличие финальных этапов
     const selectedStageString = localStorage.getItem('selectedStage');
@@ -109,8 +111,35 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
+  // Проверка на noSmenTask для workplace
+  if (requireNoSmenTask) {
+    const assignments = authService.getAssignments();
+    if (assignments && assignments.machines && assignments.machines.length > 0) {
+      const hasNoSmenTask = assignments.machines.some(machine => machine.noSmenTask === true);
+      if (!hasNoSmenTask) {
+        // console.log('Нет машин с noSmenTask, перенаправление');
+        return redirectToHomePage();
+      }
+    } else {
+      // console.log('Нет машин или assignments, перенаправление');
+      return redirectToHomePage();
+    }
+  }
+
   // Исключение пользователей с выбранными финальными этапами (для обычных мастеров и workplace)
   if (excludeFinalStage) {
+    // Дополнительная проверка для workplace - исключаем тех, у кого есть noSmenTask
+    if (authService.hasRole('workplace')) {
+      const assignments = authService.getAssignments();
+      if (assignments && assignments.machines && assignments.machines.length > 0) {
+        const hasNoSmenTask = assignments.machines.some(machine => machine.noSmenTask === true);
+        if (hasNoSmenTask) {
+          // console.log('У workplace есть машины с noSmenTask, перенаправление');
+          return redirectToHomePage();
+        }
+      }
+    }
+    
     // Проверяем выбранный этап, а не общее наличие финальных этапов
     const selectedStageString = localStorage.getItem('selectedStage');
     if (selectedStageString) {

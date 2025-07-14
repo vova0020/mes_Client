@@ -54,8 +54,8 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   };
 
   const calculateProgress = (order: Order) => {
-    if (order.progress !== undefined) {
-      return `${order.progress.toFixed(1)}%`;
+    if (order.completionPercentage !== undefined) {
+      return `${order.completionPercentage.toFixed(1)}%`;
     }
     if ('status' in order) {
       const status = (order as any).status;
@@ -137,7 +137,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
           </div>
         ) : (
           <div className={showOrders ? styles.showOrders : styles.hideOrders}>
-            {orders.map((order, index) => (
+            {orders.sort((a, b) => a.id - b.id).map((order, index) => (
               <div
                 key={order.id}
                 className={`
@@ -150,7 +150,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 onClick={() => handleOrderClick(order.id)}
               >
                 <div className={styles.orderTitle}>
-                  {order.runNumber} - {order.name || 'Без названия'}
+                  {order.batchNumber} - {order.orderName || 'Без названия'}
                 </div>
                 <div className={styles.orderInfo}>
                   <div className={styles.orderAvailability}>

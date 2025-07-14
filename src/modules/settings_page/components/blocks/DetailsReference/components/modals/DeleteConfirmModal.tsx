@@ -4,7 +4,7 @@ import {
   TrashIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { Detail } from '../../../api/detailsApi/detailsApi';
+import { Detail } from '../../../../../../api/detailsApi/detailsApi';
 import styles from './DeleteConfirmModal.module.css';
 
 interface DeleteConfirmModalProps {

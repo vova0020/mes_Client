@@ -4,7 +4,7 @@ import {
   CheckIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { Detail, CreateDetailDto, UpdateDetailDto } from '../../../api/detailsApi/detailsApi';
+import { Detail, CreateDetailDto, UpdateDetailDto } from '../../../../../../api/detailsApi/detailsApi';
 import styles from './DetailModal.module.css';
 
 interface DetailModalProps {

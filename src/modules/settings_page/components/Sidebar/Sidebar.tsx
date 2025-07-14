@@ -3,12 +3,13 @@ import styles from './Sidebar.module.css';
 
 import { ReactComponent as Settings_buffer } from '../../../../assets/settingsSidebar/Settings_buffer.svg';
 import { ReactComponent as Settings_users } from '../../../../assets/settingsSidebar/Settings_users.svg';
-import { ReactComponent as Settings_workplace_ypak } from '../../../../assets/settingsSidebar/Settings_workplace_ypak.svg';
-import { ReactComponent as Settings_machin } from '../../../../assets/settingsSidebar/Settings_machin.svg';
-import { ReactComponent as Settings_technological_route } from '../../../../assets/settingsSidebar/Settings_technological_route.svg';
-import { ReactComponent as Settings_technological_operations } from '../../../../assets/settingsSidebar/Settings_technological_operations.svg';
-import { ReactComponent as Settings_streams } from '../../../../assets/settingsSidebar/Settings_streams.svg';
+import { ReactComponent as Settings_5 } from '../../../../assets/settingsSidebar/Settings_workplace_ypak.svg';
+import { ReactComponent as Settings_4 } from '../../../../assets/settingsSidebar/Settings_machin.svg';
+import { ReactComponent as Settings_3 } from '../../../../assets/settingsSidebar/Settings_technological_route.svg';
+import { ReactComponent as Settings_2 } from '../../../../assets/settingsSidebar/Settings_technological_operations.svg';
+import { ReactComponent as Settings_1 } from '../../../../assets/settingsSidebar/Settings_streams.svg';
 import { ReactComponent as Settings_materials } from '../../../../assets/settingsSidebar/Settings_materials.svg';
+import { ReactComponent as Sprav_details } from '../../../../assets/settingsSidebar/Sprav_details.svg';
 
 import { Button, Tooltip } from '@mui/material';
 
@@ -22,6 +23,7 @@ export type SettingSection =
   | 'technological_operations'
   | 'streams'
   | 'materials'
+  | 'details_reference_container'
   | null;
 
 interface SidebarProps {
@@ -49,31 +51,30 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
 
         <Tooltip title="Управление потоками" placement="right">
           <Button onClick={() => onSectionChange('streams')}>
-            <Settings_streams className={getButtonClass('streams')} />
+            <Settings_1 className={getButtonClass('streams')} />
           </Button>
         </Tooltip>
 
-        {/* <Tooltip title="Технологические операции" placement="right">
-          <Button onClick={() => onSectionChange('technological_operations')}>
-            <Settings_technological_operations className={getButtonClass('technological_operations')} />
-          </Button>
-        </Tooltip> */}
-
         <Tooltip title="Технологические маршруты" placement="right">
           <Button onClick={() => onSectionChange('technological_route')}>
-            <Settings_technological_route className={getButtonClass('technological_route')} />
+            <Settings_2 className={getButtonClass('technological_route')} />
           </Button>
         </Tooltip>
 
         <Tooltip title="Настройки станков" placement="right">
           <Button onClick={() => onSectionChange('machin')}>
-            <Settings_machin className={getButtonClass('machin')} />
+            <Settings_3 className={getButtonClass('machin')} />
           </Button>
         </Tooltip>
 
-           <Tooltip title="Настройки рабочих мест УПАК" placement="right">
+           {/* <Tooltip title="Настройки рабочих мест УПАК" placement="right">
           <Button onClick={() => onSectionChange('workplace_ypak')}>
-            <Settings_workplace_ypak className={getButtonClass('workplace_ypak')} />
+            <Settings_5 className={getButtonClass('workplace_ypak')} />
+          </Button>
+        </Tooltip> */}
+        <Tooltip title="Справочник деталей" placement="right">
+          <Button onClick={() => onSectionChange('details_reference_container')}>
+            <Sprav_details className={getButtonClass('details_reference_container')} />
           </Button>
         </Tooltip>
 

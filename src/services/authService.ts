@@ -24,6 +24,7 @@ export interface Machine {
   segmentId?: number;
   segmentName?: string;
   stages?: Stage[];
+  noSmenTask?: boolean;
 }
 
 export interface Segment {
@@ -218,9 +219,19 @@ const authService = {
         // console.log('Assignments для workplace:', assignments);
         // console.log('Machines:', assignments.machines);
         
-        // Для рабочих мест проверяем наличие финальных эт��пов в машинах
+        // Для рабочих мест сначала проверяем наличие машин с noSmenTask
         if (assignments.machines && assignments.machines.length > 0) {
-          // console.log('Найдены машины, проверяем финальные этапы...');
+          // console.log('Найдены машины, проверяем noSmenTask...');
+          
+          const hasNoSmenTask = assignments.machines.some(machine => machine.noSmenTask === true);
+          
+          if (hasNoSmenTask) {
+            // console.log('Найдены машины с noSmenTask, перенаправляем на /nosmenmachine');
+            return '/nosmenmachine';
+          }
+          
+          // Если нет noSmenTask, проверяем финальные этапы
+          // console.log('Нет машин с noSmenTask, проверяем финальные этапы...');
           
           // Подробно логируем каждую машину и её этапы
           assignments.machines.forEach((machine, index) => {
@@ -375,6 +386,16 @@ const authService = {
       // console.log('=== ОБРАБОТКА WORKPLACE В DETERMINEHOMEPAGE ===');
       // console.log('Assignments для workplace:', assignments);
       // console.log('Machines:', assignments.machines);
+      
+      // Сначала проверяем наличие машин с noSmenTask
+      if (assignments.machines && assignments.machines.length > 0) {
+        const hasNoSmenTask = assignments.machines.some(machine => machine.noSmenTask === true);
+        
+        if (hasNoSmenTask) {
+          // console.log('Найдены машины с noSmenTask, перенаправление на /nosmenmachine');
+          return '/nosmenmachine';
+        }
+      }
       
       // Проверяем выбранный этап из localStorage
       const selectedStageString = localStorage.getItem('selectedStage');

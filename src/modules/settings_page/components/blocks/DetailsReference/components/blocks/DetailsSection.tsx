@@ -17,10 +17,10 @@ import {
   EyeIcon,
   CloudArrowUpIcon,
 } from '@heroicons/react/24/outline';
-import { useDetails } from '../../../hooks/detailsHook';
-import { useParser } from '../../../hooks/parserHook';
-import { Detail, CreateDetailDto, UpdateDetailDto, CreateDetailWithPackageDto } from '../../../api/detailsApi/detailsApi';
-import { ParsedDetail } from '../../../api/parserApi/parserApi';
+import { useDetails } from '../../../../../../hooks/detailsHook';
+import { useParser } from '../../../../../../hooks/parserHook';
+import { Detail, CreateDetailDto, UpdateDetailDto, CreateDetailWithPackageDto } from '../../../../../../api/detailsApi/detailsApi';
+import { ParsedDetail } from '../../../../../../api/parserApi/parserApi';
 import { DetailModal, DeleteConfirmModal, UploadModal, ParsedDataModal } from '../modals';
 import styles from './DetailsSection.module.css';
 

@@ -14,7 +14,7 @@ import { useMachine } from '../hooks/machinNoSmenHook/useMachine';
 
 import styles from './MesPage.module.css';
 
-const MasterPage: React.FC = () => {
+const MachineNoSmen: React.FC = () => {
   // Использовать хук без передачи ID - он сам возьмет ID из localStorage
   const { 
     machine, 
@@ -105,4 +105,4 @@ const MasterPage: React.FC = () => {
   );
 };
 
-export default MasterPage;
+export default MachineNoSmen;
