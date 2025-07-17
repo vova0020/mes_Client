@@ -1,0 +1,315 @@
+/* Основной контейнер */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  color: white;
+  background: transparent;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  text-align: center;
+}
+
+/* Основной контент - разделен на две панели */
+.content {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  height: calc(100vh - 200px);
+  overflow: hidden;
+}
+
+/* Левая панель - заказы */
+.ordersPanel {
+  flex: 0 0 400px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+/* Правая панель - детали */
+.detailsPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+/* Заголовки панелей */
+.panelHeader {
+  padding: 16px 20px;
+  background: linear-gradient(to right, #2d3748, #1a202c);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.panelTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Контейнеры таблиц */
+.tableContainer {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.table {
+  background: linear-gradient(to bottom, #4a5568, #3a4553) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tableHeader {
+  background: linear-gradient(to right, #2d3748, #1a202c) !important;
+}
+
+.headerCell {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 16px !important;
+  border-bottom: 1px solid #4a5568 !important;
+}
+
+.tableRow {
+  background: transparent !important;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.tableRow:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Выбранная строка заказа */
+.selectedRow {
+  background: rgba(76, 175, 80, 0.2) !important;
+}
+
+.selectedRow:hover {
+  background: rgba(76, 175, 80, 0.3) !important;
+}
+
+.cell {
+  color: #ffffff !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #4a5568 !important;
+  font-size: 14px !important;
+}
+
+/* Информация о заказе */
+.orderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.orderName {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Статусы */
+.status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.preliminary {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid #ffc107;
+}
+
+.approved {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid #4caf50;
+}
+
+/* Кнопка баланса загрузки */
+.balanceButton {
+  background: rgba(33, 150, 243, 0.2) !important;
+  color: #2196f3 !important;
+  border: 1px solid #2196f3 !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.balanceButton:hover {
+  background: rgba(33, 150, 243, 0.3) !important;
+  transform: scale(1.02);
+}
+
+/* Селект технологического маршрута */
+.routeSelect {
+  min-width: 150px !important;
+}
+
+.selectInput {
+  color: white !important;
+}
+
+.selectInput .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.selectInput:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.selectInput.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #4caf50 !important;
+}
+
+.selectInput .MuiSelect-select {
+  color: white !important;
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+}
+
+.selectInput .MuiSelect-icon {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Стили для выпадающего меню */
+.selectInput .MuiPaper-root {
+  background: linear-gradient(to bottom, #374051, #2d3441) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.selectInput .MuiMenuItem-root {
+  color: white !important;
+  font-size: 14px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.selectInput .MuiMenuItem-root:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.selectInput .MuiMenuItem-root.Mui-selected {
+  background: rgba(76, 175, 80, 0.2) !important;
+}
+
+.selectInput .MuiMenuItem-root.Mui-selected:hover {
+  background: rgba(76, 175, 80, 0.3) !important;
+}
+
+/* Пустое состояние */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  margin: 16px;
+}
+
+/* Адаптивность */
+@media screen and (max-width: 1200px) {
+  .content {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .ordersPanel {
+    flex: none;
+    height: 300px;
+  }
+  
+  .detailsPanel {
+    flex: none;
+    height: 400px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .title {
+    font-size: 20px;
+  }
+  
+  .content {
+    gap: 16px;
+  }
+  
+  .panelTitle {
+    font-size: 14px;
+  }
+  
+  .headerCell,
+  .cell {
+    padding: 8px !important;
+    font-size: 12px !important;
+  }
+  
+  .balanceButton {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+  
+  .routeSelect {
+    min-width: 120px !important;
+  }
+  
+  .selectInput .MuiSelect-select {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .tableContainer {
+    padding: 8px;
+  }
+  
+  .panelHeader {
+    padding: 12px 16px;
+  }
+  
+  .ordersPanel {
+    height: 250px;
+  }
+  
+  .detailsPanel {
+    height: 350px;
+  }
+  
+  .emptyState {
+    font-size: 14px;
+    margin: 8px;
+  }
+}
