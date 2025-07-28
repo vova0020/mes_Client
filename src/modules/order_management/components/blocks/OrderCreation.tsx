@@ -1,188 +1,280 @@
-import React, { useState } from 'react';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Alert, CircularProgress } from '@mui/material';
 import { Edit, CheckCircle, Assignment, MonetizationOn, Visibility, ExpandMore, ExpandLess } from '@mui/icons-material';
 import styles from './OrderCreation.module.css';
 
-// Типы данных
-interface Detail {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-}
+// Импорты API и хуков
+import { useProductionOrders } from '../../../hooks/productionOrdersHook';
+import { usePackageDirectory } from '../../../hooks/packageDirectoryHook';
+import { 
+  OrderStatus, 
+  CreateProductionOrderDto, 
+  ProductionOrderResponseDto,
+  CreatePackageDto,
+  UpdateProductionOrderDto
+} from '../../../api/productionOrdersApi/productionOrdersApi';
 
-interface Package {
-  id: string;
-  name: string;
-  quantity: number;
-  details: Detail[];
-}
-
-interface Order {
-  id: string;
-  name: string;
-  requiredDate: string;
-  status: 'preliminary' | 'approved';
-  packages: Package[];
-}
-
+// Интерфейс для формы создания заказа
 interface OrderFormData {
-  orderNumber: string;
+  batchNumber: string;
   orderName: string;
   requiredDate: string;
-  packages: Package[];
+  packages: Array<{
+    packageId: number;
+    packageName: string;
+    quantity: number;
+  }>;
 }
 
-// Моковые данные деталей для упаковок
-const mockDetails: { [key: string]: Detail[] } = {
-  '1': [
-    { id: 'd1', name: 'Деталь А1', quantity: 5, unit: 'шт' },
-    { id: 'd2', name: 'Деталь А2', quantity: 3, unit: 'шт' },
-    { id: 'd3', name: 'Деталь А3', quantity: 2, unit: 'кг' },
-  ],
-  '2': [
-    { id: 'd4', name: 'Деталь Б1', quantity: 8, unit: 'шт' },
-    { id: 'd5', name: 'Деталь Б2', quantity: 1, unit: 'м' },
-  ],
-  '3': [
-    { id: 'd6', name: 'Деталь В1', quantity: 10, unit: 'шт' },
-    { id: 'd7', name: 'Деталь В2', quantity: 4, unit: 'шт' },
-    { id: 'd8', name: 'Деталь В3', quantity: 1.5, unit: 'кг' },
-  ],
-  '4': [
-    { id: 'd9', name: 'Деталь Г1', quantity: 6, unit: 'шт' },
-    { id: 'd10', name: 'Деталь Г2', quantity: 2, unit: 'л' },
-  ],
-  '5': [
-    { id: 'd11', name: 'Деталь Д1', quantity: 12, unit: 'шт' },
-    { id: 'd12', name: 'Деталь Д2', quantity: 3, unit: 'шт' },
-    { id: 'd13', name: 'Деталь Д3', quantity: 0.8, unit: 'кг' },
-  ],
+// Функция для преобразования статуса в читаемый вид
+const getStatusLabel = (status: OrderStatus): string => {
+  switch (status) {
+    case OrderStatus.PRELIMINARY:
+      return 'Предварительный';
+    case OrderStatus.APPROVED:
+      return 'Утвержден';
+    case OrderStatus.LAUNCH_PERMITTED:
+      return 'Разрешен к запуску';
+    case OrderStatus.IN_PROGRESS:
+      return 'В работе';
+    case OrderStatus.COMPLETED:
+      return 'Завершен';
+    default:
+      return status;
+  }
 };
 
-// Моковые данные упаковок
-const mockPackages: Package[] = [
-  { id: '1', name: 'Упаковка А', quantity: 0, details: mockDetails['1'] },
-  { id: '2', name: 'Упаковка Б', quantity: 0, details: mockDetails['2'] },
-  { id: '3', name: 'Упаковка В', quantity: 0, details: mockDetails['3'] },
-  { id: '4', name: 'Упаковка Г', quantity: 0, details: mockDetails['4'] },
-  { id: '5', name: 'Упаковка Д', quantity: 0, details: mockDetails['5'] },
-];
+// Функция для получения CSS класса статуса
+const getStatusClass = (status: OrderStatus): string => {
+  switch (status) {
+    case OrderStatus.PRELIMINARY:
+      return 'preliminary';
+    case OrderStatus.APPROVED:
+      return 'approved';
+    case OrderStatus.LAUNCH_PERMITTED:
+      return 'launchPermitted';
+    case OrderStatus.IN_PROGRESS:
+      return 'inProgress';
+    case OrderStatus.COMPLETED:
+      return 'completed';
+    default:
+      return 'preliminary';
+  }
+};
 
 const OrderCreation: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
+  // Хуки для работы с API
+  const {
+    orders,
+    loading: ordersLoading,
+    error: ordersError,
+    selectedOrder,
+    createOrder,
+    updateOrder,
+    updateOrderStatus,
+    deleteOrder,
+    fetchOrders,
+    selectOrder,
+    clearSelection,
+    isCreating,
+    isUpdating,
+    isUpdatingStatus
+  } = useProductionOrders();
+
+  const {
+    packages: availablePackages,
+    loading: packagesLoading,
+    error: packagesError,
+    isFetching: isPackagesFetching
+  } = usePackageDirectory();
+
+  // Локальное состояние для диалогов и форм
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCompositionDialogOpen, setIsCompositionDialogOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+  const [editingOrder, setEditingOrder] = useState<ProductionOrderResponseDto | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<ProductionOrderResponseDto | null>(null);
   const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
   const [orderForm, setOrderForm] = useState<OrderFormData>({
-    orderNumber: '',
+    batchNumber: '',
     orderName: '',
     requiredDate: '',
-    packages: mockPackages.map(pkg => ({ ...pkg }))
+    packages: []
   });
+
+  // Инициализация формы с доступными упаковками
+  useEffect(() => {
+    if (availablePackages.length > 0) {
+      setOrderForm(prev => ({
+        ...prev,
+        packages: availablePackages.map(pkg => ({
+          packageId: pkg.packageId,
+          packageName: pkg.packageName,
+          quantity: 0
+        }))
+      }));
+    }
+  }, [availablePackages]);
 
   // Обработчики для создания заказа
   const handleCreateOrder = () => {
     setOrderForm({
-      orderNumber: '',
+      batchNumber: '',
       orderName: '',
       requiredDate: '',
-      packages: mockPackages.map(pkg => ({ ...pkg }))
+      packages: availablePackages.map(pkg => ({
+        packageId: pkg.packageId,
+        packageName: pkg.packageName,
+        quantity: 0
+      }))
     });
     setIsCreateDialogOpen(true);
   };
 
-  const handleSaveOrder = () => {
-    const selectedPackages = orderForm.packages.filter(pkg => pkg.quantity > 0);
-    const newOrder: Order = {
-      id: Date.now().toString(),
-      name: orderForm.orderName,
-      requiredDate: orderForm.requiredDate,
-      status: 'preliminary',
-      packages: selectedPackages
-    };
-    setOrders([...orders, newOrder]);
-    setIsCreateDialogOpen(false);
+  const handleSaveOrder = async () => {
+    try {
+      const selectedPackages: CreatePackageDto[] = orderForm.packages
+        .filter(pkg => pkg.quantity > 0)
+        .map(pkg => ({
+          packageDirectoryId: pkg.packageId,
+          quantity: pkg.quantity
+        }));
+
+      if (selectedPackages.length === 0) {
+        alert('Выберите хотя бы одну упаковку для заказа');
+        return;
+      }
+
+      if (!orderForm.batchNumber || !orderForm.orderName || !orderForm.requiredDate) {
+        alert('Заполните все обязательные поля');
+        return;
+      }
+
+      const createDto: CreateProductionOrderDto = {
+        batchNumber: orderForm.batchNumber,
+        orderName: orderForm.orderName,
+        requiredDate: new Date(orderForm.requiredDate).toISOString(),
+        status: OrderStatus.PRELIMINARY,
+        packages: selectedPackages
+      };
+
+      await createOrder(createDto);
+      setIsCreateDialogOpen(false);
+      
+      // Сброс формы
+      setOrderForm({
+        batchNumber: '',
+        orderName: '',
+        requiredDate: '',
+        packages: availablePackages.map(pkg => ({
+          packageId: pkg.packageId,
+          packageName: pkg.packageName,
+          quantity: 0
+        }))
+      });
+    } catch (error) {
+      console.error('Ошибка при создании заказа:', error);
+      alert('Ошибка при создании заказа. Проверьте данные и попробуйте снова.');
+    }
   };
 
   // Обработчики для редактирования заказа
-  const handleEditOrder = (order: Order) => {
-    if (order.status === 'approved') {
-      alert('Нельзя редактировать утвержденный заказ');
+  const handleEditOrder = (order: ProductionOrderResponseDto) => {
+    if (order.status === OrderStatus.IN_PROGRESS) {
+      alert('Нельзя редактировать заказы, которые находятся в работе');
       return;
     }
+    
     setEditingOrder(order);
     
     // Загружаем данные заказа в форму
-    const formPackages = mockPackages.map(pkg => {
-      const orderPackage = order.packages.find(op => op.id === pkg.id);
+    const formPackages = availablePackages.map(pkg => {
+      const orderPackage = order.packages?.find(op => op.packageId === pkg.packageId);
       return {
-        ...pkg,
+        packageId: pkg.packageId,
+        packageName: pkg.packageName,
         quantity: orderPackage ? orderPackage.quantity : 0
       };
     });
     
     setOrderForm({
-      orderNumber: order.id,
-      orderName: order.name,
-      requiredDate: order.requiredDate,
+      batchNumber: order.batchNumber,
+      orderName: order.orderName,
+      requiredDate: order.requiredDate.split('T')[0], // Преобразуем ISO дату в формат для input[type="date"]
       packages: formPackages
     });
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateOrder = () => {
-    if (editingOrder) {
-      const selectedPackages = orderForm.packages.filter(pkg => pkg.quantity > 0);
-      setOrders(orders.map(order => 
-        order.id === editingOrder.id 
-          ? { 
-              ...order, 
-              name: orderForm.orderName, 
-              requiredDate: orderForm.requiredDate,
-              packages: selectedPackages
-            }
-          : order
-      ));
+  const handleUpdateOrder = async () => {
+    if (!editingOrder) return;
+
+    try {
+      const selectedPackages: CreatePackageDto[] = orderForm.packages
+        .filter(pkg => pkg.quantity > 0)
+        .map(pkg => ({
+          packageDirectoryId: pkg.packageId,
+          quantity: pkg.quantity
+        }));
+
+      if (selectedPackages.length === 0) {
+        alert('Выберите хотя бы одну упаковку для заказа');
+        return;
+      }
+
+      if (!orderForm.batchNumber || !orderForm.orderName || !orderForm.requiredDate) {
+        alert('Заполните все обязательные поля');
+        return;
+      }
+
+      const updateDto: UpdateProductionOrderDto = {
+        batchNumber: orderForm.batchNumber,
+        orderName: orderForm.orderName,
+        requiredDate: new Date(orderForm.requiredDate).toISOString(),
+        packages: selectedPackages
+      };
+
+      await updateOrder(editingOrder.orderId, updateDto);
       setIsEditDialogOpen(false);
       setEditingOrder(null);
+    } catch (error) {
+      console.error('Ошибка при обновлении заказа:', error);
+      alert('Ошибка при обновлении заказа. Попробуйте снова.');
     }
   };
 
   // Обработчик утверждения заказа
-  const handleApproveOrder = (orderId: string) => {
-    setOrders(orders.map(order => 
-      order.id === orderId 
-        ? { ...order, status: 'approved' }
-        : order
-    ));
+  const handleApproveOrder = async (orderId: number) => {
+    try {
+      await updateOrderStatus(orderId, OrderStatus.APPROVED);
+    } catch (error) {
+      console.error('Ошибка при утверждении заказа:', error);
+      alert('Ошибка при утверждении заказа. Попробуйте снова.');
+    }
   };
 
   // Обработчики для упаковок
-  const handlePackageQuantityChange = (packageId: string, quantity: number) => {
+  const handlePackageQuantityChange = (packageId: number, quantity: number) => {
     setOrderForm({
       ...orderForm,
       packages: orderForm.packages.map(pkg => 
-        pkg.id === packageId ? { ...pkg, quantity } : pkg
+        pkg.packageId === packageId ? { ...pkg, quantity } : pkg
       )
     });
   };
 
-  const handlePackageToggle = (packageId: string, checked: boolean) => {
+  const handlePackageToggle = (packageId: number, checked: boolean) => {
     setOrderForm({
       ...orderForm,
       packages: orderForm.packages.map(pkg => 
-        pkg.id === packageId ? { ...pkg, quantity: checked ? 1 : 0 } : pkg
+        pkg.packageId === packageId ? { ...pkg, quantity: checked ? 1 : 0 } : pkg
       )
     });
   };
 
   // Обработчики для просмотра состава заказа
-  const handleOrderComposition = (orderId: string) => {
-    const order = orders.find(o => o.id === orderId);
+  const handleOrderComposition = (orderId: number) => {
+    const order = orders.find(o => o.orderId === orderId);
     if (order) {
       setViewingOrder(order);
       setExpandedPackages({});
@@ -190,16 +282,42 @@ const OrderCreation: React.FC = () => {
     }
   };
 
-  const handlePackageExpand = (packageId: string) => {
+  const handlePackageExpand = (packageId: number) => {
     setExpandedPackages(prev => ({
       ...prev,
       [packageId]: !prev[packageId]
     }));
   };
 
-  const handleOrderExpense = (orderId: string) => {
+  const handleOrderExpense = (orderId: number) => {
     alert(`Расход на заказ ${orderId} - функция в разработке`);
   };
+
+  // Обработчик удаления заказа
+  const handleDeleteOrder = async (orderId: number) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот заказ?')) {
+      try {
+        await deleteOrder(orderId);
+      } catch (error) {
+        console.error('Ошибка при удалении заказа:', error);
+        alert('Ошибка при удалении заказа. Попробуйте снова.');
+      }
+    }
+  };
+
+  // Показыв��ем индикатор загрузки
+  if (ordersLoading === 'loading' || packagesLoading === 'loading') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Создание заказов</h2>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          <CircularProgress />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -207,64 +325,87 @@ const OrderCreation: React.FC = () => {
         <h2 className={styles.title}>Создание заказов</h2>
       </div>
 
+      {/* Показываем ошибки, если есть */}
+      {(ordersError || packagesError) && (
+        <Alert severity="error" style={{ margin: '1rem 0' }}>
+          {ordersError?.message || packagesError?.message || 'Произошла ошибка при загрузке данных'}
+        </Alert>
+      )}
+
       {/* Таблица заказов */}
       <div className={styles.tableContainer}>
         <TableContainer component={Paper} className={styles.table}>
           <Table>
             <TableHead>
               <TableRow className={styles.tableHeader}>
-                <TableCell className={styles.headerCell}>Заказ</TableCell>
+                <TableCell className={styles.headerCell}>Номер партии</TableCell>
+                <TableCell className={styles.headerCell}>Название заказа</TableCell>
                 <TableCell className={styles.headerCell}>Требуемая дата готовности</TableCell>
                 <TableCell className={styles.headerCell}>Статус</TableCell>
+                <TableCell className={styles.headerCell}>Прогресс</TableCell>
                 <TableCell className={styles.headerCell}>Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id} className={styles.tableRow}>
-                  <TableCell className={styles.cell}>{order.name}</TableCell>
-                  <TableCell className={styles.cell}>{order.requiredDate}</TableCell>
-                  <TableCell className={styles.cell}>
-                    <span className={`${styles.status} ${styles[order.status]}`}>
-                      {order.status === 'preliminary' ? 'Предварительный' : 'Утверждено'}
-                    </span>
-                  </TableCell>
-                  <TableCell className={styles.cell}>
-                    <div className={styles.actionButtons}>
-                      <IconButton 
-                        onClick={() => handleOrderComposition(order.id)}
-                        className={styles.actionButton}
-                        title="Состав заказа"
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton 
-                        onClick={() => handleOrderExpense(order.id)}
-                        className={styles.actionButton}
-                        title="Расход на заказ"
-                      >
-                        <MonetizationOn />
-                      </IconButton>
-                      <IconButton 
-                        onClick={() => handleEditOrder(order)}
-                        className={styles.actionButton}
-                        disabled={order.status === 'approved'}
-                        title="Редактировать заказ"
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton 
-                        onClick={() => handleApproveOrder(order.id)}
-                        className={styles.actionButton}
-                        disabled={order.status === 'approved'}
-                        title="Утвердить заказ"
-                      >
-                        <CheckCircle />
-                      </IconButton>
-                    </div>
+              {orders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+                    Нет заказов для отображения
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                orders.map((order) => (
+                  <TableRow key={order.orderId} className={styles.tableRow}>
+                    <TableCell className={styles.cell}>{order.batchNumber}</TableCell>
+                    <TableCell className={styles.cell}>{order.orderName}</TableCell>
+                    <TableCell className={styles.cell}>
+                      {new Date(order.requiredDate).toLocaleDateString('ru-RU')}
+                    </TableCell>
+                    <TableCell className={styles.cell}>
+                      <span className={`${styles.status} ${styles[getStatusClass(order.status)]}`}>
+                        {getStatusLabel(order.status)}
+                      </span>
+                    </TableCell>
+                    <TableCell className={styles.cell}>
+                      {order.completionPercentage}%
+                    </TableCell>
+                    <TableCell className={styles.cell}>
+                      <div className={styles.actionButtons}>
+                        <IconButton 
+                          onClick={() => handleOrderComposition(order.orderId)}
+                          className={styles.actionButton}
+                          title="Состав заказа"
+                        >
+                          <Visibility />
+                        </IconButton>
+                        <IconButton 
+                          onClick={() => handleOrderExpense(order.orderId)}
+                          className={styles.actionButton}
+                          title="Расход на заказ"
+                        >
+                          <MonetizationOn />
+                        </IconButton>
+                        <IconButton 
+                          onClick={() => handleEditOrder(order)}
+                          className={styles.actionButton}
+                          disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED || isUpdating}
+                          title="Редактировать заказ"
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton 
+                          onClick={() => handleApproveOrder(order.orderId)}
+                          className={styles.actionButton}
+                          disabled={order.status !== OrderStatus.PRELIMINARY || isUpdatingStatus}
+                          title="Утвердить заказ"
+                        >
+                          {isUpdatingStatus ? <CircularProgress size={20} /> : <CheckCircle />}
+                        </IconButton>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -276,8 +417,9 @@ const OrderCreation: React.FC = () => {
           variant="contained" 
           onClick={handleCreateOrder}
           className={styles.createButton}
+          disabled={isCreating || availablePackages.length === 0}
         >
-          Создать заказ
+          {isCreating ? <CircularProgress size={20} /> : 'Создать заказ'}
         </Button>
         <Button 
           variant="contained" 
@@ -300,23 +442,25 @@ const OrderCreation: React.FC = () => {
         <DialogContent className={styles.dialogContent}>
           <div className={styles.formContainer}>
             <TextField
-              label="Номер заказа"
-              value={orderForm.orderNumber}
-              onChange={(e) => setOrderForm({...orderForm, orderNumber: e.target.value})}
+              label="Номер производственной партии *"
+              value={orderForm.batchNumber}
+              onChange={(e) => setOrderForm({...orderForm, batchNumber: e.target.value})}
               fullWidth
               margin="normal"
               className={styles.textField}
+              required
             />
             <TextField
-              label="Название заказа"
+              label="Название заказа *"
               value={orderForm.orderName}
               onChange={(e) => setOrderForm({...orderForm, orderName: e.target.value})}
               fullWidth
               margin="normal"
               className={styles.textField}
+              required
             />
             <TextField
-              label="Требуемая дата готовности"
+              label="Требуемая дата готовности *"
               type="date"
               value={orderForm.requiredDate}
               onChange={(e) => setOrderForm({...orderForm, requiredDate: e.target.value})}
@@ -324,47 +468,67 @@ const OrderCreation: React.FC = () => {
               margin="normal"
               InputLabelProps={{ shrink: true }}
               className={styles.textField}
+              required
             />
             
             <div className={styles.packagesSection}>
               <h4 className={styles.packagesTitle}>Состав заказа (упаковки)</h4>
-              <div className={styles.packagesList}>
-                {orderForm.packages.map((pkg) => (
-                  <div key={pkg.id} className={styles.packageItem}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={pkg.quantity > 0}
-                          onChange={(e) => handlePackageToggle(pkg.id, e.target.checked)}
-                          className={styles.checkbox}
-                        />
-                      }
-                      label={pkg.name}
-                      className={styles.packageLabel}
-                    />
-                    {pkg.quantity > 0 && (
-                      <TextField
-                        type="number"
-                        label="Количество"
-                        value={pkg.quantity}
-                        onChange={(e) => handlePackageQuantityChange(pkg.id, parseInt(e.target.value) || 0)}
-                        size="small"
-                        className={styles.quantityField}
-                        inputProps={{ min: 1 }}
+              {isPackagesFetching ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+                  <CircularProgress size={24} />
+                </div>
+              ) : orderForm.packages.length === 0 ? (
+                <Alert severity="warning">
+                  Нет доступных упаковок для выбора. Сначала создайте упаковки в справочнике.
+                </Alert>
+              ) : (
+                <div className={styles.packagesList}>
+                  {orderForm.packages.map((pkg) => (
+                    <div key={pkg.packageId} className={styles.packageItem}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={pkg.quantity > 0}
+                            onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
+                            className={styles.checkbox}
+                          />
+                        }
+                        label={pkg.packageName}
+                        className={styles.packageLabel}
                       />
-                    )}
-                  </div>
-                ))}
-              </div>
+                      {pkg.quantity > 0 && (
+                        <TextField
+                          type="number"
+                          label="Количество"
+                          value={pkg.quantity}
+                          onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
+                          size="small"
+                          className={styles.quantityField}
+                          inputProps={{ min: 1 }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
         <DialogActions className={styles.dialogActions}>
-          <Button onClick={() => setIsCreateDialogOpen(false)} className={styles.cancelButton}>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(false)} 
+            className={styles.cancelButton}
+            disabled={isCreating}
+          >
             Отмена
           </Button>
-          <Button onClick={handleSaveOrder} variant="contained" className={styles.saveButton}>
-            Создать
+          <Button 
+            onClick={handleSaveOrder} 
+            variant="contained" 
+            className={styles.saveButton}
+            disabled={isCreating || orderForm.packages.length === 0}
+          >
+            {isCreating ? <CircularProgress size={20} /> : 'Создать'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -381,23 +545,25 @@ const OrderCreation: React.FC = () => {
         <DialogContent className={styles.dialogContent}>
           <div className={styles.formContainer}>
             <TextField
-              label="Номер заказа"
-              value={orderForm.orderNumber}
-              disabled
+              label="Номер производственной партии *"
+              value={orderForm.batchNumber}
+              onChange={(e) => setOrderForm({...orderForm, batchNumber: e.target.value})}
               fullWidth
               margin="normal"
               className={styles.textField}
+              required
             />
             <TextField
-              label="Название заказа"
+              label="Название заказа *"
               value={orderForm.orderName}
               onChange={(e) => setOrderForm({...orderForm, orderName: e.target.value})}
               fullWidth
               margin="normal"
               className={styles.textField}
+              required
             />
             <TextField
-              label="Требуемая дата готовности"
+              label="Требуемая дата готовности *"
               type="date"
               value={orderForm.requiredDate}
               onChange={(e) => setOrderForm({...orderForm, requiredDate: e.target.value})}
@@ -405,47 +571,141 @@ const OrderCreation: React.FC = () => {
               margin="normal"
               InputLabelProps={{ shrink: true }}
               className={styles.textField}
+              required
             />
             
             <div className={styles.packagesSection}>
-              <h4 className={styles.packagesTitle}>Состав заказа (упаковки)</h4>
-              <div className={styles.packagesList}>
-                {orderForm.packages.map((pkg) => (
-                  <div key={pkg.id} className={styles.packageItem}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={pkg.quantity > 0}
-                          onChange={(e) => handlePackageToggle(pkg.id, e.target.checked)}
-                          className={styles.checkbox}
-                        />
-                      }
-                      label={pkg.name}
-                      className={styles.packageLabel}
-                    />
-                    {pkg.quantity > 0 && (
-                      <TextField
-                        type="number"
-                        label="Количество"
-                        value={pkg.quantity}
-                        onChange={(e) => handlePackageQuantityChange(pkg.id, parseInt(e.target.value) || 0)}
-                        size="small"
-                        className={styles.quantityField}
-                        inputProps={{ min: 1 }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+              <h4 className={styles.packagesTitle}>Текущий состав заказа</h4>
+              {editingOrder?.status === OrderStatus.IN_PROGRESS ? (
+                <Alert severity="warning" style={{ margin: '1rem 0' }}>
+                  Нельзя изменять состав упаковок у заказа, который находится в работе.
+                </Alert>
+              ) : (
+                <Alert severity="info" style={{ margin: '1rem 0' }}>
+                  При изменении упаковок все существующие упаковки будут заменены новыми. 
+                  Прогресс выполнении упаковок будет сброшен.
+                </Alert>
+              )}
+              
+              {/* Показываем текущие упаковки заказа */}
+              {editingOrder?.packages && editingOrder.packages.length > 0 ? (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h5 style={{ margin: '0.5rem 0', color: '#666' }}>Текущие упаковки в заказе:</h5>
+                  <TableContainer component={Paper} style={{ marginBottom: '1rem' }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell><strong>Код упаковки</strong></TableCell>
+                          <TableCell><strong>Название</strong></TableCell>
+                          <TableCell><strong>Количество</strong></TableCell>
+                          <TableCell><strong>Прогресс</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {editingOrder.packages.map((pkg) => (
+                          <TableRow key={pkg.packageId}>
+                            <TableCell>{pkg.packageCode}</TableCell>
+                            <TableCell>{pkg.packageName}</TableCell>
+                            <TableCell>{pkg.quantity}</TableCell>
+                            <TableCell>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div 
+                                  style={{ 
+                                    width: '60px', 
+                                    height: '6px', 
+                                    backgroundColor: '#e0e0e0', 
+                                    borderRadius: '3px',
+                                    overflow: 'hidden'
+                                  }}
+                                >
+                                  <div 
+                                    style={{ 
+                                      width: `${pkg.completionPercentage}%`, 
+                                      height: '100%', 
+                                      backgroundColor: pkg.completionPercentage === 100 ? '#4caf50' : '#2196f3',
+                                      transition: 'width 0.3s ease'
+                                    }}
+                                  />
+                                </div>
+                                <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                                  {pkg.completionPercentage}%
+                                </span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </div>
+              ) : (
+                <Alert severity="info" style={{ margin: '1rem 0' }}>
+                  В заказе пока нет упаковок.
+                </Alert>
+              )}
+
+              {/* Форма для изменения упаковок */}
+              {editingOrder?.status !== OrderStatus.IN_PROGRESS && (
+                <>
+                  <h5 style={{ margin: '1rem 0 0.5rem 0', color: '#666' }}>Изменить состав упаковок:</h5>
+                  {isPackagesFetching ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+                      <CircularProgress size={24} />
+                    </div>
+                  ) : orderForm.packages.length === 0 ? (
+                    <Alert severity="warning">
+                      Нет доступных упаковок для выбора. Сначала создайте упаковки в справочнике.
+                    </Alert>
+                  ) : (
+                    <div className={styles.packagesList}>
+                      {orderForm.packages.map((pkg) => (
+                        <div key={pkg.packageId} className={styles.packageItem}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={pkg.quantity > 0}
+                                onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
+                                className={styles.checkbox}
+                              />
+                            }
+                            label={pkg.packageName}
+                            className={styles.packageLabel}
+                          />
+                          {pkg.quantity > 0 && (
+                            <TextField
+                              type="number"
+                              label="Количество"
+                              value={pkg.quantity}
+                              onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
+                              size="small"
+                              className={styles.quantityField}
+                              inputProps={{ min: 1 }}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </DialogContent>
         <DialogActions className={styles.dialogActions}>
-          <Button onClick={() => setIsEditDialogOpen(false)} className={styles.cancelButton}>
+          <Button 
+            onClick={() => setIsEditDialogOpen(false)} 
+            className={styles.cancelButton}
+            disabled={isUpdating}
+          >
             Отмена
           </Button>
-          <Button onClick={handleUpdateOrder} variant="contained" className={styles.saveButton}>
-            Сохранить
+          <Button 
+            onClick={handleUpdateOrder} 
+            variant="contained" 
+            className={styles.saveButton}
+            disabled={isUpdating}
+          >
+            {isUpdating ? <CircularProgress size={20} /> : 'Сохранить'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -459,65 +719,82 @@ const OrderCreation: React.FC = () => {
         className={styles.dialog}
       >
         <DialogTitle className={styles.dialogTitle}>
-          Состав заказа: {viewingOrder?.name}
+          Состав заказа: {viewingOrder?.orderName}
         </DialogTitle>
         <DialogContent className={styles.dialogContent}>
           <div className={styles.compositionContainer}>
+            {viewingOrder && (
+              <div style={{ marginBottom: '1rem' }}>
+                <p><strong>Номер партии:</strong> {viewingOrder.batchNumber}</p>
+                <p><strong>Статус:</strong> {getStatusLabel(viewingOrder.status)}</p>
+                <p><strong>Прогресс:</strong> {viewingOrder.completionPercentage}%</p>
+                <p><strong>Дата создания:</strong> {new Date(viewingOrder.createdAt).toLocaleDateString('ru-RU')}</p>
+                <p><strong>Требуемая дата:</strong> {new Date(viewingOrder.requiredDate).toLocaleDateString('ru-RU')}</p>
+                {viewingOrder.completedAt && (
+                  <p><strong>Дата завершения:</strong> {new Date(viewingOrder.completedAt).toLocaleDateString('ru-RU')}</p>
+                )}
+              </div>
+            )}
+            
             {viewingOrder?.packages && viewingOrder.packages.length > 0 ? (
               <TableContainer component={Paper} className={styles.compositionTable}>
                 <Table>
                   <TableHead>
                     <TableRow className={styles.tableHeader}>
-                      <TableCell className={styles.headerCell}>Упаковка</TableCell>
+                      <TableCell className={styles.headerCell}>Код упаковки</TableCell>
+                      <TableCell className={styles.headerCell}>Название упаковки</TableCell>
                       <TableCell className={styles.headerCell}>Количество</TableCell>
+                      <TableCell className={styles.headerCell}>Прогресс</TableCell>
                       <TableCell className={styles.headerCell}>Действия</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {viewingOrder.packages.map((pkg) => (
-                      <React.Fragment key={pkg.id}>
+                      <React.Fragment key={pkg.packageId}>
                         <TableRow className={styles.tableRow}>
-                          <TableCell className={styles.cell}>{pkg.name}</TableCell>
+                          <TableCell className={styles.cell}>{pkg.packageCode}</TableCell>
+                          <TableCell className={styles.cell}>{pkg.packageName}</TableCell>
                           <TableCell className={styles.cell}>{pkg.quantity}</TableCell>
+                          <TableCell className={styles.cell}>{pkg.completionPercentage}%</TableCell>
                           <TableCell className={styles.cell}>
                             <IconButton
-                              onClick={() => handlePackageExpand(pkg.id)}
+                              onClick={() => handlePackageExpand(pkg.packageId)}
                               className={styles.expandButton}
                               title="Показать детали"
                             >
-                              {expandedPackages[pkg.id] ? <ExpandLess /> : <ExpandMore />}
+                              {expandedPackages[pkg.packageId] ? <ExpandLess /> : <ExpandMore />}
                             </IconButton>
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell colSpan={3} className={styles.collapseCell}>
-                            <Collapse in={expandedPackages[pkg.id]} timeout="auto" unmountOnExit>
+                          <TableCell colSpan={5} className={styles.collapseCell}>
+                            <Collapse in={expandedPackages[pkg.packageId]} timeout="auto" unmountOnExit>
                               <div className={styles.detailsContainer}>
                                 <h5 className={styles.detailsTitle}>Детали упаковки:</h5>
-                                <TableContainer component={Paper} className={styles.detailsTable}>
-                                  <Table size="small">
-                                    <TableHead>
-                                      <TableRow className={styles.detailsTableHeader}>
-                                        <TableCell className={styles.detailsHeaderCell}>Деталь</TableCell>
-                                        <TableCell className={styles.detailsHeaderCell}>Количество на упаковку</TableCell>
-                                        <TableCell className={styles.detailsHeaderCell}>Общее количество</TableCell>
-                                        <TableCell className={styles.detailsHeaderCell}>Единица измерения</TableCell>
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {pkg.details.map((detail) => (
-                                        <TableRow key={detail.id} className={styles.detailsTableRow}>
-                                          <TableCell className={styles.detailsCell}>{detail.name}</TableCell>
-                                          <TableCell className={styles.detailsCell}>{detail.quantity}</TableCell>
-                                          <TableCell className={styles.detailsCell}>
-                                            {detail.quantity * pkg.quantity}
-                                          </TableCell>
-                                          <TableCell className={styles.detailsCell}>{detail.unit}</TableCell>
+                                {pkg.details && pkg.details.length > 0 ? (
+                                  <TableContainer component={Paper} className={styles.detailsTable}>
+                                    <Table size="small">
+                                      <TableHead>
+                                        <TableRow className={styles.detailsTableHeader}>
+                                          <TableCell className={styles.detailsHeaderCell}>Код детали</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Название детали</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Общее количество</TableCell>
                                         </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </TableContainer>
+                                      </TableHead>
+                                      <TableBody>
+                                        {pkg.details.map((detail) => (
+                                          <TableRow key={detail.partId} className={styles.detailsTableRow}>
+                                            <TableCell className={styles.detailsCell}>{detail.partCode}</TableCell>
+                                            <TableCell className={styles.detailsCell}>{detail.partName}</TableCell>
+                                            <TableCell className={styles.detailsCell}>{detail.quantity}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </TableContainer>
+                                ) : (
+                                  <p>Нет деталей в упаковке</p>
+                                )}
                               </div>
                             </Collapse>
                           </TableCell>

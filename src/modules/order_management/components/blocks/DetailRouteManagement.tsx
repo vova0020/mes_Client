@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -9,120 +9,159 @@ import {
   Paper, 
   Button,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
-  SelectChangeEvent
+  SelectChangeEvent,
+  CircularProgress,
+  Alert,
+  Snackbar,
+  Typography,
+  Box
 } from '@mui/material';
+import { 
+  useRouteManagement, 
+  useRouteManagementWebSocket,
+  PartRouteUpdatedEvent 
+} from '../../../hooks';
+import { 
+  OrderForRoutesResponseDto, 
+  PartForRouteManagementDto, 
+  RouteInfoDto 
+} from '../../../api/routeManagementApi';
 import styles from './DetailRouteManagement.module.css';
 
-// Типы данных
-interface TechRoute {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface Detail {
-  id: string;
-  article: string;
-  name: string;
-  material: string;
-  size: string;
-  quantity: number;
-  techRouteId: string;
-}
-
-interface Order {
-  id: string;
-  name: string;
-  status: 'preliminary' | 'approved';
-  details: Detail[];
-}
-
-// Моковые данные технологических маршрутов
-const mockTechRoutes: TechRoute[] = [
-  { id: '1', name: 'Маршрут А', description: 'Стандартная обработка' },
-  { id: '2', name: 'Маршрут Б', description: 'Усиленная обработка' },
-  { id: '3', name: 'Маршрут В', description: 'Быстрая обработка' },
-  { id: '4', name: 'Маршрут Г', description: 'Специальная обработка' },
-];
-
-// Моковые данные заказов с деталями
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    name: 'Заказ №001',
-    status: 'preliminary',
-    details: [
-      { id: 'd1', article: 'ART-001', name: 'Деталь А1', material: 'Сталь', size: '100x50x20', quantity: 10, techRouteId: '1' },
-      { id: 'd2', article: 'ART-002', name: 'Деталь А2', material: 'Алюминий', size: '80x40x15', quantity: 5, techRouteId: '2' },
-      { id: 'd3', article: 'ART-003', name: 'Деталь А3', material: 'Медь', size: '60x30x10', quantity: 8, techRouteId: '1' },
-    ]
-  },
-  {
-    id: '2',
-    name: 'Заказ №002',
-    status: 'approved',
-    details: [
-      { id: 'd4', article: 'ART-004', name: 'Деталь Б1', material: 'Сталь', size: '120x60x25', quantity: 15, techRouteId: '3' },
-      { id: 'd5', article: 'ART-005', name: 'Деталь Б2', material: 'Титан', size: '90x45x18', quantity: 3, techRouteId: '4' },
-    ]
-  },
-  {
-    id: '3',
-    name: 'Заказ №003',
-    status: 'preliminary',
-    details: [
-      { id: 'd6', article: 'ART-006', name: 'Деталь В1', material: 'Алюминий', size: '70x35x12', quantity: 20, techRouteId: '2' },
-      { id: 'd7', article: 'ART-007', name: 'Деталь В2', material: 'Сталь', size: '110x55x22', quantity: 7, techRouteId: '1' },
-      { id: 'd8', article: 'ART-008', name: 'Деталь В3', material: 'Медь', size: '50x25x8', quantity: 12, techRouteId: '3' },
-      { id: 'd9', article: 'ART-009', name: 'Деталь В4', material: 'Титан', size: '95x48x20', quantity: 4, techRouteId: '4' },
-    ]
-  },
-  {
-    id: '4',
-    name: 'Заказ №004',
-    status: 'approved',
-    details: [
-      { id: 'd10', article: 'ART-010', name: 'Деталь Г1', material: 'Сталь', size: '130x65x30', quantity: 6, techRouteId: '1' },
-      { id: 'd11', article: 'ART-011', name: 'Деталь Г2', material: 'Алюминий', size: '85x42x16', quantity: 9, techRouteId: '2' },
-    ]
-  },
-];
-
 const DetailRouteManagement: React.FC = () => {
-  const [orders] = useState<Order[]>(mockOrders);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [orderDetails, setOrderDetails] = useState<Detail[]>([]);
+  // Используем хук для управления маршрутами
+  const {
+    routes,
+    orders,
+    selectedOrderParts,
+    routesLoading,
+    ordersLoading,
+    partsLoading,
+    updatingRoute,
+    routesError,
+    ordersError,
+    partsError,
+    updateError,
+    fetchOrderParts,
+    updatePartRoute,
+    clearOrderParts,
+    clearErrors
+  } = useRouteManagement();
+
+  // Локальное состояние для выбранного заказа
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  
+  // Состояние для уведомлений
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
   // Обработчик выбора заказа
-  const handleOrderSelect = (order: Order) => {
-    setSelectedOrder(order);
-    setOrderDetails([...order.details]);
+  const handleOrderSelect = async (order: OrderForRoutesResponseDto) => {
+    try {
+      setSelectedOrderId(order.orderId);
+      await fetchOrderParts(order.orderId);
+    } catch (error) {
+      console.error('Ошибка при загрузке деталей заказа:', error);
+      setSnackbar({
+        open: true,
+        message: 'Ошибка при загрузке деталей заказа',
+        severity: 'error'
+      });
+    }
   };
 
   // Обработчик изменения технологического маршрута
-  const handleTechRouteChange = (detailId: string, newTechRouteId: string) => {
-    setOrderDetails(prevDetails =>
-      prevDetails.map(detail =>
-        detail.id === detailId
-          ? { ...detail, techRouteId: newTechRouteId }
-          : detail
-      )
-    );
+  const handleTechRouteChange = async (partId: number, newRouteId: number) => {
+    try {
+      const result = await updatePartRoute(partId, newRouteId);
+      setSnackbar({
+        open: true,
+        message: `Маршрут детали "${result.partCode}" успешно изменен на "${result.newRoute.routeName}"`,
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Ошибка при изменении маршрута:', error);
+      setSnackbar({
+        open: true,
+        message: 'Ошибка при изменении маршрута детали',
+        severity: 'error'
+      });
+    }
   };
 
   // Обработчик кнопки "Баланс загрузки участков"
-  const handleLoadBalance = (orderId: string) => {
-    alert(`Баланс загрузки участков для заказа ${orderId} - функция в разработке`);
+  const handleLoadBalance = (orderId: number) => {
+    setSnackbar({
+      open: true,
+      message: `Баланс загрузки участков для заказа ${orderId} - функция в разработке`,
+      severity: 'info'
+    });
   };
 
-  // Получить название технологического маршрута по ID
-  const getTechRouteName = (techRouteId: string) => {
-    const route = mockTechRoutes.find(r => r.id === techRouteId);
-    return route ? route.name : 'Неизвестный маршрут';
+  // Обработчик закрытия уведомления
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
+
+  // Обработчик WebSocket события обновления маршрута
+  const handlePartRouteUpdated = (event: PartRouteUpdatedEvent) => {
+    console.log('Получено WebSocket событие обновления маршрута:', event);
+    
+    // Показываем уведомление о том, что маршрут был изменен другим пользовател��м
+    setSnackbar({
+      open: true,
+      message: `Маршрут детали "${event.partRouteUpdate.partCode}" был изменен другим пользователем на "${event.partRouteUpdate.newRoute.routeName}"`,
+      severity: 'info'
+    });
+
+    // Если это заказ, который мы сейчас просматриваем, обновляем данные
+    if (selectedOrderId === event.orderId && selectedOrderParts) {
+      fetchOrderParts(event.orderId);
+    }
+  };
+
+  // Подключаем WebSocket для получения обновлений в реальном времени
+  useRouteManagementWebSocket(handlePartRouteUpdated, true);
+
+  // Получить статус заказа на русском языке
+  const getOrderStatusText = (status: string) => {
+    switch (status) {
+      case 'PRELIMINARY':
+        return 'Предварительный';
+      case 'APPROVED':
+        return 'Утверждено';
+      default:
+        return status;
+    }
+  };
+
+  // Очистка выбора при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      clearOrderParts();
+      clearErrors();
+    };
+  }, [clearOrderParts, clearErrors]);
+
+  // Отображение ошибок загрузки
+  if (routesError || ordersError) {
+    return (
+      <div className={styles.container}>
+        <Alert severity="error">
+          Ошибка при загрузке данных: {routesError?.message || ordersError?.message}
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -135,50 +174,71 @@ const DetailRouteManagement: React.FC = () => {
         <div className={styles.ordersPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle}>Заказы</h3>
+            {ordersLoading === 'loading' && (
+              <CircularProgress size={20} />
+            )}
           </div>
           
           <div className={styles.tableContainer}>
-            <TableContainer component={Paper} className={styles.table}>
-              <Table>
-                <TableHead>
-                  <TableRow className={styles.tableHeader}>
-                    <TableCell className={styles.headerCell}>Заказ</TableCell>
-                    <TableCell className={styles.headerCell}>Действия</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow 
-                      key={order.id} 
-                      className={`${styles.tableRow} ${selectedOrder?.id === order.id ? styles.selectedRow : ''}`}
-                      onClick={() => handleOrderSelect(order)}
-                    >
-                      <TableCell className={styles.cell}>
-                        <div className={styles.orderInfo}>
-                          <span className={styles.orderName}>{order.name}</span>
-                          <span className={`${styles.status} ${styles[order.status]}`}>
-                            {order.status === 'preliminary' ? 'Предварительный' : 'Утверждено'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className={styles.cell}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLoadBalance(order.id);
-                          }}
-                          className={styles.balanceButton}
-                        >
-                          Баланс загрузки участков
-                        </Button>
-                      </TableCell>
+            {ordersLoading === 'loading' ? (
+              <Box display="flex" justifyContent="center" p={3}>
+                <CircularProgress />
+              </Box>
+            ) : orders.length === 0 ? (
+              <Box p={3}>
+                <Typography variant="body2" color="textSecondary">
+                  Нет доступных заказов для управления маршрутами
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer component={Paper} className={styles.table}>
+                <Table>
+                  <TableHead>
+                    <TableRow className={styles.tableHeader}>
+                      <TableCell className={styles.headerCell}>Заказ</TableCell>
+                      <TableCell className={styles.headerCell}>Действия</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow 
+                        key={order.orderId} 
+                        className={`${styles.tableRow} ${selectedOrderId === order.orderId ? styles.selectedRow : ''}`}
+                        onClick={() => handleOrderSelect(order)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <TableCell className={styles.cell}>
+                          <div className={styles.orderInfo}>
+                            <span className={styles.orderName}>
+                              {order.orderName} (№{order.batchNumber})
+                            </span>
+                            <span className={`${styles.status} ${styles[order.status.toLowerCase()]}`}>
+                              {getOrderStatusText(order.status)}
+                            </span>
+                            <Typography variant="caption" color="textSecondary">
+                              Деталей: {order.totalParts}
+                            </Typography>
+                          </div>
+                        </TableCell>
+                        <TableCell className={styles.cell}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLoadBalance(order.orderId);
+                            }}
+                            className={styles.balanceButton}
+                          >
+                            Баланс загрузки участков
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </div>
         </div>
 
@@ -186,62 +246,99 @@ const DetailRouteManagement: React.FC = () => {
         <div className={styles.detailsPanel}>
           <div className={styles.panelHeader}>
             <h3 className={styles.panelTitle}>
-              {selectedOrder ? `Детали заказа: ${selectedOrder.name}` : 'Выберите заказ'}
+              {selectedOrderParts ? 
+                `Детали заказа: ${selectedOrderParts.order.orderName}` : 
+                'Выберите заказ'
+              }
             </h3>
+            {partsLoading === 'loading' && (
+              <CircularProgress size={20} />
+            )}
           </div>
 
-          {selectedOrder ? (
+          {partsError && (
+            <Alert severity="error" sx={{ m: 2 }}>
+              Ошибка при загрузке деталей: {partsError.message}
+            </Alert>
+          )}
+
+          {selectedOrderParts ? (
             <div className={styles.tableContainer}>
-              <TableContainer component={Paper} className={styles.table}>
-                <Table>
-                  <TableHead>
-                    <TableRow className={styles.tableHeader}>
-                      <TableCell className={styles.headerCell}>Артикул детали</TableCell>
-                      <TableCell className={styles.headerCell}>Название детали</TableCell>
-                      <TableCell className={styles.headerCell}>Материал</TableCell>
-                      <TableCell className={styles.headerCell}>Размер</TableCell>
-                      <TableCell className={styles.headerCell}>Количество</TableCell>
-                      <TableCell className={styles.headerCell}>Тех. маршрут</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {orderDetails.map((detail) => (
-                      <TableRow key={detail.id} className={styles.tableRow}>
-                        <TableCell className={styles.cell}>{detail.article}</TableCell>
-                        <TableCell className={styles.cell}>{detail.name}</TableCell>
-                        <TableCell className={styles.cell}>{detail.material}</TableCell>
-                        <TableCell className={styles.cell}>{detail.size}</TableCell>
-                        <TableCell className={styles.cell}>{detail.quantity}</TableCell>
-                        <TableCell className={styles.cell}>
-                          <FormControl size="small" className={styles.routeSelect}>
-                            <Select
-                              value={detail.techRouteId}
-                              onChange={(e: SelectChangeEvent) => 
-                                handleTechRouteChange(detail.id, e.target.value)
-                              }
-                              className={styles.selectInput}
-                            >
-                              {mockTechRoutes.map((route) => (
-                                <MenuItem key={route.id} value={route.id}>
-                                  {route.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </TableCell>
+              {partsLoading === 'loading' ? (
+                <Box display="flex" justifyContent="center" p={3}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <TableContainer component={Paper} className={styles.table}>
+                  <Table>
+                    <TableHead>
+                      <TableRow className={styles.tableHeader}>
+                        <TableCell className={styles.headerCell}>Код детали</TableCell>
+                        <TableCell className={styles.headerCell}>Название детали</TableCell>
+                        <TableCell className={styles.headerCell}>Материал</TableCell>
+                        <TableCell className={styles.headerCell}>Размер</TableCell>
+                        <TableCell className={styles.headerCell}>Количество</TableCell>
+                        <TableCell className={styles.headerCell}>Тех. маршрут</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {selectedOrderParts.parts.map((part) => (
+                        <TableRow key={part.partId} className={styles.tableRow}>
+                          <TableCell className={styles.cell}>{part.partCode}</TableCell>
+                          <TableCell className={styles.cell}>{part.partName}</TableCell>
+                          <TableCell className={styles.cell}>{part.materialName}</TableCell>
+                          <TableCell className={styles.cell}>{part.size}</TableCell>
+                          <TableCell className={styles.cell}>{part.totalQuantity}</TableCell>
+                          <TableCell className={styles.cell}>
+                            <FormControl size="small" className={styles.routeSelect}>
+                              <Select
+                                value={part.currentRoute.routeId}
+                                onChange={(e: SelectChangeEvent<number>) => 
+                                  handleTechRouteChange(part.partId, Number(e.target.value))
+                                }
+                                className={styles.selectInput}
+                                disabled={updatingRoute}
+                              >
+                                {selectedOrderParts.availableRoutes.map((route) => (
+                                  <MenuItem key={route.routeId} value={route.routeId}>
+                                    {route.routeName}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </div>
           ) : (
             <div className={styles.emptyState}>
-              <p>Выберите заказ из списка слева для просмотра деталей</p>
+              <Typography variant="body1" color="textSecondary">
+                Выберите заказ из списка слева для просмотра деталей
+              </Typography>
             </div>
           )}
         </div>
       </div>
+
+      {/* Уведомления */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

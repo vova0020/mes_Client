@@ -268,13 +268,13 @@ const OrderPlanning: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow className={styles.tableHeader}>
-                <TableCell className={styles.headerCell}>Зак��з</TableCell>
+                <TableCell className={styles.headerCell}>Заказ</TableCell>
                 <TableCell className={styles.headerCell}>Требуемая дата готовности</TableCell>
                 <TableCell className={styles.headerCell}>Действия</TableCell>
                 <TableCell className={styles.headerCell}>Текущий статус</TableCell>
                 <TableCell className={styles.headerCell}>Разрешить запуск</TableCell>
                 <TableCell className={styles.headerCell}>Основной поток</TableCell>
-                <TableCell className={styles.headerCell}>Дата завершения второстепенного потока</TableCell>
+                {/* <TableCell className={styles.headerCell}>Дата завершения второстепенного потока</TableCell> */}
                 <TableCell className={styles.headerCell}>Дата запуска</TableCell>
                 <TableCell className={styles.headerCell}>Дата выпуска</TableCell>
               </TableRow>
@@ -353,7 +353,7 @@ const OrderPlanning: React.FC = () => {
                   </TableCell>
 
                   {/* Дата завершения второстепенного потока */}
-                  <TableCell className={styles.cell}>
+                  {/* <TableCell className={styles.cell}>
                     <TextField
                       type="date"
                       value={order.secondaryFlowCompletionDate}
@@ -362,7 +362,7 @@ const OrderPlanning: React.FC = () => {
                       className={styles.dateField}
                       InputLabelProps={{ shrink: true }}
                     />
-                  </TableCell>
+                  </TableCell> */}
 
                   {/* Дата запуска */}
                   <TableCell className={styles.cell}>
