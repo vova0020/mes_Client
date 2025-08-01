@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -19,45 +19,29 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Collapse
+  Collapse,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { Visibility, MonetizationOn, PlayArrow, ExpandMore, ExpandLess } from '@mui/icons-material';
 import styles from './OrderPlanning.module.css';
+import { useOrderManagement } from '../../../hooks';
+import { 
+  transformOrderToPlanning, 
+  transformOrderDetailsToPlanning,
+  transformStatusToApi,
+  getStatusText,
+  canApproveForLaunch,
+  OrderPlanningData,
+  Package,
+  Detail
+} from '../../utils/dataTransformers';
 
 // Типы данных
 interface ProductionFlow {
   id: string;
   name: string;
   description: string;
-}
-
-interface Detail {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-}
-
-interface Package {
-  id: string;
-  name: string;
-  quantity: number;
-  details: Detail[];
-}
-
-interface OrderPlanningData {
-  id: string;
-  name: string;
-  requiredDate: string;
-  status: 'preliminary' | 'approved' | 'allowedToStart' | 'inProgress' | 'completed';
-  mainFlowId: string;
-  secondaryFlowCompletionDate: string;
-  startDate: string;
-  plannedStartDate: string;
-  actualStartDate: string;
-  plannedReleaseDate: string;
-  actualReleaseDate: string;
-  packages: Package[];
 }
 
 // Моковые данные производственных потоков
@@ -179,51 +163,76 @@ const mockOrdersData: OrderPlanningData[] = [
 ];
 
 const OrderPlanning: React.FC = () => {
-  const [orders, setOrders] = useState<OrderPlanningData[]>(mockOrdersData);
+  // Используем хук для управления заказами
+  const {
+    orders: apiOrders,
+    orderDetails,
+    selectedOrderId,
+    loading,
+    error,
+    setSelectedOrderId,
+    approveOrderForLaunch,
+    refetchOrders,
+  } = useOrderManagement();
+
+  // Локальное состояние для UI
   const [isCompositionDialogOpen, setIsCompositionDialogOpen] = useState(false);
-  const [viewingOrder, setViewingOrder] = useState<OrderPlanningData | null>(null);
   const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
+  const [localOrders, setLocalOrders] = useState<OrderPlanningData[]>([]);
+
+  // Преобразуем данные API в формат компонента
+  useEffect(() => {
+    if (apiOrders) {
+      const transformedOrders = apiOrders.map(transformOrderToPlanning);
+      setLocalOrders(transformedOrders);
+    }
+  }, [apiOrders]);
 
   // Обработчик изменения основного потока
   const handleMainFlowChange = (orderId: string, newFlowId: string) => {
-    setOrders(prevOrders =>
+    setLocalOrders(prevOrders =>
       prevOrders.map(order =>
         order.id === orderId
           ? { ...order, mainFlowId: newFlowId }
           : order
       )
     );
+    // TODO: Здесь можно добавить API вызов для сохранения изменений
   };
 
   // Обработчик изменения даты
   const handleDateChange = (orderId: string, field: keyof OrderPlanningData, value: string) => {
-    setOrders(prevOrders =>
+    setLocalOrders(prevOrders =>
       prevOrders.map(order =>
         order.id === orderId
           ? { ...order, [field]: value }
           : order
       )
     );
+    // TODO: Здесь можно добавить API вызов для сохранения изменений
   };
 
   // Обработчик разрешения запуска
-  const handleAllowStart = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId && order.status === 'approved'
-          ? { ...order, status: 'allowedToStart' }
-          : order
-      )
-    );
+  const handleAllowStart = async (orderId: string) => {
+    try {
+      const result = await approveOrderForLaunch(parseInt(orderId));
+      if (result) {
+        // Данные автоматически обновятся через хук
+        console.log('Заказ разрешен к запуску:', result);
+      }
+    } catch (error) {
+      console.error('Ошибка при разрешении запуска:', error);
+    }
   };
 
   // Обработчики для кнопок действий
-  const handleOrderComposition = (orderId: string) => {
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      setViewingOrder(order);
+  const handleOrderComposition = async (orderId: string) => {
+    try {
+      setSelectedOrderId(parseInt(orderId));
       setExpandedPackages({});
       setIsCompositionDialogOpen(true);
+    } catch (error) {
+      console.error('Ошибка при загрузке состава заказа:', error);
     }
   };
 
@@ -244,17 +253,13 @@ const OrderPlanning: React.FC = () => {
     return flow ? flow.name : 'Неизвестный поток';
   };
 
-  // Получить текст статуса
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'preliminary': return 'Предварительный';
-      case 'approved': return 'Утверждено';
-      case 'allowedToStart': return 'Разрешено к запуску';
-      case 'inProgress': return 'В работе';
-      case 'completed': return 'Завершен';
-      default: return status;
-    }
+  // Получить данные для про��мотра заказа
+  const getViewingOrderData = (): OrderPlanningData | null => {
+    if (!orderDetails) return null;
+    return transformOrderDetailsToPlanning(orderDetails);
   };
+
+  const viewingOrder = getViewingOrderData();
 
   return (
     <div className={styles.container}>
@@ -273,14 +278,34 @@ const OrderPlanning: React.FC = () => {
                 <TableCell className={styles.headerCell}>Действия</TableCell>
                 <TableCell className={styles.headerCell}>Текущий статус</TableCell>
                 <TableCell className={styles.headerCell}>Разрешить запуск</TableCell>
-                <TableCell className={styles.headerCell}>Основной поток</TableCell>
+                {/* <TableCell className={styles.headerCell}>Основной поток</TableCell> */}
                 {/* <TableCell className={styles.headerCell}>Дата завершения второстепенного потока</TableCell> */}
                 <TableCell className={styles.headerCell}>Дата запуска</TableCell>
                 <TableCell className={styles.headerCell}>Дата выпуска</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders.map((order) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>
+                    <CircularProgress />
+                    <div style={{ marginTop: '10px' }}>Загрузка заказов...</div>
+                  </TableCell>
+                </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>
+                    <Alert severity="error">{error}</Alert>
+                  </TableCell>
+                </TableRow>
+              ) : localOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>
+                    Нет заказов для отображения
+                  </TableCell>
+                </TableRow>
+              ) : (
+                localOrders.map((order) => (
                 <TableRow key={order.id} className={styles.tableRow}>
                   {/* Заказ */}
                   <TableCell className={styles.cell}>
@@ -334,7 +359,7 @@ const OrderPlanning: React.FC = () => {
                   </TableCell>
 
                   {/* Основной поток */}
-                  <TableCell className={styles.cell}>
+                  {/* <TableCell className={styles.cell}>
                     <FormControl size="small" className={styles.flowSelect}>
                       <Select
                         value={order.mainFlowId}
@@ -350,7 +375,7 @@ const OrderPlanning: React.FC = () => {
                         ))}
                       </Select>
                     </FormControl>
-                  </TableCell>
+                  </TableCell> */}
 
                   {/* Дата завершения второстепенного потока */}
                   {/* <TableCell className={styles.cell}>
@@ -420,7 +445,8 @@ const OrderPlanning: React.FC = () => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>

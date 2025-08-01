@@ -76,6 +76,7 @@ export interface ProductionPallet {
 export interface PalletsResponseDto {
   pallets: ProductionPallet[];
   total: number;
+  unallocatedQuantity?: number; // Количество нераспределенных деталей
 }
 
 // Интерфейс для ответа API с буферными ячейками
@@ -108,6 +109,33 @@ export interface MoveToBufferRequest {
 export interface OperationResponse {
   message: string;
   operation: OperationDto;
+}
+
+// Интерфейс для запроса создания поддона
+export interface CreatePalletRequest {
+  partId: number;
+  quantity: number;
+  palletName?: string;
+}
+
+// Интерфейс для ответа создания поддона
+export interface CreatePalletResponse {
+  message: string;
+  pallet: {
+    id: number;
+    name: string;
+    partId: number;
+    quantity: number;
+    createdAt: string;
+    part: {
+      id: number;
+      code: string;
+      name: string;
+      material: string;
+      totalQuantity: number;
+      availableQuantity: number;
+    };
+  };
 }
 
 const getSegmentIdFromStorage = (): number | null => {
@@ -179,9 +207,9 @@ export const getProcessStepText = (operation?: OperationDto | null): string => {
 };
 
 // Функция для получения производственных поддонов по ID детали
-export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<ProductionPallet[]> => {
+export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<{ pallets: ProductionPallet[], unallocatedQuantity: number }> => {
   if (detailId === null) {
-    return [];
+    return { pallets: [], unallocatedQuantity: 0 };
   }
 
   const stageid = getSegmentIdFromStorage();
@@ -200,7 +228,10 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
       return pallet;
     });
 
-    return processedPallets;
+    return {
+      pallets: processedPallets,
+      unallocatedQuantity: response.data.unallocatedQuantity || 0
+    };
   } catch (error) {
     console.error('Ошибка при получении поддонов детали:', error);
     throw error;
@@ -402,5 +433,31 @@ export const getCurrentOperation = async (palletId: number): Promise<OperationDt
   } catch (error) {
     console.error('Ошибка при получении текущей операции поддона:', error);
     return null;
+  }
+};
+
+// Новая функция: создание поддона по ID детали
+export const createPalletByPart = async (
+  partId: number,
+  quantity: number,
+  palletName?: string
+): Promise<CreatePalletResponse> => {
+  try {
+    const payload: CreatePalletRequest = {
+      partId,
+      quantity,
+      palletName
+    };
+
+    const response = await axios.post<CreatePalletResponse>(
+      `${API_URL}/master/create-pallet-by-part`,
+      payload
+    );
+
+    console.log('Поддон успешно создан:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при создании поддона:', error);
+    throw error;
   }
 };

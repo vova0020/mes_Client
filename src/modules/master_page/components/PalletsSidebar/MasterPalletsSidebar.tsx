@@ -22,11 +22,13 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     machines,
     loading,
     error,
+    unallocatedQuantity,
     fetchPallets,
     updateMachine,
     updateBufferCell,
     loadSegmentResources,
-    refreshPalletData
+    refreshPalletData,
+    createPallet
   } = useProductionPallets(null);
 
   const [showDetails, setShowDetails] = useState<boolean>(false);
@@ -35,6 +37,12 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   const [machinesLoading, setMachinesLoading] = useState<boolean>(false);
   const [processingPalletId, setProcessingPalletId] = useState<number | null>(null);
   const [processStepIdError, setProcessStepIdError] = useState<string | null>(null);
+  
+  // Состояния для модального окна создания поддона
+  const [showCreatePalletModal, setShowCreatePalletModal] = useState<boolean>(false);
+  const [createPalletQuantity, setCreatePalletQuantity] = useState<string>('');
+  const [createPalletName, setCreatePalletName] = useState<string>('');
+  const [isCreatingPallet, setIsCreatingPallet] = useState<boolean>(false);
 
   // Получаем значение из localStorage
   const getdefaultSegmentId = (): number | null => {
@@ -245,12 +253,67 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     try {
       setProcessingPalletId(palletId);
       await refreshPalletData(palletId);
-      console.log(`Данные поддона ${palletId} обновлены`);
+      console.log(`Данные поддона ${palletId} обн��влены`);
     } catch (err) {
       setErrorMessage('Не удалось обновить данные поддона');
       console.error('Ошибка при обновлении данных поддона:', err);
     } finally {
       setProcessingPalletId(null);
+    }
+  };
+
+  // Обработчик открытия модального окна создания поддона
+  const handleOpenCreatePalletModal = () => {
+    setShowCreatePalletModal(true);
+    setCreatePalletQuantity('');
+    setCreatePalletName('');
+    setErrorMessage(null);
+  };
+
+  // Обработчик закрытия модального окна создания поддона
+  const handleCloseCreatePalletModal = () => {
+    setShowCreatePalletModal(false);
+    setCreatePalletQuantity('');
+    setCreatePalletName('');
+  };
+
+  // Обработчик создания поддона
+  const handleCreatePallet = async () => {
+    if (!detailId) {
+      setErrorMessage('Не выбрана деталь для создания поддона');
+      return;
+    }
+
+    const quantity = parseInt(createPalletQuantity);
+    if (isNaN(quantity) || quantity <= 0) {
+      setErrorMessage('Введите корректное количество деталей');
+      return;
+    }
+
+    if (quantity > unallocatedQuantity) {
+      setErrorMessage(`Количество не может превышать доступное количество (${unallocatedQuantity})`);
+      return;
+    }
+
+    try {
+      setIsCreatingPallet(true);
+      setErrorMessage(null);
+
+      await createPallet(
+        detailId,
+        quantity,
+        createPalletName.trim() || undefined
+      );
+
+      // Закрываем модальное окно после успешного создания
+      handleCloseCreatePalletModal();
+      
+      console.log('Поддон успешно создан');
+    } catch (err) {
+      setErrorMessage('Не удалось создать поддон');
+      console.error('Ошибка при создании поддона:', err);
+    } finally {
+      setIsCreatingPallet(false);
     }
   };
 
@@ -537,6 +600,15 @@ return (
           <span className={styles.propertyLabel}>Размер:</span>
           <span className={styles.propertyValue}>{detailInfo.size}</span>
         </div>
+        {/* Отображаем информацию о нераспределенных деталях */}
+        {!loading && detailId && (
+          <div className={styles.detailProperty}>
+            <span className={styles.propertyLabel}>Нераспределено:</span>
+            <span className={`${styles.propertyValue} ${unallocatedQuantity > 0 ? styles.unallocatedQuantity : ''}`}>
+              {unallocatedQuantity} шт.
+            </span>
+          </div>
+        )}
       </div>
     </div>
 
@@ -578,7 +650,21 @@ return (
           <div className={styles.emptyMessage}>
             <h3>Нет доступных поддонов</h3>
             {detailId ? (
-              <p>Для выбранной детали не найдено ни одного поддона.</p>
+              <>
+                <p>Для выбранной детали не найдено ни одного поддона.</p>
+                {unallocatedQuantity > 0 && (
+                  <>
+                    <p>Доступно для распределения: <strong>{unallocatedQuantity} шт.</strong></p>
+                    <button 
+                      className={styles.createPalletButton}
+                      onClick={handleOpenCreatePalletModal}
+                      disabled={isCreatingPallet}
+                    >
+                      {isCreatingPallet ? 'Создание...' : 'Создать поддон'}
+                    </button>
+                  </>
+                )}
+              </>
             ) : (
               <p>Выберите деталь для отображения её поддонов.</p>
             )}
@@ -586,6 +672,22 @@ return (
         </div>
       ) : (
         <div className={`${styles.tableContainer} ${showDetails ? styles.showDetails : styles.hideDetails}`}>
+          {/* Кнопка создания поддона, если есть нераспределенные детали */}
+          {unallocatedQuantity > 0 && (
+            <div className={styles.createPalletSection}>
+              <div className={styles.unallocatedInfo}>
+                Нераспределено: <strong>{unallocatedQuantity} шт.</strong>
+              </div>
+              <button 
+                className={styles.createPalletButtonSmall}
+                onClick={handleOpenCreatePalletModal}
+                disabled={isCreatingPallet}
+              >
+                {isCreatingPallet ? 'Созда��ие...' : '+ Создать поддон'}
+              </button>
+            </div>
+          )}
+          
           <div className={styles.tableScrollContainer}>
             <table className={styles.palletsTable}>
               <thead>
@@ -637,6 +739,77 @@ return (
         </div>
       )}
     </div>
+
+    {/* Модальное окно создания поддона */}
+    {showCreatePalletModal && (
+      <div className={styles.modalOverlay} onClick={handleCloseCreatePalletModal}>
+        <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h3>Создать новый поддон</h3>
+            <button 
+              className={styles.modalCloseButton}
+              onClick={handleCloseCreatePalletModal}
+              disabled={isCreatingPallet}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className={styles.modalBody}>
+            <div className={styles.formGroup}>
+              <label htmlFor="palletQuantity">Количество деталей *</label>
+              <input
+                id="palletQuantity"
+                type="number"
+                min="1"
+                max={unallocatedQuantity}
+                value={createPalletQuantity}
+                onChange={(e) => setCreatePalletQuantity(e.target.value)}
+                placeholder={`Максимум: ${unallocatedQuantity}`}
+                disabled={isCreatingPallet}
+                className={styles.formInput}
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="palletName">Название поддона (опционально)</label>
+              <input
+                id="palletName"
+                type="text"
+                value={createPalletName}
+                onChange={(e) => setCreatePalletName(e.target.value)}
+                placeholder="Автоматически, если не указано"
+                disabled={isCreatingPallet}
+                className={styles.formInput}
+              />
+            </div>
+
+            {errorMessage && (
+              <div className={styles.errorMessage}>
+                {errorMessage}
+              </div>
+            )}
+          </div>
+          
+          <div className={styles.modalFooter}>
+            <button 
+              className={styles.cancelButton}
+              onClick={handleCloseCreatePalletModal}
+              disabled={isCreatingPallet}
+            >
+              Отмена
+            </button>
+            <button 
+              className={styles.createButton}
+              onClick={handleCreatePallet}
+              disabled={isCreatingPallet || !createPalletQuantity}
+            >
+              {isCreatingPallet ? 'Создание...' : 'Создать'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 );
 

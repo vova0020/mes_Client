@@ -1,4 +1,4 @@
-
+  
 /* Основной контейнер боковой панели с градиентным фоном и тенями */
 .sidebar {
   position: fixed;
@@ -33,18 +33,27 @@
     0 0 0 1000px rgba(0, 0, 0, 0.5); /* Затемнение фона */
 }
 
-/* Заголовок панели */
+/* Заголовок панели - обновленный стиль */
 .sidebarHeader {
-  padding: 16px 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #374051, #2a303c);
+  border-radius: 12px 12px 0 0; /* Закругление только верхних углов */
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.headerTop {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(to bottom, #3f4a5f, #343e4f);
-  border-radius: 12px 12px 0 0; /* Закругление только верхних углов */
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
-.sidebarHeader h2 {
+.headerTop h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
@@ -52,6 +61,94 @@
   text-transform: uppercase;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   letter-spacing: 1.2px;
+}
+
+.detailInfo {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.detailProperty {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(52, 152, 219, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-left: 2px solid #3498db;
+  animation: fadeIn 0.3s forwards;
+}
+
+.propertyLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 6px;
+}
+
+.propertyValue {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  background: rgba(52, 152, 219, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Анимация появления для элементов заголовка */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detailProperty:nth-child(1) { animation-delay: 0.05s; }
+.detailProperty:nth-child(2) { animation-delay: 0.1s; }
+.detailProperty:nth-child(3) { animation-delay: 0.15s; }
+.detailProperty:nth-child(4) { animation-delay: 0.2s; }
+
+/* Добавляем иконки для свойств */
+.detailProperty svg {
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+/* Стиль для отображения нераспределенных деталей в заг��ловке */
+.unallocatedQuantity {
+  color: #e67e22 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    color: #e67e22;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  50% { 
+    color: #f39c12;
+    text-shadow: 0 0 8px rgba(243, 156, 18, 0.6);
+  }
 }
 
 .closeButton {
@@ -643,14 +740,34 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 30px;
+  padding: 40px 30px;
   height: 100%;
-  min-height: 200px;
-  background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  border-radius: 10px;
+  min-height: 300px;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-radius: 16px;
   box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.stateContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #74b9ff, #0984e3, #00cec9, #00b894);
+  background-size: 200% 100%;
+  animation: gradientShift 3s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* Стили для состояния загрузки */
@@ -747,28 +864,61 @@
 
 /* Стили для пустого списка */
 .emptyIcon {
-  color: #bdc3c7;
-  font-size: 40px;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.1));
+  color: #74b9ff;
+  font-size: 64px;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 4px 12px rgba(116, 185, 255, 0.3));
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { 
+    transform: translateY(0px);
+  }
+  50% { 
+    transform: translateY(-8px);
+  }
 }
 
 .emptyMessage {
   text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .emptyMessage h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 8px 0;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d3436;
+  margin: 0 0 16px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
 }
 
 .emptyMessage p {
-  font-size: 13px;
-  color: #666;
-  margin: 0;
+  font-size: 16px;
+  color: #636e72;
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.emptyMessage p:last-child {
+  margin-bottom: 0;
+}
+
+.emptyMessage strong {
+  color: #e17055;
+  font-weight: 700;
+  background: linear-gradient(135deg, #e17055, #d63031);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Стили для компонента статуса операции */
@@ -808,6 +958,13 @@
 
 /* Стили для различных статусов операций */
 
+/* Статус 'Задание прошло предыдущий этап но еще не обрабатывалось' */
+.statusPassedPreviousStage {
+  background: linear-gradient(to bottom, #e1b035, #b9b629);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #9fa41c;
+}
 
 /* Статус 'Задание на станке но еще не обрабатывалось' */
 .statusOnMachine {
@@ -1313,4 +1470,983 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* Стили для информации о нераспределенных деталях */
+.unallocatedInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.unallocatedInfo span {
+  color: #856404;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.unallocatedInfo strong {
+  color: #d68910;
+  font-weight: 700;
+}
+
+/* Стили для кнопки создания поддона */
+.createPalletButton {
+  background: linear-gradient(135deg, #00b894, #00a085);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 6px 20px rgba(0, 184, 148, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.createPalletButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.createPalletButton:hover {
+  background: linear-gradient(135deg, #00cec9, #00b894);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 10px 30px rgba(0, 184, 148, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.createPalletButton:hover::before {
+  left: 100%;
+}
+
+.createPalletButton:active {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 
+    0 4px 15px rgba(0, 184, 148, 0.4),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.createPalletButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  transform: none;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: disabledPulse 2s ease-in-out infinite;
+}
+
+@keyframes disabledPulse {
+  0%, 100% { 
+    opacity: 0.6;
+  }
+  50% { 
+    opacity: 0.8;
+  }
+}
+
+/* Стили для модал��ного окна */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modalContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 12px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(224, 224, 224, 0.8);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(224, 224, 224, 0.8);
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.modalCloseButton:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  transform: scale(1.1);
+}
+
+.modalForm {
+  padding: 20px;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  font-size: 14px;
+  color: #333;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.formGroup input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+}
+
+.formGroup small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.errorMessage {
+  background: linear-gradient(to bottom, #fff0f0, #ffebeb);
+  border: 1px solid #ffcdd2;
+  color: #d32f2f;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.cancelButton {
+  background: linear-gradient(to bottom, #6c757d, #5a6268);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #495057;
+}
+
+.cancelButton:hover {
+  background: linear-gradient(to bottom, #78848e, #6c757d);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.cancelButton:active {
+  background: linear-gradient(to bottom, #5a6268, #495057);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(to bottom, #5a6268, #495057);
+  color: white;
+  border-left: 3px solid #495057;
+  transform: none;
+  box-shadow: none;
+}
+
+.submitButton {
+  background: linear-gradient(to bottom, #28a745, #218838);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #1e7e34;
+}
+
+.submitButton:hover {
+  background: linear-gradient(to bottom, #34ce57, #28a745);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.submitButton:active {
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  color: white;
+  border-left: 3px solid #1e7e34;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Стили для уведомлений об успехе */
+.successNotification {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  color: #155724;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+  animation: slideInDown 0.3s ease;
+}
+
+.nextStepInfo {
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #cce5ff, #b3d9ff);
+  border: 1px solid #007bff;
+  border-radius: 8px;
+  color: #004085;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+  animation: slideInDown 0.3s ease;
+}
+
+/* Анимации для модального окна */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптивные стили для модального окна */
+@media screen and (max-width: 768px) {
+  .modalContent {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .modalForm {
+    padding: 16px;
+  }
+  
+  .modalActions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .submitButton {
+    width: 100%;
+    padding: 12px 20px;
+  }
+  
+  .unallocatedInfo {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .createPalletButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Стили для компонента завершенной детали */
+.completedForDetail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Стили для следующего этапа */
+.nextStep {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  margin-top: 2px;
+  padding: 2px 6px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+/* Стили для секции создания поддона в таблице */
+.createPalletSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #e8f5e8, #d4edda);
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+}
+
+.createPalletSection .unallocatedInfo {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  color: #155724;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.createPalletButtonSmall {
+  background: linear-gradient(to bottom, #28a745, #218838);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #1e7e34;
+}
+
+.createPalletButtonSmall:hover {
+  background: linear-gradient(to bottom, #34ce57, #28a745);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.createPalletButtonSmall:active {
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.createPalletButtonSmall:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  color: white;
+  border-left: 3px solid #1e7e34;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Стили для модального окна - дополнительные элементы */
+.modalBody {
+  padding: 20px;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(224, 224, 224, 0.8);
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+}
+
+.formInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  font-size: 14px;
+  color: #333;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.formInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+}
+
+.createButton {
+  background: linear-gradient(to bottom, #28a745, #218838);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #1e7e34;
+}
+
+.createButton:hover {
+  background: linear-gradient(to bottom, #34ce57, #28a745);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.createButton:active {
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.createButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  color: white;
+  border-left: 3px solid #1e7e34;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Дополнительные статусы для мастера */
+.statusPassedPreviousStage {
+  background: linear-gradient(to bottom, #17a2b8, #138496);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #0c5460;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ПОДДОНА (КАК У МАСТЕРА) ===== */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeInOverlay 0.3s ease-out;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.modalCloseButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.modalCloseButton:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modalCloseButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modalBody {
+  padding: 28px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+}
+
+.formGroup {
+  margin-bottom: 24px;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.formInput {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2c3e50;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+}
+
+.formInput:disabled {
+  background: linear-gradient(145deg, #f5f6fa, #e9ecef);
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: #dee2e6;
+}
+
+.formInput::placeholder {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+/* Стили для сообщения об ошибке в модальном окне */
+.modalBody .errorMessage {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #e53935;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 16px;
+  box-shadow: 
+    0 2px 8px rgba(229, 57, 53, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: shakeError 0.5s ease-in-out;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px;
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 10px rgba(127, 140, 141, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.cancelButton:hover {
+  background: linear-gradient(135deg, #a6b5b6, #95a5a6);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(127, 140, 141, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(127, 140, 141, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.createButton {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 10px rgba(46, 204, 113, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.createButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.createButton:hover {
+  background: linear-gradient(135deg, #58d68d, #2ecc71);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(46, 204, 113, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.createButton:hover::before {
+  left: 100%;
+}
+
+.createButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(46, 204, 113, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createButton:disabled {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Адаптивные стили для новых элементов */
+@media screen and (max-width: 768px) {
+  .createPalletSection {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .createPalletButtonSmall {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .modalContent {
+    width: 95%;
+    margin: 20px;
+    border-radius: 12px;
+  }
+  
+  .modalHeader {
+    padding: 20px 24px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 18px;
+  }
+  
+  .modalBody {
+    padding: 24px;
+  }
+  
+  .modalFooter {
+    padding: 16px 24px;
+    flex-direction: column-reverse;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .createPalletSection {
+    padding: 8px 12px;
+  }
+  
+  .createPalletSection .unallocatedInfo {
+    font-size: 12px;
+  }
+  
+  .createPalletButtonSmall {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .modalContent {
+    width: 98%;
+    margin: 10px;
+    border-radius: 8px;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 20px;
+  }
+  
+  .modalFooter {
+    padding: 16px 20px;
+  }
+  
+  .formInput {
+    padding: 12px 14px;
+    font-size: 16px; /* Предотвращает зум на iOS */
+  }
 }

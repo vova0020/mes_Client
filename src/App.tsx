@@ -19,36 +19,39 @@ function App() {
       <div className="App">
         <Routes>
           {/* Публичный маршрут для авторизации */}
-          <Route path="/" element={<OrderManagementBlok />} />
-          {/* Публичный маршрут для авторизации */}
-          {/* <Route path="/login" element={<AuthPage />} /> */}
+          <Route path="/login" element={<AuthPage />} />
+          
+          {/* Защищенный маршрут для управления заказами */}
+          <Route element={<ProtectedRoute requiredRoles={["admin", "management", "technologist"]} />}>
+            <Route path="/order-management" element={<OrderManagementBlok />} />
+          </Route>
           
           {/* Защищенные маршруты для операторов workplace БЕЗ финальных этапов - ОБНОВЛЕНО */}
-          {/* <Route element={<ProtectedRoute requiredRole="workplace" excludeFinalStage={true} />}>
+          <Route element={<ProtectedRoute requiredRole="workplace" excludeFinalStage={true} />}>
             <Route path="/machine" element={<MachinePage />} />
-          </Route> */}
+          </Route>
           
           {/* Маршрут для workplace с noSmenTask */}
-          {/* <Route element={<ProtectedRoute requiredRole="workplace" requireNoSmenTask={true} />}>
+          <Route element={<ProtectedRoute requiredRole="workplace" requireNoSmenTask={true} />}>
             <Route path="/nosmenmachine" element={<MesPage />} />
-          </Route> */}
+          </Route>
           
           {/* Маршрут для роли nosmen */}
-          {/* <Route element={<ProtectedRoute requiredRole="nosmen" />}>
+          <Route element={<ProtectedRoute requiredRole="nosmen" />}>
             <Route path="/nosmenmachine" element={<MesPage />} />
           </Route>
            
            <Route element={<ProtectedRoute requiredRole="admin" />}>
             <Route path="/settings" element={<SettingsPage />} />
-          </Route>  */}
+          </Route> 
           
           {/* Защищенные маршруты для обычных мастеров (без финальных этапов) и администраторов */}
-           {/* <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} excludeFinalStage={true} />}>
+           <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} excludeFinalStage={true} />}>
             <Route path="/master" element={<MasterPage />} />
-          </Route>  */}
+          </Route> 
           
           {/* Маршрут для мастеров упаковки (с финальными этапами) */}
-           {/* <Route element={<ProtectedRoute requiredRole="master" requireFinalStage={true} />}>
+           <Route element={<ProtectedRoute requiredRole="master" requireFinalStage={true} />}>
             <Route path="/ypak" element={<MasterYpakPage />} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="workplace" requireFinalStage={true} />}>  
@@ -56,17 +59,17 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute requiredRole="complect" />}>
             <Route path="/complect" element={<ComplectPage />} />
-          </Route>  */}
+          </Route> 
           
 
 
           
           {/* Главная страница - редирект на нужный маршрут */}
-          {/* <Route path="/" element={<Navigate to="/login" replace />} /> */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
           {/* <Route path="/" element={<Navigate to="/login" replace />} /> */}
           
           {/* Обработка неизвестных маршрутов */}
-           {/* <Route path="*" element={<Navigate to="/login" replace />} />  */}
+           <Route path="*" element={<Navigate to="/login" replace />} /> 
         </Routes>
       </div>
 

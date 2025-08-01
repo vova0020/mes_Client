@@ -41,7 +41,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
         setActiveDetailId(null);
         // Закрываем сайдбар при смене заказа
         setIsSidebarOpen(false);
-      }, 300); // Задержка должна быть равна или меньше времени ан��мации исчезновения
+      }, 300); // Задержка должна быть равна или меньше времени анимации исчезновения
       
       return () => clearTimeout(timer);
     } else {
@@ -254,6 +254,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
       
       {/* Боковая панель поддонов */}
       <PalletsSidebar 
+        detailInfo={activeDetailId ? details.find(d => d.id === activeDetailId) : null}
         detailId={activeDetailId}
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}

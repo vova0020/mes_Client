@@ -116,6 +116,7 @@ export enum TaskStatus {
 export interface PalletsResponseDto {
   pallets: ProductionPallet[];
   total: number;
+  unallocatedQuantity?: number; // Количество нераспределенных деталей
 }
 
 // Интерфейс для ответа API с буферными ячейками
@@ -212,6 +213,40 @@ export interface TakeToWorkResponseDto {
       name: string;
     };
   };
+}
+
+// Интерфейс для создания поддона
+export interface CreatePalletRequestDto {
+  partId: number;
+  quantity: number;
+  palletName?: string;
+}
+
+// Интерфейс для ответа API при создании поддона
+export interface CreatePalletResponseDto {
+  message: string;
+  pallet: {
+    id: number;
+    name: string;
+    partId: number;
+    quantity: number;
+    createdAt: string;
+    part: {
+      id: number;
+      code: string;
+      name: string;
+      material: string;
+      totalQuantity: number;
+      availableQuantity: number;
+    };
+  };
+}
+
+// Интерфейс для получения поддонов с количеством нераспределенных деталей
+export interface PalletsWithUnallocatedResponseDto {
+  pallets: ProductionPallet[];
+  total: number;
+  unallocatedQuantity: number;
 }
 
 // Функция для получения данных пользователя из localStorage
@@ -480,10 +515,48 @@ export const getPalletRouteSheet = async (palletId: number): Promise<Blob> => {
 export const getCurrentOperation = async (palletId: number): Promise<OperationDto | null> => {
   try {
     const response = await axios.get<{operation: OperationDto | null}>(`${API_URL}/pallets/${palletId}/current-operation`);
-    console.log(`Получена операция для поддона ${palletId}:`, response.data);
+    console.log(`Получе��а операция для поддона ${palletId}:`, response.data);
     return response.data.operation;
   } catch (error) {
     console.error('Ошибка при получении текущей операции поддона:', error);
     return null;
+  }
+};
+
+// Функция для получения поддонов с количеством нераспределенных деталей
+export const fetchAvailablePalletsWithUnallocated = async (detailId: number): Promise<PalletsWithUnallocatedResponseDto> => {
+  try {
+    const stageid = getSegmentIdFromStorage();
+    const response = await axios.get<PalletsWithUnallocatedResponseDto>(`${API_URL}/machines-no-smen/available-pallets/${detailId}/${stageid}`);
+    console.log('Ответ API fetchAvailablePalletsWithUnallocated:', response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при получении поддонов с нераспределенными деталями:', error);
+    throw error;
+  }
+};
+
+// Функция для создания поддона (новый API)
+export const createPallet = async (request: CreatePalletRequestDto): Promise<CreatePalletResponseDto> => {
+  try {
+    const response = await axios.post<CreatePalletResponseDto>(`${API_URL}/machines-no-smen/create-pallet`, request);
+    console.log('Поддон успешно создан:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при создании поддона:', error);
+    throw error;
+  }
+};
+
+// Функция для создания поддона по ID детали (новый API)
+export const createPalletByPart = async (request: CreatePalletRequestDto): Promise<CreatePalletResponseDto> => {
+  try {
+    const response = await axios.post<CreatePalletResponseDto>(`${API_URL}/machines-no-smen/create-pallet-by-part`, request);
+    console.log('Поддон по детали успешно создан:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при создании поддона по детали:', error);
+    throw error;
   }
 };

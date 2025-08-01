@@ -13,3 +13,12 @@ export type {
   PartRouteUpdatedEvent,
   PartRouteUpdatedHandler
 } from './routeManagementHook';
+
+// Order Management Hooks
+export { 
+  useOrders, 
+  useOrderDetails, 
+  useOrderStatusUpdate, 
+  useOrderManagement,
+  useOrderManagementSocket 
+} from './orderManagementHook';

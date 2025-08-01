@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   ProductionPallet, 
   fetchAvailablePallets,
+  fetchAvailablePalletsWithUnallocated,
   BufferCellDto,
   MachineDto,
   fetchBufferCellsBySegmentId,
@@ -12,7 +13,11 @@ import {
   completeProcessing,
   moveToBuffer,
   CompleteProcessingResponseDto,
-  TakeToWorkResponseDto
+  TakeToWorkResponseDto,
+  CreatePalletRequestDto,
+  CreatePalletResponseDto,
+  createPalletByPart,
+  PalletsWithUnallocatedResponseDto
 } from '../../api/machinNoSmenApi/productionPalletsService';
 
 // Определение интерфейса результата хука
@@ -22,8 +27,10 @@ interface UseProductionPalletsResult {
   error: Error | null;
   bufferCells: BufferCellDto[];
   machines: MachineDto[];
+  unallocatedQuantity: number;
   fetchPallets: (detailId: number | null) => Promise<void>;
   fetchAvailablePallets: (detailId: number) => Promise<void>;
+  fetchPalletsWithUnallocated: (detailId: number) => Promise<PalletsWithUnallocatedResponseDto>;
   loadSegmentResources: () => Promise<void>;
   refreshPalletData: (palletId: number) => Promise<void>;
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
@@ -32,6 +39,7 @@ interface UseProductionPalletsResult {
   takeToWork: (palletId: number) => Promise<TakeToWorkResponseDto>;
   completeProcessing: (palletId: number) => Promise<CompleteProcessingResponseDto>;
   moveToBuffer: (palletId: number, bufferCellId: number) => Promise<{ message: string; pallet: any }>;
+  createPallet: (request: CreatePalletRequestDto) => Promise<CreatePalletResponseDto>;
 }
 
 // Пользовательский хук для управления данными о производственных поддонах
@@ -43,6 +51,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   // Состояние для ячеек буфера и станков
   const [bufferCells, setBufferCells] = useState<BufferCellDto[]>([]);
   const [machines, setMachines] = useState<MachineDto[]>([]);
+  // Состояние для количества нераспределенных деталей
+  const [unallocatedQuantity, setUnallocatedQuantity] = useState<number>(0);
   
   // Функция для преобразования OperationDto в CurrentOperationDto
   const convertOperationToCurrentOperation = (operation: OperationDto | null): CurrentOperationDto | null => {
@@ -285,6 +295,55 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     }
   }, [refreshPalletData]);
 
+  // Функция для получения поддонов с количеством нераспределенных деталей
+  const handleFetchPalletsWithUnallocated = useCallback(async (detailId: number): Promise<PalletsWithUnallocatedResponseDto> => {
+    setLoading(true);
+    setError(null);
+    setCurrentDetailId(detailId);
+    
+    try {
+      // Получаем данные о поддонах с количеством нераспределенных деталей
+      const response = await fetchAvailablePalletsWithUnallocated(detailId);
+      
+      console.log('Полученные поддоны с нераспределенными деталями:', response);
+      
+      // Нормализуем данные поддонов
+      const normalizedPallets = response.pallets.map(pallet => ({
+        ...pallet,
+        currentOperation: pallet.currentOperation === undefined ? null : pallet.currentOperation
+      }));
+      
+      setPallets(normalizedPallets);
+      setUnallocatedQuantity(response.unallocatedQuantity);
+      
+      return response;
+    } catch (err) {
+      console.error('Ошибка при получении поддонов с нераспределенными деталями:', err);
+      setError(err instanceof Error ? err : new Error('Произошла неизвестная ошибка'));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Функция для создания поддона
+  const handleCreatePallet = useCallback(async (request: CreatePalletRequestDto): Promise<CreatePalletResponseDto> => {
+    try {
+      // Вызываем API для создания поддона
+      const response = await createPalletByPart(request);
+      
+      // Обновляем список поддонов после создания
+      if (currentDetailId) {
+        await handleFetchPalletsWithUnallocated(currentDetailId);
+      }
+      
+      return response;
+    } catch (err) {
+      console.error('Ошибка при создании поддона:', err);
+      throw err;
+    }
+  }, [currentDetailId, handleFetchPalletsWithUnallocated]);
+
   // Функция для загрузки ресурсов выбранного сегмента
   const loadSegmentResources = useCallback(async () => {
     setLoading(true);
@@ -318,8 +377,10 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     pallets,
     loading,
     error,
+    unallocatedQuantity,
     fetchPallets,
     fetchAvailablePallets: handleFetchAvailablePallets,
+    fetchPalletsWithUnallocated: handleFetchPalletsWithUnallocated,
     bufferCells,
     machines,
     loadSegmentResources,
@@ -329,7 +390,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     completePalletProcessing: handleCompletePalletProcessing,
     takeToWork: handleTakeToWork,
     completeProcessing: handleCompleteProcessing,
-    moveToBuffer: handleMoveToBuffer
+    moveToBuffer: handleMoveToBuffer,
+    createPallet: handleCreatePallet
   };
 };
 

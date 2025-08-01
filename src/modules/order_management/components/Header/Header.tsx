@@ -5,6 +5,7 @@ import styles from './Header.module.css';
 import logo from '../../../../assets/logo-Photoroom.png';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LogoutButton from '../../../../componentsGlobal/LogoutButton/LogoutButton';
+import HeaderNavigation from '../../../../componentsGlobal/HeaderNavigation/HeaderNavigation';
 
 // Интерфейсы для типизации данных из localStorage
 interface Machine {
@@ -66,7 +67,7 @@ const Header: React.FC = () => {
           {techStage}
         </div>
         <div className={styles.navButtons}>
-          <button className={styles.navButton}>{machineName}</button>
+          <HeaderNavigation />
           <button className={styles.navButton}>{operatorName}</button>
         </div>
       </div>

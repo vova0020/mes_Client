@@ -206,10 +206,10 @@ const authService = {
         return '/master';
 
       case 'management':
-        return '/settings';
+        return '/order-management';
 
       case 'technologist':
-        return '/settings';
+        return '/order-management';
 
       case 'orderPicker':
         return '/ypakmachine';

@@ -9,6 +9,8 @@ import {
   fetchBufferCellsBySegmentId,
   fetchMachinBySegmentId,
   OperationDto,
+  createPalletByPart,
+  CreatePalletResponse,
   // getCurrentOperation
 } from '../../api/masterPage/productionPalletsServiceMaster';
 
@@ -19,11 +21,13 @@ interface UseProductionPalletsResult {
   error: Error | null;
   bufferCells: BufferCellDto[];
   machines: MachineDto[];
+  unallocatedQuantity: number;
   fetchPallets: (detailId: number | null) => Promise<void>;
   updateMachine: (palletId: number, machine: string, segmentId: number) => Promise<void>;
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
   loadSegmentResources: () => Promise<void>;
   refreshPalletData: (palletId: number) => Promise<void>;
+  createPallet: (partId: number, quantity: number, palletName?: string) => Promise<CreatePalletResponse>;
 }
 
 // Пользовательский хук для управления данными о производственных поддонах
@@ -32,6 +36,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [currentDetailId, setCurrentDetailId] = useState<number | null>(initialDetailId);
+  const [unallocatedQuantity, setUnallocatedQuantity] = useState<number>(0);
   // Состояние для ячеек буфера и станков
   const [bufferCells, setBufferCells] = useState<BufferCellDto[]>([]);
   const [machines, setMachines] = useState<MachineDto[]>([]);
@@ -50,20 +55,23 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     
     try {
       // Получаем данные о поддонах
-      const fetchedPallets = await fetchProductionPalletsByDetailId(detailId);
+      const fetchedData = await fetchProductionPalletsByDetailId(detailId);
       
       // Отладочная информация
-      // // console.log('Полученные данные о поддонах:', fetchedPallets);
+      // console.log('Полученные данные о поддонах:', fetchedData);
       
-      if (fetchedPallets.length > 0) {
+      // Устанавливаем количество нераспределенных деталей
+      setUnallocatedQuantity(fetchedData.unallocatedQuantity);
+      
+      if (fetchedData.pallets.length > 0) {
         // Проверяем, есть ли у первого поддона данные об операции
-        const hasExistingOperations = fetchedPallets.some(p => p.currentOperation);
+        const hasExistingOperations = fetchedData.pallets.some(p => p.currentOperation);
         
         if (hasExistingOperations) {
-          // // console.log('Поддоны уже содержат данные об операциях');
+          // console.log('Поддоны уже содержат данные об операциях');
           
           // Убедимся, что currentOperation определен (не undefined)
-          const normalizedPallets = fetchedPallets.map(pallet => ({
+          const normalizedPallets = fetchedData.pallets.map(pallet => ({
             ...pallet,
             // Если currentOperation === undefined, то преобразуем его в null для единообразия
             currentOperation: pallet.currentOperation === undefined ? null : pallet.currentOperation
@@ -71,11 +79,11 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
           
           setPallets(normalizedPallets);
         } else {
-          // // console.log('Требуется дополнительный запрос для получения операций');
+          // console.log('Требуется дополнительный запрос для получения операций');
           
           // Если данных об операциях нет, делаем дополнительные запросы
           const palletsWithOperations = await Promise.all(
-            fetchedPallets.map(async (pallet) => {
+            fetchedData.pallets.map(async (pallet) => {
               try {
                 // const operation = await getCurrentOperation(pallet.id);
                 return {
@@ -225,6 +233,33 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       setLoading(false);
     }
   }, []);
+
+  // Функция для создания нового поддона
+  const createPallet = useCallback(async (
+    partId: number,
+    quantity: number,
+    palletName?: string
+  ): Promise<CreatePalletResponse> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await createPalletByPart(partId, quantity, palletName);
+      
+      // После успешного создания поддона обновляем список поддонов
+      if (currentDetailId === partId) {
+        await fetchPallets(currentDetailId);
+      }
+
+      return response;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Ошибка при создании поддона');
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDetailId, fetchPallets]);
   
   // Инициализация с начальным ID детали, если он предоставлен
   useEffect(() => {
@@ -237,13 +272,15 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     pallets,
     loading,
     error,
+    unallocatedQuantity,
     fetchPallets,
     updateMachine,
     updateBufferCell,
     bufferCells,
     machines,
     loadSegmentResources,
-    refreshPalletData
+    refreshPalletData,
+    createPallet
   };
 };
 
