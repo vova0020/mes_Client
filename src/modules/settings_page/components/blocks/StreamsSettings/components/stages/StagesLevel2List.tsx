@@ -56,14 +56,55 @@ export const StagesLevel2List: React.FC<StagesLevel2ListProps> = ({
     return acc;
   }, {} as Record<number, any>);
 
-  // Фильтрация подэтапов по поиску
+  // Улучшенная фильтрация подэтапов по поиску
   const filteredSubstages = substages.filter(substage => {
-    const parentStage = parentStagesMap[substage.stageId];
-    const searchLower = searchTerm.toLowerCase();
+    if (!searchTerm.trim()) return true;
     
-    return substage.substageName.toLowerCase().includes(searchLower) ||
-           substage.description?.toLowerCase().includes(searchLower) ||
-           parentStage?.stageName.toLowerCase().includes(searchLower);
+    const searchTermLower = searchTerm.toLowerCase().trim();
+    const substageName = substage.substageName.toLowerCase();
+    const description = substage.description?.toLowerCase() || '';
+    const parentStage = parentStagesMap[substage.stageId];
+    const parentStageName = parentStage?.stageName.toLowerCase() || '';
+    
+    // Точное совпадение имеет наивысший приоритет
+    if (substageName === searchTermLower || 
+        description === searchTermLower || 
+        parentStageName === searchTermLower) {
+      return true;
+    }
+    
+    // Совпадение с начала строки имеет высокий приоритет
+    if (substageName.startsWith(searchTermLower) || 
+        description.startsWith(searchTermLower) || 
+        parentStageName.startsWith(searchTermLower)) {
+      return true;
+    }
+    
+    // Поиск по словам (разделенным пробелами)
+    const searchWords = searchTermLower.split(/\s+/).filter(word => word.length > 0);
+    const substageWords = substageName.split(/\s+/);
+    const descriptionWords = description.split(/\s+/);
+    const parentStageWords = parentStageName.split(/\s+/);
+    
+    // Проверяем, начинается ли какое-то слово в названии, описании или родительской операции с поискового слова
+    const hasWordMatch = searchWords.every((searchWord: string) => 
+      substageWords.some((word: string) => word.startsWith(searchWord)) ||
+      descriptionWords.some((word: string) => word.startsWith(searchWord)) ||
+      parentStageWords.some((word: string) => word.startsWith(searchWord))
+    );
+    
+    if (hasWordMatch) {
+      return true;
+    }
+    
+    // Если поисковый запрос длинный (больше 2 символов), разрешаем частичное совпадение
+    if (searchTermLower.length > 2) {
+      return substageName.includes(searchTermLower) || 
+             description.includes(searchTermLower) || 
+             parentStageName.includes(searchTermLower);
+    }
+    
+    return false;
   });
 
   const handleDeleteSubstage = (substageId: number) => {
@@ -175,7 +216,7 @@ export const StagesLevel2List: React.FC<StagesLevel2ListProps> = ({
                       {/* Описание подэтапа */}
                       {substage.description && (
                         <p className={styles.substageCardDescription}>
-                          {substage.description}
+                         Описание: {substage.description}
                         </p>
                       )}
                     </div>
@@ -212,7 +253,7 @@ export const StagesLevel2List: React.FC<StagesLevel2ListProps> = ({
                     </div>
                   </div>
 
-                  <div className={styles.substageCardStats}>
+                  {/* <div className={styles.substageCardStats}>
                     <div className={styles.statItem}>
                       <span className={styles.statIcon}>📏</span>
                       <span className={styles.statValue}>
@@ -227,7 +268,7 @@ export const StagesLevel2List: React.FC<StagesLevel2ListProps> = ({
                       </span>
                       <span className={styles.statLabel}>ID родителя</span>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               );
             })}

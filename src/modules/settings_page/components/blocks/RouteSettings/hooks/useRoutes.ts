@@ -262,9 +262,13 @@ export const useDeleteRouteStage = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: routesApi.deleteRouteStage,
-    onSuccess: () => {
+    mutationFn: ({ stageId, routeId }: { stageId: number; routeId: number }) => {
+      return routesApi.deleteRouteStage(stageId);
+    },
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.detail(variables.routeId) });
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.stages(variables.routeId) });
     },
   });
 };
@@ -289,10 +293,26 @@ export const useMoveRouteStage = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ stageId, newSequenceNumber }: { stageId: number; newSequenceNumber: number }) =>
-      routesApi.moveRouteStage(stageId, newSequenceNumber),
-    onSuccess: () => {
+    mutationFn: ({ stageId, newSequenceNumber }: { stageId: number; newSequenceNumber: number }) => {
+      console.log('API call: moveRouteStage', { stageId, newSequenceNumber });
+      return routesApi.moveRouteStage(stageId, newSequenceNumber);
+    },
+    onSuccess: (updatedStages) => {
+      console.log('Move stage success:', updatedStages);
+      
+      // Инвалидируем список маршрутов
       queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.lists() });
+      
+      // Если у нас есть обновленные этапы, найдем routeId и инвалидируем кэш для конкретного маршрута
+      if (updatedStages && updatedStages.length > 0) {
+        const routeId = updatedStages[0].routeId;
+        console.log('Invalidating cache for route:', routeId);
+        queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.detail(routeId) });
+        queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.stages(routeId) });
+      }
+    },
+    onError: (error) => {
+      console.error('Move stage error:', error);
     },
   });
 };

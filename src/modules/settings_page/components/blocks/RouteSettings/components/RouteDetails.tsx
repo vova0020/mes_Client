@@ -1,210 +1,234 @@
 import React from 'react';
-import {
-    Typography,
-    Divider,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemAvatar,
-    Avatar,
-    Paper,
-    Box,
-    Chip,
-    IconButton,
-    Tooltip,
-    CircularProgress
-} from '@mui/material';
-import {
-    Route as RouteIcon,
-    ArrowForward as ArrowForwardIcon,
-    Assignment as AssignmentIcon,
-    ArrowUpward as ArrowUpwardIcon,
-    ArrowDownward as ArrowDownwardIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon
-} from '@mui/icons-material';
+import { CircularProgress } from '@mui/material';
 import { Route } from '../api/routes.api';
-import { useDeleteRouteStage, useMoveRouteStage } from '../hooks/useRoutes';
+import { useDeleteRouteStage, useMoveRouteStage, useRoute } from '../hooks/useRoutes';
 import styles from './RouteDetails.module.css';
 
 interface RouteDetailsProps {
     selectedRoute: Route | null;
+    onRouteUpdate?: (updatedRoute: Route) => void;
 }
 
 const RouteDetails: React.FC<RouteDetailsProps> = ({
-    selectedRoute
+    selectedRoute,
+    onRouteUpdate
 }) => {
     const deleteRouteStage = useDeleteRouteStage();
     const moveRouteStage = useMoveRouteStage();
+    
+    // Получаем актуальные данные маршрута из кэша
+    const { data: currentRoute } = useRoute(selectedRoute?.routeId || 0);
+    
+    // Используем актуальные данные, если они есть, иначе fallback на переданные
+    const routeToDisplay = currentRoute || selectedRoute;
 
     const handleDeleteStage = async (stageId: number) => {
+        if (!routeToDisplay) return;
+        
         try {
-            await deleteRouteStage.mutateAsync(stageId);
+            await deleteRouteStage.mutateAsync({
+                stageId,
+                routeId: routeToDisplay.routeId
+            });
         } catch (error) {
             console.error('Ошибка при удалении этапа:', error);
         }
     };
 
     const handleMoveStage = async (stageId: number, direction: 'up' | 'down') => {
-        if (!selectedRoute) return;
+        if (!routeToDisplay) return;
 
-        const currentStage = selectedRoute.routeStages.find(s => s.routeStageId === stageId);
-        if (!currentStage) return;
+        const sortedStages = [...routeToDisplay.routeStages].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+        const currentIndex = sortedStages.findIndex(s => s.routeStageId === stageId);
+        
+        if (currentIndex === -1) return;
+        
+        let newIndex: number;
+        if (direction === 'up') {
+            if (currentIndex === 0) return; // Уже первый
+            newIndex = currentIndex - 1;
+        } else {
+            if (currentIndex === sortedStages.length - 1) return; // Уже последний
+            newIndex = currentIndex + 1;
+        }
 
-        const newSequenceNumber = direction === 'up' 
-            ? currentStage.sequenceNumber - 1 
-            : currentStage.sequenceNumber + 1;
+        // Используем номер последовательности целевой позиции
+        const targetStage = sortedStages[newIndex];
+        const newSequenceNumber = Number(targetStage.sequenceNumber);
+
+        console.log('Moving stage:', { 
+            stageId, 
+            direction, 
+            currentIndex, 
+            newIndex, 
+            currentSequence: sortedStages[currentIndex].sequenceNumber, 
+            newSequenceNumber,
+            newSequenceNumberType: typeof newSequenceNumber
+        });
 
         try {
-            await moveRouteStage.mutateAsync({
-                stageId,
+            const updatedStages = await moveRouteStage.mutateAsync({
+                stageId: Number(stageId),
                 newSequenceNumber
             });
+            
+            // Если есть callback и обновленные данные, обновляем родительский компонент
+            if (onRouteUpdate && updatedStages && updatedStages.length > 0) {
+                // Получаем обновленный маршрут из кэша
+                const updatedRoute = currentRoute;
+                if (updatedRoute) {
+                    onRouteUpdate(updatedRoute);
+                }
+            }
         } catch (error) {
             console.error('Ошибка при перемещении этапа:', error);
         }
     };
 
-    if (!selectedRoute) {
+    if (!routeToDisplay) {
         return (
             <div className={styles.routeDetailsContainer}>
-                <Typography className={styles.selectPrompt}>
-                    Выберите маршрут для просмотра деталей
-                </Typography>
+                <div className={styles.emptyState}>
+                    <div className={styles.emptyStateIcon}>🛣️</div>
+                    <h3 className={styles.emptyStateTitle}>Выберите маршрут</h3>
+                    <p className={styles.emptyStateDescription}>
+                        Выберите маршрут из списка слева для просмотра подробной информации
+                    </p>
+                </div>
             </div>
         );
     }
 
     // Сортируем этапы по последовательности
-    const sortedStages = [...selectedRoute.routeStages].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+    const sortedStages = [...routeToDisplay.routeStages].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
 
     return (
         <div className={styles.routeDetailsContainer}>
-            <Typography variant="h6" component="h2" className={styles.detailsTitle}>
-                Информация о маршруте
-            </Typography>
-            <Divider className={styles.divider} />
-
-            <div className={styles.routeInfo}>
-                <div className={styles.routeInfoHeader}>
-                    <Avatar className={styles.largeAvatar}>
-                        <RouteIcon />
-                    </Avatar>
-                    <div className={styles.routeMainInfo}>
-                        <Typography variant="h5">{selectedRoute.routeName}</Typography>
-                        <Chip
-                            label={`Этапов: ${sortedStages.length}`}
-                            className={styles.stagesCountChip}
-                        />
+            {/* Header */}
+            <div className={styles.detailsHeader}>
+                <div className={styles.routeMainInfo}>
+                    <div className={styles.routeIcon}>🛣️</div>
+                    <div>
+                        <h2 className={styles.routeName}>{routeToDisplay.routeName}</h2>
+                        <div className={styles.routeStats}>
+                            <span className={styles.statBadge}>
+                                Этапов: {sortedStages.length}
+                            </span>
+                            {routeToDisplay._count && (
+                                <span className={styles.statBadge}>
+                                    Деталей: {routeToDisplay._count.parts}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
+            </div>
 
+            <div className={styles.detailsContent}>
+                {/* Stages Section */}
                 {sortedStages.length > 0 ? (
-                    <Paper elevation={0} className={styles.stagesContainer}>
-                        <Typography variant="subtitle1" className={styles.sectionTitle}>
+                    <div className={styles.stagesSection}>
+                        <h3 className={styles.sectionTitle}>
+                            <span className={styles.sectionIcon}>⚙️</span>
                             Последовательность этапов обработки
-                        </Typography>
-                        <Box className={styles.stagesFlow}>
+                        </h3>
+                        <div className={styles.stageFlowHint}>
+                            💡 Используйте стрелки ↑↓ для изменения порядка этапов. Порядок определяет последовательность обработки деталей.
+                        </div>
+                        <div className={styles.stagesFlow}>
                             {sortedStages.map((stage, index) => (
                                 <React.Fragment key={stage.routeStageId}>
-                                    <Paper elevation={2} className={styles.stageItem}>
-                                        <div className={styles.stageContent}>
-                                            <Typography className={styles.stageNumber}>
-                                                {index + 1}
-                                            </Typography>
-                                            <div className={styles.stageInfo}>
-                                                <Typography className={styles.stageName}>
-                                                    {stage.stage.stageName}
-                                                </Typography>
-                                                {stage.substage && (
-                                                    <Typography className={styles.substageName}>
-                                                        → {stage.substage.substageName}
-                                                    </Typography>
-                                                )}
-                                            </div>
-                                            <div className={styles.stageActions}>
-                                                <Tooltip title="Переместить вверх">
-                                                    <span>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleMoveStage(stage.routeStageId, 'up')}
-                                                            disabled={index === 0 || moveRouteStage.isPending}
-                                                        >
-                                                            <ArrowUpwardIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
-                                                <Tooltip title="Переместить вниз">
-                                                    <span>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleMoveStage(stage.routeStageId, 'down')}
-                                                            disabled={index === sortedStages.length - 1 || moveRouteStage.isPending}
-                                                        >
-                                                            <ArrowDownwardIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
-                                                <Tooltip title="Удалить этап">
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleDeleteStage(stage.routeStageId)}
-                                                        disabled={deleteRouteStage.isPending}
-                                                        className={styles.deleteButton}
-                                                    >
-                                                        {deleteRouteStage.isPending ? (
-                                                            <CircularProgress size={16} />
-                                                        ) : (
-                                                            <DeleteIcon fontSize="small" />
-                                                        )}
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </div>
+                                    <div className={styles.stageCard}>
+                                        <div className={styles.stageNumber}>
+                                            {index + 1}
                                         </div>
-                                    </Paper>
+                                        <div className={styles.stageInfo}>
+                                            <div className={styles.stageName}>
+                                                {stage.stage.stageName}
+                                            </div>
+                                            {stage.substage && (
+                                                <div className={styles.substageName}>
+                                                    → {stage.substage.substageName}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={styles.stageActions}>
+                                            <button
+                                                className={`${styles.actionButton} ${styles.moveButton}`}
+                                                onClick={() => handleMoveStage(stage.routeStageId, 'up')}
+                                                disabled={index === 0 || moveRouteStage.isPending}
+                                                title="Переместить вверх"
+                                            >
+                                                ↑
+                                            </button>
+                                            <button
+                                                className={`${styles.actionButton} ${styles.moveButton}`}
+                                                onClick={() => handleMoveStage(stage.routeStageId, 'down')}
+                                                disabled={index === sortedStages.length - 1 || moveRouteStage.isPending}
+                                                title="Переместить вниз"
+                                            >
+                                                ↓
+                                            </button>
+                                            <button
+                                                className={`${styles.actionButton} ${styles.deleteButton}`}
+                                                onClick={() => handleDeleteStage(stage.routeStageId)}
+                                                disabled={deleteRouteStage.isPending}
+                                                title="Удалить этап"
+                                            >
+                                                {deleteRouteStage.isPending ? (
+                                                    <CircularProgress size={16} />
+                                                ) : (
+                                                    '🗑️'
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
                                     {index < sortedStages.length - 1 && (
-                                        <ArrowForwardIcon className={styles.arrowIcon} />
+                                        <div className={styles.stageArrow}></div>
                                     )}
                                 </React.Fragment>
                             ))}
-                        </Box>
-                    </Paper>
-                ) : (
-                    <Typography className={styles.noStages}>
-                        Этапы обработки не определены для данного маршрута
-                    </Typography>
-                )}
-
-                {selectedRoute.parts && selectedRoute.parts.length > 0 ? (
-                    <div className={styles.partsSection}>
-                        <Typography variant="subtitle1" className={styles.sectionTitle}>
-                            Детали, использующие данный маршрут
-                        </Typography>
-                        <List className={styles.partsList}>
-                            {selectedRoute.parts.map(part => (
-                                <ListItem key={part.partId} className={styles.partItem}>
-                                    <ListItemAvatar>
-                                        <Avatar className={styles.partAvatar}>
-                                            <AssignmentIcon />
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={part.partName}
-                                        secondary={
-                                            <span className={styles.partCodeText}>
-                                                Код: {part.partCode}
-                                            </span>
-                                        }
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
+                        </div>
                     </div>
                 ) : (
-                    <Typography className={styles.noParts}>
-                        Этот маршрут не назначен ни одной детали
-                    </Typography>
+                    <div className={styles.noStagesSection}>
+                        <div className={styles.noStagesIcon}>⚙️</div>
+                        <h3 className={styles.noStagesTitle}>Этапы не определены</h3>
+                        <p className={styles.noStagesDescription}>
+                            Для данного маршрута не определены этапы обработки. 
+                            Отредактируйте маршрут, чтобы добавить этапы.
+                        </p>
+                    </div>
                 )}
+
+                {/* Parts Section */}
+                {/* {routeToDisplay.parts && routeToDisplay.parts.length > 0 ? (
+                    <div className={styles.partsSection}>
+                        <h3 className={styles.sectionTitle}>
+                            <span className={styles.sectionIcon}>📋</span>
+                            Детали, использующие данный маршрут
+                        </h3>
+                        <div className={styles.partsList}>
+                            {routeToDisplay.parts.map(part => (
+                                <div key={part.partId} className={styles.partCard}>
+                                    <div className={styles.partIcon}>📋</div>
+                                    <div className={styles.partInfo}>
+                                        <div className={styles.partName}>{part.partName}</div>
+                                        <div className={styles.partCode}>Код: {part.partCode}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className={styles.noPartsSection}>
+                        <div className={styles.noPartsIcon}>📋</div>
+                        <h3 className={styles.noPartsTitle}>Детали не назначены</h3>
+                        <p className={styles.noPartsDescription}>
+                            Этот маршрут пока не назначен ни одной детали.
+                        </p>
+                    </div>
+                )} */}
             </div>
         </div>
     );

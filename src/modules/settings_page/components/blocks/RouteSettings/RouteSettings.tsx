@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Box, Alert, Snackbar } from '@mui/material';
+import { Alert, Snackbar } from '@mui/material';
 import RouteList from './components/RouteList';
 import RouteForm from './components/RouteForm';
 import RouteDetails from './components/RouteDetails';
@@ -14,7 +14,7 @@ import {
   UpdateRouteCompleteDto
 } from './hooks/useRoutes';
 import { Route, CreateRouteDto } from './api/routes.api';
-
+import styles from './RouteSettings.module.css';
 
 // Создаем QueryClient локально для этого компонента
 const queryClient = new QueryClient({
@@ -173,43 +173,85 @@ const RouteSettingsContent: React.FC = () => {
 
   if (routesError) {
     return (
-      <Alert severity="error">
-        Ошибка при загрузке маршрутов: {routesError.message}
-      </Alert>
+      <div className={styles.pageContainer}>
+        <div className={styles.errorContainer}>
+          <Alert severity="error">
+            Ошибка при загрузке маршрутов: {routesError.message}
+          </Alert>
+        </div>
+      </div>
     );
   }
 
   const isFormLoading = createRouteMutation.isPending || updateRouteCompleteMutation.isPending;
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, height: '100%' }}>
-      {/* Список маршрутов */}
-      <Box sx={{ flex: '0 0 400px' }}>
-        <RouteList
-          routes={routes}
-          selectedRoute={selectedRoute}
-          setSelectedRoute={setSelectedRoute}
-          onEdit={handleOpenForm}
-          onDelete={handleDeleteRoute}
-          isDeleting={deleteRouteMutation.isPending}
-        />
-      </Box>
+    <div className={styles.pageContainer}>
+      {/* Header */}
+      <div className={styles.pageHeader}>
+        <div className={styles.pageHeaderContent}>
+          <h1 className={styles.pageTitle}>
+            <span className={styles.pageTitleIcon}>🛣️</span>
+            Управление маршрутами
+          </h1>
+          <p className={styles.pageSubtitle}>
+            Создание и настройка технологических маршрутов производства
+          </p>
+        </div>
+        <div className={styles.pageHeaderActions}>
+          <button
+            onClick={() => handleOpenForm()}
+            className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonLarge}`}
+          >
+            <span className={styles.buttonIcon}>+</span>
+            Создать маршрут
+          </button>
+        </div>
+      </div>
 
-      {/* Детали маршрута */}
-      <Box sx={{ flex: 1 }}>
-        <RouteDetails selectedRoute={selectedRoute} />
-      </Box>
+      {/* Main Content */}
+      <div className={styles.mainContent}>
+        <div className={styles.contentPanel}>
+          <div className={styles.routesLayout}>
+            {/* Список маршрутов */}
+            <div className={styles.leftPanel}>
+              <RouteList
+                routes={routes}
+                selectedRoute={selectedRoute}
+                setSelectedRoute={setSelectedRoute}
+                onEdit={handleOpenForm}
+                onDelete={handleDeleteRoute}
+                isDeleting={deleteRouteMutation.isPending}
+              />
+            </div>
+
+            {/* Детали маршрута */}
+            <div className={styles.rightPanel}>
+              <RouteDetails 
+                selectedRoute={selectedRoute} 
+                onRouteUpdate={setSelectedRoute}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Форма создания/редактирования */}
-      <RouteForm
-        open={isFormOpen}
-        onClose={handleCloseForm}
-        onSave={handleSaveRoute}
-        route={editingRoute}
-        availableStages={availableStages}
-        isEditing={!!editingRoute}
-        isLoading={isFormLoading}
-      />
+      {isFormOpen && (
+        <div className={styles.modalOverlay} onClick={handleCloseForm}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <RouteForm
+              open={isFormOpen}
+              onClose={handleCloseForm}
+              onSave={handleSaveRoute}
+              route={editingRoute}
+              availableStages={availableStages}
+              isEditing={!!editingRoute}
+              isLoading={isFormLoading}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Уведомления */}
       <Snackbar
@@ -225,7 +267,7 @@ const RouteSettingsContent: React.FC = () => {
           {notification.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </div>
   );
 };
 

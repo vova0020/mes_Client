@@ -24,7 +24,7 @@ export const StageLevel2Form: React.FC<StageLevel2FormProps> = ({
     stageId: preselectedStageId || '',
     substageName: '',
     description: '',
-    allowance: '',
+    allowance: '1',
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -120,13 +120,13 @@ export const StageLevel2Form: React.FC<StageLevel2FormProps> = ({
       newErrors.substageName = 'Название должно содержать минимум 2 символа';
     }
 
-    // Проверяем allowance (в миллиметрах)
-    const allowanceNum = Number(formData.allowance);
-    if (!formData.allowance || isNaN(allowanceNum) || allowanceNum < 0) {
-      newErrors.allowance = 'Допуск должен быть положительным числом';
-    } else if (allowanceNum > 1000) {
-      newErrors.allowance = 'Допуск не может превышать 1000 мм';
-    }
+    // Проверка допуска временно отключена (поле скрыто)
+    // const allowanceNum = Number(formData.allowance);
+    // if (!formData.allowance || isNaN(allowanceNum) || allowanceNum < 0) {
+    //   newErrors.allowance = 'Допуск должен быть положительным числом';
+    // } else if (allowanceNum > 1000) {
+    //   newErrors.allowance = 'Допуск не может превышать 1000 мм';
+    // }
 
     if (formData.description && formData.description.length > 500) {
       newErrors.description = 'Описание не должно превышать 500 символов';
@@ -310,7 +310,8 @@ export const StageLevel2Form: React.FC<StageLevel2FormProps> = ({
             )}
           </div>
 
-          <div className={styles.formGroup}>
+          {/* Поле допуска временно скрыто */}
+          <div className={styles.formGroup} style={{ display: 'none' }}>
             <label htmlFor="allowance" className={styles.label}>
               Допуск (мм) *
             </label>

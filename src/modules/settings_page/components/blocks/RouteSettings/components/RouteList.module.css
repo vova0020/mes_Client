@@ -2,227 +2,77 @@
 /* RouteList Component Styles */
 /* ================================================ */
 
-.listContainer {
+.routesListContainer {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  padding: 1.5rem;
+  background: #f8fafc;
 }
 
+/* Header Styles */
 .listHeader {
+  padding: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  border-radius: 12px;
-    background: white;
-}
-
-.listTitle {
-  color: #1f2937;
-  font-weight: 600;
-  font-size: 1.25rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.addButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.addButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.addButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.addButtonIcon {
-  font-size: 1.2rem;
-}
-
-.routeList {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-.routeItem {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  margin-bottom: 0.75rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  animation: fadeIn 0.3s ease-out;
-}
-
-.routeItem:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transform: translateY(-1px);
-}
-
-.routeItem.selected {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-}
-
-.routeItemContent {
-  padding: 1rem;
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
 }
 
-.routeAvatar {
-  width: 48px;
-  height: 48px;
+.searchContainer {
+  position: relative;
+  width: 100%;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 2px solid #e2e8f0;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: white;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
   font-size: 1.2rem;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
 }
 
-.routeInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.routeName {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.25rem 0;
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.routeSteps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-top: 0.5rem;
-}
-
-.stepChip {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  color: #667eea;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  border-radius: 12px;
+.resultsCount {
+  color: #64748b;
+  font-size: 0.875rem;
   font-weight: 500;
-}
-
-.noSteps {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-style: italic;
-  padding: 0.25rem 0;
-}
-
-.routeActions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.actionButton {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.actionButton:hover {
-  background: #e5e7eb;
-  transform: scale(1.1);
-}
-
-.editButton:hover {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.deleteButton:hover {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.emptyMessage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
   text-align: center;
-  color: #6b7280;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 2px dashed #d1d5db;
-  border-radius: 12px;
-  margin: 2rem 0;
+  padding: 0.5rem;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border-left: 3px solid #10b981;
 }
 
-.emptyIcon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.emptyTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-}
-
-.emptyDescription {
-  font-size: 1rem;
-  margin: 0;
-}
-
-.loadingContainer {
+/* Loading and Error States */
+.loadingContainer,
+.errorContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  height: 200px;
   color: #6b7280;
 }
 
@@ -230,7 +80,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e5e7eb;
-  border-top: 3px solid #667eea;
+  border-top: 3px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -241,62 +91,396 @@
   100% { transform: rotate(360deg); }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Routes List */
+.routesList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.routesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.routesList::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.routesList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.routesList::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #64748b;
+  text-align: center;
+  padding: 2rem;
+}
+
+.emptyState::before {
+  content: '📋';
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Route Card */
+.routeCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.routeCard::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to bottom, #e2e8f0, #cbd5e1);
+  transition: all 0.3s ease;
+}
+
+.routeCard:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #10b981;
+}
+
+.routeCard:hover::before {
+  background: linear-gradient(to bottom, #10b981, #059669);
+}
+
+.routeCardSelected {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.routeCardSelected::before {
+  background: linear-gradient(to bottom, #10b981, #059669);
+}
+
+.routeInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.routeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.routeName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.routeType {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  flex-shrink: 0;
+}
+
+.routeDetails {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.stagesInfo,
+.partsInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: #f1f5f9;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.stagesLabel,
+.partsLabel {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.stagesCount,
+.partsCount {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 0.875rem;
+}
+
+/* Stages Preview */
+.stagesPreview {
+  margin-top: 0.75rem;
+}
+
+.previewLabel {
+  display: block;
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.stagesTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  max-height: 3rem;
+  overflow: hidden;
+}
+
+.stageTag {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Actions */
+.routeActions {
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.actionButton {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.copyButton {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.copyButton:hover {
+  background: #e0f2fe;
+  transform: scale(1.05);
+}
+
+.editButton {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.editButton:hover {
+  background: #bfdbfe;
+  transform: scale(1.05);
+}
+
+.deleteButton {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.deleteButton:hover {
+  background: #fecaca;
+  transform: scale(1.05);
+}
+
+.confirmDeleteButton {
+  background: #dc2626;
+  color: white;
+  animation: pulse 1s infinite;
+}
+
+.confirmDeleteButton:hover {
+  background: #b91c1c;
+}
+
+.cancelButton {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.cancelButton:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Operation Overlay */
+.operationOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .listContainer {
-    padding: 1rem;
-  }
-  
   .listHeader {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .addButton {
-    width: 100%;
-    justify-content: center;
     padding: 1rem;
   }
   
-  .routeItemContent {
+  .routesList {
     padding: 0.75rem;
   }
   
-  .routeAvatar {
-    width: 40px;
-    height: 40px;
+  .routeCard {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .routeHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .routeName {
     font-size: 1rem;
+  }
+  
+  .routeDetails {
+    gap: 1rem;
+  }
+  
+  .stagesInfo,
+  .partsInfo {
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .stagesTags {
+    max-height: 2.5rem;
+  }
+  
+  .stageTag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .actionButton {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
-  .listContainer {
+  .listHeader {
     padding: 0.75rem;
   }
   
-  .routeSteps {
-    display: none;
+  .routesList {
+    padding: 0.5rem;
   }
   
-  .routeActions {
+  .routeCard {
+    padding: 0.875rem;
+  }
+  
+  .routeName {
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
+  
+  .routeType {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+  
+  .routeDetails {
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
+  }
+  
+  .stagesInfo,
+  .partsInfo {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .previewLabel {
+    font-size: 0.75rem;
+  }
+  
+  .stagesTags {
+    max-height: 2rem;
   }
   
   .actionButton {
-    width: 28px;
-    height: 28px;
+    min-width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+    padding: 0.375rem;
+  }
+  
+  .routeActions {
+    gap: 0.25rem;
   }
 }

@@ -23,6 +23,7 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
   const [selectedMaterials, setSelectedMaterials] = useState<number[]>([]);
   const [selectedStages, setSelectedStages] = useState<number[]>([]);
   const [materialSearchTerm, setMaterialSearchTerm] = useState('');
+  const [stageSearchTerm, setStageSearchTerm] = useState('');
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<number | null>(null);
   
   const queryClient = useQueryClient();
@@ -123,16 +124,82 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
     }
   }, [editStream]);
 
-  // Фильтрация материалов
+  // Улучшенная фильтрация материалов
   const filteredMaterials = materials.filter(material => {
-    const matchesSearch = material.materialName.toLowerCase().includes(materialSearchTerm.toLowerCase()) ||
-                         material.article.toLowerCase().includes(materialSearchTerm.toLowerCase());
+    // Если нет поискового запроса, не фильтруем по поиску
+    if (!materialSearchTerm.trim()) {
+      const matchesGroup = selectedGroupFilter === null || 
+                          material.groups?.some(g => g.groupId === selectedGroupFilter) ||
+                          material.groupsMaterials?.some(gm => gm.groupId === selectedGroupFilter);
+      return matchesGroup;
+    }
+
+    // Нормализуем поисковый запрос
+    const searchTerm = materialSearchTerm.trim().toLowerCase();
     
+    // Проверяем точное совпадение в начале строки (приоритет)
+    const nameStartsWith = material.materialName.toLowerCase().startsWith(searchTerm);
+    const articleStartsWith = material.article.toLowerCase().startsWith(searchTerm);
+    
+    // Проверяем вхождение в любом месте строки
+    const nameIncludes = material.materialName.toLowerCase().includes(searchTerm);
+    const articleIncludes = material.article.toLowerCase().includes(searchTerm);
+    
+    // Проверяем совпадение по словам (разделенным пробелами)
+    const nameWords = material.materialName.toLowerCase().split(/\s+/);
+    const articleWords = material.article.toLowerCase().split(/\s+/);
+    const searchWords = searchTerm.split(/\s+/);
+    
+    const nameWordsMatch = searchWords.every(word => 
+      nameWords.some(nameWord => nameWord.includes(word))
+    );
+    const articleWordsMatch = searchWords.every(word => 
+      articleWords.some(articleWord => articleWord.includes(word))
+    );
+
+    // Материал подходит, если есть любое из совпадений
+    const matchesSearch = nameStartsWith || articleStartsWith || nameIncludes || articleIncludes || nameWordsMatch || articleWordsMatch;
+    
+    // Проверяем фильтр по группе
     const matchesGroup = selectedGroupFilter === null || 
                         material.groups?.some(g => g.groupId === selectedGroupFilter) ||
                         material.groupsMaterials?.some(gm => gm.groupId === selectedGroupFilter);
     
     return matchesSearch && matchesGroup;
+  });
+
+  // Фильтрация этапов производства
+  const filteredStages = productionStages.filter(stage => {
+    // Если нет поискового запроса, показываем все этапы
+    if (!stageSearchTerm.trim()) {
+      return true;
+    }
+
+    // Нормализуем поисковый запрос
+    const searchTerm = stageSearchTerm.trim().toLowerCase();
+    
+    // Проверяем точное совпадение в начале строки (приоритет)
+    const nameStartsWith = stage.stageName.toLowerCase().startsWith(searchTerm);
+    const descriptionStartsWith = stage.description?.toLowerCase().startsWith(searchTerm);
+    
+    // Проверяем вхождение в любом месте строки
+    const nameIncludes = stage.stageName.toLowerCase().includes(searchTerm);
+    const descriptionIncludes = stage.description?.toLowerCase().includes(searchTerm);
+    
+    // Проверяем совпадение по словам (разделенным пробелами)
+    const nameWords = stage.stageName.toLowerCase().split(/\s+/);
+    const descriptionWords = stage.description?.toLowerCase().split(/\s+/) || [];
+    const searchWords = searchTerm.split(/\s+/);
+    
+    const nameWordsMatch = searchWords.every(word => 
+      nameWords.some(nameWord => nameWord.includes(word))
+    );
+    const descriptionWordsMatch = descriptionWords.length > 0 && searchWords.every(word => 
+      descriptionWords.some(descWord => descWord.includes(word))
+    );
+
+    // Этап подходит, если есть любое из совпадений
+    return nameStartsWith || descriptionStartsWith || nameIncludes || descriptionIncludes || nameWordsMatch || descriptionWordsMatch;
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -149,6 +216,22 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
         ? prev.filter(id => id !== materialId)
         : [...prev, materialId]
     );
+  };
+
+  const handleSelectAllMaterials = () => {
+    const filteredMaterialIds = filteredMaterials.map(material => material.materialId);
+    const allSelected = filteredMaterialIds.every(id => selectedMaterials.includes(id));
+    
+    if (allSelected) {
+      // Убираем все отфильтрованные материалы из выбранных
+      setSelectedMaterials(prev => prev.filter(id => !filteredMaterialIds.includes(id)));
+    } else {
+      // Добавляем все отфильтрова��ные материалы к выбранным
+      setSelectedMaterials(prev => {
+        const newIds = filteredMaterialIds.filter(id => !prev.includes(id));
+        return [...prev, ...newIds];
+      });
+    }
   };
 
   const handleStageToggle = (stageId: number) => {
@@ -262,6 +345,18 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
                 ))}
               </select>
             </div>
+
+            <button
+              type="button"
+              onClick={handleSelectAllMaterials}
+              className={styles.selectAllButton}
+              disabled={filteredMaterials.length === 0}
+            >
+              {filteredMaterials.length > 0 && filteredMaterials.every(material => selectedMaterials.includes(material.materialId))
+                ? 'Снять все'
+                : 'Выбрать все'
+              }
+            </button>
           </div>
 
           {/* Список материалов */}
@@ -310,14 +405,27 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
             Этапы производства ({selectedStages.length} выбрано)
           </h3>
           
+          {/* Поиск этапов */}
+          <div className={styles.stagesFilters}>
+            <div className={styles.searchGroup}>
+              <input
+                type="text"
+                placeholder="Поиск этапов..."
+                value={stageSearchTerm}
+                onChange={(e) => setStageSearchTerm(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
+          </div>
+          
           <div className={styles.stagesContainer}>
-            {productionStages.length === 0 ? (
+            {filteredStages.length === 0 ? (
               <div className={styles.emptyStages}>
-                <p>Этапы производства не найдены</p>
+                <p>{stageSearchTerm.trim() ? 'Этапы не найдены' : 'Этапы производства не найдены'}</p>
               </div>
             ) : (
               <div className={styles.stagesList}>
-                {productionStages.map(stage => (
+                {filteredStages.map(stage => (
                   <div
                     key={stage.stageId}
                     className={`${styles.stageItem} ${

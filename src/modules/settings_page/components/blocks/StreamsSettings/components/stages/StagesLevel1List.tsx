@@ -43,11 +43,46 @@ export const StagesLevel1List: React.FC<StagesLevel1ListProps> = ({
     }
   });
 
-  // Фильтрация этапов по поиску
-  const filteredStages = stages?.filter(stage =>
-    stage.stageName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    stage.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Улучшенная фильтрация этапов по поиску
+  const filteredStages = stages?.filter(stage => {
+    if (!searchTerm.trim()) return true;
+    
+    const searchTermLower = searchTerm.toLowerCase().trim();
+    const stageName = stage.stageName.toLowerCase();
+    const description = stage.description?.toLowerCase() || '';
+    
+    // Точное совпадение имеет наивысший приоритет
+    if (stageName === searchTermLower || description === searchTermLower) {
+      return true;
+    }
+    
+    // Совпадение с начала строки имеет высокий приоритет
+    if (stageName.startsWith(searchTermLower) || description.startsWith(searchTermLower)) {
+      return true;
+    }
+    
+    // Поиск по словам (разделенным пробелами)
+    const searchWords = searchTermLower.split(/\s+/).filter(word => word.length > 0);
+    const stageWords = stageName.split(/\s+/);
+    const descriptionWords = description.split(/\s+/);
+    
+    // Проверяем, начинается ли какое-то слово в названии или описании с поискового слова
+    const hasWordMatch = searchWords.every((searchWord: string) => 
+      stageWords.some((word: string) => word.startsWith(searchWord)) ||
+      descriptionWords.some((word: string) => word.startsWith(searchWord))
+    );
+    
+    if (hasWordMatch) {
+      return true;
+    }
+    
+    // Если поисковый запрос длинный (больше 2 символов), разрешаем частичное совпадение
+    if (searchTermLower.length > 2) {
+      return stageName.includes(searchTermLower) || description.includes(searchTermLower);
+    }
+    
+    return false;
+  }) || [];
 
   const handleDeleteStage = (stageId: number) => {
     if (deleteConfirmId === stageId) {
