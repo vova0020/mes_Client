@@ -162,10 +162,38 @@ const RouteList: React.FC<RouteListProps> = ({
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const copyRouteMutation = useCopyRoute();
 
-    // Фильтрация маршрутов по поисковому запросу
-    const filteredRoutes = routes.filter((route: Route) =>
-        route.routeName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Улучшенная фильтрация маршрутов по поисковому запросу
+    const filteredRoutes = routes.filter((route: Route) => {
+        if (!searchTerm.trim()) return true;
+        
+        const searchLower = searchTerm.toLowerCase().trim();
+        
+        // Поиск по названию маршрута
+        const nameMatch = route.routeName.toLowerCase().includes(searchLower);
+        
+        // Поиск по названиям этапов
+        const stageMatch = route.routeStages?.some(stage => 
+            stage.stage.stageName.toLowerCase().includes(searchLower)
+        ) || false;
+        
+        // Поиск по названиям подэтапов
+        const substageMatch = route.routeStages?.some(stage => 
+            stage.substage?.substageName.toLowerCase().includes(searchLower)
+        ) || false;
+        
+        // Поиск по количеству этапов (например, "3 этапа" или просто "3")
+        const stagesCount = route.routeStages?.length || 0;
+        const stageCountMatch = searchLower.includes(stagesCount.toString()) ||
+            (searchLower.includes('этап') && searchLower.includes(stagesCount.toString()));
+        
+        // Поиск по количеству деталей
+        const partsCount = route._count?.parts || 0;
+        const partsCountMatch = searchLower.includes(partsCount.toString()) ||
+            (searchLower.includes('деталь') && searchLower.includes(partsCount.toString())) ||
+            (searchLower.includes('детал') && searchLower.includes(partsCount.toString()));
+        
+        return nameMatch || stageMatch || substageMatch || stageCountMatch || partsCountMatch;
+    });
 
     const handleCopyRoute = async (route: Route) => {
         try {
@@ -198,7 +226,7 @@ const RouteList: React.FC<RouteListProps> = ({
                 <div className={styles.searchContainer}>
                     <input
                         type="text"
-                        placeholder="Поиск по названию маршрута..."
+                        placeholder="Поиск по названию, этапам, подэтапам или количеству..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className={styles.searchInput}

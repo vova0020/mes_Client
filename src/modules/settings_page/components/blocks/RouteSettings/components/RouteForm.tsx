@@ -1,36 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    Typography,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemAvatar,
-    Avatar,
-    Checkbox,
-    Divider,
-    IconButton,
-    Tooltip,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    CircularProgress,
-    Alert
-} from '@mui/material';
-import {
-    Engineering as EngineeringIcon,
-    ArrowUpward as ArrowUpwardIcon,
-    ArrowDownward as ArrowDownwardIcon,
-    Delete as DeleteIcon
-} from '@mui/icons-material';
-import { Route, CreateRouteDto, AvailableStage } from '../api/routes.api';
-import { useAvailableStagesLevel2 } from '../hooks/useRoutes';
+import { 
+    Route, 
+    CreateRouteDto, 
+    ProductionLine, 
+    LineStagesResponse,
+    routesApi 
+} from '../api/routes.api';
+import { useDeleteAllRouteStages } from '../hooks/useRoutes';
 import styles from './RouteForm.module.css';
 
 interface RouteFormProps {
@@ -38,7 +14,6 @@ interface RouteFormProps {
     onClose: () => void;
     onSave: (routeData: CreateRouteDto) => void;
     route?: Route | null;
-    availableStages: AvailableStage[];
     isEditing: boolean;
     isLoading: boolean;
 }
@@ -56,33 +31,41 @@ const RouteForm: React.FC<RouteFormProps> = ({
     onClose,
     onSave,
     route,
-    availableStages,
     isEditing,
     isLoading
 }) => {
-    // Состояние для формы маршрута
-    const [routeForm, setRouteForm] = useState<{ routeName: string }>({
-        routeName: ''
+    // Состояние формы
+    const [routeForm, setRouteForm] = useState({
+        routeName: '',
+        lineId: 0
     });
 
-    // Состояние для выбранных этапов
+    // Состояние для производственных линий и этапов
+    const [productionLines, setProductionLines] = useState<ProductionLine[]>([]);
+    const [lineStages, setLineStages] = useState<LineStagesResponse | null>(null);
     const [selectedStages, setSelectedStages] = useState<SelectedStage[]>([]);
     
-    // Состояние для добавления нового этапа
-    const [newStage, setNewStage] = useState({
-        stageId: 0,
-        substageId: 0
-    });
+    
+    // Состояние загрузки
+    const [loadingLines, setLoadingLines] = useState(false);
+    const [loadingStages, setLoadingStages] = useState(false);
 
-    // Получаем подэтапы для выбранного этапа
-    const { data: availableSubstages = [] } = useAvailableStagesLevel2(newStage.stageId);
+    // Хук для удаления всех этапов маршрута
+    const deleteAllStagesMutation = useDeleteAllRouteStages();
+
+    // Загрузка производственных линий при открытии формы
+    useEffect(() => {
+        if (open) {
+            loadProductionLines();
+        }
+    }, [open]);
 
     // Инициализация формы при открытии
     useEffect(() => {
         if (route && isEditing) {
-            // Редактирование существующего маршрута
             setRouteForm({
-                routeName: route.routeName
+                routeName: route.routeName,
+                lineId: route.lineId || 0
             });
 
             // Устанавливаем выбранные этапы
@@ -97,15 +80,107 @@ const RouteForm: React.FC<RouteFormProps> = ({
                 }));
             
             setSelectedStages(stages);
+
+            // Загружаем этапы производственной линии если линия выбрана
+            if (route.lineId) {
+                loadLineStages(route.lineId);
+            }
         } else {
-            // Создание нового маршрута
-            setRouteForm({ routeName: '' });
+            setRouteForm({ routeName: '', lineId: 0 });
             setSelectedStages([]);
+            setLineStages(null);
         }
-        
-        // Сброс формы добавления этапа
-        setNewStage({ stageId: 0, substageId: 0 });
     }, [route, isEditing, open]);
+
+    // Загрузка производственных линий
+    const loadProductionLines = async () => {
+        setLoadingLines(true);
+        try {
+            const linesData = await routesApi.getProductionLines();
+            setProductionLines(linesData);
+        } catch (error) {
+            console.error('Ошибка загрузки производственных линий:', error);
+        } finally {
+            setLoadingLines(false);
+        }
+    };
+
+    // Загрузка этапов производственной линии
+    const loadLineStages = async (lineId: number) => {
+        setLoadingStages(true);
+        try {
+            const stagesData = await routesApi.getLineStages(lineId);
+            setLineStages(stagesData);
+        } catch (error) {
+            console.error('Ошибка загрузки этапов производственной линии:', error);
+            setLineStages(null);
+        } finally {
+            setLoadingStages(false);
+        }
+    };
+
+    // Обработчик изменения производственной линии
+    const handleLineChange = async (lineId: number) => {
+        setRouteForm(prev => ({ ...prev, lineId }));
+        setSelectedStages([]); // Очищаем выбранные этапы
+        
+        if (lineId > 0) {
+            loadLineStages(lineId);
+        } else {
+            setLineStages(null);
+            
+            // Если это редактирование существующего маршрута и выбрано "Без привязки к производственной линии"
+            // то удаляем все этапы маршрута через API
+            if (isEditing && route?.routeId && route.routeStages.length > 0) {
+                try {
+                    await deleteAllStagesMutation.mutateAsync(route.routeId);
+                    console.log('Все этапы маршрута успешно удалены');
+                } catch (error) {
+                    console.error('Ошибка при удалении всех этапов маршрута:', error);
+                }
+            }
+        }
+    };
+
+    // Автоматически добавить все этапы линии при загрузке этапов
+    useEffect(() => {
+        if (lineStages) {
+            if (!isEditing) {
+                // Для создания нового маршрута - автоматически добавляем все этапы линии
+                const allStages: SelectedStage[] = lineStages.stagesLevel1.map((stage, index) => ({
+                    stageId: stage.stageId,
+                    substageId: undefined,
+                    sequenceNumber: index + 1,
+                    stageName: stage.stageName,
+                    substageName: undefined
+                }));
+                setSelectedStages(allStages);
+            } else {
+                // При редактировании проверяем, есть ли этапы которых нет в текущем маршруте
+                // и добавляем их в конец списка
+                setSelectedStages(prevStages => {
+                    const currentStageIds = prevStages.map(s => s.stageId);
+                    const missingStages = lineStages.stagesLevel1.filter(stage => 
+                        !currentStageIds.includes(stage.stageId)
+                    );
+                    
+                    if (missingStages.length > 0) {
+                        const newStages: SelectedStage[] = missingStages.map((stage, index) => ({
+                            stageId: stage.stageId,
+                            substageId: undefined,
+                            sequenceNumber: prevStages.length + index + 1,
+                            stageName: stage.stageName,
+                            substageName: undefined
+                        }));
+                        
+                        return [...prevStages, ...newStages];
+                    }
+                    
+                    return prevStages;
+                });
+            }
+        }
+    }, [lineStages, isEditing]);
 
     // Обработчик изменения поля формы
     const handleRouteFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,40 +188,7 @@ const RouteForm: React.FC<RouteFormProps> = ({
         setRouteForm(prev => ({ ...prev, [name]: value }));
     };
 
-    // Добавить этап к маршруту
-    const handleAddStage = () => {
-        if (newStage.stageId === 0) return;
-
-        const stageInfo = availableStages.find(s => s.stageId === newStage.stageId);
-        if (!stageInfo) return;
-
-        const substageInfo = newStage.substageId ? 
-            stageInfo.productionStagesLevel2.find(s => s.substageId === newStage.substageId) : 
-            undefined;
-
-        const newSelectedStage: SelectedStage = {
-            stageId: newStage.stageId,
-            substageId: newStage.substageId || undefined,
-            sequenceNumber: selectedStages.length + 1,
-            stageName: stageInfo.stageName,
-            substageName: substageInfo?.substageName
-        };
-
-        setSelectedStages([...selectedStages, newSelectedStage]);
-        setNewStage({ stageId: 0, substageId: 0 });
-    };
-
-    // Удалить этап из маршрута
-    const handleRemoveStage = (index: number) => {
-        const updatedStages = selectedStages.filter((_, i) => i !== index);
-        // Обновляем последовательность
-        const reorderedStages = updatedStages.map((stage, idx) => ({
-            ...stage,
-            sequenceNumber: idx + 1
-        }));
-        setSelectedStages(reorderedStages);
-    };
-
+    
     // Переместить этап вверх
     const handleMoveUp = (index: number) => {
         if (index === 0) return;
@@ -156,7 +198,6 @@ const RouteForm: React.FC<RouteFormProps> = ({
         stages[index] = stages[index - 1];
         stages[index - 1] = temp;
         
-        // Обновляем последовательность
         const reorderedStages = stages.map((stage, idx) => ({
             ...stage,
             sequenceNumber: idx + 1
@@ -174,7 +215,6 @@ const RouteForm: React.FC<RouteFormProps> = ({
         stages[index] = stages[index + 1];
         stages[index + 1] = temp;
         
-        // Обновляем последовательность
         const reorderedStages = stages.map((stage, idx) => ({
             ...stage,
             sequenceNumber: idx + 1
@@ -187,6 +227,7 @@ const RouteForm: React.FC<RouteFormProps> = ({
     const handleSave = () => {
         const routeData: CreateRouteDto = {
             routeName: routeForm.routeName,
+            lineId: routeForm.lineId > 0 ? routeForm.lineId : undefined,
             stages: selectedStages.map(stage => ({
                 stageId: stage.stageId,
                 substageId: stage.substageId,
@@ -197,186 +238,174 @@ const RouteForm: React.FC<RouteFormProps> = ({
         onSave(routeData);
     };
 
+    
+    if (!open) return null;
+
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            maxWidth="md"
-            fullWidth
-        >
-            <DialogTitle className={styles.dialogTitle}>
-                {isEditing ? 'Редактирование маршрута' : 'Создание нового маршрута'}
-            </DialogTitle>
-            <DialogContent className={styles.dialogContent}>
-                <TextField
-                    autoFocus
-                    margin="dense"
-                    name="routeName"
-                    label="Название маршрута"
-                    type="text"
-                    fullWidth
-                    value={routeForm.routeName}
-                    onChange={handleRouteFormChange}
-                    required
-                    variant="outlined"
-                    className={styles.formField}
-                />
+        <div className={styles.overlay}>
+            <div className={styles.routeFormContainer}>
+                {/* Заголовок формы */}
+                <div className={styles.formHeader}>
+                    <h2 className={styles.formTitle}>
+                        {isEditing ? 'Редактирование маршрута' : 'Создание нового маршрута'}
+                    </h2>
+                    <button 
+                        className={styles.closeButton}
+                        onClick={onClose}
+                        disabled={isLoading}
+                    >
+                        ✕
+                    </button>
+                </div>
 
-                <div className={styles.stagesContainer}>
-                    {/* Форма добавления этапа */}
-                    <div className={styles.addStageForm}>
-                        <Typography variant="subtitle1" className={styles.sectionTitle}>
-                            Добавить этап обработки
-                        </Typography>
-                        <div className={styles.addStageInputs}>
-                            <FormControl variant="outlined" className={styles.stageSelect}>
-                                <InputLabel>Этап обработки</InputLabel>
-                                <Select
-                                    value={newStage.stageId}
-                                    onChange={(e) => setNewStage(prev => ({ 
-                                        ...prev, 
-                                        stageId: e.target.value as number,
-                                        substageId: 0 // Сбрасываем подэтап при смене этапа
-                                    }))}
-                                    label="Этап обработки"
-                                >
-                                    <MenuItem value={0}>Выберите этап</MenuItem>
-                                    {availableStages.map(stage => (
-                                        <MenuItem key={stage.stageId} value={stage.stageId}>
-                                            {stage.stageName}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            {newStage.stageId > 0 && availableSubstages.length > 0 && (
-                                <FormControl variant="outlined" className={styles.substageSelect}>
-                                    <InputLabel>Подэтап (опционально)</InputLabel>
-                                    <Select
-                                        value={newStage.substageId}
-                                        onChange={(e) => setNewStage(prev => ({ 
-                                            ...prev, 
-                                            substageId: e.target.value as number 
-                                        }))}
-                                        label="Подэтап (опционально)"
-                                    >
-                                        <MenuItem value={0}>Не выбран</MenuItem>
-                                        {availableSubstages.map(substage => (
-                                            <MenuItem key={substage.substageId} value={substage.substageId}>
-                                                {substage.substageName}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            )}
-
-                            <Button
-                                variant="contained"
-                                onClick={handleAddStage}
-                                disabled={newStage.stageId === 0}
-                                className={styles.addStageButton}
-                            >
-                                Добавить
-                            </Button>
+                {/* Содержимое формы */}
+                <div className={styles.form}>
+                    {/* Основная информация */}
+                    <div className={styles.formSection}>
+                        <h3 className={styles.sectionTitle}>Основная информация</h3>
+                        
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Название маршрута</label>
+                            <input
+                                type="text"
+                                name="routeName"
+                                value={routeForm.routeName}
+                                onChange={handleRouteFormChange}
+                                className={styles.input}
+                                placeholder="Введите название маршрута"
+                                required
+                            />
                         </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Производственная линия</label>
+                            <select
+                                value={routeForm.lineId}
+                                onChange={(e) => handleLineChange(Number(e.target.value))}
+                                className={styles.select}
+                                disabled={loadingLines}
+                            >
+                                <option value={0}>Без привязки к производственной линии</option>
+                                {productionLines.map(line => (
+                                    <option key={line.lineId} value={line.lineId}>
+                                        {line.lineName} ({line.lineType})
+                                    </option>
+                                ))}
+                            </select>
+                            {loadingLines && (
+                                <div className={styles.fieldHint}>Загрузка производственных линий...</div>
+                            )}
+                        </div>
+
+                        {lineStages && (
+                            <div className={styles.flowInfo}>
+                                <div className={styles.flowInfoHeader}>
+                                    <span className={styles.flowInfoIcon}>🏭</span>
+                                    <span className={styles.flowInfoName}>{lineStages.productionLine.lineName}</span>
+                                </div>
+                                <div className={styles.flowInfoDescription}>
+                                    Тип: {lineStages.productionLine.lineType}
+                                </div>
+                                <div className={styles.flowInfoStats}>
+                                    Доступно этапов: {lineStages.stagesLevel1.length} | 
+                                    Подэтапов: {lineStages.stagesLevel2.length} | 
+                                    Маршрутов в линии: {lineStages.routesCount}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    <Divider className={styles.divider} />
-
-                    {/* Список выбранных этапов */}
-                    <div className={styles.selectedStagesContainer}>
-                        <Typography variant="subtitle1" className={styles.sectionTitle}>
-                            Выбранные этапы (порядок выполнения)
-                        </Typography>
+                    
+                    {/* Выбранные этапы */}
+                    <div className={styles.formSection}>
+                        <h3 className={styles.sectionTitle}>
+                            Этапы производственной линии (настройка порядка выполнения)
+                        </h3>
                         
                         {selectedStages.length === 0 ? (
-                            <Alert severity="info" className={styles.noStagesAlert}>
-                                Этапы обработки не выбраны. Добавьте этапы для создания маршрута.
-                            </Alert>
+                            <div className={styles.emptyStages}>
+                                {routeForm.lineId === 0 
+                                    ? 'Выберите производственную линию для отображения этапов'
+                                    : loadingStages 
+                                        ? 'Загрузка этапов производственной ли��ии...'
+                                        : 'Этапы производственной линии будут отображены автоматически'
+                                }
+                            </div>
                         ) : (
-                            <List className={styles.selectedStagesList}>
+                            <div className={styles.stagesList}>
                                 {selectedStages.map((stage, index) => (
-                                    <ListItem 
+                                    <div 
                                         key={`${stage.stageId}-${stage.substageId || 'none'}-${index}`}
-                                        className={styles.selectedStageItem}
+                                        className={styles.stageItem}
                                     >
-                                        <Typography className={styles.stageSequence}>
+                                        <div className={styles.stageSequence}>
                                             {index + 1}
-                                        </Typography>
-                                        <ListItemAvatar>
-                                            <Avatar className={styles.stageAvatar}>
-                                                <EngineeringIcon />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={stage.stageName}
-                                            secondary={stage.substageName ? `→ ${stage.substageName}` : null}
-                                        />
-                                        <div className={styles.stageActions}>
-                                            <Tooltip title="Переместить вверх">
-                                                <span>
-                                                    <IconButton 
-                                                        size="small" 
-                                                        onClick={() => handleMoveUp(index)}
-                                                        disabled={index === 0}
-                                                    >
-                                                        <ArrowUpwardIcon />
-                                                    </IconButton>
-                                                </span>
-                                            </Tooltip>
-                                            <Tooltip title="Переместить вниз">
-                                                <span>
-                                                    <IconButton 
-                                                        size="small" 
-                                                        onClick={() => handleMoveDown(index)}
-                                                        disabled={index === selectedStages.length - 1}
-                                                    >
-                                                        <ArrowDownwardIcon />
-                                                    </IconButton>
-                                                </span>
-                                            </Tooltip>
-                                            <Tooltip title="Удалить этап">
-                                                <IconButton 
-                                                    size="small" 
-                                                    onClick={() => handleRemoveStage(index)}
-                                                    className={styles.deleteButton}
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Tooltip>
                                         </div>
-                                    </ListItem>
+                                        <div className={styles.stageInfo}>
+                                            <div className={styles.stageName}>
+                                                🔧 {stage.stageName}
+                                            </div>
+                                            {stage.substageName && (
+                                                <div className={styles.stageDescription}>
+                                                    → {stage.substageName}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={styles.stageActions}>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleMoveUp(index)}
+                                                disabled={index === 0}
+                                                className={styles.actionButton}
+                                                title="Переместить вверх"
+                                            >
+                                                ↑
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleMoveDown(index)}
+                                                disabled={index === selectedStages.length - 1}
+                                                className={styles.actionButton}
+                                                title="Переместить вниз"
+                                            >
+                                                ↓
+                                            </button>
+                                        </div>
+                                    </div>
                                 ))}
-                            </List>
+                            </div>
                         )}
                     </div>
                 </div>
-            </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button 
-                    onClick={onClose} 
-                    className={`${styles.dialogButton} ${styles.cancelButton}`}
-                    disabled={isLoading}
-                >
-                    Отмена
-                </Button>
-                <Button 
-                    onClick={handleSave} 
-                    className={`${styles.dialogButton} ${styles.saveButton}`}
-                    variant="contained"
-                    disabled={!routeForm.routeName || selectedStages.length === 0 || isLoading}
-                >
-                    {isLoading ? (
-                        <>
-                            <CircularProgress size={20} style={{ marginRight: 8 }} />
-                            Сохранение...
-                        </>
-                    ) : (
-                        'Сохранить'
-                    )}
-                </Button>
-            </DialogActions>
-        </Dialog>
+
+                {/* Действия формы */}
+                <div className={styles.formActions}>
+                    <button 
+                        type="button"
+                        onClick={onClose} 
+                        className={`${styles.button} ${styles.cancelButton}`}
+                        disabled={isLoading}
+                    >
+                        Отмена
+                    </button>
+                    <button 
+                        type="button"
+                        onClick={handleSave} 
+                        className={`${styles.button} ${styles.submitButton}`}
+                        disabled={!routeForm.routeName || isLoading}
+                    >
+                        {isLoading ? (
+                            <>
+                                <div className={styles.spinner}></div>
+                                Сохранение...
+                            </>
+                        ) : (
+                            'Сохранить'
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 };
 

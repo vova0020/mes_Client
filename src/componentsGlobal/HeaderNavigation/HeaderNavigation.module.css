@@ -4,6 +4,7 @@
 }
 
 .navButton {
+  margin-right: 10px;
   background: linear-gradient(to bottom, #4a6583, #34495e);
   border: 1px solid #243342;
   color: #fff;

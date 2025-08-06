@@ -9,8 +9,7 @@ import {
   useRoutes, 
   useCreateRoute, 
   useUpdateRouteComplete, 
-  useDeleteRoute, 
-  useAvailableStagesLevel1,
+  useDeleteRoute,
   UpdateRouteCompleteDto
 } from './hooks/useRoutes';
 import { Route, CreateRouteDto } from './api/routes.api';
@@ -50,7 +49,6 @@ const RouteSettingsContent: React.FC = () => {
 
   // Запросы
   const { data: routes = [], isLoading: routesLoading, error: routesError } = useRoutes();
-  const { data: availableStages = [] } = useAvailableStagesLevel1();
 
   // Мутации
   const createRouteMutation = useCreateRoute();
@@ -75,10 +73,11 @@ const RouteSettingsContent: React.FC = () => {
         // Преобразуем данные для UpdateRouteCompleteDto, устанавливая sequenceNumber
         const updateData: UpdateRouteCompleteDto = {
           routeName: routeData.routeName,
+          lineId: routeData.lineId,
           stages: (routeData.stages || []).map((stage, index) => ({
             stageId: stage.stageId,
             substageId: stage.substageId,
-            sequenceNumber: stage.sequenceNumber ?? index + 1 // Используем переданное значение или индекс + 1
+            sequenceNumber: stage.sequenceNumber ?? index + 1 // Используем переданное значение или инде��с + 1
           }))
         };
 
@@ -245,7 +244,6 @@ const RouteSettingsContent: React.FC = () => {
               onClose={handleCloseForm}
               onSave={handleSaveRoute}
               route={editingRoute}
-              availableStages={availableStages}
               isEditing={!!editingRoute}
               isLoading={isFormLoading}
             />

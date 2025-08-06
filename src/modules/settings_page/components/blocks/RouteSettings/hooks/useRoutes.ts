@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { routesApi, Route, CreateRouteDto, UpdateRouteDto, CreateRouteStageDto, UpdateRouteStageDto, ReorderRouteStagesDto } from '../api/routes.api';
+import { routesApi, Route, CreateRouteDto, UpdateRouteDto, CreateRouteStageDto, UpdateRouteStageDto, ReorderRouteStagesDto, ProductionLine, LineStagesResponse } from '../api/routes.api';
 
 // Ключи для запросов
 export const ROUTES_QUERY_KEYS = {
@@ -9,14 +9,14 @@ export const ROUTES_QUERY_KEYS = {
   details: () => [...ROUTES_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: number) => [...ROUTES_QUERY_KEYS.details(), id] as const,
   stages: (routeId: number) => [...ROUTES_QUERY_KEYS.all, 'stages', routeId] as const,
-  availableStages: ['available-stages'] as const,
-  availableStagesLevel1: () => [...ROUTES_QUERY_KEYS.availableStages, 'level1'] as const,
-  availableStagesLevel2: (stageId: number) => [...ROUTES_QUERY_KEYS.availableStages, 'level2', stageId] as const,
+  productionLines: ['productionLines'] as const,
+  lineStages: (lineId: number) => [...ROUTES_QUERY_KEYS.productionLines, 'stages', lineId] as const,
 };
 
 // Интерфейс для комплексного обновления маршрута
 export interface UpdateRouteCompleteDto {
   routeName: string;
+  lineId?: number;
   stages: Array<{
     stageId: number;
     substageId?: number;
@@ -53,22 +53,22 @@ export const useRouteStages = (routeId: number) => {
   });
 };
 
-// Хук для получения доступных этапов уровня 1
-export const useAvailableStagesLevel1 = () => {
+// Хук для получения всех производственных линий
+export const useProductionLines = () => {
   return useQuery({
-    queryKey: ROUTES_QUERY_KEYS.availableStagesLevel1(),
-    queryFn: routesApi.getAvailableStagesLevel1,
+    queryKey: ROUTES_QUERY_KEYS.productionLines,
+    queryFn: routesApi.getProductionLines,
     staleTime: 10 * 60 * 1000, // 10 минут
   });
 };
 
-// Хук для получения доступных этапов уровня 2
-export const useAvailableStagesLevel2 = (stageId: number) => {
+// Хук для получения этапов производственной линии
+export const useLineStages = (lineId: number) => {
   return useQuery({
-    queryKey: ROUTES_QUERY_KEYS.availableStagesLevel2(stageId),
-    queryFn: () => routesApi.getAvailableStagesLevel2(stageId),
-    enabled: !!stageId,
-    staleTime: 10 * 60 * 1000,
+    queryKey: ROUTES_QUERY_KEYS.lineStages(lineId),
+    queryFn: () => routesApi.getLineStages(lineId),
+    enabled: !!lineId,
+    staleTime: 10 * 60 * 1000, // 10 минут
   });
 };
 
@@ -137,8 +137,11 @@ export const useUpdateRouteComplete = () => {
       // 1. Получаем текущий маршрут
       const currentRoute = await routesApi.getRouteById(id);
       
-      // 2. Обновляем название маршрута
-      const updatedRoute = await routesApi.updateRoute(id, { routeName: data.routeName });
+      // 2. Обновляем название маршрута и производственную линию
+      const updatedRoute = await routesApi.updateRoute(id, { 
+        routeName: data.routeName,
+        lineId: data.lineId 
+      });
       
       // 3. Сравниваем этапы
       const { stagesToDelete, stagesToAdd, stagesToUpdate } = compareStages(
@@ -273,6 +276,22 @@ export const useDeleteRouteStage = () => {
   });
 };
 
+// Хук для удаления всех этапов маршрута
+export const useDeleteAllRouteStages = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (routeId: number) => {
+      return routesApi.deleteAllRouteStages(routeId);
+    },
+    onSuccess: (data, routeId) => {
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.detail(routeId) });
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.stages(routeId) });
+    },
+  });
+};
+
 // Хук для изменения порядка этапов
 export const useReorderRouteStages = () => {
   const queryClient = useQueryClient();
@@ -329,3 +348,5 @@ export const useCopyRoute = () => {
     },
   });
 };
+
+//

@@ -23,9 +23,26 @@ export interface RouteStage {
   substage?: Substage;
 }
 
+export interface ProductionLine {
+  lineId: number;
+  lineName: string;
+  lineType: string;
+  _count?: {
+    routes: number;
+  };
+  routes?: Array<{
+    routeId: number;
+    routeName: string;
+  }>;
+  isOccupied?: boolean;
+  routesCount?: number;
+}
+
 export interface Route {
   routeId: number;
   routeName: string;
+  lineId?: number;
+  productionLine?: ProductionLine;
   routeStages: RouteStage[];
   _count?: {
     parts: number;
@@ -39,6 +56,7 @@ export interface Route {
 
 export interface CreateRouteDto {
   routeName: string;
+  lineId?: number;
   stages?: Array<{
     stageId: number;
     substageId?: number;
@@ -47,7 +65,32 @@ export interface CreateRouteDto {
 }
 
 export interface UpdateRouteDto {
-  routeName: string;
+  routeName?: string;
+  lineId?: number;
+}
+
+export interface LineStagesResponse {
+  productionLine: {
+    lineId: number;
+    lineName: string;
+    lineType: string;
+  };
+  stagesLevel1: {
+    stageId: number;
+    stageName: string;
+    description?: string;
+    finalStage: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }[];
+  stagesLevel2: {
+    substageId: number;
+    stageId: number;
+    substageName: string;
+    description?: string;
+    allowance: number;
+  }[];
+  routesCount: number;
 }
 
 export interface CreateRouteStageDto {
@@ -70,6 +113,21 @@ export interface AvailableStage {
   stageId: number;
   stageName: string;
   productionStagesLevel2: Substage[];
+}
+
+export interface FlowDetails {
+  flowId: number;
+  flowName: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  routes: {
+    routeId: number;
+    routeName: string;
+    _count: {
+      parts: number;
+    };
+  }[];
 }
 
 
@@ -134,6 +192,12 @@ export const routesApi = {
     return response.data;
   },
 
+  // Удалить все этапы из маршрута и связь с линией
+  deleteAllRouteStages: async (routeId: number): Promise<{ message: string }> => {
+    const response = await api.delete(`/settings/routes/${routeId}/stages`);
+    return response.data;
+  },
+
   // Изменить порядок этапов в маршруте
   reorderRouteStages: async (routeId: number, data: ReorderRouteStagesDto): Promise<RouteStage[]> => {
     const response = await api.put(`/settings/routes/${routeId}/stages/reorder`, data);
@@ -148,15 +212,15 @@ export const routesApi = {
     return response.data;
   },
 
-  // Получить доступные этапы уровня 1
-  getAvailableStagesLevel1: async (): Promise<AvailableStage[]> => {
-    const response = await api.get('/settings/routes/available-stages/level1');
+  // Получить все производственные линии
+  getProductionLines: async (): Promise<ProductionLine[]> => {
+    const response = await api.get('/settings/routes/production-lines');
     return response.data;
   },
 
-  // Получить доступные этапы уровня 2
-  getAvailableStagesLevel2: async (stageId: number): Promise<Substage[]> => {
-    const response = await api.get(`/settings/routes/available-stages/level2/${stageId}`);
+  // Получить этапы по ID производственной линии
+  getLineStages: async (lineId: number): Promise<LineStagesResponse> => {
+    const response = await api.get(`/settings/routes/line/${lineId}/stages`);
     return response.data;
   },
 

@@ -64,7 +64,7 @@ const Header: React.FC = () => {
       {/* Левый блок: название этапа и кнопки */}
       <div className={styles.leftContainer}>
         <div className={styles.techStage}>
-          {techStage}
+          {/* {techStage}*/}
         </div>
         <div className={styles.navButtons}>
           <HeaderNavigation />
