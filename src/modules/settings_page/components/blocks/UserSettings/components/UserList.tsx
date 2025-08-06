@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useUsers, useDeleteUser } from '../hooks/useUsersQuery';
 import { User } from '../services/usersApi';
+import { useDebounce } from '../utils/debounce';
 import styles from './UserList.module.css';
 
 interface UserListProps {
@@ -24,32 +25,61 @@ export const UserList: React.FC<UserListProps> = ({
   const { data: users = [], isLoading, error } = useUsers();
   const deleteMutation = useDeleteUser();
 
-  // Фильтрация пользователей
-  const filteredUsers = users.filter(user => {
-    if (filter.search) {
-      const searchLower = filter.search.toLowerCase();
-      const fullName = `${user.userDetail.firstName} ${user.userDetail.lastName}`.toLowerCase();
-      const loginMatch = user.login.toLowerCase().includes(searchLower);
-      const nameMatch = fullName.includes(searchLower);
-      
-      if (!loginMatch && !nameMatch) {
-        return false;
-      }
-    }
-    
-    if (filter.position && user.userDetail.position !== filter.position) {
-      return false;
-    }
-    
-    return true;
-  });
+  // Дебаунс для поиска (300мс задержка)
+  const debouncedSearch = useDebounce(filter.search || '', 300);
 
-  // Получаем уникальные должности для фильтра
-  const uniquePositions = Array.from(new Set(
-    users
-      .map(user => user.userDetail.position)
-      .filter((position): position is string => position !== null && position !== undefined && position.trim() !== '')
-  ));
+  // Мемоизированная фильтрация и поиск пользователей
+  const filteredUsers = useMemo(() => {
+    return users
+      .filter(user => {
+        if (debouncedSearch) {
+          const searchLower = debouncedSearch.toLowerCase().trim();
+          if (!searchLower) return true;
+          
+          // Поиск по логину
+          const loginMatch = user.login.toLowerCase().includes(searchLower);
+          
+          // Поиск по полному имени
+          const fullName = `${user.userDetail.firstName} ${user.userDetail.lastName}`.toLowerCase();
+          const nameMatch = fullName.includes(searchLower);
+          
+          // Поиск по отдельным словам в имени и фамилии
+          const firstNameMatch = user.userDetail.firstName.toLowerCase().includes(searchLower);
+          const lastNameMatch = user.userDetail.lastName.toLowerCase().includes(searchLower);
+          
+          // Поиск по должности
+          const positionMatch = user.userDetail.position?.toLowerCase().includes(searchLower) || false;
+          
+          // Поиск по телефону (убираем все символы кроме цифр)
+          const phoneMatch = user.userDetail.phone?.replace(/\D/g, '').includes(searchLower.replace(/\D/g, '')) || false;
+          
+          // Поиск по ID пользователя
+          const idMatch = user.userId.toString().includes(searchLower);
+          
+          // Возвращаем true если найдено совпадение хотя бы в одном поле
+          if (!loginMatch && !nameMatch && !firstNameMatch && !lastNameMatch && !positionMatch && !phoneMatch && !idMatch) {
+            return false;
+          }
+        }
+        
+        if (filter.position && user.userDetail.position !== filter.position) {
+          return false;
+        }
+        
+        return true;
+      })
+      // Сортировка по ID по возрастанию
+      .sort((a, b) => a.userId - b.userId);
+  }, [users, debouncedSearch, filter.position]);
+
+  // Мемоизированные уникальные должности для филь��ра
+  const uniquePositions = useMemo(() => {
+    return Array.from(new Set(
+      users
+        .map(user => user.userDetail.position)
+        .filter((position): position is string => position !== null && position !== undefined && position.trim() !== '')
+    )).sort(); // Сортируем должности по алфавиту
+  }, [users]);
 
   const handleDeleteUser = async (userId: number, userLogin: string) => {
     if (window.confirm(`Вы уверены, что хотите удалить пользователя "${userLogin}"?`)) {
@@ -120,7 +150,7 @@ export const UserList: React.FC<UserListProps> = ({
           <span className={styles.searchIcon}>🔍</span>
           <input
             type="text"
-            placeholder="Поиск по имени или логину..."
+            placeholder="Поиск по имени, логину, должности, телефону или ID..."
             value={filter.search || ''}
             onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
             className={styles.searchInput}
@@ -203,6 +233,7 @@ export const UserList: React.FC<UserListProps> = ({
                       {user.userDetail.firstName} {user.userDetail.lastName}
                     </h3>
                     <div className={styles.userLogin}>@{user.login}</div>
+                    <div className={styles.userId}>ID: {user.userId}</div>
                   </div>
                 </div>
 

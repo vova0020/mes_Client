@@ -59,19 +59,26 @@ export const useUser = (id: number | undefined) => {
   });
 };
 
-// Созд��ть пользователя
+// Создать пользователя
 export const useCreateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (userData: CreateUserDto) => UsersApiService.createUser(userData),
     onSuccess: (newUser) => {
-      // Обновляем кэш со списком пользователей
+      // Обновляем кэш со списком пользователей (добавляем и сортируем по ID)
       queryClient.setQueryData(
         USERS_QUERY_KEYS.lists(),
         (oldData: User[] | undefined) => {
-          return oldData ? [...oldData, newUser] : [newUser];
+          const updatedData = oldData ? [...oldData, newUser] : [newUser];
+          return updatedData.sort((a, b) => a.userId - b.userId);
         }
+      );
+      
+      // Добавляем в кэш детали нового пользователя
+      queryClient.setQueryData(
+        USERS_QUERY_KEYS.detail(newUser.userId),
+        newUser
       );
     },
   });

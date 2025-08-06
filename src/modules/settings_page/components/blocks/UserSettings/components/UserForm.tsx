@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useUser, useCreateUser, useUpdateUser, useCreatePickerWithRole } from '../hooks/useUsersQuery';
+import { useUser, useUsers, useCreateUser, useUpdateUser, useCreatePickerWithRole } from '../hooks/useUsersQuery';
 import { CreateUserDto, UpdateUserDto } from '../services/usersApi';
 import styles from './UserForm.module.css';
 
@@ -51,6 +51,7 @@ export const UserForm: React.FC<UserFormProps> = ({
   const [showPassword, setShowPassword] = useState(false);
 
   const { data: existingUser, isLoading: isLoadingUser } = useUser(editId);
+  const { data: allUsers = [] } = useUsers(); // Для проверки дублирования логинов
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const createPickerWithRoleMutation = useCreatePickerWithRole();
@@ -86,6 +87,15 @@ export const UserForm: React.FC<UserFormProps> = ({
       newErrors.login = 'Логин не должен превышать 50 символов';
     } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.login)) {
       newErrors.login = 'Логин может содержать только буквы, цифры, дефис и подчеркивание';
+    } else {
+      // Проверка на дублирование логинов
+      const loginExists = allUsers.some(user => 
+        user.login.toLowerCase() === formData.login.trim().toLowerCase() && 
+        (!isEditing || user.userId !== editId)
+      );
+      if (loginExists) {
+        newErrors.login = 'Пользователь с таким логином уже существует';
+      }
     }
 
     // Валидация пароля (только при создании или если поле заполнено)

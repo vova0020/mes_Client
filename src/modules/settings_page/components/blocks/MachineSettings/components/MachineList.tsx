@@ -25,16 +25,18 @@ export const MachineList: React.FC<MachineListProps> = ({
   const { data: statistics } = useStagesStatistics();
   const deleteMachineMutation = useDeleteMachine();
 
-  // Фильтрация станков
-  const filteredMachines = machines.filter(machine => {
-    if (filter.status && machine.status !== filter.status) {
-      return false;
-    }
-    if (filter.search && !machine.machineName.toLowerCase().includes(filter.search.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
+  // Фильтрация и сортировка станков
+  const filteredMachines = machines
+    .filter(machine => {
+      if (filter.status && machine.status !== filter.status) {
+        return false;
+      }
+      if (filter.search && !machine.machineName.toLowerCase().includes(filter.search.toLowerCase())) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => a.machineId - b.machineId); // Дополнительная сортировка по ID
 
   const handleDeleteMachine = async (machineId: number, machineName: string) => {
     if (window.confirm(`Вы уверены, что хотите удалить станок "${machineName}"?`)) {

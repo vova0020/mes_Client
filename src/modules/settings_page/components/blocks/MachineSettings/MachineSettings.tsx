@@ -196,22 +196,26 @@ const MachineSettingsContent: React.FC = () => {
 
       {/* Main Content */}
       <div className={styles.mainContent}>
-        {/* Left Panel - Machines List */}
-        <div className={styles.leftPanel}>
-          <MachineList 
-            onMachineSelect={handleMachineSelect}
-            onMachineEdit={handleMachineEdit}
-            onMachineDeleted={handleMachineDeleted}
-            selectedMachineId={selectedMachine?.machineId}
-          />
-        </div>
+        <div className={styles.contentPanel}>
+          <div className={styles.machinesLayout}>
+            {/* Left Panel - Machines List */}
+            <div className={styles.leftPanel}>
+              <MachineList 
+                onMachineSelect={handleMachineSelect}
+                onMachineEdit={handleMachineEdit}
+                onMachineDeleted={handleMachineDeleted}
+                selectedMachineId={selectedMachine?.machineId}
+              />
+            </div>
 
-        {/* Right Panel - Machine Details */}
-        <div className={styles.rightPanel}>
-          <MachineDetails 
-            selectedMachine={selectedMachine}
-            onMachineUpdated={handleMachineUpdated}
-          />
+            {/* Right Panel - Machine Details */}
+            <div className={styles.rightPanel}>
+              <MachineDetails 
+                selectedMachine={selectedMachine}
+                onMachineUpdated={handleMachineUpdated}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

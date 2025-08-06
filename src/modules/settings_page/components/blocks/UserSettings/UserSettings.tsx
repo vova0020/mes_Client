@@ -132,10 +132,10 @@ const UserSettingsContent: React.FC<UserSettingsContentProps> = ({ className }) 
 
       <div className={styles.header}>
         <div className={styles.headerContent}>
-          <h2 className={styles.headerTitle}>
+          <h1 className={styles.headerTitle}>
             <span className={styles.headerIcon}>👥</span>
             Управление пользователями
-          </h2>
+          </h1>
           <p className={styles.headerSubtitle}>
             Настройка пользователей системы и управление их ролями 
             <span className={styles.realtimeIndicator}>
@@ -143,53 +143,59 @@ const UserSettingsContent: React.FC<UserSettingsContentProps> = ({ className }) 
             </span>
           </p>
         </div>
-        <button 
-          className={styles.createButton}
-          onClick={handleCreateUser}
-          disabled={isCreateMode || isEditMode}
-        >
-          + Создать пользователя
-        </button>
+        <div className={styles.headerActions}>
+          <button 
+            className={styles.createButton}
+            onClick={handleCreateUser}
+            disabled={isCreateMode || isEditMode}
+          >
+            + Создать пользователя
+          </button>
+        </div>
       </div>
 
       <div className={styles.content}>
-        <div className={styles.leftPanel}>
-          <UserList
-            onUserSelect={handleUserSelect}
-            onUserEdit={handleEditUser}
-            onUserDeleted={handleUserDeleted}
-            selectedUserId={selectedUser?.userId}
-          />
-        </div>
-
-        <div className={styles.rightPanel}>
-          {isCreateMode && (
-            <div className={styles.formContainer}>
-              <UserForm
-                onSaved={handleUserCreated}
-                onCancel={handleCancelEdit}
+        <div className={styles.contentPanel}>
+          <div className={styles.usersLayout}>
+            <div className={styles.leftPanel}>
+              <UserList
+                onUserSelect={handleUserSelect}
+                onUserEdit={handleEditUser}
+                onUserDeleted={handleUserDeleted}
+                selectedUserId={selectedUser?.userId}
               />
             </div>
-          )}
 
-          {isEditMode && selectedUser && (
-            <div className={styles.formContainer}>
-              <UserForm
-                editId={selectedUser.userId}
-                onSaved={handleUserUpdated}
-                onCancel={handleCancelEdit}
-              />
-            </div>
-          )}
+            <div className={styles.rightPanel}>
+              {isCreateMode && (
+                <div className={styles.formContainer}>
+                  <UserForm
+                    onSaved={handleUserCreated}
+                    onCancel={handleCancelEdit}
+                  />
+                </div>
+              )}
 
-          {!isCreateMode && !isEditMode && (
-            <div className={styles.detailsContainer}>
-              <UserDetails
-                selectedUser={selectedUser}
-                onUserUpdated={handleUserDetailsUpdated}
-              />
+              {isEditMode && selectedUser && (
+                <div className={styles.formContainer}>
+                  <UserForm
+                    editId={selectedUser.userId}
+                    onSaved={handleUserUpdated}
+                    onCancel={handleCancelEdit}
+                  />
+                </div>
+              )}
+
+              {!isCreateMode && !isEditMode && (
+                <div className={styles.detailsContainer}>
+                  <UserDetails
+                    selectedUser={selectedUser}
+                    onUserUpdated={handleUserDetailsUpdated}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

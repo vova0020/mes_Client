@@ -20,7 +20,11 @@ export const MACHINES_QUERY_KEYS = {
 export const useMachines = () => {
   return useQuery({
     queryKey: MACHINES_QUERY_KEYS.lists(),
-    queryFn: MachinesApiService.getAllMachines,
+    queryFn: async () => {
+      const machines = await MachinesApiService.getAllMachines();
+      // Сортируем станки по ID по возрастанию
+      return machines.sort((a, b) => a.machineId - b.machineId);
+    },
     staleTime: 1000 * 60 * 5, // 5 минут
   });
 };
@@ -84,7 +88,18 @@ export const useCreateMachine = () => {
       queryClient.setQueryData(
         MACHINES_QUERY_KEYS.lists(),
         (oldData: Machine[] | undefined) => {
-          return oldData ? [...oldData, newMachine] : [newMachine];
+          if (!oldData) return [newMachine];
+          
+          // Проверяем, нет ли уже такого станка (предотвращаем дублирование)
+          const existingMachine = oldData.find(machine => machine.machineId === newMachine.machineId);
+          if (existingMachine) {
+            console.log('[useCreateMachine] Станок уже существует, пропускаем добавление');
+            return oldData;
+          }
+          
+          // Добавляем новый станок и сортируем по ID
+          const updatedData = [...oldData, newMachine];
+          return updatedData.sort((a, b) => a.machineId - b.machineId);
         }
       );
       

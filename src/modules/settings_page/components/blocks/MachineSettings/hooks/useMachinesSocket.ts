@@ -61,7 +61,18 @@ export const useMachinesSocket = () => {
       queryClient.setQueryData(
         MACHINES_QUERY_KEYS.lists(),
         (oldData: Machine[] | undefined) => {
-          return oldData ? [...oldData, data.machine] : [data.machine];
+          if (!oldData) return [data.machine];
+          
+          // Проверяем, нет ли уже такого станка (предотвращаем дублирование)
+          const existingMachine = oldData.find(machine => machine.machineId === data.machine.machineId);
+          if (existingMachine) {
+            console.log('[MachinesSocket] Станок уже существует, пропускаем добавление');
+            return oldData;
+          }
+          
+          // Добавляем новый станок и сортируем по ID
+          const updatedData = [...oldData, data.machine];
+          return updatedData.sort((a, b) => a.machineId - b.machineId);
         }
       );
       

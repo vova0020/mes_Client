@@ -1,99 +1,179 @@
+/* ================================================ */
+/* UserForm Component Styles */
+/* ================================================ */
+
 .form {
-  height: 100%;
-  background: white;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: linear-gradient(to bottom, #374051, #2d3441);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid #243342;
+  color: white;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  margin: 0 auto;
 }
 
+/* Form Header */
 .header {
+  background: linear-gradient(to bottom, #4a6583, #34495e);
+  color: white;
+  padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid #243342;
+  flex-shrink: 0;
 }
 
 .title {
-  margin: 0;
   font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .closeButton {
-  background: #f1f5f9;
-  border: 2px solid #e2e8f0;
-  color: #64748b;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  border: 1px solid #a5281a;
+  color: white;
+  font-size: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  font-weight: 700;
 }
 
-.closeButton:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #dc2626;
-  transform: scale(1.1);
-}
-
-.formContent {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.label {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.9rem;
-  margin-bottom: 4px;
-}
-
-.input {
-  padding: 12px 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background: white;
-}
-
-.input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+.closeButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #e95e4f, #d14233);
+  box-shadow: 
+    0 3px 5px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
-.input:hover:not(:focus) {
-  border-color: #cbd5e1;
+.closeButton:active {
+  background: linear-gradient(to bottom, #c0392b, #a5281a);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+}
+
+.closeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Form Content */
+.formContent {
+  padding: 2rem;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  /* Скрываем полосу прокрутки */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE и Edge */
+}
+
+.formContent::-webkit-scrollbar {
+  display: none; /* Chrome, Safari и Opera */
+}
+
+/* Form Fields */
+.field {
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  display: block;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  text-shadow: none;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  color: #2c3e50;
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  box-sizing: border-box;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #6c757d;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: #5dade2;
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.1),
+    0 0 0 3px rgba(93, 173, 226, 0.2);
+}
+
+.input:disabled,
+.textarea:disabled,
+.select:disabled {
+  background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .inputError {
   border-color: #dc2626 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.1),
+    0 0 0 3px rgba(220, 38, 38, 0.2) !important;
 }
 
+/* Password Field */
 .passwordContainer {
   position: relative;
   display: flex;
@@ -101,71 +181,62 @@
 }
 
 .passwordContainer .input {
-  padding-right: 50px;
-  width: 100%;
+  padding-right: 3rem;
 }
 
 .passwordToggle {
   position: absolute;
-  right: 12px;
+  right: 0.75rem;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.2rem;
-  color: #64748b;
+  color: #6c757d;
   transition: color 0.3s ease;
-  padding: 4px;
+  padding: 0.25rem;
 }
 
 .passwordToggle:hover {
-  color: #374151;
+  color: #2c3e50;
 }
 
 .errorText {
   color: #dc2626;
   font-size: 0.85rem;
   font-weight: 500;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.errorText::before {
-  content: "⚠️";
-  font-size: 0.8rem;
+  margin-top: 0.25rem;
 }
 
 .fieldHint {
-  color: #64748b;
+  color: #6c757d;
   font-size: 0.8rem;
-  margin-top: 4px;
+  margin-top: 0.25rem;
   font-style: italic;
 }
 
-/* Стили для чекбокса создания комплектовщика */
+/* Checkbox Field */
 .checkboxContainer {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 2px solid #bae6fd;
-  border-radius: 12px;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+  border: 2px solid #2196f3;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .checkboxContainer:hover {
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  border-color: #0ea5e9;
+  background: linear-gradient(145deg, #bbdefb, #90caf9);
+  border-color: #1976d2;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
 }
 
 .checkbox {
   width: 18px;
   height: 18px;
-  border: 2px solid #0ea5e9;
+  border: 2px solid #1976d2;
   border-radius: 4px;
   background: white;
   cursor: pointer;
@@ -175,25 +246,9 @@
 }
 
 .checkbox:checked {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  border-color: #0284c7;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
-}
-
-.checkbox:checked::after {
-  content: "✓";
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.checkbox:hover:not(:checked) {
-  border-color: #0284c7;
-  background: #f0f9ff;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  border-color: #1565c0;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
 }
 
 .checkboxLabel {
@@ -201,84 +256,102 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .checkboxText {
   font-weight: 600;
-  color: #0c4a6e;
+  color: #0d47a1;
   font-size: 1rem;
   line-height: 1.4;
+  text-shadow: none;
 }
 
 .checkboxHint {
-  color: #0369a1;
+  color: #1565c0;
   font-size: 0.85rem;
   line-height: 1.4;
   font-style: italic;
+  text-shadow: none;
 }
 
+/* Form Actions */
 .actions {
   display: flex;
-  gap: 16px;
   justify-content: flex-end;
-  padding-top: 24px;
-  border-top: 1px solid #e2e8f0;
-  margin-top: auto;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #4a6583;
+  background: linear-gradient(to bottom, #374051, #2d3441);
+  flex-shrink: 0;
 }
 
-.cancelButton {
-  padding: 12px 24px;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  color: #64748b;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-}
-
-.cancelButton:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #374151;
-  transform: translateY(-1px);
-}
-
-.cancelButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.submitButton {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.button {
+  padding: 0.75rem 1.5rem;
   border: none;
-  color: white;
   border-radius: 8px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   min-width: 120px;
   justify-content: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.submitButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-}
-
-.submitButton:disabled {
-  opacity: 0.7;
+.button:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
+.cancelButton {
+  background: linear-gradient(to bottom, #7f8c8d, #6c7b7d);
+  color: white;
+  border: 1px solid #5d6d7e;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  box-shadow: 
+    0 3px 5px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.cancelButton:active {
+  background: linear-gradient(to bottom, #6c7b7d, #5d6d7e);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+}
+
+.submitButton {
+  background: linear-gradient(to bottom, #27ae60, #229954);
+  color: white;
+  border: 1px solid #1e8449;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  box-shadow: 
+    0 3px 5px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.submitButton:active {
+  background: linear-gradient(to bottom, #229954, #1e8449);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+}
+
+/* Loading spinner in button */
 .submitSpinner {
   width: 16px;
   height: 16px;
@@ -293,22 +366,22 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Загрузка */
+/* Loading State */
 .loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 200px;
-  gap: 16px;
-  color: #64748b;
+  gap: 1rem;
+  color: white;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #e2e8f0;
-  border-top: 3px solid #667eea;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -316,182 +389,54 @@
 .loading p {
   margin: 0;
   font-weight: 500;
-  color: #64748b;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
 }
 
-/* Адаптивность */
+/* Responsive Design */
 @media (max-width: 768px) {
   .form {
-    margin: 0;
-    border-radius: 0;
-    height: 100vh;
+    max-width: 100%;
+    max-height: 95vh;
   }
   
   .header {
-    padding: 16px;
-  }
-  
-  .title {
-    font-size: 1.25rem;
+    padding: 1rem;
   }
   
   .formContent {
-    padding: 16px;
-    gap: 16px;
+    padding: 1rem;
+    gap: 1rem;
   }
   
   .actions {
     flex-direction: column-reverse;
-    gap: 12px;
+    padding: 1rem;
   }
   
-  .cancelButton,
-  .submitButton {
+  .button {
     width: 100%;
-    justify-content: center;
-  }
-  
-  .checkboxContainer {
-    padding: 12px;
-  }
-  
-  .checkboxText {
-    font-size: 0.9rem;
-  }
-  
-  .checkboxHint {
-    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
-  .header {
-    padding: 12px;
+  .title {
+    font-size: 1.25rem;
   }
   
-  .formContent {
-    padding: 12px;
-    gap: 12px;
+  .closeButton {
+    font-size: 1.25rem;
+    padding: 0.25rem;
+    width: 32px;
+    height: 32px;
   }
   
-  .field {
-    gap: 6px;
-  }
-  
-  .input {
-    padding: 10px 12px;
+  .button {
+    padding: 0.625rem 1rem;
     font-size: 0.9rem;
   }
   
-  .passwordContainer .input {
-    padding-right: 45px;
-  }
-  
-  .passwordToggle {
-    right: 10px;
-    font-size: 1.1rem;
-  }
-}
-
-/* Улучшенные анимации */
-.field {
-  animation: slideInUp 0.3s ease;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.form {
-  animation: fadeInScale 0.4s ease;
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Кастомные скроллбары */
-.formContent::-webkit-scrollbar {
-  width: 6px;
-}
-
-.formContent::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.formContent::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.formContent::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Фокус состояния для доступности */
-.checkbox:focus {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-
-.checkboxLabel:focus-within {
-  outline: 2px solid rgba(102, 126, 234, 0.3);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Состояния полей */
-.field:focus-within .label {
-  color: #667eea;
-  font-weight: 700;
-}
-
-.input:valid:not(:placeholder-shown) {
-  border-color: #10b981;
-}
-
-.input:valid:not(:placeholder-shown):focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-/* Улучшенные эффекты наведения */
-.checkboxContainer:hover .checkboxText {
-  color: #0c4a6e;
-  font-weight: 700;
-}
-
-.checkboxContainer:hover .checkboxHint {
-  color: #0369a1;
-}
-
-/* Анимация появления чекбокса */
-.checkboxContainer {
-  animation: slideInRight 0.4s ease;
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  .field {
+    padding: 1rem;
   }
 }
