@@ -2,12 +2,25 @@
 .details-reference-container {
   /* display: grid; */
   /* grid-template-rows: 1fr auto auto; */
-  height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 1rem;
-  gap: 1rem;
-  overflow: auto;
+  /* height: 100vh; */
+  /* background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); */
+  /* padding: 1rem; */
+  /* gap: 1rem; */
+  /* overflow: auto; */
 }
+.packaging-details-container{
+  /* height: 100%; */
+  
+}
+
+.packaging-container{
+  padding-bottom: 1%;
+}
+
+.details-container{
+  
+}
+/* ================================================================ */
 
 /* Hierarchy Section */
 .details-reference-container__hierarchy {
@@ -61,6 +74,7 @@
 
 /* Info Panel */
 .details-reference-container__info {
+  margin-top: 1%;
   background: linear-gradient(to right, #1e293b, #334155);
   border-radius: 12px;
   padding: 1rem 1.5rem;

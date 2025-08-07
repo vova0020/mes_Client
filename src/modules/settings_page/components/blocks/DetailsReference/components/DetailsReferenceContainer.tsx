@@ -17,7 +17,7 @@ export const DetailsReferenceContainer: React.FC = () => {
     clearSelection,
     isCreating
   } = usePackageDirectory();
-  
+
   // Состояние для выбранной упаковки (используем строковый ID для совместимости с существующим интерфейсом)
   const [selectedPackagingId, setSelectedPackagingId] = useState<string | null>(null);
 
@@ -53,11 +53,8 @@ export const DetailsReferenceContainer: React.FC = () => {
 
   return (
     <div className={styles['details-reference-container']}>
-      {/* Верхняя часть - Упаковки */}
-      <div className={styles['details-reference-container__hierarchy']}>
-        <div className={styles['hierarchy__sections']}>
-          {/* Секция упаковок */}
-          <div className={styles['hierarchy__section']}>
+        <div className={styles['packaging-details-container']} >
+          <div className={styles['packaging-container']}>
             <PackagingSection
               packaging={packagingData}
               onAddPackaging={handleAddPackaging}
@@ -65,15 +62,11 @@ export const DetailsReferenceContainer: React.FC = () => {
               selectedPackagingId={selectedPackagingId}
             />
           </div>
+          <div className={styles['details-container']}>
+             <DetailsSection selectedPackagingId={selectedPackagingId} />
+          </div>
         </div>
-      </div>
-
-      {/* Нижняя часть - Детали */}
-      <div className={styles['details-reference-container__details']}>
-        <DetailsSection selectedPackagingId={selectedPackagingId} />
-      </div>
-
-      {/* Информационная панель */}
+          {/* Информационная панель */}
       <div className={styles['details-reference-container__info']}>
         <div className={styles.breadcrumb}>
           {selectedPackagingItem && (
@@ -83,9 +76,54 @@ export const DetailsReferenceContainer: React.FC = () => {
             </span>
           )}
         </div>
-        
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+      {/* Верхняя часть - Упаковки
+      <div className={styles['details-reference-container__hierarchy']}>
+        <div className={styles['hierarchy__sections']}>
+          {/* Секция упаковок */}
+          {/* <div className={styles['hierarchy__section']}>
+            <PackagingSection
+              packaging={packagingData}
+              onAddPackaging={handleAddPackaging}
+              onSelectPackaging={handleSelectPackaging}
+              selectedPackagingId={selectedPackagingId}
+            />
+          </div>
+        </div>
+      </div>  */}
+
+      {/* Нижняя часть - Детали */}
+      {/* <div className={styles['details-reference-container__details']}>
+        <DetailsSection selectedPackagingId={selectedPackagingId} />
+      </div> */}
+
+      {/* Информационная панель */}
+      {/* <div className={styles['details-reference-container__info']}>
+        <div className={styles.breadcrumb}>
+          {selectedPackagingItem && (
+            <span className={styles['breadcrumb__item']}>
+              <span className={styles['breadcrumb__label']}>Упаковка:</span>
+              <span className={styles['breadcrumb__value']}>{selectedPackagingItem.name}</span>
+            </span>
+          )}
+        </div> */}
+
         {/* Статистика */}
-        <div className={styles.stats}>
+        {/* <div className={styles.stats}>
           <div className={styles['stats__item']}>
             <span className={styles['stats__label']}>Упаковок:</span>
             <span className={styles['stats__value']}>{packagingData.length}</span>
@@ -96,8 +134,8 @@ export const DetailsReferenceContainer: React.FC = () => {
               <span className={styles['stats__value']}>{selectedPackagingItem.detailsCount}</span>
             </div>
           )}
-        </div>
-      </div>
+        </div> */}
+       </div>
     </div>
   );
 };
