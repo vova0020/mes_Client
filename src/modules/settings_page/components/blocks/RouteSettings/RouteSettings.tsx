@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Alert, Snackbar } from '@mui/material';
@@ -8,11 +7,10 @@ import RouteDetails from './components/RouteDetails';
 import { 
   useRoutes, 
   useCreateRoute, 
-  useUpdateRouteComplete, 
-  useDeleteRoute,
-  UpdateRouteCompleteDto
+  useUpdateRoutePartial, 
+  useDeleteRoute
 } from './hooks/useRoutes';
-import { Route, CreateRouteDto } from './api/routes.api';
+import { Route, CreateRouteDto, UpdateRoutePartialDto } from './api/routes.api';
 import styles from './RouteSettings.module.css';
 
 // Создаем QueryClient локально для этого компонента
@@ -52,7 +50,7 @@ const RouteSettingsContent: React.FC = () => {
 
   // Мутации
   const createRouteMutation = useCreateRoute();
-  const updateRouteCompleteMutation = useUpdateRouteComplete();
+  const updateRoutePartialMutation = useUpdateRoutePartial();
   const deleteRouteMutation = useDeleteRoute();
 
   // Обработчики
@@ -70,18 +68,14 @@ const RouteSettingsContent: React.FC = () => {
     try {
       if (editingRoute) {
         // Редактирование существующего маршрута
-        // Преобразуем данные для UpdateRouteCompleteDto, устанавливая sequenceNumber
-        const updateData: UpdateRouteCompleteDto = {
+        // Используем новый API для частичного обновления
+        const updateData: UpdateRoutePartialDto = {
           routeName: routeData.routeName,
           lineId: routeData.lineId,
-          stages: (routeData.stages || []).map((stage, index) => ({
-            stageId: stage.stageId,
-            substageId: stage.substageId,
-            sequenceNumber: stage.sequenceNumber ?? index + 1 // Используем переданное значение или инде��с + 1
-          }))
+          stageIds: (routeData.stages || []).map(stage => stage.stageId)
         };
 
-        const updatedRoute = await updateRouteCompleteMutation.mutateAsync({
+        const updatedRoute = await updateRoutePartialMutation.mutateAsync({
           id: editingRoute.routeId,
           data: updateData
         });
@@ -182,7 +176,7 @@ const RouteSettingsContent: React.FC = () => {
     );
   }
 
-  const isFormLoading = createRouteMutation.isPending || updateRouteCompleteMutation.isPending;
+  const isFormLoading = createRouteMutation.isPending || updateRoutePartialMutation.isPending;
 
   return (
     <div className={styles.pageContainer}>

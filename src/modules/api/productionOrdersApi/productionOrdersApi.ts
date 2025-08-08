@@ -1,6 +1,18 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// DTO для создания упаковки в справочнике
+export interface CreatePackageDirectoryDto {
+  packageCode: string;  // Артикул упаковки
+  packageName: string;  // Название упаковки
+}
+
+// DTO для обновления упаковки в справочнике
+export interface UpdatePackageDirectoryDto {
+  packageCode?: string;  // Артикул упаковки
+  packageName?: string;  // Название упаковки
+}
+
 // Статусы заказов
 export enum OrderStatus {
   PRELIMINARY = 'PRELIMINARY',
@@ -94,6 +106,8 @@ export interface PackageDirectoryResponseDto {
   packageName: string;            // Название упаковки
   detailsCount: number;           // Количество деталей в упаковке
   details?: PackageDirectoryDetailDto[]; // Детали в упаковке из справочника
+  createdAt: string;             // Дата создания
+  updatedAt: string;             // Дата обновления
 }
 
 /**
@@ -206,10 +220,58 @@ export const productionOrdersApi = {
   getPackageDirectory: async (): Promise<PackageDirectoryResponseDto[]> => {
     try {
       console.log('Получение списка упаковок из справочника');
-      const response = await axios.get<PackageDirectoryResponseDto[]>(`${API_URL}/production-orders/package-directory`);
+      const response = await axios.get<PackageDirectoryResponseDto[]>(`${API_URL}/package-directory`);
       return response.data;
     } catch (error) {
-      console.error('Ошибка при получении списка упаковок из справочника:', error);
+      console.error('Ошибка при получении списка упаковок:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Создание новой упаковки в справочнике
+   * @param dto - DTO с данными для создания упаковки
+   * @returns Promise с данными созданной упаковки
+   */
+  createPackage: async (dto: CreatePackageDirectoryDto): Promise<PackageDirectoryResponseDto> => {
+    try {
+      console.log('Создание новой упаковки:', dto);
+      const response = await axios.post<PackageDirectoryResponseDto>(`${API_URL}/package-directory`, dto);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при создании упаковки:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Обновление упаковки в справочнике
+   * @param id - Идентификатор упаковки
+   * @param dto - Данные для обновления
+   * @returns Promise с обновленной упаковкой
+   */
+  updatePackage: async (id: number, dto: UpdatePackageDirectoryDto): Promise<PackageDirectoryResponseDto> => {
+    try {
+      console.log(`Обновление упаковки с ID=${id}:`, dto);
+      const response = await axios.patch<PackageDirectoryResponseDto>(`${API_URL}/package-directory/${id}`, dto);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении упаковки:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Удаление упаковки из справочника
+   * @param id - Идентификатор упаковки
+   * @returns Promise с результатом удаления
+   */
+  deletePackage: async (id: number): Promise<void> => {
+    try {
+      console.log(`Удаление упаковки с ID=${id}`);
+      await axios.delete(`${API_URL}/package-directory/${id}`);
+    } catch (error) {
+      console.error('Ошибка при удалении упаковки:', error);
       throw error;
     }
   }

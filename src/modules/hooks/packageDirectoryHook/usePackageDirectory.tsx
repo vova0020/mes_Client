@@ -1,14 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { 
   productionOrdersApi, 
-  PackageDirectoryResponseDto
+  PackageDirectoryResponseDto,
+  UpdatePackageDirectoryDto
 } from '../../api/productionOrdersApi/productionOrdersApi';
 
-// Типы состояний загрузки
-export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
-
-// DTO для создания упаковки (пока что простой интерфейс)
-interface CreatePackageDto {
+// DTO для создания упаковки в справочнике
+interface CreatePackageDirectoryDto {
   packageCode: string;
   packageName: string;
 }
@@ -22,13 +20,40 @@ interface UsePackageDirectoryResult {
   
   // Операции
   fetchPackages: () => Promise<void>;
-  createPackage: (createDto: CreatePackageDto) => Promise<void>;
+  createPackage: (createDto: CreatePackageDirectoryDto) => Promise<void>;
+  updatePackage: (packageId: number, updateDto: UpdatePackageDirectoryDto) => Promise<void>;
+  deletePackage: (packageId: number) => Promise<void>;
   selectPackage: (packageId: number | null) => void;
   clearSelection: () => void;
   
   // Состояния операций
   isFetching: boolean;
   isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+};
+
+// Типы состояний загрузки
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+
+// Тип для результата хука
+interface UsePackageDirectoryResult {
+  packages: PackageDirectoryResponseDto[];
+  loading: LoadingState;
+  error: Error | null;
+  selectedPackage: PackageDirectoryResponseDto | null;
+  
+  // Операции
+  fetchPackages: () => Promise<void>;
+  createPackage: (createDto: CreatePackageDirectoryDto) => Promise<void>;
+  deletePackage: (packageId: number) => Promise<void>;
+  selectPackage: (packageId: number | null) => void;
+  clearSelection: () => void;
+  
+  // Состояния операций
+  isFetching: boolean;
+  isCreating: boolean;
+  isDeleting: boolean;
 }
 
 /**
@@ -45,6 +70,8 @@ export const usePackageDirectory = (
   const [selectedPackage, setSelectedPackage] = useState<PackageDirectoryResponseDto | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Функция для загрузки всех упаковок из справочника
   const fetchPackages = useCallback(async (): Promise<void> => {
@@ -86,21 +113,20 @@ export const usePackageDirectory = (
   }, [packages]);
 
   // Функция для создания новой упаковки (заглушка, так как API для создания упаковок пока не реализован)
-  const createPackage = useCallback(async (createDto: CreatePackageDto): Promise<void> => {
+  const createPackage = useCallback(async (createDto: CreatePackageDirectoryDto): Promise<void> => {
     try {
       setIsCreating(true);
       setError(null);
       
       console.log('Создание новой упаковки:', createDto);
       
-      // TODO: Здесь должен быть вызов API для создания упаковки
-      // Пока что это заглушка
-      console.warn('API для создания упаковок пока не реализован');
+      // Вызываем API для создания упаковки
+      await productionOrdersApi.createPackage({
+        packageCode: createDto.packageCode,
+        packageName: createDto.packageName
+      });
       
-      // Имитируем задержку
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // После создания перезагружаем список упаковок
+      // После успешного создания обновляем список упаковок
       await fetchPackages();
       
     } catch (err) {
@@ -119,6 +145,59 @@ export const usePackageDirectory = (
     console.log('Выбор упаковки из справочника сброшен');
   }, []);
 
+  // Функция для обновления упаковки
+  const updatePackage = useCallback(async (packageId: number, updateDto: UpdatePackageDirectoryDto): Promise<void> => {
+    try {
+      setIsUpdating(true);
+      setError(null);
+      
+      console.log('Обновление упаковки:', packageId, updateDto);
+      
+      // Вызываем API для обновления упаковки
+      await productionOrdersApi.updatePackage(packageId, updateDto);
+      
+      // После успешного обновления обновляем список упаковок
+      await fetchPackages();
+      
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Неизвестная ошибка при обновлении упаковки');
+      setError(error);
+      console.error('Ошибка при обновлении упаковки:', error);
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [fetchPackages]);
+
+  // Функция для удаления упаковки
+  const deletePackage = useCallback(async (packageId: number): Promise<void> => {
+    try {
+      setIsDeleting(true);
+      setError(null);
+      
+      console.log('Удаление упаковки:', packageId);
+      
+      // Вызываем API для удаления упаковки
+      await productionOrdersApi.deletePackage(packageId);
+      
+      // После успешного удаления обновляем список упаковок
+      await fetchPackages();
+      
+      // Если была выбрана удаленная упаковка, сбрасываем выбор
+      if (selectedPackage?.packageId === packageId) {
+        clearSelection();
+      }
+      
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Неизвестная ошибка при удалении упаковки');
+      setError(error);
+      console.error('Ошибка при удалении упаковки:', error);
+      throw error;
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [fetchPackages, selectedPackage, clearSelection]);
+
   // Автоматическая загрузка данных при инициализации
   useEffect(() => {
     if (autoFetch) {
@@ -135,11 +214,15 @@ export const usePackageDirectory = (
     // Операции
     fetchPackages,
     createPackage,
+    updatePackage,
+    deletePackage,
     selectPackage,
     clearSelection,
     
     // Состояния операций
     isFetching,
-    isCreating
+    isCreating,
+    isUpdating,
+    isDeleting
   };
 };

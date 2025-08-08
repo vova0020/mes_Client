@@ -1,7 +1,6 @@
 import React from 'react';
-import { CircularProgress } from '@mui/material';
 import { Route } from '../api/routes.api';
-import { useDeleteRouteStage, useMoveRouteStage, useRoute } from '../hooks/useRoutes';
+import { useMoveRouteStage, useRoute } from '../hooks/useRoutes';
 import styles from './RouteDetails.module.css';
 
 interface RouteDetailsProps {
@@ -13,7 +12,6 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
     selectedRoute,
     onRouteUpdate
 }) => {
-    const deleteRouteStage = useDeleteRouteStage();
     const moveRouteStage = useMoveRouteStage();
     
     // Получаем актуальные данные маршрута из кэша
@@ -21,19 +19,6 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
     
     // Используем актуальные данные, если они есть, иначе fallback на переданные
     const routeToDisplay = currentRoute || selectedRoute;
-
-    const handleDeleteStage = async (stageId: number) => {
-        if (!routeToDisplay) return;
-        
-        try {
-            await deleteRouteStage.mutateAsync({
-                stageId,
-                routeId: routeToDisplay.routeId
-            });
-        } catch (error) {
-            console.error('Ошибка при удалении этапа:', error);
-        }
-    };
 
     const handleMoveStage = async (stageId: number, direction: 'up' | 'down') => {
         if (!routeToDisplay) return;
@@ -168,18 +153,6 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
                                                 title="Переместить вниз"
                                             >
                                                 ↓
-                                            </button>
-                                            <button
-                                                className={`${styles.actionButton} ${styles.deleteButton}`}
-                                                onClick={() => handleDeleteStage(stage.routeStageId)}
-                                                disabled={deleteRouteStage.isPending}
-                                                title="Удалить этап"
-                                            >
-                                                {deleteRouteStage.isPending ? (
-                                                    <CircularProgress size={16} />
-                                                ) : (
-                                                    '🗑️'
-                                                )}
                                             </button>
                                         </div>
                                     </div>

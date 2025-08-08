@@ -69,6 +69,22 @@ export interface UpdateRouteDto {
   lineId?: number;
 }
 
+export interface UpdateRouteCompleteDto {
+  routeName: string;
+  lineId?: number;
+  stages: Array<{
+    stageId: number;
+    substageId?: number;
+    sequenceNumber: number;
+  }>;
+}
+
+export interface UpdateRoutePartialDto {
+  routeName?: string;
+  lineId?: number;
+  stageIds?: number[];
+}
+
 export interface LineStagesResponse {
   productionLine: {
     lineId: number;
@@ -229,6 +245,18 @@ export const routesApi = {
     const response = await api.post(`/settings/routes/${id}/copy`, {
       newRouteName
     });
+    return response.data;
+  },
+
+  // Полное обновление маршрута с этапами
+  updateRouteComplete: async (id: number, data: UpdateRouteCompleteDto): Promise<Route> => {
+    const response = await api.put(`/settings/routes/${id}/complete`, data);
+    return response.data;
+  },
+
+  // Частичное обновление маршрута (новый API)
+  updateRoutePartial: async (id: number, data: UpdateRoutePartialDto): Promise<Route> => {
+    const response = await api.put(`/settings/routes/${id}`, data);
     return response.data;
   },
 };

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { routesApi, Route, CreateRouteDto, UpdateRouteDto, CreateRouteStageDto, UpdateRouteStageDto, ReorderRouteStagesDto, ProductionLine, LineStagesResponse } from '../api/routes.api';
+import { routesApi, Route, CreateRouteDto, UpdateRouteDto, UpdateRouteCompleteDto, UpdateRoutePartialDto, CreateRouteStageDto, UpdateRouteStageDto, ReorderRouteStagesDto, ProductionLine, LineStagesResponse } from '../api/routes.api';
 
 // Ключи для запросов
 export const ROUTES_QUERY_KEYS = {
@@ -13,16 +13,7 @@ export const ROUTES_QUERY_KEYS = {
   lineStages: (lineId: number) => [...ROUTES_QUERY_KEYS.productionLines, 'stages', lineId] as const,
 };
 
-// Интерфейс для комплексного обновления маршрута
-export interface UpdateRouteCompleteDto {
-  routeName: string;
-  lineId?: number;
-  stages: Array<{
-    stageId: number;
-    substageId?: number;
-    sequenceNumber: number;
-  }>;
-}
+
 
 // Хук для получения всех маршрутов
 export const useRoutes = () => {
@@ -98,115 +89,44 @@ export const useUpdateRoute = () => {
   });
 };
 
-// Функция для сравнения этапов
-const compareStages = (
-  oldStages: Array<{ routeStageId: number; stageId: number; substageId?: number; sequenceNumber: number }>,
-  newStages: Array<{ stageId: number; substageId?: number; sequenceNumber: number }>
-) => {
-  const stagesToDelete = oldStages.filter(oldStage => 
-    !newStages.some(newStage => 
-      newStage.stageId === oldStage.stageId && 
-      newStage.substageId === oldStage.substageId
-    )
-  );
 
-  const stagesToAdd = newStages.filter(newStage => 
-    !oldStages.some(oldStage => 
-      oldStage.stageId === newStage.stageId && 
-      oldStage.substageId === newStage.substageId
-    )
-  );
-
-  const stagesToUpdate = oldStages.filter(oldStage => {
-    const matchingNewStage = newStages.find(newStage => 
-      newStage.stageId === oldStage.stageId && 
-      newStage.substageId === oldStage.substageId
-    );
-    return matchingNewStage && matchingNewStage.sequenceNumber !== oldStage.sequenceNumber;
-  });
-
-  return { stagesToDelete, stagesToAdd, stagesToUpdate };
-};
 
 // Комплексный хук для обновления маршрута с этапами
 export const useUpdateRouteComplete = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: UpdateRouteCompleteDto }) => {
-      // 1. Получаем текущий маршрут
-      const currentRoute = await routesApi.getRouteById(id);
-      
-      // 2. Обновляем название маршрута и производственную линию
-      const updatedRoute = await routesApi.updateRoute(id, { 
-        routeName: data.routeName,
-        lineId: data.lineId 
-      });
-      
-      // 3. Сравниваем этапы
-      const { stagesToDelete, stagesToAdd, stagesToUpdate } = compareStages(
-        currentRoute.routeStages,
-        data.stages
-      );
-
-      // 4. Удаляем лишние этапы
-      for (const stage of stagesToDelete) {
-        await routesApi.deleteRouteStage(stage.routeStageId);
-      }
-
-      // 5. Добавляем новые этапы
-      for (const stage of stagesToAdd) {
-        await routesApi.addRouteStage(id, {
-          stageId: stage.stageId,
-          substageId: stage.substageId,
-          sequenceNumber: stage.sequenceNumber
-        });
-      }
-
-      // 6. Обновляем измененные этапы
-      for (const oldStage of stagesToUpdate) {
-        const newStage = data.stages.find(s => 
-          s.stageId === oldStage.stageId && s.substageId === oldStage.substageId
-        );
-        if (newStage) {
-          await routesApi.updateRouteStage(oldStage.routeStageId, {
-            sequenceNumber: newStage.sequenceNumber
-          });
-        }
-      }
-
-      // 7. Переупорядочиваем этапы если нужно
-      const finalRoute = await routesApi.getRouteById(id);
-      const needsReordering = finalRoute.routeStages.some((stage, index) => 
-        stage.sequenceNumber !== data.stages[index]?.sequenceNumber
-      );
-
-      if (needsReordering) {
-        const stageIds = data.stages
-          .sort((a, b) => a.sequenceNumber - b.sequenceNumber)
-          .map(stage => {
-            const routeStage = finalRoute.routeStages.find(rs => 
-              rs.stageId === stage.stageId && rs.substageId === stage.substageId
-            );
-            return routeStage?.routeStageId;
-          })
-          .filter(Boolean) as number[];
-
-        if (stageIds.length > 0) {
-          await routesApi.reorderRouteStages(id, { stageIds });
-        }
-      }
-
-      // 8. Возвращаем финальный результат
-      return routesApi.getRouteById(id);
-    },
+    mutationFn: ({ id, data }: { id: number; data: UpdateRouteCompleteDto }) => 
+      routesApi.updateRouteComplete(id, data),
     onSuccess: (data) => {
-      // Инвалидируем все связанные запросы
       queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.detail(data.routeId) });
       queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.stages(data.routeId) });
       
-      // Обновляем кэш
+      queryClient.setQueryData(ROUTES_QUERY_KEYS.detail(data.routeId), data);
+      queryClient.setQueryData(ROUTES_QUERY_KEYS.lists(), (oldData: Route[] | undefined) => {
+        if (!oldData) return oldData;
+        return oldData.map(route => 
+          route.routeId === data.routeId ? data : route
+        );
+      });
+    },
+  });
+};
+
+// Хук для частичного обновления маршрута (новый API)
+export const useUpdateRoutePartial = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateRoutePartialDto }) => 
+      routesApi.updateRoutePartial(id, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.detail(data.routeId) });
+      queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.stages(data.routeId) });
+      
+      // Обновляем кэш немедленно
       queryClient.setQueryData(ROUTES_QUERY_KEYS.detail(data.routeId), data);
       queryClient.setQueryData(ROUTES_QUERY_KEYS.lists(), (oldData: Route[] | undefined) => {
         if (!oldData) return oldData;

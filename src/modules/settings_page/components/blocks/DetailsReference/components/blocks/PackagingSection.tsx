@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { PlusIcon, DocumentIcon, MapIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import React, { useState } from 'react'
+import { PlusIcon, DocumentIcon, MapIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline'
 import styles from './PackagingSection.module.css'
+import { PackagingModal } from './PackagingModal'
 
 interface Packaging {
   id: string
@@ -11,7 +12,9 @@ interface Packaging {
 
 interface PackagingSectionProps {
   packaging: Packaging[]
-  onAddPackaging: (article: string, name: string) => void
+  onAddPackaging: (article: string, name: string) => Promise<void>
+  onEditPackaging?: (packagingId: string, article: string, name: string) => Promise<void>
+  onDeletePackaging?: (packagingId: string) => Promise<void>
   onSelectPackaging?: (packagingId: string) => void
   selectedPackagingId?: string | null
 }
@@ -19,70 +22,25 @@ interface PackagingSectionProps {
 export const PackagingSection: React.FC<PackagingSectionProps> = ({
   packaging,
   onAddPackaging,
+  onEditPackaging,
+  onDeletePackaging,
   onSelectPackaging,
   selectedPackagingId,
 }) => {
-  const [isAddingNew, setIsAddingNew] = useState(false)
-  const [newPackagingData, setNewPackagingData] = useState({
-    article: '',
-    name: '',
-  })
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{ article?: string; name?: string }>({})
-  const articleInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (isAddingNew && articleInputRef.current) {
-      articleInputRef.current.focus()
-    }
-  }, [isAddingNew])
-
-  const validateForm = () => {
-    const newErrors: { article?: string; name?: string } = {}
-    
-    if (!newPackagingData.article.trim()) {
-      newErrors.article = 'Артикул обязателен'
-    }
-    
-    if (!newPackagingData.name.trim()) {
-      newErrors.name = 'Название обязательно'
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-  console.log(packaging);
-  
-
-  const handleAddPackaging = async () => {
-    if (!validateForm()) return
-    
+  const handleAddPackaging = async (article: string, name: string) => {
     setIsLoading(true)
     try {
-      await onAddPackaging(
-        newPackagingData.article.trim(),
-        newPackagingData.name.trim()
-      )
-      setNewPackagingData({ article: '', name: '' })
-      setErrors({})
-      setIsAddingNew(false)
+      await onAddPackaging(article, name)
+      setIsModalOpen(false) // Закрываем модальное окно после успешного сохранения
     } catch (error) {
       console.error('Ошибка при добавлении упаковки:', error)
+      // Не закрываем окно при ошибке, чтобы пользователь мог попробовать снова
+      throw error
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleCancel = () => {
-    setNewPackagingData({ article: '', name: '' })
-    setErrors({})
-    setIsAddingNew(false)
-  }
-
-  const handleInputChange = (field: 'article' | 'name', value: string) => {
-    setNewPackagingData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
     }
   }
 
@@ -105,8 +63,7 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
       </header>
 
       <div className={styles.content}>
-        {!isAddingNew && (
-        packaging.length > 0 && (
+        {packaging.length > 0 ? (
           <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
@@ -115,6 +72,7 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
                   <th>Название упаковки</th>
                   <th>Внесено деталей</th>
                   <th>Схемы укладки</th>
+                  <th>Действия</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,9 +80,7 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
                   <tr
                     key={pack.id}
                     className={`${styles.tableRow} ${
-                      selectedPackagingId === pack.id
-                        ? styles.selectedRow
-                        : ''
+                      selectedPackagingId === pack.id ? styles.selectedRow : ''
                     }`}
                     onClick={() => handleSelectPackaging(pack.id)}
                     role="button"
@@ -143,15 +99,15 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
                       <span className={styles.packagingName}>{pack.name}</span>
                     </td>
                     <td className={styles.countCell}>
-                      {pack.detailsCount > 0 ? 
-                      <span className={styles.countBadge}>
-                        {pack.detailsCount}
-                      </span> : 
-                      <span className={styles.countBadgeZero}>
-                        {pack.detailsCount}
-                      </span>
-                      }
-
+                      {pack.detailsCount > 0 ? (
+                        <span className={styles.countBadge}>
+                          {pack.detailsCount}
+                        </span>
+                      ) : (
+                        <span className={styles.countBadgeZero}>
+                          {pack.detailsCount}
+                        </span>
+                      )}
                     </td>
                     <td className={styles.actionsCell}>
                       <div className={styles.actionButtons}>
@@ -179,95 +135,50 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
                         </button>
                       </div>
                     </td>
+                    <td className={styles.actionsCell}>
+                      <div className={styles.actionButtons}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditPackaging?.(pack.id, pack.article, pack.name);
+                          }}
+                          title="Редактировать упаковку"
+                          className={`${styles.iconButton} ${styles.editButton}`}
+                          aria-label="Редактировать упаковку"
+                        >
+                          <PencilIcon className={styles.icon} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Подтверждение удаления
+                            if (window.confirm('Вы уверены, что хотите удалить эту упаковку?')) {
+                              onDeletePackaging?.(pack.id);
+                            }
+                          }}
+                          title="Удалить упаковку"
+                          className={`${styles.iconButton} ${styles.deleteButton}`}
+                          aria-label="Удалить упаковку"
+                        >
+                          <TrashIcon className={styles.icon} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )
-      )}
-        {packaging.length === 0 && !isAddingNew && (
+        ) : (
           <div className={styles.empty}>
             <p>Нет созданных упаковок</p>
             <p className={styles.hint}>Добавьте первую упаковку для начала работы</p>
           </div>
         )}
 
-        {isAddingNew && (
-          <div className={styles.addForm}>
-            <div className={styles.formHeader}>
-              <h4 className={styles.formTitle}>Добавить новую упаковку</h4>
-              <button
-                onClick={handleCancel}
-                className={styles.closeButton}
-                aria-label="Закрыть форму"
-              >
-                <XMarkIcon className={styles.closeIcon} />
-              </button>
-            </div>
-            
-            <div className={styles.formFields}>
-              <div className={styles.fieldGroup}>
-                <label htmlFor="article-input" className={styles.label}>
-                  Артикул упаковки *
-                </label>
-                <input
-                  id="article-input"
-                  ref={articleInputRef}
-                  type="text"
-                  placeholder="Введите артикул"
-                  value={newPackagingData.article}
-                  onChange={(e) => handleInputChange('article', e.target.value)}
-                  className={`${styles.input} ${errors.article ? styles.inputError : ''}`}
-                  disabled={isLoading}
-                />
-                {errors.article && (
-                  <span className={styles.errorText}>{errors.article}</span>
-                )}
-              </div>
-              
-              <div className={styles.fieldGroup}>
-                <label htmlFor="name-input" className={styles.label}>
-                  Название упаковки *
-                </label>
-                <input
-                  id="name-input"
-                  type="text"
-                  placeholder="Введите название"
-                  value={newPackagingData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
-                  disabled={isLoading}
-                />
-                {errors.name && (
-                  <span className={styles.errorText}>{errors.name}</span>
-                )}
-              </div>
-            </div>
-            
-            <div className={styles.formActions}>
-              <button 
-                onClick={handleAddPackaging} 
-                className={styles.btn}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Сохранение...' : 'Сохранить'}
-              </button>
-              <button 
-                onClick={handleCancel} 
-                className={styles.btnSecondary}
-                disabled={isLoading}
-              >
-                Отмена
-              </button>
-            </div>
-          </div>
-        )}
-
         <footer className={styles.footer}>
           <button
-            onClick={() => setIsAddingNew(true)}
-            disabled={isAddingNew}
+            onClick={() => setIsModalOpen(true)}
             className={styles.addBtn}
           >
             <PlusIcon className={styles.icon} />
@@ -275,6 +186,13 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
           </button>
         </footer>
       </div>
+
+      <PackagingModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddPackaging}
+        isLoading={isLoading}
+      />
     </div>
   )
 }

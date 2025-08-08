@@ -6,7 +6,6 @@ import {
     LineStagesResponse,
     routesApi 
 } from '../api/routes.api';
-import { useDeleteAllRouteStages } from '../hooks/useRoutes';
 import styles from './RouteForm.module.css';
 
 interface RouteFormProps {
@@ -50,9 +49,6 @@ const RouteForm: React.FC<RouteFormProps> = ({
     const [loadingLines, setLoadingLines] = useState(false);
     const [loadingStages, setLoadingStages] = useState(false);
 
-    // Хук для удаления всех этапов маршрута
-    const deleteAllStagesMutation = useDeleteAllRouteStages();
-
     // Загрузка производственных линий при открытии формы
     useEffect(() => {
         if (open) {
@@ -68,7 +64,7 @@ const RouteForm: React.FC<RouteFormProps> = ({
                 lineId: route.lineId || 0
             });
 
-            // Устанавливаем выбранные этапы
+            // При редактировании показываем только существующие этапы маршрута
             const stages = route.routeStages
                 .sort((a, b) => a.sequenceNumber - b.sequenceNumber)
                 .map(stage => ({
@@ -81,11 +77,12 @@ const RouteForm: React.FC<RouteFormProps> = ({
             
             setSelectedStages(stages);
 
-            // Загружаем этапы производственной линии если линия выбрана
+            // Загружаем этапы текущей линии для возможности добавления новых
             if (route.lineId) {
                 loadLineStages(route.lineId);
             }
         } else {
+            // При создании нового маршрута
             setRouteForm({ routeName: '', lineId: 0 });
             setSelectedStages([]);
             setLineStages(null);
@@ -121,66 +118,57 @@ const RouteForm: React.FC<RouteFormProps> = ({
 
     // Обработчик изменения производственной линии
     const handleLineChange = async (lineId: number) => {
+        const prevLineId = routeForm.lineId;
         setRouteForm(prev => ({ ...prev, lineId }));
-        setSelectedStages([]); // Очищаем выбранные этапы
         
         if (lineId > 0) {
-            loadLineStages(lineId);
-        } else {
-            setLineStages(null);
-            
-            // Если это редактирование существующего маршрута и выбрано "Без привязки к производственной линии"
-            // то удаляем все этапы маршрута через API
-            if (isEditing && route?.routeId && route.routeStages.length > 0) {
-                try {
-                    await deleteAllStagesMutation.mutateAsync(route.routeId);
-                    console.log('Все этапы маршрута успешно удалены');
-                } catch (error) {
-                    console.error('Ошибка при удалении всех этапов маршрута:', error);
-                }
-            }
-        }
-    };
+            // При выборе производственной линии
+            await loadLineStages(lineId);
 
-    // Автоматически добавить все этапы линии при загрузке этапов
-    useEffect(() => {
-        if (lineStages) {
-            if (!isEditing) {
-                // Для создания нового маршрута - автоматически добавляем все этапы линии
-                const allStages: SelectedStage[] = lineStages.stagesLevel1.map((stage, index) => ({
+            // Если выбрана та же линия, что была раньше, обновляем список этапов
+            if (lineId === prevLineId) {
+                const allStages = lineStages?.stagesLevel1.map((stage, index) => ({
                     stageId: stage.stageId,
                     substageId: undefined,
                     sequenceNumber: index + 1,
                     stageName: stage.stageName,
                     substageName: undefined
-                }));
+                })) || [];
                 setSelectedStages(allStages);
-            } else {
-                // При редактировании проверяем, есть ли этапы которых нет в текущем маршруте
-                // и добавляем их в конец списка
-                setSelectedStages(prevStages => {
-                    const currentStageIds = prevStages.map(s => s.stageId);
-                    const missingStages = lineStages.stagesLevel1.filter(stage => 
-                        !currentStageIds.includes(stage.stageId)
-                    );
-                    
-                    if (missingStages.length > 0) {
-                        const newStages: SelectedStage[] = missingStages.map((stage, index) => ({
-                            stageId: stage.stageId,
-                            substageId: undefined,
-                            sequenceNumber: prevStages.length + index + 1,
-                            stageName: stage.stageName,
-                            substageName: undefined
-                        }));
-                        
-                        return [...prevStages, ...newStages];
-                    }
-                    
-                    return prevStages;
-                });
             }
+        } else {
+            // При выборе "Без привязки к линии"
+            setLineStages(null);
+            setSelectedStages([]);
         }
-    }, [lineStages, isEditing]);
+    };
+
+    // Управление этапами при загрузке этапов линии
+    useEffect(() => {
+        if (!lineStages) return;
+
+        const allStages = lineStages.stagesLevel1.map((stage, index) => ({
+            stageId: stage.stageId,
+            substageId: undefined,
+            sequenceNumber: index + 1,
+            stageName: stage.stageName,
+            substageName: undefined
+        }));
+
+        // При создании нового маршрута всегда показываем все этапы линии
+        if (!isEditing) {
+            setSelectedStages(allStages);
+            return;
+        }
+
+        // При редактировании и смене линии показываем все этапы новой линии
+        if (route?.lineId !== routeForm.lineId) {
+            setSelectedStages(allStages);
+        }
+        // При редактировании с той же линией оставляем текущие этапы
+        // (они обновятся через handleLineChange если пользователь специально выберет ту же линию)
+        
+    }, [lineStages, isEditing, route?.lineId, routeForm.lineId]);
 
     // Обработчик изменения поля формы
     const handleRouteFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,8 +176,21 @@ const RouteForm: React.FC<RouteFormProps> = ({
         setRouteForm(prev => ({ ...prev, [name]: value }));
     };
 
+    // Обработчики управления этапами
+    const handleDeleteStage = (stageToDelete: SelectedStage) => {
+        const updatedStages = selectedStages
+            .filter(stage => 
+                !(stage.stageId === stageToDelete.stageId && 
+                  stage.substageId === stageToDelete.substageId)
+            )
+            .map((stage, idx) => ({
+                ...stage,
+                sequenceNumber: idx + 1
+            }));
+        
+        setSelectedStages(updatedStages);
+    };
     
-    // Переместить этап вверх
     const handleMoveUp = (index: number) => {
         if (index === 0) return;
         
@@ -369,6 +370,14 @@ const RouteForm: React.FC<RouteFormProps> = ({
                                                 title="Переместить вниз"
                                             >
                                                 ↓
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteStage(stage)}
+                                                className={`${styles.actionButton} ${styles.deleteButton}`}
+                                                title="Удалить этап"
+                                            >
+                                                ×
                                             </button>
                                         </div>
                                     </div>

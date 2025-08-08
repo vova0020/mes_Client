@@ -8,6 +8,48 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Модальное окно */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Заголовок секции */
 .header {
   border-bottom: 1px solid #475066;
@@ -223,8 +265,15 @@
 }
 
 .actionsCell {
-  width: 120px;
+  width: 100px;
+  text-align: center;
+  padding: 0 8px;
 }
+
+.actionsCell button {
+  margin: 0 4px;
+}
+
 .actionButtons {
   display: flex;
   gap: 8px;
@@ -283,6 +332,48 @@
 }
 .iconButton:hover .icon {
   color: #1890ff;
+}
+
+.editButton {
+  background: #f0f7ff;
+  border-color: #91caff;
+  transition: all 0.3s ease;
+}
+
+.editButton:hover {
+  background: #1890ff;
+  border-color: #1890ff;
+  transform: scale(1.05);
+}
+
+.editButton .icon {
+  color: #1890ff;
+  transition: color 0.3s ease;
+}
+
+.editButton:hover .icon {
+  color: #ffffff;
+}
+
+.deleteButton {
+  background: #fff1f0;
+  border-color: #ffa39e;
+  transition: all 0.3s ease;
+}
+
+.deleteButton:hover {
+  background: #ff4d4f;
+  border-color: #ff4d4f;
+  transform: scale(1.05);
+}
+
+.deleteButton .icon {
+  color: #ff4d4f;
+  transition: color 0.3s ease;
+}
+
+.deleteButton:hover .icon {
+  color: #ffffff;
 }
 
 /* Форма добавления */
