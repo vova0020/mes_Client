@@ -248,9 +248,9 @@ export const routesApi = {
     return response.data;
   },
 
-  // Полное обновление маршрута с этапами
+  // Полное обновление маршрута с этапами (используем тот же эндпоинт что и updateRoute)
   updateRouteComplete: async (id: number, data: UpdateRouteCompleteDto): Promise<Route> => {
-    const response = await api.put(`/settings/routes/${id}/complete`, data);
+    const response = await api.put(`/settings/routes/${id}`, data);
     return response.data;
   },
 

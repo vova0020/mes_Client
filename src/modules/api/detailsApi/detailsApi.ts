@@ -32,6 +32,11 @@ export interface Detail {
   sbPartSku?: string;
   conveyorPosition?: number;
   quantity: number;
+  route?: {
+    routeId: number;
+    routeName: string;
+    lineId: number;
+  } | null;
   packageDetails?: PackageDetail[];
 }
 
@@ -79,6 +84,7 @@ export interface CreateDetailDto {
   sbPartSku?: string;
   conveyorPosition?: number;
   quantity: number;
+  routeId: number;
 }
 
 // DTO для создания детали с упаковкой
@@ -122,6 +128,18 @@ export interface SaveDetailsFromFileResponse {
     updated: number;
     connected: number;
   };
+}
+
+// Интерфейс для маршрута
+export interface Route {
+  routeId: number;
+  routeName: string;
+}
+
+// Ответ API при получении списка маршрутов
+export interface GetRoutesResponse {
+  message: string;
+  data: Route[];
 }
 
 /**
@@ -182,10 +200,13 @@ export const detailsApi = {
    * @param id - Идентификатор детали
    * @returns Promise с результатом удаления
    */
-  remove: async (id: number): Promise<DeleteDetailResponse> => {
+  remove: async (id: number, packageId?: number): Promise<DeleteDetailResponse> => {
     try {
-      console.log(`Удаление детали с ID=${id}`);
-      const response = await axios.delete<DeleteDetailResponse>(`${API_URL}/details/${id}`);
+      const url = packageId 
+        ? `${API_URL}/details/${id}/package/${packageId}`
+        : `${API_URL}/details/${id}`;
+      console.log(`Удаление детали с ID=${id}${packageId ? ` из упаковки с ID=${packageId}` : ''}`);
+      const response = await axios.delete<DeleteDetailResponse>(url);
       return response.data;
     } catch (error) {
       console.error('Ошибка п��и удалении детали:', error);
@@ -210,6 +231,7 @@ export const detailsApi = {
         ...originalDetail,
         partSku: `${originalDetail.partSku}_copy_${Date.now()}`, // Добавляем суффикс для уникальности
         quantity: originalDetail.quantity || 1, // Устанавливаем количество по умолчанию
+        routeId: originalDetail.route?.routeId || 1, // Используем routeId из маршрута или 1 по умолчанию
       };
       
       return await detailsApi.create(copyDto);
@@ -247,6 +269,21 @@ export const detailsApi = {
       return response.data;
     } catch (error) {
       console.error('Ошибка при сохранении деталей из файла:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Получение списка всех маршрутов
+   * @returns Promise с массивом маршрутов
+   */
+  getRoutes: async (): Promise<Route[]> => {
+    try {
+      console.log('Получение списка маршрутов');
+      const response = await axios.get<GetRoutesResponse>(`${API_URL}/details/routes`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Ошибка при получении списка маршрутов:', error);
       throw error;
     }
   }

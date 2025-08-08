@@ -77,10 +77,8 @@ const RouteForm: React.FC<RouteFormProps> = ({
             
             setSelectedStages(stages);
 
-            // Загружаем этапы текущей линии для возможности добавления новых
-            if (route.lineId) {
-                loadLineStages(route.lineId);
-            }
+            // НЕ загружаем этапы линии автоматически при редактировании
+            // Этапы линии загрузятся только если пользователь выберет линию заново
         } else {
             // При создании нового маршрута
             setRouteForm({ routeName: '', lineId: 0 });
@@ -103,14 +101,16 @@ const RouteForm: React.FC<RouteFormProps> = ({
     };
 
     // Загрузка этапов производственной линии
-    const loadLineStages = async (lineId: number) => {
+    const loadLineStages = async (lineId: number): Promise<LineStagesResponse | null> => {
         setLoadingStages(true);
         try {
             const stagesData = await routesApi.getLineStages(lineId);
             setLineStages(stagesData);
+            return stagesData;
         } catch (error) {
             console.error('Ошибка загрузки этапов производственной линии:', error);
             setLineStages(null);
+            return null;
         } finally {
             setLoadingStages(false);
         }
@@ -122,18 +122,19 @@ const RouteForm: React.FC<RouteFormProps> = ({
         setRouteForm(prev => ({ ...prev, lineId }));
         
         if (lineId > 0) {
-            // При выборе производственной линии
-            await loadLineStages(lineId);
-
-            // Если выбрана та же линия, что была раньше, обновляем список этапов
-            if (lineId === prevLineId) {
-                const allStages = lineStages?.stagesLevel1.map((stage, index) => ({
+            // При выборе производственной линии всегда загружаем этапы
+            const stagesData = await loadLineStages(lineId);
+            
+            // При редактировании: если пользователь выбрал ту же линию повторно,
+            // заменяем текущие этапы маршрута на все этапы линии
+            if (isEditing && lineId === prevLineId && stagesData) {
+                const allStages = stagesData.stagesLevel1.map((stage, index) => ({
                     stageId: stage.stageId,
                     substageId: undefined,
                     sequenceNumber: index + 1,
                     stageName: stage.stageName,
                     substageName: undefined
-                })) || [];
+                }));
                 setSelectedStages(allStages);
             }
         } else {
@@ -328,8 +329,10 @@ const RouteForm: React.FC<RouteFormProps> = ({
                                 {routeForm.lineId === 0 
                                     ? 'Выберите производственную линию для отображения этапов'
                                     : loadingStages 
-                                        ? 'Загрузка этапов производственной ли��ии...'
-                                        : 'Этапы производственной линии будут отображены автоматически'
+                                        ? 'Загрузка этапов производственной линии...'
+                                        : isEditing 
+                                            ? 'Этапы маршрута отображены выше. Выберите линию заново для загрузки всех этапов линии.'
+                                            : 'Этапы производственной линии будут отображены автоматически'
                                 }
                             </div>
                         ) : (

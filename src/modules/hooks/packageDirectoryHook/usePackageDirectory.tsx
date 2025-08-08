@@ -129,6 +129,9 @@ export const usePackageDirectory = (
       // После успешного создания обновляем список упаковок
       await fetchPackages();
       
+      // Уведомляем другие компоненты об изменении
+      window.dispatchEvent(new CustomEvent('packageDirectoryUpdated'));
+      
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Неизвестная ошибка при создании упаковки');
       setError(error);
@@ -159,6 +162,9 @@ export const usePackageDirectory = (
       // После успешного обновления обновляем список упаковок
       await fetchPackages();
       
+      // Уведомляем другие компоненты об изменении
+      window.dispatchEvent(new CustomEvent('packageDirectoryUpdated'));
+      
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Неизвестная ошибка при обновлении упаковки');
       setError(error);
@@ -183,6 +189,9 @@ export const usePackageDirectory = (
       // После успешного удаления обновляем список упаковок
       await fetchPackages();
       
+      // Уведомляем другие компоненты об изменении
+      window.dispatchEvent(new CustomEvent('packageDirectoryUpdated'));
+      
       // Если была выбрана удаленная упаковка, сбрасываем выбор
       if (selectedPackage?.packageId === packageId) {
         clearSelection();
@@ -204,6 +213,19 @@ export const usePackageDirectory = (
       fetchPackages();
     }
   }, [autoFetch, fetchPackages]);
+
+  // Слушатель событий для автоматического обновления
+  useEffect(() => {
+    const handleDetailsUpdate = () => {
+      fetchPackages();
+    };
+
+    window.addEventListener('detailsUpdated', handleDetailsUpdate);
+    
+    return () => {
+      window.removeEventListener('detailsUpdated', handleDetailsUpdate);
+    };
+  }, [fetchPackages]);
 
   return {
     packages,

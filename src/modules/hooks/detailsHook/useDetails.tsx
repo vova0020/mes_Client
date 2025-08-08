@@ -7,7 +7,8 @@ import {
   DeleteDetailResponse,
   CreateDetailWithPackageDto,
   SaveDetailsFromFileDto,
-  SaveDetailsFromFileResponse
+  SaveDetailsFromFileResponse,
+  Route
 } from '../../api/detailsApi/detailsApi';
 
 // Типы состояний загрузки
@@ -19,15 +20,18 @@ interface UseDetailsResult {
   loading: LoadingState;
   error: Error | null;
   selectedDetail: Detail | null;
+  routes: Route[];
+  routesLoading: boolean;
   
   // Операции CRUD
   createDetail: (createDto: CreateDetailDto) => Promise<Detail>;
   createDetailWithPackage: (createDto: CreateDetailWithPackageDto) => Promise<Detail>;
   updateDetail: (id: number, updateDto: UpdateDetailDto) => Promise<Detail>;
-  deleteDetail: (id: number) => Promise<void>;
+  deleteDetail: (id: number, packageId?: number) => Promise<void>;
   copyDetail: (id: number) => Promise<Detail>;
   fetchDetailsByPackage: (packageId: number) => Promise<void>;
   saveDetailsFromFile: (saveDto: SaveDetailsFromFileDto) => Promise<SaveDetailsFromFileResponse>;
+  fetchRoutes: () => Promise<void>;
   
   // Управление выбранной деталью
   selectDetail: (detailId: number | null) => void;
@@ -53,6 +57,8 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
   const [loading, setLoading] = useState<LoadingState>('idle');
   const [error, setError] = useState<Error | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<Detail | null>(null);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [routesLoading, setRoutesLoading] = useState(false);
   
   // Состояния для отдельных операций
   const [isCreating, setIsCreating] = useState(false);
@@ -93,6 +99,9 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
       // Добавляем новую деталь в список
       setDetails(prev => [...prev, newDetail]);
       
+      // Уведомляем о создании детали
+      window.dispatchEvent(new CustomEvent('detailsUpdated'));
+      
       return newDetail;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Неизвестная ошибка при создании детали');
@@ -116,6 +125,9 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
       
       // Добавляем новую деталь в список
       setDetails(prev => [...prev, newDetail]);
+      
+      // Уведомляем о создании детали
+      window.dispatchEvent(new CustomEvent('detailsUpdated'));
       
       return newDetail;
     } catch (err) {
@@ -146,6 +158,9 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
         setSelectedDetail(updatedDetail);
       }
       
+      // Уведомляем об обновлении детали
+      window.dispatchEvent(new CustomEvent('detailsUpdated'));
+      
       return updatedDetail;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Неизвестная ошибка при обновлении детали');
@@ -158,13 +173,13 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
   }, [selectedDetail]);
 
   // Функция для удаления детали
-  const deleteDetail = useCallback(async (id: number): Promise<void> => {
+  const deleteDetail = useCallback(async (id: number, packageId?: number): Promise<void> => {
     try {
       setIsDeleting(true);
       setError(null);
       
-      console.log(`Удаление детали с ID=${id}...`);
-      const result = await detailsApi.remove(id);
+      console.log(`Удаление детали с ID=${id}${packageId ? ` из упаковки с ID=${packageId}` : ''}...`);
+      const result = await detailsApi.remove(id, packageId);
       console.log('Деталь удалена:', result.message);
       
       // Удаляем деталь из списка
@@ -174,6 +189,9 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
       if (selectedDetail?.id === id) {
         setSelectedDetail(null);
       }
+      
+      // Уведомляем об удалении детали
+      window.dispatchEvent(new CustomEvent('detailsUpdated'));
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Неизвестная ошибка при удалении детали');
       setError(error);
@@ -254,6 +272,9 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
         await fetchDetailsByPackage(saveDto.packageId);
       }
       
+      // Уведомляем о сохранении деталей из файла
+      window.dispatchEvent(new CustomEvent('detailsUpdated'));
+      
       return result;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Неизвестная ошибка при сохранении деталей из файла');
@@ -265,6 +286,21 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
     }
   }, [fetchDetailsByPackage]);
 
+  // Функция для загрузки маршрутов
+  const fetchRoutes = useCallback(async (): Promise<void> => {
+    try {
+      setRoutesLoading(true);
+      console.log('Загрузка списка маршрутов...');
+      const data = await detailsApi.getRoutes();
+      console.log('Получены маршруты:', data);
+      setRoutes(data);
+    } catch (err) {
+      console.error('Ошибка при загрузке маршрутов:', err);
+    } finally {
+      setRoutesLoading(false);
+    }
+  }, []);
+
   // Автоматическая загрузка данных при изменении packageId
   useEffect(() => {
     if (packageId) {
@@ -274,11 +310,37 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
     }
   }, [packageId, fetchDetailsByPackage, clearDetails]);
 
+  // Слушатель событий для автоматического обновления
+  useEffect(() => {
+    const handlePackageDirectoryUpdate = () => {
+      if (packageId) {
+        fetchDetailsByPackage(packageId);
+      }
+    };
+
+    const handleForceRefresh = (event: any) => {
+      const { packageId: eventPackageId } = event.detail || {};
+      if (eventPackageId && packageId && eventPackageId === packageId) {
+        fetchDetailsByPackage(packageId);
+      }
+    };
+
+    window.addEventListener('packageDirectoryUpdated', handlePackageDirectoryUpdate);
+    window.addEventListener('forceRefreshDetails', handleForceRefresh);
+    
+    return () => {
+      window.removeEventListener('packageDirectoryUpdated', handlePackageDirectoryUpdate);
+      window.removeEventListener('forceRefreshDetails', handleForceRefresh);
+    };
+  }, [packageId, fetchDetailsByPackage]);
+
   return {
     details,
     loading,
     error,
     selectedDetail,
+    routes,
+    routesLoading,
     
     // Операции CRUD
     createDetail,
@@ -288,6 +350,7 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
     copyDetail,
     fetchDetailsByPackage,
     saveDetailsFromFile,
+    fetchRoutes,
     
     // Управление выбранной деталью
     selectDetail,

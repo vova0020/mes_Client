@@ -7,10 +7,10 @@ import RouteDetails from './components/RouteDetails';
 import { 
   useRoutes, 
   useCreateRoute, 
-  useUpdateRoutePartial, 
+  useUpdateRouteComplete, 
   useDeleteRoute
 } from './hooks/useRoutes';
-import { Route, CreateRouteDto, UpdateRoutePartialDto } from './api/routes.api';
+import { Route, CreateRouteDto, UpdateRouteCompleteDto } from './api/routes.api';
 import styles from './RouteSettings.module.css';
 
 // Создаем QueryClient локально для этого компонента
@@ -50,7 +50,7 @@ const RouteSettingsContent: React.FC = () => {
 
   // Мутации
   const createRouteMutation = useCreateRoute();
-  const updateRoutePartialMutation = useUpdateRoutePartial();
+  const updateRouteCompleteMutation = useUpdateRouteComplete();
   const deleteRouteMutation = useDeleteRoute();
 
   // Обработчики
@@ -68,14 +68,17 @@ const RouteSettingsContent: React.FC = () => {
     try {
       if (editingRoute) {
         // Редактирование существующего маршрута
-        // Используем новый API для частичного обновления
-        const updateData: UpdateRoutePartialDto = {
+        // ��спользуем полное обновление маршрута с этапами
+        const updateData: UpdateRouteCompleteDto = {
           routeName: routeData.routeName,
           lineId: routeData.lineId,
-          stageIds: (routeData.stages || []).map(stage => stage.stageId)
+          stages: (routeData.stages || []).map((stage, index) => ({
+            ...stage,
+            sequenceNumber: stage.sequenceNumber ?? index + 1
+          }))
         };
 
-        const updatedRoute = await updateRoutePartialMutation.mutateAsync({
+        const updatedRoute = await updateRouteCompleteMutation.mutateAsync({
           id: editingRoute.routeId,
           data: updateData
         });
@@ -176,7 +179,7 @@ const RouteSettingsContent: React.FC = () => {
     );
   }
 
-  const isFormLoading = createRouteMutation.isPending || updateRoutePartialMutation.isPending;
+  const isFormLoading = createRouteMutation.isPending || updateRouteCompleteMutation.isPending;
 
   return (
     <div className={styles.pageContainer}>

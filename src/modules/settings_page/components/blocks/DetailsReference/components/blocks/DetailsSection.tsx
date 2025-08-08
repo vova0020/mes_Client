@@ -88,12 +88,15 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     details,
     loading,
     error,
+    routes,
+    routesLoading,
     createDetail,
     createDetailWithPackage,
     updateDetail,
     deleteDetail,
     copyDetail,
     saveDetailsFromFile,
+    fetchRoutes,
     isCreating,
     isUpdating,
     isDeleting,
@@ -111,6 +114,32 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
   // Определяем состояние загрузки
   const isLoading = loading === 'loading';
+
+  // Загружаем маршруты при открытии модальных окон
+  React.useEffect(() => {
+    if (showCreateModal || showEditModal || showParsedDataModal) {
+      fetchRoutes();
+    }
+  }, [showCreateModal, showEditModal, showParsedDataModal, fetchRoutes]);
+
+  // Слушатель событий для автоматического обновления
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      // Обновляем только если выбрана упаковка
+      if (packageId) {
+        // Принудительно перезагружаем данные через хук
+        window.dispatchEvent(new CustomEvent('forceRefreshDetails', { detail: { packageId } }));
+      }
+    };
+
+    window.addEventListener('detailsUpdated', handleUpdate);
+    window.addEventListener('packageDirectoryUpdated', handleUpdate);
+    
+    return () => {
+      window.removeEventListener('detailsUpdated', handleUpdate);
+      window.removeEventListener('packageDirectoryUpdated', handleUpdate);
+    };
+  }, [packageId]);
 
   // Показать уведомление
   const showNotification = (type: NotificationState['type'], title: string, message: string) => {
@@ -204,7 +233,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   const handleDeleteDetail = async () => {
     if (!selectedDetail) return;
     try {
-      await deleteDetail(selectedDetail.id);
+      await deleteDetail(selectedDetail.id, packageId);
       setShowDeleteModal(false);
       setSelectedDetail(null);
       showNotification('success', 'Успех', 'Деталь успешно удалена');
@@ -269,7 +298,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         pfSb: detail.pfSb,
         sbPartSku: detail.sbPartSku,
         conveyorPosition: detail.conveyorPosition,
-        quantity: detail.quantity
+        quantity: detail.quantity,
+        routeId: detail.routeId
       }));
 
       const result = await saveDetailsFromFile({
@@ -513,6 +543,12 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
             <div className={styles.spinner}></div>
             <p>Загрузка деталей...</p>
           </div>
+        ) : details.length === 0 ? (
+          <div className={styles.emptyState}>
+            <DocumentArrowUpIcon className={styles.emptyIcon} />
+            <h3>Нет деталей</h3>
+            <p>В этой упаковке пока нет деталей</p>
+          </div>
         ) : viewMode === 'table' ? (
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
@@ -559,6 +595,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                   <th>ПФ СБ</th>
                   <th>Артикул СБ детали</th>
                   <th>Подстопное место</th>
+                  <th>Маршрут</th>
                   <th onClick={() => handleSort('quantity')} className={styles.sortable}>
                     Количество
                     {sortField === 'quantity' && (
@@ -571,7 +608,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
               <tbody>
                 {filteredAndSorted.length === 0 && !isLoading && (
                   <tr>
-                    <td colSpan={23} className={styles.empty}>
+                    <td colSpan={24} className={styles.empty}>
                       {details.length === 0 ? 'В этой упаковке пока нет деталей' : 'Детали не найдены по заданным критериям'}
                     </td>
                   </tr>
@@ -647,6 +684,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                     </td>
                     <td>{d.sbPartSku ?? '–'}</td>
                     <td>{d.conveyorPosition ?? '–'}</td>
+                    <td>{d.route?.routeName ?? '–'}</td>
                     <td><span className={styles.quantityBadge}>{d.quantity}</span></td>
                     <td className={styles.actions}>
                       <button 
@@ -764,6 +802,10 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                       </div>
                     )}
                     <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Маршрут:</span>
+                      <span>{d.route?.routeName ?? '–'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Количество:</span>
                       <span className={styles.quantityBadge}>{d.quantity}</span>
                     </div>
@@ -793,6 +835,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         onSubmit={handleCreateDetail}
         isLoading={isCreating}
         title="Создать деталь"
+        routes={routes}
+        routesLoading={routesLoading}
       />
 
       <DetailModal
@@ -805,6 +849,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         detail={selectedDetail}
         isLoading={isUpdating}
         title="Редактировать деталь"
+        routes={routes}
+        routesLoading={routesLoading}
       />
 
       <DeleteConfirmModal
@@ -834,6 +880,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         onSave={handleSaveParsedData}
         parsedData={parsedData}
         isLoading={isCreating}
+        routes={routes}
+        routesLoading={routesLoading}
       />
     </div>
   );

@@ -47,6 +47,7 @@ export interface ParsedDetail {
   packaging?: string;
   packagingSku?: string;
   conveyorPosition?: number;
+  routeId: number;
   detailExists: boolean;
   packages: PackageInfo[];
   diffs: DataDiff[];

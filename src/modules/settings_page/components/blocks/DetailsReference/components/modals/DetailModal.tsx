@@ -4,7 +4,7 @@ import {
   CheckIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { Detail, CreateDetailDto, UpdateDetailDto } from '../../../../../../api/detailsApi/detailsApi';
+import { Detail, CreateDetailDto, UpdateDetailDto, Route } from '../../../../../../api/detailsApi/detailsApi';
 import styles from './DetailModal.module.css';
 
 interface DetailModalProps {
@@ -14,6 +14,8 @@ interface DetailModalProps {
   detail?: Detail | null;
   isLoading?: boolean;
   title: string;
+  routes: Route[];
+  routesLoading?: boolean;
 }
 
 export const DetailModal: React.FC<DetailModalProps> = ({
@@ -22,7 +24,9 @@ export const DetailModal: React.FC<DetailModalProps> = ({
   onSubmit,
   detail,
   isLoading = false,
-  title
+  title,
+  routes,
+  routesLoading = false
 }) => {
   const [formData, setFormData] = useState<CreateDetailDto>({
     partSku: '',
@@ -53,6 +57,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
     sbPartSku: '',
     conveyorPosition: undefined,
     quantity: 1,
+    routeId: 0,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -89,6 +94,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
         sbPartSku: detail.sbPartSku || '',
         conveyorPosition: detail.conveyorPosition,
         quantity: detail.quantity || 1,
+        routeId: detail.route?.routeId || 0,
       });
     } else {
       // Сброс формы для создания новой детали
@@ -121,6 +127,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
         sbPartSku: '',
         conveyorPosition: undefined,
         quantity: 1,
+        routeId: 0,
       });
     }
     setErrors({});
@@ -147,6 +154,10 @@ export const DetailModal: React.FC<DetailModalProps> = ({
 
     if (!formData.quantity || formData.quantity < 1) {
       newErrors.quantity = 'Количество должно быть больше 0';
+    }
+
+    if (!formData.routeId || formData.routeId === 0) {
+      newErrors.routeId = 'Маршрут обязателен для выбора';
     }
 
     setErrors(newErrors);
@@ -253,6 +264,25 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                     placeholder="Введите количество"
                   />
                   {errors.quantity && <span className={styles.errorText}>{errors.quantity}</span>}
+                </div>
+
+                <div className={styles.field}>
+                  <label>Маршрут *</label>
+                  <select
+                    value={formData.routeId}
+                    onChange={e => handleInputChange('routeId', parseInt(e.target.value))}
+                    className={`${styles.input} ${errors.routeId ? styles.error : ''}`}
+                    disabled={routesLoading}
+                  >
+                    <option value={0}>Выберите маршрут</option>
+                    {routes.map(route => (
+                      <option key={route.routeId} value={route.routeId}>
+                        {route.routeName}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.routeId && <span className={styles.errorText}>{errors.routeId}</span>}
+                  {routesLoading && <span className={styles.loadingText}>Загрузка маршрутов...</span>}
                 </div>
               </div>
             </div>

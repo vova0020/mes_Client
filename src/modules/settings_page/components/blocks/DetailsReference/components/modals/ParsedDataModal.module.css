@@ -166,6 +166,8 @@
   border-radius: 12px;
   border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  position: relative;
+  max-height: calc(100vh - 400px);
 }
 
 .table {
@@ -186,12 +188,13 @@
   border-bottom: 2px solid rgba(226, 232, 240, 0.8);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
   min-width: 120px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .table th:first-child {
@@ -725,6 +728,107 @@
   border-color: #cbd5e1;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Editable Cells */
+.editableCell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.8));
+  border: 1px solid transparent;
+  min-height: 32px;
+}
+
+.editableCell:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 197, 253, 0.05));
+  border-color: rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.editIcon {
+  width: 14px;
+  height: 14px;
+  color: #9ca3af;
+  opacity: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.editableCell:hover .editIcon {
+  opacity: 1;
+  color: #3b82f6;
+}
+
+.editInput {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: white;
+  color: #374151;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  transition: all 0.2s ease;
+}
+
+.editInput:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.editInput[type="number"] {
+  text-align: center;
+}
+
+/* Route Select */
+.routeSelect {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.routeSelect:hover {
+  border-color: #cbd5e1;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.routeSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.routeSelectError {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  color: #dc2626;
+}
+
+.routeSelectError:hover {
+  border-color: #dc2626;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+}
+
+.routeSelectError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 /* Responsive */

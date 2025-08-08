@@ -8,6 +8,7 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline';
 import { ParsedDetail } from '../../../../../../api/parserApi/parserApi';
+import { Route } from '../../../../../../api/detailsApi/detailsApi';
 import styles from './ParsedDataModal.module.css';
 
 // Словарь для перевода названий полей на русский язык
@@ -53,6 +54,8 @@ interface ParsedDataModalProps {
   onSave: (editedData: ParsedDetail[]) => Promise<void>;
   parsedData: ParsedDetail[];
   isLoading?: boolean;
+  routes: Route[];
+  routesLoading?: boolean;
 }
 
 export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
@@ -60,10 +63,12 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
   onClose,
   onSave,
   parsedData,
-  isLoading = false
+  isLoading = false,
+  routes,
+  routesLoading = false
 }) => {
   const [editedData, setEditedData] = useState<ParsedDetail[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingCell, setEditingCell] = useState<{row: number, field: string} | null>(null);
   const [showDiffsModal, setShowDiffsModal] = useState(false);
   const [selectedDiffs, setSelectedDiffs] = useState<any[]>([]);
   const [selectedDetailSku, setSelectedDetailSku] = useState<string>('');
@@ -73,13 +78,29 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
     setEditedData([...parsedData]);
   }, [parsedData]);
 
-  const handleQuantityChange = (index: number, newQuantity: number) => {
+  const handleFieldChange = (index: number, field: string, value: any) => {
     const updated = [...editedData];
-    updated[index] = { ...updated[index], quantity: Math.max(1, newQuantity) };
+    if (field === 'quantity') {
+      value = Math.max(1, parseInt(value) || 1);
+    } else if (field === 'routeId') {
+      value = parseInt(value) || 0;
+    } else if (['thickness', 'thicknessWithEdging', 'finishedLength', 'finishedWidth', 'conveyorPosition'].includes(field)) {
+      value = value ? parseFloat(value) : undefined;
+    } else if (['pf', 'sbPart', 'pfSb'].includes(field)) {
+      value = value === 'true' || value === true;
+    }
+    updated[index] = { ...updated[index], [field]: value };
     setEditedData(updated);
   };
 
   const handleSave = async () => {
+    // Проверяем, что у всех деталей выбран маршрут
+    const detailsWithoutRoute = editedData.filter(detail => !detail.routeId || detail.routeId === 0);
+    if (detailsWithoutRoute.length > 0) {
+      alert(`Необходимо выбрать маршрут для всех деталей. Не выбран маршрут для ${detailsWithoutRoute.length} деталей.`);
+      return;
+    }
+    
     try {
       await onSave(editedData);
     } catch (error) {
@@ -88,9 +109,77 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
   };
 
   const handleViewDiffs = (detail: ParsedDetail) => {
-    setSelectedDiffs(detail.diffs || []);
+    // Фильтруем различия, исключая поле quantity
+    const filteredDiffs = (detail.diffs || []).filter(diff => diff.field !== 'quantity');
+    setSelectedDiffs(filteredDiffs);
     setSelectedDetailSku(detail.partSku);
     setShowDiffsModal(true);
+  };
+
+  const renderEditableCell = (detail: ParsedDetail, index: number, field: string, value: any) => {
+    const isEditing = editingCell?.row === index && editingCell?.field === field;
+    
+    if (isEditing) {
+      if (['pf', 'sbPart', 'pfSb'].includes(field)) {
+        return (
+          <select
+            value={value ? 'true' : 'false'}
+            onChange={(e) => handleFieldChange(index, field, e.target.value)}
+            onBlur={() => setEditingCell(null)}
+            className={styles.editInput}
+            autoFocus
+          >
+            <option value="false">Нет</option>
+            <option value="true">Да</option>
+          </select>
+        );
+      } else if (field === 'routeId') {
+        return (
+          <select
+            value={value || 0}
+            onChange={(e) => handleFieldChange(index, field, e.target.value)}
+            onBlur={() => setEditingCell(null)}
+            className={styles.editInput}
+            autoFocus
+          >
+            <option value={0}>Выберите маршрут</option>
+            {routes.map(route => (
+              <option key={route.routeId} value={route.routeId}>
+                {route.routeName}
+              </option>
+            ))}
+          </select>
+        );
+      } else {
+        const inputType = ['thickness', 'thicknessWithEdging', 'finishedLength', 'finishedWidth', 'conveyorPosition', 'quantity'].includes(field) ? 'number' : 'text';
+        return (
+          <input
+            type={inputType}
+            value={value || ''}
+            onChange={(e) => handleFieldChange(index, field, e.target.value)}
+            onBlur={() => setEditingCell(null)}
+            onKeyDown={(e) => e.key === 'Enter' && setEditingCell(null)}
+            className={styles.editInput}
+            autoFocus
+          />
+        );
+      }
+    }
+    
+    const displayValue = ['pf', 'sbPart', 'pfSb'].includes(field) 
+      ? (value ? 'Да' : 'Нет')
+      : (value ?? '–');
+    
+    return (
+      <div 
+        className={styles.editableCell}
+        onClick={() => setEditingCell({row: index, field})}
+        title="Нажмите для редактирования"
+      >
+        {displayValue}
+        <PencilIcon className={styles.editIcon} />
+      </div>
+    );
   };
 
   const getStatusBadge = (detail: ParsedDetail) => {
@@ -106,12 +195,14 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
   };
 
   const getDiffsInfo = (diffs: any[]) => {
-    if (!diffs || diffs.length === 0) return null;
+    // Фильтруем различия, исключая поле quantity
+    const filteredDiffs = (diffs || []).filter(diff => diff.field !== 'quantity');
+    if (!filteredDiffs || filteredDiffs.length === 0) return null;
     
     return (
       <div className={styles.diffsInfo}>
         <ExclamationTriangleIcon className={styles.warningIcon} />
-        <span>Найдено {diffs.length} различий с БД</span>
+        <span>Найдено {filteredDiffs.length} различий с БД</span>
       </div>
     );
   };
@@ -177,6 +268,7 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
                   <th>ПФ СБ</th>
                   <th>Артикул СБ детали</th>
                   <th>Подстопное место</th>
+                  <th>Маршрут</th>
                   <th>Количество</th>
                   <th>Различия</th>
                   <th>Действия</th>
@@ -189,87 +281,86 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
                     <td>
                       <span className={styles.skuBadge}>{detail.partSku}</span>
                     </td>
-                    <td className={styles.nameCell}>{detail.partName}</td>
-                    <td>{detail.materialName}</td>
-                    <td><span className={styles.materialSku}>{detail.materialSku}</span></td>
-                    <td>{detail.thickness ?? '–'}</td>
-                    <td>{detail.thicknessWithEdging ?? '–'}</td>
-                    <td>{detail.finishedLength ?? '–'}</td>
-                    <td>{detail.finishedWidth ?? '–'}</td>
-                    <td>{detail.groove ?? '–'}</td>
+                    <td>{renderEditableCell(detail, index, 'partName', detail.partName)}</td>
+                    <td>{renderEditableCell(detail, index, 'materialName', detail.materialName)}</td>
+                    <td>{renderEditableCell(detail, index, 'materialSku', detail.materialSku)}</td>
+                    <td>{renderEditableCell(detail, index, 'thickness', detail.thickness)}</td>
+                    <td>{renderEditableCell(detail, index, 'thicknessWithEdging', detail.thicknessWithEdging)}</td>
+                    <td>{renderEditableCell(detail, index, 'finishedLength', detail.finishedLength)}</td>
+                    <td>{renderEditableCell(detail, index, 'finishedWidth', detail.finishedWidth)}</td>
+                    <td>{renderEditableCell(detail, index, 'groove', detail.groove)}</td>
                     <td>
                       <div className={styles.edgingInfo}>
-                        {detail.edgingSkuL1 && <span className={styles.edgingSku}>{detail.edgingSkuL1}</span>}
-                        {detail.edgingNameL1 && <span className={styles.edgingName}>{detail.edgingNameL1}</span>}
-                        {!detail.edgingSkuL1 && !detail.edgingNameL1 && '–'}
+                        {renderEditableCell(detail, index, 'edgingSkuL1', detail.edgingSkuL1)}
+                        {renderEditableCell(detail, index, 'edgingNameL1', detail.edgingNameL1)}
                       </div>
                     </td>
                     <td>
                       <div className={styles.edgingInfo}>
-                        {detail.edgingSkuL2 && <span className={styles.edgingSku}>{detail.edgingSkuL2}</span>}
-                        {detail.edgingNameL2 && <span className={styles.edgingName}>{detail.edgingNameL2}</span>}
-                        {!detail.edgingSkuL2 && !detail.edgingNameL2 && '–'}
+                        {renderEditableCell(detail, index, 'edgingSkuL2', detail.edgingSkuL2)}
+                        {renderEditableCell(detail, index, 'edgingNameL2', detail.edgingNameL2)}
                       </div>
                     </td>
                     <td>
                       <div className={styles.edgingInfo}>
-                        {detail.edgingSkuW1 && <span className={styles.edgingSku}>{detail.edgingSkuW1}</span>}
-                        {detail.edgingNameW1 && <span className={styles.edgingName}>{detail.edgingNameW1}</span>}
-                        {!detail.edgingSkuW1 && !detail.edgingNameW1 && '–'}
+                        {renderEditableCell(detail, index, 'edgingSkuW1', detail.edgingSkuW1)}
+                        {renderEditableCell(detail, index, 'edgingNameW1', detail.edgingNameW1)}
                       </div>
                     </td>
                     <td>
                       <div className={styles.edgingInfo}>
-                        {detail.edgingSkuW2 && <span className={styles.edgingSku}>{detail.edgingSkuW2}</span>}
-                        {detail.edgingNameW2 && <span className={styles.edgingName}>{detail.edgingNameW2}</span>}
-                        {!detail.edgingSkuW2 && !detail.edgingNameW2 && '–'}
+                        {renderEditableCell(detail, index, 'edgingSkuW2', detail.edgingSkuW2)}
+                        {renderEditableCell(detail, index, 'edgingNameW2', detail.edgingNameW2)}
                       </div>
                     </td>
                     <td>
                       <div className={styles.plasticInfo}>
-                        {detail.plasticFace && <span className={styles.plasticName}>{detail.plasticFace}</span>}
-                        {detail.plasticFaceSku && <span className={styles.plasticSku}>{detail.plasticFaceSku}</span>}
-                        {!detail.plasticFace && !detail.plasticFaceSku && '–'}
+                        {renderEditableCell(detail, index, 'plasticFace', detail.plasticFace)}
+                        {renderEditableCell(detail, index, 'plasticFaceSku', detail.plasticFaceSku)}
                       </div>
                     </td>
                     <td>
                       <div className={styles.plasticInfo}>
-                        {detail.plasticBack && <span className={styles.plasticName}>{detail.plasticBack}</span>}
-                        {detail.plasticBackSku && <span className={styles.plasticSku}>{detail.plasticBackSku}</span>}
-                        {!detail.plasticBack && !detail.plasticBackSku && '–'}
+                        {renderEditableCell(detail, index, 'plasticBack', detail.plasticBack)}
+                        {renderEditableCell(detail, index, 'plasticBackSku', detail.plasticBackSku)}
                       </div>
                     </td>
+                    <td>{renderEditableCell(detail, index, 'pf', detail.pf)}</td>
+                    <td>{renderEditableCell(detail, index, 'pfSku', detail.pfSku)}</td>
+                    <td>{renderEditableCell(detail, index, 'sbPart', detail.sbPart)}</td>
+                    <td>{renderEditableCell(detail, index, 'pfSb', detail.pfSb)}</td>
+                    <td>{renderEditableCell(detail, index, 'sbPartSku', detail.sbPartSku)}</td>
+                    <td>{renderEditableCell(detail, index, 'conveyorPosition', detail.conveyorPosition)}</td>
                     <td>
-                      <span className={`${styles.badge} ${detail.pf ? styles.badgeYes : styles.badgeNo}`}>
-                        {detail.pf ? 'Да' : 'Нет'}
-                      </span>
+                      <select
+                        value={detail.routeId || 0}
+                        onChange={(e) => handleFieldChange(index, 'routeId', parseInt(e.target.value))}
+                        className={`${styles.routeSelect} ${(!detail.routeId || detail.routeId === 0) ? styles.routeSelectError : ''}`}
+                        disabled={routesLoading}
+                      >
+                        <option value={0}>Выберите маршрут</option>
+                        {routes.map(route => (
+                          <option key={route.routeId} value={route.routeId}>
+                            {route.routeName}
+                          </option>
+                        ))}
+                      </select>
                     </td>
-                    <td>{detail.pfSku ?? '–'}</td>
                     <td>
-                      <span className={`${styles.badge} ${detail.sbPart ? styles.badgeYes : styles.badgeNo}`}>
-                        {detail.sbPart ? 'Да' : 'Нет'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`${styles.badge} ${detail.pfSb ? styles.badgeYes : styles.badgeNo}`}>
-                        {detail.pfSb ? 'Да' : 'Нет'}
-                      </span>
-                    </td>
-                    <td>{detail.sbPartSku ?? '–'}</td>
-                    <td>{detail.conveyorPosition ?? '–'}</td>
-                    <td>
-                      {editingIndex === index ? (
+                      {editingCell?.row === index && editingCell?.field === 'quantity' ? (
                         <div className={styles.quantityEdit}>
                           <input
                             type="number"
                             min="1"
                             value={detail.quantity}
-                            onChange={(e) => handleQuantityChange(index, parseInt(e.target.value) || 1)}
+                            onChange={(e) => handleFieldChange(index, 'quantity', parseInt(e.target.value) || 1)}
                             className={styles.quantityInput}
+                            onBlur={() => setEditingCell(null)}
+                            onKeyDown={(e) => e.key === 'Enter' && setEditingCell(null)}
                             autoFocus
                           />
                           <button
-                            onClick={() => setEditingIndex(null)}
+                            onClick={() => setEditingCell(null)}
                             className={styles.saveQuantityBtn}
                           >
                             <CheckIcon className={styles.icon} />
@@ -279,7 +370,7 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
                         <div className={styles.quantityDisplay}>
                           <span className={styles.quantityBadge}>{detail.quantity}</span>
                           <button
-                            onClick={() => setEditingIndex(index)}
+                            onClick={() => setEditingCell({row: index, field: 'quantity'})}
                             className={styles.editQuantityBtn}
                             title="Редактировать количество"
                           >
