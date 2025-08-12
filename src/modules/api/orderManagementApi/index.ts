@@ -7,7 +7,8 @@ export type OrderStatus =
   | 'APPROVED' 
   | 'LAUNCH_PERMITTED' 
   | 'IN_PROGRESS' 
-  | 'COMPLETED';
+  | 'COMPLETED'
+  | 'POSTPONED';
 
 export interface Order {
   orderId: number;
@@ -166,6 +167,62 @@ class OrderManagementApi {
   // Функция для завершения заказа
   async completeOrder(orderId: number): Promise<StatusUpdateResponse> {
     return this.updateOrderStatus(orderId, 'COMPLETED');
+  }
+
+  // Функция для отложения заказа
+  async postponeOrder(orderId: number): Promise<StatusUpdateResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/${orderId}/postpone`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Заказ не найден');
+        }
+        if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Недопустимая операция отложения');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Ошибка при отложении заказа:', error);
+      throw error;
+    }
+  }
+
+  // Функция для удаления заказа
+  async deleteOrder(orderId: number): Promise<{ message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/${orderId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Заказ не найден');
+        }
+        if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Недопустимая операция удаления');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Ошибка при удалении заказа:', error);
+      throw error;
+    }
   }
 }
 

@@ -19,7 +19,8 @@ export enum OrderStatus {
   APPROVED = 'APPROVED',
   LAUNCH_PERMITTED = 'LAUNCH_PERMITTED',
   IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED'
+  COMPLETED = 'COMPLETED',
+  POSTPONED = 'POSTPONED'
 }
 
 // DTO для создания упаковки в заказе

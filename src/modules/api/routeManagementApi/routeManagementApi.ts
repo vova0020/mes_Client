@@ -4,7 +4,11 @@ import { API_URL } from '../config';
 // Статусы заказов для управления маршрутами
 export enum OrderStatusForRoutes {
   PRELIMINARY = 'PRELIMINARY',
-  APPROVED = 'APPROVED'
+  APPROVED = 'APPROVED',
+  LAUNCH_PERMITTED = 'LAUNCH_PERMITTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  POSTPONED = 'POSTPONED'
 }
 
 // DTO для информации о маршруте

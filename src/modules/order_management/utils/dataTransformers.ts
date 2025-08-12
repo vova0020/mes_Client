@@ -32,12 +32,13 @@ export interface Detail {
 }
 
 // Маппинг статусов API к статусам компонента
-const statusMapping = {
-  'PRELIMINARY': 'preliminary' as const,
-  'APPROVED': 'approved' as const,
-  'LAUNCH_PERMITTED': 'allowedToStart' as const,
-  'IN_PROGRESS': 'inProgress' as const,
-  'COMPLETED': 'completed' as const,
+const statusMapping: Record<string, 'preliminary' | 'approved' | 'allowedToStart' | 'inProgress' | 'completed'> = {
+  'PRELIMINARY': 'preliminary',
+  'APPROVED': 'approved',
+  'LAUNCH_PERMITTED': 'allowedToStart',
+  'IN_PROGRESS': 'inProgress',
+  'COMPLETED': 'completed',
+  'POSTPONED': 'preliminary',
 };
 
 // Обратный маппинг статусов компонента к статусам API
@@ -55,7 +56,7 @@ export const transformOrderToPlanning = (order: Order): OrderPlanningData => {
     id: order.orderId.toString(),
     name: order.orderName,
     requiredDate: order.requiredDate.split('T')[0], // Преобразуем ISO дату в YYYY-MM-DD
-    status: statusMapping[order.status],
+    status: statusMapping[order.status] || 'preliminary',
     mainFlowId: '1', // По умолчанию, можно настроить логику
     secondaryFlowCompletionDate: '', // Нужно добавить в API или вычислить
     startDate: order.createdAt.split('T')[0],

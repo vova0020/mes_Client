@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Alert, CircularProgress } from '@mui/material';
-import { Edit, CheckCircle, Assignment, MonetizationOn, Visibility, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Edit, CheckCircle, Assignment, MonetizationOn, Visibility, ExpandMore, ExpandLess, Delete, Schedule } from '@mui/icons-material';
 import styles from './OrderCreation.module.css';
 
 // Импорты API и хуков
@@ -13,6 +13,7 @@ import {
   CreatePackageDto,
   UpdateProductionOrderDto
 } from '../../../api/productionOrdersApi/productionOrdersApi';
+import { orderManagementApi } from '../../../api/orderManagementApi';
 
 // Интерфейс для формы создания заказа
 interface OrderFormData {
@@ -21,6 +22,7 @@ interface OrderFormData {
   requiredDate: string;
   packages: Array<{
     packageId: number;
+    packageCode: string;
     packageName: string;
     quantity: number;
   }>;
@@ -39,6 +41,8 @@ const getStatusLabel = (status: OrderStatus): string => {
       return 'В работе';
     case OrderStatus.COMPLETED:
       return 'Завершен';
+    case OrderStatus.POSTPONED:
+      return 'Отложен';
     default:
       return status;
   }
@@ -57,6 +61,8 @@ const getStatusClass = (status: OrderStatus): string => {
       return 'inProgress';
     case OrderStatus.COMPLETED:
       return 'completed';
+    case OrderStatus.POSTPONED:
+      return 'postponed';
     default:
       return 'preliminary';
   }
@@ -95,6 +101,7 @@ const OrderCreation: React.FC = () => {
   const [editingOrder, setEditingOrder] = useState<ProductionOrderResponseDto | null>(null);
   const [viewingOrder, setViewingOrder] = useState<ProductionOrderResponseDto | null>(null);
   const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
+  const [showPostponed, setShowPostponed] = useState(false);
   const [orderForm, setOrderForm] = useState<OrderFormData>({
     batchNumber: '',
     orderName: '',
@@ -109,6 +116,7 @@ const OrderCreation: React.FC = () => {
         ...prev,
         packages: availablePackages.map(pkg => ({
           packageId: pkg.packageId,
+          packageCode: pkg.packageCode,
           packageName: pkg.packageName,
           quantity: 0
         }))
@@ -124,6 +132,7 @@ const OrderCreation: React.FC = () => {
       requiredDate: '',
       packages: availablePackages.map(pkg => ({
         packageId: pkg.packageId,
+        packageCode: pkg.packageCode,
         packageName: pkg.packageName,
         quantity: 0
       }))
@@ -168,6 +177,7 @@ const OrderCreation: React.FC = () => {
         requiredDate: '',
         packages: availablePackages.map(pkg => ({
           packageId: pkg.packageId,
+          packageCode: pkg.packageCode,
           packageName: pkg.packageName,
           quantity: 0
         }))
@@ -192,6 +202,7 @@ const OrderCreation: React.FC = () => {
       const orderPackage = order.packages?.find(op => op.packageId === pkg.packageId);
       return {
         packageId: pkg.packageId,
+        packageCode: pkg.packageCode,
         packageName: pkg.packageName,
         quantity: orderPackage ? orderPackage.quantity : 0
       };
@@ -305,6 +316,24 @@ const OrderCreation: React.FC = () => {
     }
   };
 
+  // Обработчик отложения заказа
+  const handlePostponeOrder = async (orderId: number) => {
+    if (window.confirm('Вы уверены, что хотите отложить этот заказ?')) {
+      try {
+        await orderManagementApi.postponeOrder(orderId);
+        await fetchOrders(); // Обновляем список заказов
+      } catch (error) {
+        console.error('Ошибка при отложении заказа:', error);
+        alert('Ошибка при отложении заказа. Попробуйте снова.');
+      }
+    }
+  };
+
+  // Фильтрация заказов по статусу
+  const filteredOrders = showPostponed 
+    ? orders.filter(order => order.status === OrderStatus.POSTPONED)
+    : orders.filter(order => order.status !== OrderStatus.POSTPONED);
+
   // Показыв��ем индикатор загрузки
   if (ordersLoading === 'loading' || packagesLoading === 'loading') {
     return (
@@ -347,14 +376,14 @@ const OrderCreation: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders.length === 0 ? (
+              {filteredOrders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
-                    Нет заказов для отображения
+                    {showPostponed ? 'Нет отложенных заказов' : 'Нет заказов для отображения'}
                   </TableCell>
                 </TableRow>
               ) : (
-                orders.map((order) => (
+                filteredOrders.map((order) => (
                   <TableRow key={order.orderId} className={styles.tableRow}>
                     <TableCell className={styles.cell}>{order.batchNumber}</TableCell>
                     <TableCell className={styles.cell}>{order.orderName}</TableCell>
@@ -401,6 +430,22 @@ const OrderCreation: React.FC = () => {
                         >
                           {isUpdatingStatus ? <CircularProgress size={20} /> : <CheckCircle />}
                         </IconButton>
+                        <IconButton 
+                          onClick={() => handlePostponeOrder(order.orderId)}
+                          className={styles.actionButton}
+                          disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED || order.status === OrderStatus.POSTPONED}
+                          title="Отложить заказ"
+                        >
+                          <Schedule />
+                        </IconButton>
+                        <IconButton 
+                          onClick={() => handleDeleteOrder(order.orderId)}
+                          className={styles.actionButton}
+                          disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED}
+                          title="Удалить заказ"
+                        >
+                          <Delete />
+                        </IconButton>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -427,6 +472,13 @@ const OrderCreation: React.FC = () => {
           className={styles.loadButton}
         >
           Загрузить новый заказ
+        </Button>
+        <Button 
+          variant={showPostponed ? "contained" : "outlined"}
+          onClick={() => setShowPostponed(!showPostponed)}
+          className={styles.toggleButton}
+        >
+          {showPostponed ? 'Показать активные' : 'Показать отложенные'}
         </Button>
       </div>
 
@@ -483,32 +535,51 @@ const OrderCreation: React.FC = () => {
                 </Alert>
               ) : (
                 <div className={styles.packagesList}>
-                  {orderForm.packages.map((pkg) => (
-                    <div key={pkg.packageId} className={styles.packageItem}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={pkg.quantity > 0}
-                            onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
-                            className={styles.checkbox}
-                          />
-                        }
-                        label={pkg.packageName}
-                        className={styles.packageLabel}
-                      />
-                      {pkg.quantity > 0 && (
-                        <TextField
-                          type="number"
-                          label="Количество"
-                          value={pkg.quantity}
-                          onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
-                          size="small"
-                          className={styles.quantityField}
-                          inputProps={{ min: 1 }}
-                        />
-                      )}
-                    </div>
-                  ))}
+                  <table className={styles.packageTable}>
+                    <thead>
+                      <tr>
+                        <th className={styles.checkboxCell}>Выбор</th>
+                        <th className={styles.articleCell}>Артикул</th>
+                        <th className={styles.nameCell}>Название</th>
+                        <th className={styles.quantityCell}>Количество</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orderForm.packages.map((pkg) => (
+                        <tr 
+                          key={pkg.packageId} 
+                          className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
+                        >
+                          <td className={styles.checkboxCell}>
+                            <Checkbox
+                              checked={pkg.quantity > 0}
+                              onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
+                              size="small"
+                            />
+                          </td>
+                          <td className={styles.articleCell}>
+                            <span className={styles.articleBadge}>{pkg.packageCode}</span>
+                          </td>
+                          <td className={styles.nameCell}>
+                            <span className={styles.packageName}>{pkg.packageName}</span>
+                          </td>
+                          <td className={styles.quantityCell}>
+                            {pkg.quantity > 0 ? (
+                              <input
+                                type="number"
+                                value={pkg.quantity}
+                                onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
+                                className={styles.quantityInput}
+                                min="1"
+                              />
+                            ) : (
+                              <span>-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -658,32 +729,51 @@ const OrderCreation: React.FC = () => {
                     </Alert>
                   ) : (
                     <div className={styles.packagesList}>
-                      {orderForm.packages.map((pkg) => (
-                        <div key={pkg.packageId} className={styles.packageItem}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={pkg.quantity > 0}
-                                onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
-                                className={styles.checkbox}
-                              />
-                            }
-                            label={pkg.packageName}
-                            className={styles.packageLabel}
-                          />
-                          {pkg.quantity > 0 && (
-                            <TextField
-                              type="number"
-                              label="Количество"
-                              value={pkg.quantity}
-                              onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
-                              size="small"
-                              className={styles.quantityField}
-                              inputProps={{ min: 1 }}
-                            />
-                          )}
-                        </div>
-                      ))}
+                      <table className={styles.packageTable}>
+                        <thead>
+                          <tr>
+                            <th className={styles.checkboxCell}>Выбор</th>
+                            <th className={styles.articleCell}>Артикул</th>
+                            <th className={styles.nameCell}>Название</th>
+                            <th className={styles.quantityCell}>Количество</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderForm.packages.map((pkg) => (
+                            <tr 
+                              key={pkg.packageId} 
+                              className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
+                            >
+                              <td className={styles.checkboxCell}>
+                                <Checkbox
+                                  checked={pkg.quantity > 0}
+                                  onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
+                                  size="small"
+                                />
+                              </td>
+                              <td className={styles.articleCell}>
+                                <span className={styles.articleBadge}>{pkg.packageCode}</span>
+                              </td>
+                              <td className={styles.nameCell}>
+                                <span className={styles.packageName}>{pkg.packageName}</span>
+                              </td>
+                              <td className={styles.quantityCell}>
+                                {pkg.quantity > 0 ? (
+                                  <input
+                                    type="number"
+                                    value={pkg.quantity}
+                                    onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
+                                    className={styles.quantityInput}
+                                    min="1"
+                                  />
+                                ) : (
+                                  <span>-</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </>
@@ -724,7 +814,7 @@ const OrderCreation: React.FC = () => {
         <DialogContent className={styles.dialogContent}>
           <div className={styles.compositionContainer}>
             {viewingOrder && (
-              <div style={{ marginBottom: '1rem' }}>
+              <div className={styles.compositionInfo}>
                 <p><strong>Номер партии:</strong> {viewingOrder.batchNumber}</p>
                 <p><strong>Статус:</strong> {getStatusLabel(viewingOrder.status)}</p>
                 <p><strong>Прогресс:</strong> {viewingOrder.completionPercentage}%</p>

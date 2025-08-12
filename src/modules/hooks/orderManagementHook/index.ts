@@ -108,11 +108,43 @@ export const useOrderStatusUpdate = () => {
     return updateStatus(orderId, 'COMPLETED');
   }, [updateStatus]);
 
+  const postponeOrder = useCallback(async (orderId: number): Promise<StatusUpdateResponse | null> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await orderManagementApi.postponeOrder(orderId);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteOrder = useCallback(async (orderId: number): Promise<{ message: string } | null> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await orderManagementApi.deleteOrder(orderId);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     updateStatus,
     approveForLaunch,
     startProduction,
     completeOrder,
+    postponeOrder,
+    deleteOrder,
     loading,
     error,
   };
@@ -121,7 +153,7 @@ export const useOrderStatusUpdate = () => {
 // Комплексный хук для управления заказами
 export const useOrderManagement = () => {
   const { orders, loading: ordersLoading, error: ordersError, refetch: refetchOrders } = useOrders();
-  const { updateStatus, approveForLaunch, startProduction, completeOrder, loading: statusLoading, error: statusError } = useOrderStatusUpdate();
+  const { updateStatus, approveForLaunch, startProduction, completeOrder, postponeOrder, deleteOrder, loading: statusLoading, error: statusError } = useOrderStatusUpdate();
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { orderDetails, loading: detailsLoading, error: detailsError, refetch: refetchDetails } = useOrderDetails(selectedOrderId);
 
@@ -175,6 +207,31 @@ export const useOrderManagement = () => {
     return result;
   }, [completeOrder, refetchOrders, selectedOrderId, refetchDetails]);
 
+  // Отложение заказа с автоматическим обновлением
+  const postponeOrderWithUpdate = useCallback(async (orderId: number) => {
+    const result = await postponeOrder(orderId);
+    if (result) {
+      await refetchOrders();
+      if (selectedOrderId === orderId && refetchDetails) {
+        await refetchDetails();
+      }
+    }
+    return result;
+  }, [postponeOrder, refetchOrders, selectedOrderId, refetchDetails]);
+
+  // Удаление заказа с автоматическим обновлением
+  const deleteOrderWithUpdate = useCallback(async (orderId: number) => {
+    const result = await deleteOrder(orderId);
+    if (result) {
+      await refetchOrders();
+      // Если удаляемый заказ был выбран, сбрасываем выбор
+      if (selectedOrderId === orderId) {
+        setSelectedOrderId(null);
+      }
+    }
+    return result;
+  }, [deleteOrder, refetchOrders, selectedOrderId]);
+
   return {
     // Данные
     orders,
@@ -199,6 +256,8 @@ export const useOrderManagement = () => {
     approveOrderForLaunch,
     startOrderProduction,
     completeOrderProduction,
+    postponeOrderWithUpdate,
+    deleteOrderWithUpdate,
     refetchOrders,
     refetchDetails,
   };
