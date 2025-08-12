@@ -10,7 +10,8 @@ import styles from './DetailModal.module.css';
 interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateDetailDto | UpdateDetailDto) => Promise<void>;
+  onSubmit: (data: CreateDetailDto) => Promise<void>;
+  onSubmitUpdate?: (data: UpdateDetailDto) => Promise<void>;
   detail?: Detail | null;
   isLoading?: boolean;
   title: string;
@@ -22,6 +23,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onSubmitUpdate,
   detail,
   isLoading = false,
   title,
@@ -172,7 +174,11 @@ export const DetailModal: React.FC<DetailModalProps> = ({
     }
 
     try {
-      await onSubmit(formData);
+      if (detail && onSubmitUpdate) {
+        await onSubmitUpdate(formData as UpdateDetailDto);
+      } else {
+        await onSubmit(formData);
+      }
     } catch (error) {
       console.error('Ошибка при сохранении детали:', error);
     }

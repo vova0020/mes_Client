@@ -374,30 +374,77 @@
 
 /* Стили для индикатора статуса */
 .statusIndicator {
-  padding: 3px 6px; /* Уменьшаем отступы */
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 500;
-  color: white;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  display: inline-block;
-  text-align: center;
-  min-width: 70px;
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* Статус 'Ожидание' */
 .statusPending {
   background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #5d6d7e;
 }
 
-.statusProcessing {
+/* Статус 'В буфере' */
+.statusBuffered {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #5d6d7e;
+}
+
+/* Статус 'На станке' */
+.statusOnMachine {
   background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #1c6ea4;
 }
 
+/* Статус 'В работе' */
+.statusInProgress {
+  background: linear-gradient(to bottom, #f1c40f, #f39c12);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #d35400;
+  animation: pulse 1.5s infinite;
+}
+
+/* Статус 'Завершено' */
 .statusCompleted {
   background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #219653;
+}
+
+/* Статус 'Частично завершено' */
+.statusPartiallyCompleted {
+  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #7d3c98;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Особые стили для некоторых ячеек */

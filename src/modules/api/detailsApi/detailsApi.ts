@@ -95,6 +95,7 @@ export interface CreateDetailWithPackageDto extends CreateDetailDto {
 // DTO для обновления детали
 export interface UpdateDetailDto extends CreateDetailDto {
   packageConnections?: PackageConnection[];
+  packageId: number; // ID упаковки обязателен для понимания контекста обновления
 }
 
 // Ответ API при получении деталей по упаковке

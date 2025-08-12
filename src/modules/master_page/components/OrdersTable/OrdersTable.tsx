@@ -1,22 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './OrdersTable.module.css';
-import useOrders from '../../../hooks/masterPage/useOrdersMaster';
 import { Order } from '../../../api/masterPage/orderServiceMaster';
 
 interface OrdersTableProps {
+  orders: Order[];
+  loading: boolean;
+  error: Error | null;
+  fetchOrders: () => void;
   onOrderSelect?: (orderId: number | null) => void;
   onViewOrderComposition?: (orderId: number) => void;
   onViewOrderConsumption?: (orderId: number) => void;
 }
 
 const OrdersTable: React.FC<OrdersTableProps> = ({ 
+  orders,
+  loading,
+  error,
+  fetchOrders,
   onOrderSelect, 
   onViewOrderComposition, 
   onViewOrderConsumption 
 }) => {
   const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
   const [showOrders, setShowOrders] = useState(false);
-  const { orders, loading, error, fetchOrders } = useOrders();
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
@@ -60,21 +66,12 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     }
   };
 
-  const calculateProgress = (order: Order) => {
-    if (order.completionPercentage !== undefined) {
-      return `${order.completionPercentage.toFixed(1)}%`;
-    }
-    if ('status' in order) {
-      const status = (order as any).status;
-      if (status === 'completed') return '100%';
-      if (status === 'in_progress') return '50%';
-    }
-    return '0%';
+  const getProgress = (order: Order) => {
+    return `${order.completed || 0} %`;
   };
 
-  const calculateAvailability = (order: Order) => {
-    const availability = order.id % 10 * 10;
-    return `${availability}%`;
+  const getAvailability = (order: Order) => {
+    return `${order.available || 0 } %`;
   };
 
   const handleViewComposition = (e: React.MouseEvent, orderId: number) => {
@@ -175,10 +172,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 </div>
                 <div className={styles.orderInfo}>
                   <div className={styles.orderAvailability}>
-                    Доступно: {calculateAvailability(order)}
+                    Доступно: {getAvailability(order)}
                   </div>
                   <div className={styles.orderProgress}>
-                    Выполнено: {calculateProgress(order)}
+                    Выполнено: {getProgress(order)}
                   </div>
                   <div className={styles.orderActions}>
                     <button 

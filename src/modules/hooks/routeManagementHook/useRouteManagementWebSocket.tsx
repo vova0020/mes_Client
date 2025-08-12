@@ -58,7 +58,7 @@ export const useRouteManagementWebSocket = (
     const connectWebSocket = () => {
       try {
         // Замените на ваш WebSocket URL
-        const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
+        const wsUrl = process.env.REACT_APP_API_URL || "" ;
         websocket = new WebSocket(wsUrl);
         
         websocket.onopen = () => {

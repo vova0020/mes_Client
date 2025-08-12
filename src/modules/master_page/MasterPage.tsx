@@ -22,8 +22,8 @@ const MasterPage: React.FC = () => {
   // Отслеживаем изменения выбранного этапа
   const currentStage = useStageListener();
 
-  // Получаем данные заказов для поиска названия
-  const { orders } = useOrders();
+  // Получаем данные заказов (единственный источник)
+  const { orders, loading, error, fetchOrders } = useOrders();
 
   // Сбрасываем выбранный заказ при смене этапа
   useEffect(() => {
@@ -81,6 +81,10 @@ const MasterPage: React.FC = () => {
             {/* Секция с таблицей заказов */}
             <div className={styles.ordersSection}>
               <OrdersTable 
+                orders={orders}
+                loading={loading}
+                error={error}
+                fetchOrders={fetchOrders}
                 onOrderSelect={handleOrderSelect}
                 onViewOrderComposition={handleViewOrderComposition}
               />

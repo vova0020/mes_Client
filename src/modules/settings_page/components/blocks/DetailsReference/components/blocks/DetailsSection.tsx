@@ -221,7 +221,15 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   const handleEditDetail = async (formData: UpdateDetailDto) => {
     if (!selectedDetail) return;
     try {
-      await updateDetail(selectedDetail.id, formData);
+      // packageId обязателен для обновления
+      if (!packageId) {
+        throw new Error('Не указан packageId для обновления детали');
+      }
+      const updateData: UpdateDetailDto = {
+        ...formData,
+        packageId: packageId
+      };
+      await updateDetail(selectedDetail.id, updateData);
       setShowEditModal(false);
       setSelectedDetail(null);
       showNotification('success', 'Успех', 'Деталь успешно обновлена');
@@ -845,7 +853,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
           setShowEditModal(false);
           setSelectedDetail(null);
         }}
-        onSubmit={handleEditDetail}
+        onSubmit={handleCreateDetail}
+        onSubmitUpdate={handleEditDetail}
         detail={selectedDetail}
         isLoading={isUpdating}
         title="Редактировать деталь"

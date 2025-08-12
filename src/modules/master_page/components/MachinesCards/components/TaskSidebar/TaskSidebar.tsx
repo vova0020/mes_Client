@@ -5,7 +5,7 @@ import useMachines from '../../../../../hooks/masterPage/useMachinesMaster';
 import { MachineTask } from '../../../../../api/masterPage/machineMasterService';
 
 // Типы статусов деталей
-type TaskStatus = 'PENDING' | 'BUFFERED' | 'ON_MACHINE' |  'COMPLETED' | 'PARTIALLY_COMPLETED' ;
+type TaskStatus = 'PENDING' | 'BUFFERED' | 'ON_MACHINE' | 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED' ;
 
 // Интерфейс для сгруппированной детали
 interface GroupedDetail {
@@ -449,6 +449,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         return 'BUFFERED';
       case 'ON_MACHINE':
         return 'ON_MACHINE';
+      case 'IN_PROGRESS':
+        return 'IN_PROGRESS';
       case 'COMPLETED':
         return 'COMPLETED';
       case 'PARTIALLY_COMPLETED':
@@ -505,6 +507,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       case 'ON_MACHINE':
         statusClass = styles.statusOnMachine;
         statusText = 'На станке';
+        break;
+      case 'IN_PROGRESS':
+        statusClass = styles.statusInProgress;
+        statusText = 'В работе';
         break;
       case 'COMPLETED':
         statusClass = styles.statusCompleted;
@@ -720,6 +726,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                               if (statusCounts.PENDING) parts.push(`Ожидание: ${statusCounts.PENDING}`);
                               if (statusCounts.BUFFERED) parts.push(`В буфере: ${statusCounts.BUFFERED}`);
                               if (statusCounts.ON_MACHINE) parts.push(`На станке: ${statusCounts.ON_MACHINE}`);
+                              if (statusCounts.IN_PROGRESS) parts.push(`В работе: ${statusCounts.IN_PROGRESS}`);
                               if (statusCounts.PARTIALLY_COMPLETED) parts.push(`Частично: ${statusCounts.PARTIALLY_COMPLETED}`);
                               if (statusCounts.COMPLETED) parts.push(`Готово: ${statusCounts.COMPLETED}`);
                               

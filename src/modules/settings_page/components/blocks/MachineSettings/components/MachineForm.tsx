@@ -243,13 +243,13 @@ export const MachineForm: React.FC<MachineFormProps> = ({
             onChange={(e) => handleInputChange('loadUnit', e.target.value)}
             className={`${styles.select} ${errors.loadUnit ? styles.selectError : ''}`}
           >
-            <option value="кг">кг</option>
-            <option value="т">т</option>
+            {/* <option value="кг">кг</option> */}
+            {/* <option value="т">т</option> */}
             <option value="шт">шт</option>
             <option value="м">м</option>
             <option value="м²">м²</option>
             <option value="м³">м³</option>
-            <option value="л">л</option>
+            {/* <option value="л">л</option> */}
           </select>
           {errors.loadUnit && (
             <span className={styles.errorText}>{errors.loadUnit}</span>

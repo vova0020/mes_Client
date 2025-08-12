@@ -169,18 +169,18 @@ const MachinesCards: React.FC = () => {
                     <>
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Норма выработки:</span>
-                        <span className={styles.infoValue}>{machine.recommendedLoad} шт.</span>
+                        <span className={styles.infoValue}>{machine.recommendedLoad} {machine.load_unit}.</span>
                       </div>
                       
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Запланировано:</span>
-                        <span className={styles.infoValue}>{machine.plannedQuantity} шт.</span>
+                        <span className={styles.infoValue}>{machine.plannedQuantity} {machine.load_unit}.</span>
                       </div>
                       
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Выполнено:</span>
                         <span className={styles.infoValue}>
-                          {machine.completedQuantity} шт. ({calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%)
+                          {machine.completedQuantity} {machine.load_unit}. ({calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%)
                           <div className={styles.progressBar}>
                             <div 
                               className={styles.progressFill}  

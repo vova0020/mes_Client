@@ -2,14 +2,16 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
-// Интерфейс заказа (расширьте при необходимости)
+// Интерфейс заказа
 export interface Order {
   id: number;
   batchNumber: string;
   orderName: string;
   completionPercentage: number;
   isCompleted: boolean;
-  // добавьте дополнительные поля, если нужно
+  status: string;
+  available: number;
+  completed: number;
 }
 
 // Получение всех заказов (GET)

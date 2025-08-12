@@ -8,6 +8,7 @@ export interface Machine {
   status: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'BROKEN';
   recommendedLoad: number;
   plannedQuantity: number;
+  load_unit: string;
   completedQuantity: number;
 }
 

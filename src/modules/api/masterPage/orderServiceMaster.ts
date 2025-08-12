@@ -2,13 +2,16 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
-// Интерфейс заказа (расширьте при необходимости)
+// Интерфейс заказа
 export interface Order {
   id: number;
   batchNumber: string;
   orderName: string;
   completionPercentage: number;
-  // добавьте дополнительные поля, если нужно
+  isCompleted: boolean;
+  status: string;
+  available: number;
+  completed: number;
 }
 
 // Получение всех заказов (GET)
@@ -26,9 +29,13 @@ export const getAllOrders = async (): Promise<Order[]> => {
     }
   }
   
-  // Добавляем stageId в параметры запроса, если он есть
-  const params = stageId ? { stageId } : {};
-  const response = await axios.get(`${API_URL}/orders`);
+  if (!stageId) {
+    throw new Error('stageId is required');
+  }
+  
+  const response = await axios.get(`${API_URL}/orders`, {
+    params: { stageId }
+  });
   return response.data;
 }; 
 
