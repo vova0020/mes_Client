@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -16,8 +16,13 @@ import {
   Alert,
   Snackbar,
   Typography,
-  Box
+  Box,
+  TextField,
+  InputAdornment,
+  IconButton,
+  TableSortLabel
 } from '@mui/material';
+import { Search, Clear, FilterList } from '@mui/icons-material';
 import { 
   useRouteManagement, 
   useRouteManagementWebSocket,
@@ -52,6 +57,20 @@ const DetailRouteManagement: React.FC = () => {
 
   // Локальное состояние для выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  
+  // Состояние для фильтрации и сортировки заказов
+  const [orderFilter, setOrderFilter] = useState('');
+  const [orderSort, setOrderSort] = useState<{
+    field: 'orderName' | 'batchNumber' | 'status' | 'totalParts' | null;
+    direction: 'asc' | 'desc';
+  }>({ field: null, direction: 'asc' });
+  
+  // Состояние для фильтрации и сортировки деталей
+  const [partFilter, setPartFilter] = useState('');
+  const [partSort, setPartSort] = useState<{
+    field: 'partCode' | 'partName' | 'materialName' | 'size' | 'totalQuantity' | 'routeName' | null;
+    direction: 'asc' | 'desc';
+  }>({ field: null, direction: 'asc' });
   
   // Состояние для уведомлений
   const [snackbar, setSnackbar] = useState<{
@@ -144,6 +163,141 @@ const DetailRouteManagement: React.FC = () => {
     }
   };
 
+  // Фильтрация и сортировка заказов
+  const filteredAndSortedOrders = useMemo(() => {
+    let filtered = orders.filter(order => {
+      const searchTerm = orderFilter.toLowerCase().trim();
+      if (!searchTerm) return true;
+      
+      return order.orderName.toLowerCase().includes(searchTerm) ||
+             order.batchNumber.toString().includes(searchTerm) ||
+             getOrderStatusText(order.status).toLowerCase().includes(searchTerm) ||
+             `№${order.batchNumber}`.toLowerCase().includes(searchTerm);
+    });
+
+    if (!orderSort.field) return filtered;
+
+    return filtered.sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      switch (orderSort.field) {
+        case 'orderName':
+          aValue = a.orderName;
+          bValue = b.orderName;
+          break;
+        case 'batchNumber':
+          aValue = a.batchNumber;
+          bValue = b.batchNumber;
+          break;
+        case 'status':
+          aValue = getOrderStatusText(a.status);
+          bValue = getOrderStatusText(b.status);
+          break;
+        case 'totalParts':
+          aValue = a.totalParts;
+          bValue = b.totalParts;
+          break;
+        default:
+          return 0;
+      }
+
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (aValue < bValue) return orderSort.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return orderSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [orders, orderFilter, orderSort]);
+
+  // Фильтрация и сортировка деталей
+  const filteredAndSortedParts = useMemo(() => {
+    if (!selectedOrderParts) return [];
+    
+    let filtered = selectedOrderParts.parts.filter(part => {
+      const searchTerm = partFilter.toLowerCase().trim();
+      if (!searchTerm) return true;
+      
+      return part.partCode.toLowerCase().includes(searchTerm) ||
+             part.partName.toLowerCase().includes(searchTerm) ||
+             part.materialName.toLowerCase().includes(searchTerm) ||
+             part.size.toLowerCase().includes(searchTerm) ||
+             part.currentRoute.routeName.toLowerCase().includes(searchTerm) ||
+             part.totalQuantity.toString().includes(searchTerm);
+    });
+
+    if (!partSort.field) return filtered;
+
+    return filtered.sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      switch (partSort.field) {
+        case 'partCode':
+          aValue = a.partCode;
+          bValue = b.partCode;
+          break;
+        case 'partName':
+          aValue = a.partName;
+          bValue = b.partName;
+          break;
+        case 'materialName':
+          aValue = a.materialName;
+          bValue = b.materialName;
+          break;
+        case 'size':
+          aValue = a.size;
+          bValue = b.size;
+          break;
+        case 'totalQuantity':
+          aValue = a.totalQuantity;
+          bValue = b.totalQuantity;
+          break;
+        case 'routeName':
+          aValue = a.currentRoute.routeName;
+          bValue = b.currentRoute.routeName;
+          break;
+        default:
+          return 0;
+      }
+
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (aValue < bValue) return partSort.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return partSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [selectedOrderParts, partFilter, partSort]);
+
+  // Обработчики сортировки (3 состояния: none -> asc -> desc -> none)
+  const handleOrderSort = (field: Exclude<typeof orderSort.field, null>) => {
+    setOrderSort(prev => {
+      if (prev.field !== field) {
+        return { field, direction: 'asc' };
+      }
+      if (prev.direction === 'asc') {
+        return { field, direction: 'desc' };
+      }
+      return { field: null, direction: 'asc' };
+    });
+  };
+
+  const handlePartSort = (field: Exclude<typeof partSort.field, null>) => {
+    setPartSort(prev => {
+      if (prev.field !== field) {
+        return { field, direction: 'asc' };
+      }
+      if (prev.direction === 'asc') {
+        return { field, direction: 'desc' };
+      }
+      return { field: null, direction: 'asc' };
+    });
+  };
+
   // Очистка выбора при размонтировании компонента
   useEffect(() => {
     return () => {
@@ -179,6 +333,35 @@ const DetailRouteManagement: React.FC = () => {
             )}
           </div>
           
+          {/* Фильтр для заказов */}
+          <div className={styles.filterContainer}>
+            <TextField
+              size="small"
+              placeholder="Поиск заказов..."
+              value={orderFilter}
+              onChange={(e) => setOrderFilter(e.target.value)}
+              className={styles.filterInput}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search className={styles.searchIcon} />
+                  </InputAdornment>
+                ),
+                endAdornment: orderFilter && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => setOrderFilter('')}
+                      className={styles.clearButton}
+                    >
+                      <Clear />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+          </div>
+          
           <div className={styles.tableContainer}>
             {ordersLoading === 'loading' ? (
               <Box display="flex" justifyContent="center" p={3}>
@@ -191,16 +374,26 @@ const DetailRouteManagement: React.FC = () => {
                 </Typography>
               </Box>
             ) : (
-              <TableContainer component={Paper} className={styles.table}>
+              <div style={{ flex: 1, overflow: 'auto', padding: '16px', paddingTop: 0 }}>
+                <TableContainer component={Paper} className={styles.table}>
                 <Table>
                   <TableHead>
                     <TableRow className={styles.tableHeader}>
-                      <TableCell className={styles.headerCell}>Заказ</TableCell>
+                      <TableCell className={styles.headerCell}>
+                        <TableSortLabel
+                          active={orderSort.field === 'orderName'}
+                          direction={orderSort.field === 'orderName' ? orderSort.direction : 'asc'}
+                          onClick={() => handleOrderSort('orderName')}
+                          className={styles.sortLabel}
+                        >
+                          Заказ
+                        </TableSortLabel>
+                      </TableCell>
                       <TableCell className={styles.headerCell}>Действия</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {orders.map((order) => (
+                    {filteredAndSortedOrders.map((order) => (
                       <TableRow 
                         key={order.orderId} 
                         className={`${styles.tableRow} ${selectedOrderId === order.orderId ? styles.selectedRow : ''}`}
@@ -237,7 +430,8 @@ const DetailRouteManagement: React.FC = () => {
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
+                </TableContainer>
+              </div>
             )}
           </div>
         </div>
@@ -264,25 +458,109 @@ const DetailRouteManagement: React.FC = () => {
 
           {selectedOrderParts ? (
             <div className={styles.tableContainer}>
+              {/* Фильтр для деталей */}
+              <div className={styles.filterContainer}>
+                <TextField
+                  size="small"
+                  placeholder="Поиск деталей..."
+                  value={partFilter}
+                  onChange={(e) => setPartFilter(e.target.value)}
+                  className={styles.filterInput}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search className={styles.searchIcon} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: partFilter && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => setPartFilter('')}
+                          className={styles.clearButton}
+                        >
+                          <Clear />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                />
+              </div>
+              
               {partsLoading === 'loading' ? (
                 <Box display="flex" justifyContent="center" p={3}>
                   <CircularProgress />
                 </Box>
               ) : (
-                <TableContainer component={Paper} className={styles.table}>
+                <div style={{ flex: 1, overflow: 'auto', padding: '16px', paddingTop: 0 }}>
+                  <TableContainer component={Paper} className={styles.table}>
                   <Table>
                     <TableHead>
                       <TableRow className={styles.tableHeader}>
-                        <TableCell className={styles.headerCell}>Код детали</TableCell>
-                        <TableCell className={styles.headerCell}>Название детали</TableCell>
-                        <TableCell className={styles.headerCell}>Материал</TableCell>
-                        <TableCell className={styles.headerCell}>Размер</TableCell>
-                        <TableCell className={styles.headerCell}>Количество</TableCell>
-                        <TableCell className={styles.headerCell}>Тех. маршрут</TableCell>
+                        <TableCell className={styles.headerCell}>
+                          <TableSortLabel
+                            active={partSort.field === 'partCode'}
+                            direction={partSort.field === 'partCode' ? partSort.direction : 'asc'}
+                            onClick={() => handlePartSort('partCode')}
+                            className={styles.sortLabel}
+                          >
+                            Код детали
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell className={styles.headerCell}>
+                          <TableSortLabel
+                            active={partSort.field === 'partName'}
+                            direction={partSort.field === 'partName' ? partSort.direction : 'asc'}
+                            onClick={() => handlePartSort('partName')}
+                            className={styles.sortLabel}
+                          >
+                            Название детали
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell className={styles.headerCell}>
+                          <TableSortLabel
+                            active={partSort.field === 'materialName'}
+                            direction={partSort.field === 'materialName' ? partSort.direction : 'asc'}
+                            onClick={() => handlePartSort('materialName')}
+                            className={styles.sortLabel}
+                          >
+                            Материал
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell className={styles.headerCell}>
+                          <TableSortLabel
+                            active={partSort.field === 'size'}
+                            direction={partSort.field === 'size' ? partSort.direction : 'asc'}
+                            onClick={() => handlePartSort('size')}
+                            className={styles.sortLabel}
+                          >
+                            Размер
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell className={styles.headerCell}>
+                          <TableSortLabel
+                            active={partSort.field === 'totalQuantity'}
+                            direction={partSort.field === 'totalQuantity' ? partSort.direction : 'asc'}
+                            onClick={() => handlePartSort('totalQuantity')}
+                            className={styles.sortLabel}
+                          >
+                            Количество
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell className={styles.headerCell}>
+                          <TableSortLabel
+                            active={partSort.field === 'routeName'}
+                            direction={partSort.field === 'routeName' ? partSort.direction : 'asc'}
+                            onClick={() => handlePartSort('routeName')}
+                            className={styles.sortLabel}
+                          >
+                            Тех. маршрут
+                          </TableSortLabel>
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {selectedOrderParts.parts.map((part) => (
+                      {filteredAndSortedParts.map((part) => (
                         <TableRow key={part.partId} className={styles.tableRow}>
                           <TableCell className={styles.cell}>{part.partCode}</TableCell>
                           <TableCell className={styles.cell}>{part.partName}</TableCell>
@@ -311,7 +589,8 @@ const DetailRouteManagement: React.FC = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </TableContainer>
+                  </TableContainer>
+                </div>
               )}
             </div>
           ) : (

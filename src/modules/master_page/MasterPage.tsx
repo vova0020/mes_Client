@@ -92,14 +92,17 @@ const MasterPage: React.FC = () => {
             
             {/* Секция с карточками станков */}
             <div className={styles.machinesSection}>
-              <MachinesCards />
+              <MachinesCards onDataUpdate={fetchOrders} />
             </div>
           </div>
           
           {/* Нижний ряд с таблицей деталей на всю ширину */}
           <div className={styles.bottomRow}>
             <div className={styles.detailsSection}>
-              <DetailsTable selectedOrderId={selectedOrderId} />
+              <DetailsTable 
+                selectedOrderId={selectedOrderId} 
+                onDataUpdate={fetchOrders}
+              />
             </div>
           </div>
         </div>

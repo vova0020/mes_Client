@@ -23,6 +23,7 @@ export interface Order {
   isCompleted: boolean;
   packagesCount: number;
   totalPartsCount: number;
+  priority?: number;
 }
 
 export interface OrderDetail {
@@ -69,6 +70,17 @@ export interface StatusUpdateResponse {
   previousStatus: OrderStatus;
   newStatus: OrderStatus;
   launchPermission: boolean;
+  updatedAt: string;
+}
+
+export interface PriorityUpdateRequest {
+  priority: number;
+}
+
+export interface PriorityUpdateResponse {
+  orderId: number;
+  previousPriority: number;
+  newPriority: number;
   updatedAt: string;
 }
 
@@ -221,6 +233,35 @@ class OrderManagementApi {
       return await response.json();
     } catch (error) {
       console.error('Ошибка при удалении заказа:', error);
+      throw error;
+    }
+  }
+
+  // Функция для изменения приоритета заказа
+  async updateOrderPriority(orderId: number, priority: number): Promise<Order> {
+    try {
+      const response = await fetch(`${API_URL}/production-orders/${orderId}/priority`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ priority }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Заказ не найден');
+        }
+        if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Недопустимое значение приоритета');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Ошибка при изменении приоритета заказа:', error);
       throw error;
     }
   }

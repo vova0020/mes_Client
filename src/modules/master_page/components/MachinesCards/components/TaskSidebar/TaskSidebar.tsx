@@ -43,6 +43,7 @@ interface TaskSidebarProps {
   onClose: () => void;
   machineId: number;
   machineName: string;
+  onDataUpdate?: () => void;
 }
 
 // Компонент модального окна для частичной обработки
@@ -292,7 +293,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   isOpen, 
   onClose, 
   machineId, 
-  machineName 
+  machineName,
+  onDataUpdate 
 }) => {
   // Используем хук для работы с заданиями и станками
   const {
@@ -417,6 +419,9 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       if (success) {
         setSuccessMessage(`Поддон №${operationId} успешно переведен в статус "В работе"`);
         await fetchTasks(machineId);
+        if (onDataUpdate) {
+          onDataUpdate();
+        }
       } else {
         setErrorMessage('Не удалось перевести поддон в работу');
       }
@@ -439,6 +444,9 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       if (success) {
         setSuccessMessage(`Поддон №${operationId} успешно отмечен как готовый`);
         await fetchTasks(machineId);
+        if (onDataUpdate) {
+          onDataUpdate();
+        }
       } else {
         setErrorMessage('Не удалось отметить поддон как готовый');
       }

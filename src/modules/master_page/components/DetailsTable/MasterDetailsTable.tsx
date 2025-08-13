@@ -6,9 +6,10 @@ import PalletsSidebar from '../PalletsSidebar/MasterPalletsSidebar';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
+  onDataUpdate?: () => void;
 }
 
-const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
+const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpdate }) => {
   // Состояние для отслеживания активной детали
   const [activeDetailId, setActiveDetailId] = useState<number | null>(null);
   
@@ -261,7 +262,8 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId }) => {
         detailId={selectedDetailForPallets} 
         detailInfo={selectedInfoDetailForPallets} 
         isOpen={sidebarOpen} 
-        onClose={handleCloseSidebar} 
+        onClose={handleCloseSidebar}
+        onDataUpdate={onDataUpdate}
       />
     </div>
   );

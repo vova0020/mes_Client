@@ -23,7 +23,26 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import { Visibility, MonetizationOn, PlayArrow, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Visibility, MonetizationOn, PlayArrow, ExpandMore, ExpandLess, DragIndicator } from '@mui/icons-material';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import styles from './OrderPlanning.module.css';
 import { useOrderManagement } from '../../../hooks';
 import { 
@@ -44,123 +63,164 @@ interface ProductionFlow {
   description: string;
 }
 
-// Моковые данные производственных потоков
-const mockProductionFlows: ProductionFlow[] = [
-  { id: '1', name: 'Основной поток А', description: 'Главная производственная линия' },
-  { id: '2', name: 'Основной поток Б', description: 'Вторая производственная линия' },
-  { id: '3', name: 'Основной поток В', description: 'Третья производственная линия' },
-  { id: '4', name: 'Резервный поток', description: 'Резервная производственная линия' },
-];
+// Компонент для перетаскиваемой строки заказа
+interface SortableOrderRowProps {
+  order: OrderPlanningData;
+  onComposition: (orderId: string) => void;
+  onExpense: (orderId: string) => void;
+  onAllowStart: (orderId: string) => void;
+  onDateChange: (orderId: string, field: keyof OrderPlanningData, value: string) => void;
+}
 
-// Моковые данные деталей для упаковок
-const mockDetails: { [key: string]: Detail[] } = {
-  '1': [
-    { id: 'd1', name: 'Деталь А1', quantity: 5, unit: 'шт' },
-    { id: 'd2', name: 'Деталь А2', quantity: 3, unit: 'шт' },
-    { id: 'd3', name: 'Деталь А3', quantity: 2, unit: 'кг' },
-  ],
-  '2': [
-    { id: 'd4', name: 'Деталь Б1', quantity: 8, unit: 'шт' },
-    { id: 'd5', name: 'Деталь Б2', quantity: 1, unit: 'м' },
-  ],
-  '3': [
-    { id: 'd6', name: 'Деталь В1', quantity: 10, unit: 'шт' },
-    { id: 'd7', name: 'Деталь В2', quantity: 4, unit: 'шт' },
-    { id: 'd8', name: 'Деталь В3', quantity: 1.5, unit: 'кг' },
-  ],
-  '4': [
-    { id: 'd9', name: 'Деталь Г1', quantity: 6, unit: 'шт' },
-    { id: 'd10', name: 'Деталь Г2', quantity: 2, unit: 'л' },
-  ],
-  '5': [
-    { id: 'd11', name: 'Деталь Д1', quantity: 12, unit: 'шт' },
-    { id: 'd12', name: 'Деталь Д2', quantity: 3, unit: 'шт' },
-    { id: 'd13', name: 'Деталь Д3', quantity: 0.8, unit: 'кг' },
-  ],
+const SortableOrderRow: React.FC<SortableOrderRowProps> = ({
+  order,
+  onComposition,
+  onExpense,
+  onAllowStart,
+  onDateChange,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: order.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      className={styles.tableRow}
+      data-dragging={isDragging}
+    >
+      {/* Drag Handle */}
+      <TableCell className={styles.cell}>
+        <div
+          {...attributes}
+          {...listeners}
+          className={styles.dragHandle}
+          style={{ cursor: 'grab', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <DragIndicator />
+        </div>
+      </TableCell>
+
+      {/* Заказ */}
+      <TableCell className={styles.cell}>
+        <div className={styles.orderName}>{order.name}</div>
+      </TableCell>
+
+      {/* Требуемая дата готовности */}
+      <TableCell className={styles.cell}>
+        {order.requiredDate}
+      </TableCell>
+
+      {/* Действия */}
+      <TableCell className={styles.cell}>
+        <div className={styles.actionButtons}>
+          <IconButton 
+            onClick={() => onComposition(order.id)}
+            className={styles.actionButton}
+            title="Состав заказа"
+          >
+            <Visibility />
+          </IconButton>
+          <IconButton 
+            onClick={() => onExpense(order.id)}
+            className={styles.actionButton}
+            title="Расход на заказ"
+          >
+            <MonetizationOn />
+          </IconButton>
+        </div>
+      </TableCell>
+
+      {/* Текущий статус */}
+      <TableCell className={styles.cell}>
+        <span className={`${styles.status} ${styles[order.status]}`}>
+          {getStatusText(order.status)}
+        </span>
+      </TableCell>
+
+      {/* Разрешить запуск */}
+      <TableCell className={styles.cell}>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => onAllowStart(order.id)}
+          disabled={order.status !== 'approved'}
+          className={styles.startButton}
+          startIcon={<PlayArrow />}
+        >
+          Разрешить
+        </Button>
+      </TableCell>
+
+      {/* Дата запуска */}
+      <TableCell className={styles.cell}>
+        <div className={styles.dateGroup}>
+          <div className={styles.dateItem}>
+            <span className={styles.dateLabel}>План:</span>
+            <TextField
+              type="date"
+              value={order.plannedStartDate}
+              onChange={(e) => onDateChange(order.id, 'plannedStartDate', e.target.value)}
+              size="small"
+              className={styles.dateField}
+              InputLabelProps={{ shrink: true }}
+            />
+          </div>
+          <div className={styles.dateItem}>
+            <span className={styles.dateLabel}>Факт:</span>
+            <TextField
+              type="date"
+              value={order.actualStartDate}
+              onChange={(e) => onDateChange(order.id, 'actualStartDate', e.target.value)}
+              size="small"
+              className={styles.dateField}
+              InputLabelProps={{ shrink: true }}
+            />
+          </div>
+        </div>
+      </TableCell>
+
+      {/* Дата выпуска */}
+      <TableCell className={styles.cell}>
+        <div className={styles.dateGroup}>
+          <div className={styles.dateItem}>
+            <span className={styles.dateLabel}>План:</span>
+            <TextField
+              type="date"
+              value={order.plannedReleaseDate}
+              onChange={(e) => onDateChange(order.id, 'plannedReleaseDate', e.target.value)}
+              size="small"
+              className={styles.dateField}
+              InputLabelProps={{ shrink: true }}
+            />
+          </div>
+          <div className={styles.dateItem}>
+            <span className={styles.dateLabel}>Факт:</span>
+            <TextField
+              type="date"
+              value={order.actualReleaseDate}
+              onChange={(e) => onDateChange(order.id, 'actualReleaseDate', e.target.value)}
+              size="small"
+              className={styles.dateField}
+              InputLabelProps={{ shrink: true }}
+            />
+          </div>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 };
-
-// Моковые данные упаковок
-const mockPackages: Package[] = [
-  { id: '1', name: 'Упаковка А', quantity: 2, details: mockDetails['1'] },
-  { id: '2', name: 'Упаковка Б', quantity: 3, details: mockDetails['2'] },
-  { id: '3', name: 'Упаковка В', quantity: 1, details: mockDetails['3'] },
-  { id: '4', name: 'Упаковка Г', quantity: 4, details: mockDetails['4'] },
-  { id: '5', name: 'Упаковка Д', quantity: 2, details: mockDetails['5'] },
-];
-
-// Моковые данные заказов для планирования
-const mockOrdersData: OrderPlanningData[] = [
-  {
-    id: '1',
-    name: 'Заказ №001',
-    requiredDate: '2024-02-15',
-    status: 'approved',
-    mainFlowId: '1',
-    secondaryFlowCompletionDate: '2024-02-10',
-    startDate: '2024-01-20',
-    plannedStartDate: '2024-01-20',
-    actualStartDate: '',
-    plannedReleaseDate: '2024-02-14',
-    actualReleaseDate: '',
-    packages: [mockPackages[0], mockPackages[1]],
-  },
-  {
-    id: '2',
-    name: 'Заказ №002',
-    requiredDate: '2024-02-20',
-    status: 'allowedToStart',
-    mainFlowId: '2',
-    secondaryFlowCompletionDate: '2024-02-18',
-    startDate: '2024-01-25',
-    plannedStartDate: '2024-01-25',
-    actualStartDate: '2024-01-25',
-    plannedReleaseDate: '2024-02-19',
-    actualReleaseDate: '',
-    packages: [mockPackages[2], mockPackages[3]],
-  },
-  {
-    id: '3',
-    name: 'Заказ №003',
-    requiredDate: '2024-02-25',
-    status: 'inProgress',
-    mainFlowId: '1',
-    secondaryFlowCompletionDate: '2024-02-22',
-    startDate: '2024-01-30',
-    plannedStartDate: '2024-01-30',
-    actualStartDate: '2024-01-30',
-    plannedReleaseDate: '2024-02-24',
-    actualReleaseDate: '',
-    packages: [mockPackages[0], mockPackages[2], mockPackages[4]],
-  },
-  {
-    id: '4',
-    name: 'Заказ №004',
-    requiredDate: '2024-03-01',
-    status: 'completed',
-    mainFlowId: '3',
-    secondaryFlowCompletionDate: '2024-02-26',
-    startDate: '2024-02-01',
-    plannedStartDate: '2024-02-01',
-    actualStartDate: '2024-02-01',
-    plannedReleaseDate: '2024-02-28',
-    actualReleaseDate: '2024-02-27',
-    packages: [mockPackages[1], mockPackages[3]],
-  },
-  {
-    id: '5',
-    name: 'Заказ №005',
-    requiredDate: '2024-03-05',
-    status: 'preliminary',
-    mainFlowId: '2',
-    secondaryFlowCompletionDate: '2024-03-02',
-    startDate: '2024-02-05',
-    plannedStartDate: '2024-02-05',
-    actualStartDate: '',
-    plannedReleaseDate: '2024-03-04',
-    actualReleaseDate: '',
-    packages: [mockPackages[4]],
-  },
-];
 
 const OrderPlanning: React.FC = () => {
   // Используем хук для управления заказами
@@ -172,6 +232,7 @@ const OrderPlanning: React.FC = () => {
     error,
     setSelectedOrderId,
     approveOrderForLaunch,
+    updateOrderPriority,
     refetchOrders,
   } = useOrderManagement();
 
@@ -180,11 +241,30 @@ const OrderPlanning: React.FC = () => {
   const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
   const [localOrders, setLocalOrders] = useState<OrderPlanningData[]>([]);
 
+  // Настройка сенсоров для drag-and-drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   // Преобразуем данные API в формат компонента
   useEffect(() => {
     if (apiOrders) {
-      const transformedOrders = apiOrders.map(transformOrderToPlanning);
+      const transformedOrders = apiOrders
+        .map(transformOrderToPlanning)
+        .sort((a, b) => {
+          const priorityA = a.priority || 999;
+          const priorityB = b.priority || 999;
+          return priorityA - priorityB;
+        });
       setLocalOrders(transformedOrders);
+      console.log('Sorted orders:', transformedOrders.map(o => ({ id: o.id, name: o.name, priority: o.priority })));
     }
   }, [apiOrders]);
 
@@ -225,6 +305,32 @@ const OrderPlanning: React.FC = () => {
     }
   };
 
+  // Обработчик завершения перетаскивания
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = localOrders.findIndex((order) => order.id === active.id);
+      const newIndex = localOrders.findIndex((order) => order.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        // Обновляем локальный порядок
+        const newOrders = arrayMove(localOrders, oldIndex, newIndex);
+        setLocalOrders(newOrders);
+        
+        // Отправляем новый приоритет на сервер
+        const newPriority = newIndex + 1;
+        try {
+          await updateOrderPriority(parseInt(active.id as string), newPriority);
+        } catch (error) {
+          console.error('Ошибка при изменении приоритета:', error);
+          // Возвращаем исходный порядок при ошибке
+          setLocalOrders(localOrders);
+        }
+      }
+    }
+  };
+
   // Обработчики для кнопок действий
   const handleOrderComposition = async (orderId: string) => {
     try {
@@ -247,11 +353,7 @@ const OrderPlanning: React.FC = () => {
     }));
   };
 
-  // Получить название производственного потока по ID
-  const getFlowName = (flowId: string) => {
-    const flow = mockProductionFlows.find(f => f.id === flowId);
-    return flow ? flow.name : 'Неизвестный поток';
-  };
+
 
   // Получить данные для про��мотра заказа
   const getViewingOrderData = (): OrderPlanningData | null => {
@@ -273,13 +375,12 @@ const OrderPlanning: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow className={styles.tableHeader}>
-                <TableCell className={styles.headerCell}>Заказ</TableCell>
+                <TableCell className={styles.headerCell}>Порядок</TableCell>
+                <TableCell className={styles.headerCell}>Название заказа</TableCell>
                 <TableCell className={styles.headerCell}>Требуемая дата готовности</TableCell>
                 <TableCell className={styles.headerCell}>Действия</TableCell>
                 <TableCell className={styles.headerCell}>Текущий статус</TableCell>
                 <TableCell className={styles.headerCell}>Разрешить запуск</TableCell>
-                {/* <TableCell className={styles.headerCell}>Основной поток</TableCell> */}
-                {/* <TableCell className={styles.headerCell}>Дата завершения второстепенного потока</TableCell> */}
                 <TableCell className={styles.headerCell}>Дата запуска</TableCell>
                 <TableCell className={styles.headerCell}>Дата выпуска</TableCell>
               </TableRow>
@@ -305,147 +406,27 @@ const OrderPlanning: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                localOrders.map((order) => (
-                <TableRow key={order.id} className={styles.tableRow}>
-                  {/* Заказ */}
-                  <TableCell className={styles.cell}>
-                    <div className={styles.orderName}>{order.name}</div>
-                  </TableCell>
-
-                  {/* Требуемая дата готовности */}
-                  <TableCell className={styles.cell}>
-                    {order.requiredDate}
-                  </TableCell>
-
-                  {/* Действия */}
-                  <TableCell className={styles.cell}>
-                    <div className={styles.actionButtons}>
-                      <IconButton 
-                        onClick={() => handleOrderComposition(order.id)}
-                        className={styles.actionButton}
-                        title="Состав заказа"
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton 
-                        onClick={() => handleOrderExpense(order.id)}
-                        className={styles.actionButton}
-                        title="Расход на заказ"
-                      >
-                        <MonetizationOn />
-                      </IconButton>
-                    </div>
-                  </TableCell>
-
-                  {/* Текущий статус */}
-                  <TableCell className={styles.cell}>
-                    <span className={`${styles.status} ${styles[order.status]}`}>
-                      {getStatusText(order.status)}
-                    </span>
-                  </TableCell>
-
-                  {/* Разрешить запуск */}
-                  <TableCell className={styles.cell}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => handleAllowStart(order.id)}
-                      disabled={order.status !== 'approved'}
-                      className={styles.startButton}
-                      startIcon={<PlayArrow />}
-                    >
-                      Разрешить
-                    </Button>
-                  </TableCell>
-
-                  {/* Основной поток */}
-                  {/* <TableCell className={styles.cell}>
-                    <FormControl size="small" className={styles.flowSelect}>
-                      <Select
-                        value={order.mainFlowId}
-                        onChange={(e: SelectChangeEvent) => 
-                          handleMainFlowChange(order.id, e.target.value)
-                        }
-                        className={styles.selectInput}
-                      >
-                        {mockProductionFlows.map((flow) => (
-                          <MenuItem key={flow.id} value={flow.id}>
-                            {flow.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell> */}
-
-                  {/* Дата завершения второстепенного потока */}
-                  {/* <TableCell className={styles.cell}>
-                    <TextField
-                      type="date"
-                      value={order.secondaryFlowCompletionDate}
-                      onChange={(e) => handleDateChange(order.id, 'secondaryFlowCompletionDate', e.target.value)}
-                      size="small"
-                      className={styles.dateField}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </TableCell> */}
-
-                  {/* Дата запуска */}
-                  <TableCell className={styles.cell}>
-                    <div className={styles.dateGroup}>
-                      <div className={styles.dateItem}>
-                        <span className={styles.dateLabel}>План:</span>
-                        <TextField
-                          type="date"
-                          value={order.plannedStartDate}
-                          onChange={(e) => handleDateChange(order.id, 'plannedStartDate', e.target.value)}
-                          size="small"
-                          className={styles.dateField}
-                          InputLabelProps={{ shrink: true }}
-                        />
-                      </div>
-                      <div className={styles.dateItem}>
-                        <span className={styles.dateLabel}>Факт:</span>
-                        <TextField
-                          type="date"
-                          value={order.actualStartDate}
-                          onChange={(e) => handleDateChange(order.id, 'actualStartDate', e.target.value)}
-                          size="small"
-                          className={styles.dateField}
-                          InputLabelProps={{ shrink: true }}
-                        />
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  {/* Дата выпуска */}
-                  <TableCell className={styles.cell}>
-                    <div className={styles.dateGroup}>
-                      <div className={styles.dateItem}>
-                        <span className={styles.dateLabel}>План:</span>
-                        <TextField
-                          type="date"
-                          value={order.plannedReleaseDate}
-                          onChange={(e) => handleDateChange(order.id, 'plannedReleaseDate', e.target.value)}
-                          size="small"
-                          className={styles.dateField}
-                          InputLabelProps={{ shrink: true }}
-                        />
-                      </div>
-                      <div className={styles.dateItem}>
-                        <span className={styles.dateLabel}>Факт:</span>
-                        <TextField
-                          type="date"
-                          value={order.actualReleaseDate}
-                          onChange={(e) => handleDateChange(order.id, 'actualReleaseDate', e.target.value)}
-                          size="small"
-                          className={styles.dateField}
-                          InputLabelProps={{ shrink: true }}
-                        />
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                ))
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={localOrders.map(order => order.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {localOrders.map((order) => (
+                      <SortableOrderRow
+                        key={order.id}
+                        order={order}
+                        onComposition={handleOrderComposition}
+                        onExpense={handleOrderExpense}
+                        onAllowStart={handleAllowStart}
+                        onDateChange={handleDateChange}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               )}
             </TableBody>
           </Table>
@@ -470,6 +451,7 @@ const OrderPlanning: React.FC = () => {
                 <Table>
                   <TableHead>
                     <TableRow className={styles.tableHeader}>
+                      <TableCell className={styles.headerCell}>Артикул упаковки</TableCell>
                       <TableCell className={styles.headerCell}>Упаковка</TableCell>
                       <TableCell className={styles.headerCell}>Количество</TableCell>
                       <TableCell className={styles.headerCell}>Действия</TableCell>
@@ -479,6 +461,7 @@ const OrderPlanning: React.FC = () => {
                     {viewingOrder.packages.map((pkg) => (
                       <React.Fragment key={pkg.id}>
                         <TableRow className={styles.tableRow}>
+                          <TableCell className={styles.cell}>{pkg.articleNumber}</TableCell>
                           <TableCell className={styles.cell}>{pkg.name}</TableCell>
                           <TableCell className={styles.cell}>{pkg.quantity}</TableCell>
                           <TableCell className={styles.cell}>
@@ -492,7 +475,7 @@ const OrderPlanning: React.FC = () => {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell colSpan={3} className={styles.collapseCell}>
+                          <TableCell colSpan={4} className={styles.collapseCell}>
                             <Collapse in={expandedPackages[pkg.id]} timeout="auto" unmountOnExit>
                               <div className={styles.detailsContainer}>
                                 <h5 className={styles.detailsTitle}>Детали упаковки:</h5>
@@ -500,21 +483,23 @@ const OrderPlanning: React.FC = () => {
                                   <Table size="small">
                                     <TableHead>
                                       <TableRow className={styles.detailsTableHeader}>
+                                        <TableCell className={styles.detailsHeaderCell}>Артикул детали</TableCell>
                                         <TableCell className={styles.detailsHeaderCell}>Деталь</TableCell>
                                         <TableCell className={styles.detailsHeaderCell}>Количество на упаковку</TableCell>
                                         <TableCell className={styles.detailsHeaderCell}>Общее количество</TableCell>
-                                        <TableCell className={styles.detailsHeaderCell}>Единица измерения</TableCell>
+                                        {/* <TableCell className={styles.detailsHeaderCell}>Единица измерения</TableCell> */}
                                       </TableRow>
                                     </TableHead>
                                     <TableBody>
                                       {pkg.details.map((detail) => (
                                         <TableRow key={detail.id} className={styles.detailsTableRow}>
+                                          <TableCell className={styles.detailsCell}>{detail.articleNumber}</TableCell>
                                           <TableCell className={styles.detailsCell}>{detail.name}</TableCell>
                                           <TableCell className={styles.detailsCell}>{detail.quantity}</TableCell>
                                           <TableCell className={styles.detailsCell}>
                                             {detail.quantity * pkg.quantity}
                                           </TableCell>
-                                          <TableCell className={styles.detailsCell}>{detail.unit}</TableCell>
+                                          {/* <TableCell className={styles.detailsCell}>{detail.unit}</TableCell> */}
                                         </TableRow>
                                       ))}
                                     </TableBody>

@@ -813,7 +813,7 @@ const OrderCreation: React.FC = () => {
         </DialogTitle>
         <DialogContent className={styles.dialogContent}>
           <div className={styles.compositionContainer}>
-            {viewingOrder && (
+            {/* {viewingOrder && (
               <div className={styles.compositionInfo}>
                 <p><strong>Номер партии:</strong> {viewingOrder.batchNumber}</p>
                 <p><strong>Статус:</strong> {getStatusLabel(viewingOrder.status)}</p>
@@ -824,17 +824,16 @@ const OrderCreation: React.FC = () => {
                   <p><strong>Дата завершения:</strong> {new Date(viewingOrder.completedAt).toLocaleDateString('ru-RU')}</p>
                 )}
               </div>
-            )}
+            )} */}
             
             {viewingOrder?.packages && viewingOrder.packages.length > 0 ? (
               <TableContainer component={Paper} className={styles.compositionTable}>
                 <Table>
                   <TableHead>
                     <TableRow className={styles.tableHeader}>
-                      <TableCell className={styles.headerCell}>Код упаковки</TableCell>
-                      <TableCell className={styles.headerCell}>Название упаковки</TableCell>
+                      <TableCell className={styles.headerCell}>Артикул упаковки</TableCell>
+                      <TableCell className={styles.headerCell}>Упаковка</TableCell>
                       <TableCell className={styles.headerCell}>Количество</TableCell>
-                      <TableCell className={styles.headerCell}>Прогресс</TableCell>
                       <TableCell className={styles.headerCell}>Действия</TableCell>
                     </TableRow>
                   </TableHead>
@@ -845,7 +844,6 @@ const OrderCreation: React.FC = () => {
                           <TableCell className={styles.cell}>{pkg.packageCode}</TableCell>
                           <TableCell className={styles.cell}>{pkg.packageName}</TableCell>
                           <TableCell className={styles.cell}>{pkg.quantity}</TableCell>
-                          <TableCell className={styles.cell}>{pkg.completionPercentage}%</TableCell>
                           <TableCell className={styles.cell}>
                             <IconButton
                               onClick={() => handlePackageExpand(pkg.packageId)}
@@ -857,7 +855,7 @@ const OrderCreation: React.FC = () => {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell colSpan={5} className={styles.collapseCell}>
+                          <TableCell colSpan={4} className={styles.collapseCell}>
                             <Collapse in={expandedPackages[pkg.packageId]} timeout="auto" unmountOnExit>
                               <div className={styles.detailsContainer}>
                                 <h5 className={styles.detailsTitle}>Детали упаковки:</h5>
@@ -866,9 +864,11 @@ const OrderCreation: React.FC = () => {
                                     <Table size="small">
                                       <TableHead>
                                         <TableRow className={styles.detailsTableHeader}>
-                                          <TableCell className={styles.detailsHeaderCell}>Код детали</TableCell>
-                                          <TableCell className={styles.detailsHeaderCell}>Название детали</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Артикул детали</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Деталь</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Количество на упаковку</TableCell>
                                           <TableCell className={styles.detailsHeaderCell}>Общее количество</TableCell>
+                                          {/* <TableCell className={styles.detailsHeaderCell}>Единица измерения</TableCell> */}
                                         </TableRow>
                                       </TableHead>
                                       <TableBody>
@@ -877,6 +877,10 @@ const OrderCreation: React.FC = () => {
                                             <TableCell className={styles.detailsCell}>{detail.partCode}</TableCell>
                                             <TableCell className={styles.detailsCell}>{detail.partName}</TableCell>
                                             <TableCell className={styles.detailsCell}>{detail.quantity}</TableCell>
+                                            <TableCell className={styles.detailsCell}>
+                                              {detail.quantity * pkg.quantity}
+                                            </TableCell>
+                                            {/* <TableCell className={styles.detailsCell}>шт</TableCell> */}
                                           </TableRow>
                                         ))}
                                       </TableBody>

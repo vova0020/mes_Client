@@ -4,7 +4,11 @@ import styles from './MachinesCards.module.css';
 import useMachines from '../../../hooks/masterPage/useMachinesMaster';
 import TaskSidebar from './components/TaskSidebar/TaskSidebar';
 
-const MachinesCards: React.FC = () => {
+interface MachinesCardsProps {
+  onDataUpdate?: () => void;
+}
+
+const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
   // Используем хук для получения данных о станках
   const { machines, loading, error, refreshMachines } = useMachines();
   
@@ -219,6 +223,7 @@ const MachinesCards: React.FC = () => {
           onClose={handleCloseTaskSidebar}
           machineId={selectedMachine.id}
           machineName={selectedMachine.name}
+          onDataUpdate={onDataUpdate}
         />
       )}
     </>

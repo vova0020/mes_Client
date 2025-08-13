@@ -232,6 +232,20 @@ export const useOrderManagement = () => {
     return result;
   }, [deleteOrder, refetchOrders, selectedOrderId]);
 
+  // Изменение приоритета заказа с автоматическим обновлением
+  const updateOrderPriority = useCallback(async (orderId: number, priority: number) => {
+    try {
+      const result = await orderManagementApi.updateOrderPriority(orderId, priority);
+      if (result) {
+        await refetchOrders();
+      }
+      return result;
+    } catch (error) {
+      console.error('Ошибка при изменении приоритета заказа:', error);
+      throw error;
+    }
+  }, [refetchOrders]);
+
   return {
     // Данные
     orders,
@@ -258,6 +272,7 @@ export const useOrderManagement = () => {
     completeOrderProduction,
     postponeOrderWithUpdate,
     deleteOrderWithUpdate,
+    updateOrderPriority,
     refetchOrders,
     refetchDetails,
   };

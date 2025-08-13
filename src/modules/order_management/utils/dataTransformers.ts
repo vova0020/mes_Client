@@ -15,6 +15,7 @@ export interface OrderPlanningData {
   plannedReleaseDate: string;
   actualReleaseDate: string;
   packages: Package[];
+  priority?: number;
 }
 
 export interface Package {
@@ -22,6 +23,7 @@ export interface Package {
   name: string;
   quantity: number;
   details: Detail[];
+  articleNumber: string;
 }
 
 export interface Detail {
@@ -29,6 +31,7 @@ export interface Detail {
   name: string;
   quantity: number;
   unit: string;
+  articleNumber: string;
 }
 
 // Маппинг статусов API к статусам компонента
@@ -52,7 +55,7 @@ const reverseStatusMapping = {
 
 // Преобразование заказа из API в формат компонента
 export const transformOrderToPlanning = (order: Order): OrderPlanningData => {
-  return {
+  const result = {
     id: order.orderId.toString(),
     name: order.orderName,
     requiredDate: order.requiredDate.split('T')[0], // Преобразуем ISO дату в YYYY-MM-DD
@@ -65,7 +68,11 @@ export const transformOrderToPlanning = (order: Order): OrderPlanningData => {
     plannedReleaseDate: order.requiredDate.split('T')[0],
     actualReleaseDate: order.completedAt ? order.completedAt.split('T')[0] : '',
     packages: [], // Будет заполнено при получении деталей
+    priority: order.priority,
   };
+  
+  console.log(`Transform order ${order.orderId}: priority ${order.priority} -> ${result.priority}`);
+  return result;
 };
 
 // Преобразование деталей заказа из API в формат компонента
@@ -83,6 +90,7 @@ export const transformOrderDetailsToPlanning = (orderDetails: OrderDetailsRespon
     isCompleted: orderDetails.order.isCompleted,
     packagesCount: orderDetails.packages.length,
     totalPartsCount: orderDetails.packages.reduce((total, pkg) => total + pkg.details.length, 0),
+    priority: (orderDetails.order as any).priority,
   });
 
   // Преобразуем упаковки
@@ -90,17 +98,20 @@ export const transformOrderDetailsToPlanning = (orderDetails: OrderDetailsRespon
     id: pkg.packageId.toString(),
     name: pkg.packageName,
     quantity: pkg.quantity,
+    articleNumber: `PKG-${pkg.packageId.toString().padStart(3, '0')}`,
     details: pkg.details.map(detail => ({
       id: detail.partId.toString(),
       name: detail.partName,
       quantity: detail.totalQuantity,
       unit: 'шт', // По умолчанию, можно добавить в API
+      articleNumber: `ART-${detail.partId.toString().padStart(3, '0')}`,
     })),
   }));
 
   return {
     ...baseOrder,
     packages,
+    priority: baseOrder.priority,
   };
 };
 

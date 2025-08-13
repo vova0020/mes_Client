@@ -22,6 +22,7 @@ interface PalletsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   position?: { top: number; right: number };
+  onDataUpdate?: () => void;
 }
 
 const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
@@ -29,7 +30,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   detailId, 
   isOpen, 
   onClose,
-  position = { top: 120, right: 20 }
+  position = { top: 120, right: 20 },
+  onDataUpdate
 }) => {
   // Ref для боковой панели
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -208,6 +210,11 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
         await fetchPalletsWithUnallocated(detailId);
       }
       
+      // Уведомляем родительский компонент об обновлении данных
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
+      
       if (response && response.assignment) {
         const assignment = response.assignment;
         const palletName = assignment.pallet?.palletName || `№${assignment.pallet?.palletId || palletId}`;
@@ -258,6 +265,11 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       // Обновляем данные после успешной операции
       if (detailId) {
         await fetchPalletsWithUnallocated(detailId);
+      }
+      
+      // Уведомляем родительский компонент об обновлении данных
+      if (onDataUpdate) {
+        onDataUpdate();
       }
       
       if (response) {

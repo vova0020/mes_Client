@@ -201,7 +201,7 @@ export const productionOrdersApi = {
   /**
    * Удаление производственного заказа по ID
    * @param id - Идентификатор заказа
-   * @returns Promise с резуль��атом удаления
+   * @returns Promise с результатом удаления
    */
   remove: async (id: number): Promise<DeleteProductionOrderResponse> => {
     try {

@@ -29,10 +29,15 @@ const MachineNoSmen: React.FC = () => {
 
   // Добавляем только состояние для отсле��ивания выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [ordersKey, setOrdersKey] = useState<number>(0);
   
   // Обработчик выбора заказа с useCallback для стабильной ссылки на функцию
   const handleOrderSelect = useCallback((orderId: number | null) => {
     setSelectedOrderId(orderId);
+  }, []);
+  
+  const refreshOrders = useCallback(() => {
+    setOrdersKey(prev => prev + 1);
   }, []);
 
   // Функция для отображения соответствующего контента в зависимости от состояния
@@ -66,10 +71,16 @@ const MachineNoSmen: React.FC = () => {
     return (
       <>
         <div className={styles.ordersSection}>
-          <OrdersTable onOrderSelect={handleOrderSelect} />
+          <OrdersTable 
+            key={ordersKey}
+            onOrderSelect={handleOrderSelect} 
+          />
         </div>
         <div className={styles.detailsSection}>
-          <DetailsTable selectedOrderId={selectedOrderId} />
+          <DetailsTable 
+            selectedOrderId={selectedOrderId} 
+            onDataUpdate={refreshOrders}
+          />
         </div>
       </>
     );

@@ -10,9 +10,10 @@ interface PalletsSidebarProps {
   detailId: number | null;
   isOpen: boolean;
   onClose: () => void;
+  onDataUpdate?: () => void;
 }
 
-const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, isOpen, onClose }) => {
+const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, isOpen, onClose, onDataUpdate }) => {
   // Ref для боковой панели
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -168,6 +169,9 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     try {
       setProcessingPalletId(palletId);
       await updateMachine(palletId, newMachine, defaultSegmentId);
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
       console.log(`Поддон ${palletId} назначен на станок: ${newMachine}`);
     } catch (err) {
       setErrorMessage('Не удалось обновить станок для поддона');

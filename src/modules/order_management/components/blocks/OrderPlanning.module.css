@@ -532,6 +532,33 @@
   background: rgba(255, 255, 255, 0.2) !important;
 }
 
+/* Стили для drag-and-drop */
+.dragHandle {
+  color: rgba(255, 255, 255, 0.6);
+  cursor: grab;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.dragHandle:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.tableRow {
+  position: relative;
+}
+
+.tableRow[data-dragging="true"] {
+  opacity: 0.5;
+  z-index: 1000;
+}
+
 @media screen and (max-width: 768px) {
   .container {
     padding: 10px;
