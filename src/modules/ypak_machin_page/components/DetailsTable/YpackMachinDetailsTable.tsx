@@ -284,8 +284,11 @@ const DetailsTable: React.FC = () => {
     );
   }
 
+  // Фильтруем задачи, исключая завершенные
+  const filteredTasks = tasks.filter(task => task.status !== 'COMPLETED');
+
   // Если нет задач для отображения
-  if (tasks.length === 0) {
+  if (filteredTasks.length === 0) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>Информация об упаковке</h2>
@@ -342,7 +345,7 @@ const DetailsTable: React.FC = () => {
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {tasks.map((task, index) => (
+            {filteredTasks.map((task, index) => (
               <tr
                 key={task.taskId}
                 className={`

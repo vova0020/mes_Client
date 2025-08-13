@@ -59,23 +59,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       setActiveOrderId(orderId);
     }
   };
+   const getProgress = (order: Order) => {
+      return `${order.completed || 0} %`;
+    };
+  
+    const getAvailability = (order: Order) => {
+      return `${order.available || 0 } %`;
+    };
 
-  const calculateProgress = (order: Order) => {
-    if (order.completionPercentage !== undefined) {
-      return `${order.completionPercentage.toFixed(1)}%`;
-    }
-    if ('status' in order) {
-      const status = (order as any).status;
-      if (status === 'completed') return '100%';
-      if (status === 'in_progress') return '50%';
-    }
-    return '0%';
-  };
-
-  const calculateAvailability = (order: Order) => {
-    const availability = order.id % 10 * 10;
-    return `${availability}%`;
-  };
+  
 
   const handleViewComposition = (e: React.MouseEvent, orderId: number) => {
     e.stopPropagation();
@@ -175,10 +167,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 </div>
                 <div className={styles.orderInfo}>
                   <div className={styles.orderAvailability}>
-                    Доступно: {calculateAvailability(order)}
+                    Доступно: {getAvailability(order)}
                   </div>
                   <div className={styles.orderProgress}>
-                    Выполнено: {calculateProgress(order)}
+                    Выполнено: {getProgress(order)}
                   </div>
                   <div className={styles.orderActions}>
                     <button 

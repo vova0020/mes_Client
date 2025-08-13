@@ -7,7 +7,9 @@ import {
   startOperation,
   completeOperation,
   partiallyCompleteOperation,
-  getPackingScheme
+  getPackingScheme,
+  assignPalletToPackage,
+  AssignPalletToPackageResponse
 } from '../../api/ypakMachine/ypakMachineApi';
 
 // Тип для состояния загрузки
@@ -25,6 +27,7 @@ interface UseYpakMachineResult {
   completeOperation: (taskId: number) => Promise<void>;
   partiallyCompleteOperation: (taskId: number, packagedCount: number) => Promise<void>;
   getPackingScheme: (packageId: number) => Promise<string>;
+  assignPalletToPackage: (palletId: number, packageId: number, quantity: number) => Promise<AssignPalletToPackageResponse>;
 }
 
 /**
@@ -116,6 +119,23 @@ export const useYpakMachine = (): UseYpakMachineResult => {
     }
   }, []);
 
+  // Функция для назначения поддона на упаковку
+  const handleAssignPalletToPackage = useCallback(async (
+    palletId: number, 
+    packageId: number, 
+    quantity: number
+  ): Promise<AssignPalletToPackageResponse> => {
+    try {
+      const result = await assignPalletToPackage(palletId, packageId, quantity);
+      // Обновляем данные после успешного запроса
+      await fetchMachineDetails();
+      return result;
+    } catch (error) {
+      console.error('Ошибка при назначении поддона на упаковку:', error);
+      throw error;
+    }
+  }, [fetchMachineDetails]);
+
   // Получение списка всех задач
   const tasks = machineDetails?.tasks || [];
 
@@ -129,7 +149,8 @@ export const useYpakMachine = (): UseYpakMachineResult => {
     startOperation: handleStartOperation,
     completeOperation: handleCompleteOperation,
     partiallyCompleteOperation: handlePartiallyCompleteOperation,
-    getPackingScheme: handleGetPackingScheme
+    getPackingScheme: handleGetPackingScheme,
+    assignPalletToPackage: handleAssignPalletToPackage
   };
 };
 

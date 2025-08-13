@@ -3,7 +3,6 @@ import { packagingApi, PackageDto, PackagesResponse, PackagingQueryParams } from
 
 interface UsePackagingResult {
   packages: PackageDto[];
-  pagination?: PackagesResponse['pagination'];
   loading: boolean;
   error: Error | null;
   fetchPackages: (params?: PackagingQueryParams) => Promise<void>;
@@ -14,7 +13,6 @@ interface UsePackagingResult {
 
 export const usePackaging = (initialParams?: PackagingQueryParams): UsePackagingResult => {
   const [packages, setPackages] = useState<PackageDto[]>([]);
-  const [pagination, setPagination] = useState<PackagesResponse['pagination']>();
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -25,8 +23,7 @@ export const usePackaging = (initialParams?: PackagingQueryParams): UsePackaging
 
     try {
       const response = await packagingApi.getPackages(params);
-      setPackages(response.packages);
-      setPagination(response.pagination);
+      setPackages(response);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Ошибка при получении упаковок');
       setError(error);
@@ -43,8 +40,7 @@ export const usePackaging = (initialParams?: PackagingQueryParams): UsePackaging
 
     try {
       const response = await packagingApi.getPackagesByOrderId(orderId);
-      setPackages(response.packages);
-      setPagination(response.pagination);
+      setPackages(response);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(`Ошибка при получении упаковок для заказа ${orderId}`);
       setError(error);
@@ -75,7 +71,6 @@ export const usePackaging = (initialParams?: PackagingQueryParams): UsePackaging
   // Функция для очистки списка упаковок
   const clearPackages = useCallback(() => {
     setPackages([]);
-    setPagination(undefined);
     setError(null);
   }, []);
 
@@ -88,7 +83,6 @@ export const usePackaging = (initialParams?: PackagingQueryParams): UsePackaging
 
   return {
     packages,
-    pagination,
     loading,
     error,
     fetchPackages,

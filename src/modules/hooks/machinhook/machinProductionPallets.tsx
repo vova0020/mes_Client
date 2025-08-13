@@ -13,6 +13,7 @@ import {
   updateBufferCell,
   CompleteProcessingResponseDto
 } from '../../api/machineApi/machinProductionPalletsService';
+import { DefectPalletPartsDto, DefectPartsResponse } from '../../api/machineApi/machineApi';
 
 // Определение интерфейса результата хука
 interface UseProductionPalletsResult {
@@ -27,6 +28,7 @@ interface UseProductionPalletsResult {
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
   startPalletProcessing: (palletId: number) => Promise<void>;
   completePalletProcessing: (palletId: number) => Promise<CompleteProcessingResponseDto>;
+  defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
 }
 
 // Пользовательский хук для управления данными о производственных поддонах
@@ -132,6 +134,23 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     }
   }, [refreshPalletData]);
 
+  // Функция для отбраковки деталей с поддона
+  const handleDefectPalletParts = useCallback(async (defectData: DefectPalletPartsDto): Promise<DefectPartsResponse> => {
+    try {
+      // Используем API напрямую
+      const { machineApi } = await import('../../api/machineApi/machineApi');
+      const response = await machineApi.defectPalletParts(defectData);
+      
+      // Обновляем данные о поддоне после отбраковки
+      await refreshPalletData(defectData.palletId);
+      
+      return response;
+    } catch (err) {
+      console.error(`Ошибка при отбраковке деталей с поддона ${defectData.palletId}:`, err);
+      throw err;
+    }
+  }, [refreshPalletData]);
+
   // Функция для загрузки ресурсов выбранного сегмента
   const loadSegmentResources = useCallback(async () => {
     // Не устанавливаем loading здесь, так как это может конфликтовать с загрузкой поддонов
@@ -171,7 +190,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     refreshPalletData,
     updateBufferCell: handleUpdateBufferCell,
     startPalletProcessing: handleStartPalletProcessing,
-    completePalletProcessing: handleCompletePalletProcessing
+    completePalletProcessing: handleCompletePalletProcessing,
+    defectPalletParts: handleDefectPalletParts
   };
 };
 

@@ -46,13 +46,19 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
 
   // Загружаем станки при монтировании компонента
   useEffect(() => {
+    console.log('Загружаем станки...');
     fetchAvailableMachines();
-  }, [fetchAvailableMachines]);
+  }, []);
+
+  // Отладка списка станков
+  useEffect(() => {
+    console.log('availableMachines:', availableMachines);
+  }, [availableMachines]);
 
   // Загружаем упаковки при изменении выбранного заказа
   useEffect(() => {
     // Если меняется ID заказа, сначала скрываем детали с анимацией
-    if (prevOrderIdRef.current !== selectedOrderId && !loading && packages.length > 0) {
+    if (prevOrderIdRef.current !== selectedOrderId && !loading && packages && packages.length > 0) {
       setShowDetails(false);
       
       // Используем setTimeout для создания "задержки" при смене данных
@@ -82,7 +88,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
 
   // Показываем упаковки с анимацией после загрузки
   useEffect(() => {
-    if (!loading && packages.length > 0) {
+    if (!loading && packages && packages.length > 0) {
       // Небольшая задержка перед показом упаковок для более заметной анимации
       const timer = setTimeout(() => {
         setShowDetails(true);
@@ -233,7 +239,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     e.stopPropagation(); // Предотвращаем всплытие события
     
     // Находим упаковку и получаем ID задания
-    const packaging = packages.find(p => p.id === packageId);
+    const packaging = (packages || []).find(p => p.id === packageId);
     if (packaging) {
       const assignedMachine = getAssignedMachine(packaging);
       if (assignedMachine && assignedMachine.taskId) {
@@ -253,7 +259,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     e.stopPropagation(); // Предотвращаем всплытие события
     
     // Находим упаковку и получаем ID задания
-    const packaging = packages.find(p => p.id === packageId);
+    const packaging = (packages || []).find(p => p.id === packageId);
     if (packaging) {
       const assignedMachine = getAssignedMachine(packaging);
       if (assignedMachine && assignedMachine.taskId) {
@@ -272,6 +278,30 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   const handlePartiallyCompletedClick = (e: React.MouseEvent, packageId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     // updateStatus(packageId, 'partially_completed');
+  };
+
+  // Функция для получения класса стиля в зависимости от статуса упаковки
+  const getPackingStatusClass = (status: string): string => {
+    switch (status) {
+      case 'NOT_PROCESSED': return styles.statusNotProcessed;
+      case 'READY_PROCESSED': return styles.statusReadyProcessed;
+      case 'PENDING': return styles.statusPackingPending;
+      case 'IN_PROGRESS': return styles.statusPackingInProgress;
+      case 'COMPLETED': return styles.statusPackingCompleted;
+      default: return '';
+    }
+  };
+
+  // Функция для получения текста статуса упаковки
+  const getPackingStatusText = (status: string): string => {
+    switch (status) {
+      case 'NOT_PROCESSED': return 'Не обработано';
+      case 'READY_PROCESSED': return 'Готово к обработке';
+      case 'PENDING': return 'Ожидает упаковки';
+      case 'IN_PROGRESS': return 'В работе';
+      case 'COMPLETED': return 'Завершена';
+      default: return status;
+    }
   };
 
   // Отображаем сообщение о загрузке
@@ -338,7 +368,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   }
 
   // Если выбран заказ, но нет упаковок
-  if (packages.length === 0) {
+  if (!packages || packages.length === 0) {
     return (
       <div className={styles.detailsContainer}>
         <h2 className={styles.title}>Информация об упаковке</h2>
@@ -376,13 +406,14 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
               <th>Распределено</th>
               <th>Скомплектовано</th>
               <th>Упаковано</th>
+              <th>Статус упаковки</th>
               {/* <th>Разрешить паковать вне линии</th> */}
               <th>Назначить станок</th>
               <th colSpan={4}>Действия</th>
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {packages.sort((a, b) => a.id - b.id).map((packaging, index) => (
+            {(packages || []).sort((a, b) => a.id - b.id).map((packaging, index) => (
               <tr
                 key={packaging.id}
                 className={`
@@ -402,11 +433,16 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                     Схема укладки
                   </button>
                 </td>
-                <td>{packaging.parts?.length || 0}</td>
+                <td>{packaging.totalQuantity}</td>
                 <td>{packaging.readyForPackaging}</td>
                 <td>{packaging.distributed}</td>
                 <td>{packaging.assembled}</td>
                 <td>{packaging.packaged}</td>
+                <td>
+                  <span className={`${styles.statusBadge} ${getPackingStatusClass(packaging.packingStatus || 'NOT_PROCESSED')}`}>
+                    {getPackingStatusText(packaging.packingStatus || 'NOT_PROCESSED')}
+                  </span>
+                </td>
                 {/* <td>
                   <label className={styles.checkboxContainer}>
                     <input 
@@ -427,22 +463,16 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                         value={assignedMachine ? assignedMachine.machineId : ""}
                         onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
                         onClick={(e) => e.stopPropagation()}
-                        disabled={availableMachinesLoading || !!assignedMachine}
+                        disabled={availableMachinesLoading}
                       >
                         <option value="">
                           {availableMachinesLoading ? 'Загрузка...' : 'Выберите станок'}
                         </option>
-                        {assignedMachine ? (
-                          <option key={assignedMachine.machineId} value={assignedMachine.machineId}>
-                            {assignedMachine.machineName}
+                        {availableMachines.map((machine) => (
+                          <option key={machine.id} value={machine.id}>
+                            {machine.name}
                           </option>
-                        ) : (
-                          availableMachines.sort((a, b) => a.id - b.id).map((machine) => (
-                            <option key={machine.id} value={machine.id}>
-                              {machine.name}
-                            </option>
-                          ))
-                        )}
+                        ))}
                       </select>
                     );
                   })()}

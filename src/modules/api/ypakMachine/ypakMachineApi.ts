@@ -158,3 +158,29 @@ export const getPackingScheme = async (packageId: number): Promise<Blob> => {
     throw error;
   }
 };
+
+// Интерфейс для ответа API назначения поддона на упаковку
+export interface AssignPalletToPackageResponse {
+  success: boolean;
+  assignmentId: number;
+  message: string;
+}
+
+// Назначение поддона на упаковку
+export const assignPalletToPackage = async (
+  palletId: number, 
+  packageId: number, 
+  quantity: number
+): Promise<AssignPalletToPackageResponse> => {
+  try {
+    const response = await axios.post(`${API_URL}/packaging/pallets/assign-to-package`, {
+      palletId,
+      packageId,
+      quantity
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при назначении поддона на упаковку:', error);
+    throw error;
+  }
+};

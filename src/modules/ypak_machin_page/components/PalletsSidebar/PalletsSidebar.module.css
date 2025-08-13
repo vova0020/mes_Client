@@ -768,6 +768,11 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #d35400;
+  white-space: nowrap;
 }
 
 .processStep {

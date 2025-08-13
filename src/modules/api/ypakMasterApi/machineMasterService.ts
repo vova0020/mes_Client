@@ -93,7 +93,7 @@ export const fetchMachinesBySegment = async (): Promise<Machine[]> => {
       throw new Error('Не удалось получить ID этапа из localStorage');
     }
     
-    const response = await axios.get<Machine[]>(`${API_URL}/machins/master/machines`, {
+    const response = await axios.get<Machine[]>(`${API_URL}/packing-assignments/machines`, {
       params: {
         stageId: stageId
       }

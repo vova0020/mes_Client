@@ -36,6 +36,8 @@ export interface PalletDto {
   palletId: number;
   palletName: string;
   quantity: number;
+  status: string;
+  assignedToPackage: boolean;
   currentCell?: CellDto;
   placedAt?: Date;
   machineAssignments: MachineAssignmentDto[];

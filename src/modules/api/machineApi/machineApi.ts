@@ -20,6 +20,31 @@ export interface LocalMachineData {
   machines: Machine[];
 }
 
+// Интерфейсы для отбраковки деталей
+export interface DefectPalletPartsDto {
+  palletId: number;
+  quantity: number;
+  reportedById: number;
+  description?: string;
+  machineId?: number;
+  stageId: number;
+}
+
+export interface DefectPartsResponse {
+  message: string;
+  reclamation: {
+    id: number;
+    quantity: number;
+    description?: string;
+    createdAt: string;
+  };
+  pallet: {
+    id: number;
+    name: string;
+    newQuantity: number;
+  };
+}
+
 /**
  * Функция для получения ID станка и ID участка из localStorage
  * @returns Объект с ID станка и ID участка или null, если данные не найдены
@@ -82,5 +107,20 @@ export const machineApi = {
       console.error('Ошибка при изменении статуса станка:', error);
       throw error;
     }
-  }, 
+  },
+
+  /**
+   * Отбраковка деталей с поддона
+   * @param defectData - Данные для отбраковки
+   * @returns Promise с результатом отбраковки
+   */
+  defectPalletParts: async (defectData: DefectPalletPartsDto): Promise<DefectPartsResponse> => {
+    try {
+      const response = await axios.post<DefectPartsResponse>(`${API_URL}/machins/pallets/defect-parts`, defectData);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при отбраковке деталей:', error);
+      throw error;
+    }
+  },
 };

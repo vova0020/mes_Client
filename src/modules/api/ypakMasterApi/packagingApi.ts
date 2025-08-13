@@ -8,11 +8,18 @@ export interface PackingTaskDto {
   priority: number;
   assignedAt: string;
   completedAt: string | null;
-  assignedUser: string | null;
   machine: {
     machineId: number;
     machineName: string;
     status: string;
+  };
+  assignedUser: {
+    userId: number;
+    login: string;
+    userDetail: {
+      firstName: string;
+      lastName: string;
+    } | null;
   } | null;
 }
 
@@ -23,16 +30,19 @@ export interface PackageDto {
   packageCode: string;
   packageName: string;
   completionPercentage: number;
+  packingStatus: string;
+  packingAssignedAt: string | null;
+  packingCompletedAt: string | null;
+  order: {
+    orderName: string;
+    batchNumber: string;
+  };
+  parts: PartInPackageDto[];
+  totalQuantity: number;
   readyForPackaging: number;
   distributed: number;
   assembled: number;
   packaged: number;
-  order: {
-    orderName: string;
-    batchNumber: string;
-    isCompleted?: boolean;
-  };
-  parts: PartInPackageDto[];
   tasks: PackingTaskDto[];
 }
 
@@ -41,19 +51,10 @@ export interface PartInPackageDto {
   partCode: string;
   partName: string;
   quantity: number;
-  status?: string;
-  totalQuantity?: number;
-  requiredQuantity?: number;
 }
 
 export interface PackagesResponse {
   packages: PackageDto[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
 }
 
 export interface PackagingQueryParams {
@@ -65,10 +66,10 @@ export interface PackagingQueryParams {
 // API функции для работы с упаковками
 export const packagingApi = {
   // Получение списка упаковок с фильтрами
-  getPackages: async (params?: PackagingQueryParams): Promise<PackagesResponse> => {
+  getPackages: async (params?: PackagingQueryParams): Promise<PackageDto[]> => {
     try {
       const response = await axios.get(`${API_URL}/packaging`, { params });
-      return response.data;
+      return response.data.packages;
     } catch (error) {
       console.error('Ошибка при получении списка упаковок:', error);
       throw error;
@@ -76,10 +77,10 @@ export const packagingApi = {
   },
 
   // Получение упаковок по ID заказа
-  getPackagesByOrderId: async (orderId: string | number): Promise<PackagesResponse> => {
+  getPackagesByOrderId: async (orderId: string | number): Promise<PackageDto[]> => {
     try {
       const response = await axios.get(`${API_URL}/packaging/by-order/${orderId}`);
-      return response.data;
+      return response.data.packages;
     } catch (error) {
       console.error(`Ошибка при получении упаковок для заказа ${orderId}:`, error);
       throw error;

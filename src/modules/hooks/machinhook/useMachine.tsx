@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { machineApi, Machine, getLocalMachineIds, MachineStatus } from '../../api/machineApi/machineApi';
+import { machineApi, Machine, getLocalMachineIds, MachineStatus, DefectPalletPartsDto, DefectPartsResponse } from '../../api/machineApi/machineApi';
 import { socketService, SocketEvent } from '../../api/socket/socketService';
 
 // Типы состояний загрузки
@@ -19,6 +19,7 @@ interface UseMachineResult {
   segmentId: number | null | undefined;
   changeStatus: (status: MachineStatus) => Promise<void>;
   isSocketConnected: boolean;
+  defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
 }
 
 /**
@@ -224,6 +225,17 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     }
   }, [effectiveId, isSocketConnected]);
 
+  // Функция для отбраковки деталей с поддона
+  const defectPalletParts = useCallback(async (defectData: DefectPalletPartsDto): Promise<DefectPartsResponse> => {
+    try {
+      const response = await machineApi.defectPalletParts(defectData);
+      return response;
+    } catch (err) {
+      console.error('Ошибка при отбраковке деталей:', err);
+      throw err;
+    }
+  }, []);
+
   // Вычисляемые состояния станка на основе текущего статуса
   const isActive = machine?.status === 'ACTIVE';
   const isInactive = machine?.status === 'INACTIVE';
@@ -242,6 +254,7 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     machineId: effectiveId,
     segmentId: machine?.segmentId,
     changeStatus,
-    isSocketConnected
+    isSocketConnected,
+    defectPalletParts
   };
 };

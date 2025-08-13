@@ -160,7 +160,7 @@ const useMachines = (): UseMachinesResult => {
     setAvailableMachinesLoading(true);
     
     try {
-      const machines = await fetchMachinesBySegment();
+      const machines = await fetchMachinesBySegmentId();
       setAvailableMachines(machines);
     } catch (err) {
       console.error('Ошибка при получении списка доступных станков:', err);
@@ -208,16 +208,13 @@ const useMachines = (): UseMachinesResult => {
   // Загрузка данных о станках при первом рендере
   useEffect(() => {
     fetchMachines();
-  }, [fetchMachines]);
+  }, []);
 
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      // console.log('Получено событие изменения этапа в useMachines:', event.detail);
-      // Добавляем небольшую задержку для предотвращения множественных запросов
-      setTimeout(() => {
-        fetchMachines(); // Перезагружаем данные о станках при изменении этапа
-      }, 150);
+      fetchMachines();
+      fetchAvailableMachines();
     };
 
     window.addEventListener('stageChanged', handleStageChange as EventListener);
@@ -225,7 +222,7 @@ const useMachines = (): UseMachinesResult => {
     return () => {
       window.removeEventListener('stageChanged', handleStageChange as EventListener);
     };
-  }, [fetchMachines]);
+  }, []);
   
   return {
     machines,

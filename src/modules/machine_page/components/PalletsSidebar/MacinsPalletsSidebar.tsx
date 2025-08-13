@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './PalletsSidebar.module.css';
 import useProductionPallets from '../../../hooks/machinhook/machinProductionPallets';
+import { useMachine } from '../../../hooks/machinhook/useMachine';
+import DefectModal from './DefectModal';
 import { 
   ProductionPallet, 
   BufferCellDto, 
@@ -11,6 +13,7 @@ import {
   getProcessStepText,
   CompleteProcessingResponseDto
 } from '../../../api/machineApi/machinProductionPalletsService';
+import { DefectPalletPartsDto } from '../../../api/machineApi/machineApi';
 
 interface PalletsSidebarProps {
   detailId: number | null;
@@ -31,6 +34,25 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [nextStepInfo, setNextStepInfo] = useState<string | null>(null);
+  const [defectModalOpen, setDefectModalOpen] = useState<boolean>(false);
+  const [selectedPallet, setSelectedPallet] = useState<ProductionPallet | null>(null);
+  
+  // Используем хук для получения данных о станке и пользователе
+  const { machine, machineId } = useMachine();
+  
+  // Получаем ID пользователя из localStorage (предполагаем, что он там хранится)
+  const getUserId = (): number => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.id || 1; // Возвращаем ID пользователя или 1 по умолчанию
+      }
+    } catch (error) {
+      console.error('Ошибка при получении ID пользователя:', error);
+    }
+    return 1; // ID по умолчанию
+  };
   
   // Используем хук для получения данных о поддонах
   const { 
@@ -43,7 +65,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     refreshPalletData,
     updateBufferCell,
     startPalletProcessing,
-    completePalletProcessing
+    completePalletProcessing,
+    defectPalletParts
   } = useProductionPallets(detailId);
 
   // Эффект для загрузки поддонов и ресурсов сегмента
@@ -102,21 +125,11 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   }, [successMessage]);
 
   // Обработчик закрытия при клике вне сайдбара
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose]);
+// Больше не закрываем сайдбар кликом вне — закрытие только через крестик
+useEffect(() => {
+  // intentionally empty: closing happens only via close button
+  return () => {};
+}, []);
 
   // Получение адреса ячейки буфера по коду - аналогично функции из компонента мастера
   const getBufferCellAddress = (bufferCell: any): string => {
@@ -371,6 +384,50 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     }
   };
 
+  // Обработчик для открытия модального окна отбраковки
+  const handleDefectClick = (pallet: ProductionPallet) => {
+    setSelectedPallet(pallet);
+    setDefectModalOpen(true);
+  };
+
+  // Обработчик для отбраковки деталей
+  const handleDefectSubmit = async (defectData: DefectPalletPartsDto) => {
+    try {
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      setNextStepInfo(null);
+      
+      const response = await defectPalletParts(defectData);
+      
+      // Показываем сообщение об успешной отбраковке
+      setSuccessMessage(
+        `Отбраковано ${response.reclamation.quantity} деталей с поддона ${response.pallet.name}. ` +
+        `Осталось: ${response.pallet.newQuantity} деталей.`
+      );
+      
+      // Обновляем данные о поддонах
+      if (detailId) {
+        await fetchPallets(detailId);
+      }
+    } catch (error) {
+      console.error('Ошибка при отбраковке деталей:', error);
+      
+      // Обрабатываем ошибки согласно документации API
+      const apiError = error as any;
+      const errorMessage = apiError.response?.data?.message || apiError.message;
+      
+      if (errorMessage.includes('Недостаточно деталей')) {
+        setErrorMessage('Недостаточно деталей на поддоне для отбраковки');
+      } else if (errorMessage.includes('Поддон не найден')) {
+        setErrorMessage('Поддон не найден в системе');
+      } else if (errorMessage.includes('Не удалось определить этап')) {
+        setErrorMessage('Не удалось определить этап для создания рекламации');
+      } else {
+        setErrorMessage(`Ошибка при отбраковке: ${errorMessage}`);
+      }
+    }
+  };
+
   // Функция для получения класса стиля в зависимости от статуса операции
   const getOperationStatusClass = (operation?: any): string => {
 
@@ -567,6 +624,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                           МЛ
                         </button>
                         <button 
+                          className={`${styles.actionButton} ${styles.defectButton}`}
+                          onClick={() => handleDefectClick(pallet)}
+                          disabled={processingPalletId === pallet.id || pallet.quantity <= 0}
+                          title="Отбраковка"
+                        >
+                          Брак
+                        </button>
+                        <button 
                           className={`${styles.actionButton} ${styles.inProgressButton}`}
                           onClick={() => handleStartWork(pallet.id)}
                           disabled={processingPalletId === pallet.id || 
@@ -599,7 +664,27 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   );
 
   // Используем портал для рендеринга сайдбара в конце body
-  return createPortal(sidebarContent, document.body);
+  return (
+    <>
+      {createPortal(sidebarContent, document.body)}
+      {selectedPallet && (
+        <DefectModal
+          isOpen={defectModalOpen}
+          onClose={() => {
+            setDefectModalOpen(false);
+            setSelectedPallet(null);
+          }}
+          onSubmit={handleDefectSubmit}
+          palletId={selectedPallet.id}
+          palletName={selectedPallet.name || `Поддон №${selectedPallet.id}`}
+          maxQuantity={selectedPallet.quantity}
+          machineId={machineId}
+          stageId={selectedPallet.currentStepId || 1} // Используем текущий этап или 1 по умолчанию
+          reportedById={getUserId()}
+        />
+      )}
+    </>
+  );
 };
 
 export default PalletsSidebar;
