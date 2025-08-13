@@ -138,6 +138,57 @@ export interface CreatePalletResponse {
   };
 }
 
+// Интерфейс для запроса отбраковки деталей
+export interface DefectPartsRequest {
+  palletId: number;
+  quantity: number;
+  reportedById: number;
+  stageId: number;
+  description?: string;
+  machineId?: number;
+}
+
+// Интерфейс для ответа отбраковки деталей
+export interface DefectPartsResponse {
+  message: string;
+  reclamation: {
+    id: number;
+    quantity: number;
+    palletDeleted: boolean;
+  };
+}
+
+// Интерфейс для распределения деталей
+export interface PartDistribution {
+  targetPalletId?: number;
+  quantity: number;
+  palletName?: string;
+}
+
+// Интерфейс для запроса перераспределения деталей
+export interface RedistributePartsRequest {
+  sourcePalletId: number;
+  distributions: PartDistribution[];
+}
+
+// Интерфейс для ответа перераспределения деталей
+export interface RedistributePartsResponse {
+  message: string;
+  result: {
+    sourcePalletDeleted: boolean;
+    createdPallets: {
+      id: number;
+      name: string;
+      quantity: number;
+    }[];
+    updatedPallets: {
+      id: number;
+      name: string;
+      newQuantity: number;
+    }[];
+  };
+}
+
 const getSegmentIdFromStorage = (): number | null => {
   try {
     const selectedStageData = localStorage.getItem('selectedStage');
@@ -286,10 +337,10 @@ export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> =>
 // Обновленная функция для получения доступных станков
 export const fetchMachinBySegmentId = async (): Promise<MachineDto[]> => {
   try {
-    const segmentId = getSegmentIdFromStorage();
+    const stageId = getSegmentIdFromStorage();
 
     // Формируем URL с обязательным параметром segmentId
-    const response = await axios.get(`${API_URL}/machins/master/all?segmentId=${segmentId}`);
+    const response = await axios.get(`${API_URL}/machins/master/all?stageId=${stageId}`);
 
     // Проверяем формат данных и адаптируем под него
     if (Array.isArray(response.data)) {
@@ -458,6 +509,74 @@ export const createPalletByPart = async (
     return response.data;
   } catch (error) {
     console.error('Ошибка при создании поддона:', error);
+    throw error;
+  }
+};
+
+// Функция для отбраковки деталей с поддона
+export const defectParts = async (
+  palletId: number,
+  quantity: number,
+  description?: string,
+  machineId?: number
+): Promise<DefectPartsResponse> => {
+  try {
+    // Получаем данные пользователя из localStorage
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      throw new Error('Данные пользователя не найдены');
+    }
+    const user = JSON.parse(userData);
+    const reportedById = user.id;
+
+    // Получаем stageId из localStorage
+    const stageId = getSegmentIdFromStorage();
+    if (!stageId) {
+      throw new Error('ID этапа не найден');
+    }
+
+    const payload: DefectPartsRequest = {
+      palletId,
+      quantity,
+      reportedById,
+      stageId,
+      description,
+      machineId
+    };
+
+    const response = await axios.post<DefectPartsResponse>(
+      `${API_URL}/master/defect-parts`,
+      payload
+    );
+
+    console.log('Детали успешно отбракованы:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при отбраковке деталей:', error);
+    throw error;
+  }
+};
+
+// Функция для перераспределения деталей между поддонами
+export const redistributeParts = async (
+  sourcePalletId: number,
+  distributions: PartDistribution[]
+): Promise<RedistributePartsResponse> => {
+  try {
+    const payload: RedistributePartsRequest = {
+      sourcePalletId,
+      distributions
+    };
+
+    const response = await axios.post<RedistributePartsResponse>(
+      `${API_URL}/master/redistribute-parts`,
+      payload
+    );
+
+    console.log('Детали успешно перераспределены:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при перераспределении деталей:', error);
     throw error;
   }
 };

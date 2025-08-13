@@ -237,3 +237,32 @@ export const updateTaskPriority = async (
     throw error;
   }
 };
+
+/**
+ * Обновляет статус операции
+ * @param operationId ID операции
+ * @param status Статус операции (IN_PROGRESS, COMPLETED, PARTIALLY_COMPLETED)
+ * @param masterId ID мастера (опционально)
+ * @returns Ответ сервера
+ */
+export const updateOperationStatus = async (
+  operationId: number,
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED',
+  masterId?: number
+): Promise<any> => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/master/update-status`,
+      {
+        operationId,
+        status,
+        masterId
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при обновлении статуса операции ${operationId}:`, error);
+    throw error;
+  }
+};

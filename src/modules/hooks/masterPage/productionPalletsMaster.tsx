@@ -11,6 +11,11 @@ import {
   OperationDto,
   createPalletByPart,
   CreatePalletResponse,
+  defectParts,
+  DefectPartsResponse,
+  redistributeParts,
+  RedistributePartsResponse,
+  PartDistribution,
   // getCurrentOperation
 } from '../../api/masterPage/productionPalletsServiceMaster';
 
@@ -28,6 +33,8 @@ interface UseProductionPalletsResult {
   loadSegmentResources: () => Promise<void>;
   refreshPalletData: (palletId: number) => Promise<void>;
   createPallet: (partId: number, quantity: number, palletName?: string) => Promise<CreatePalletResponse>;
+  defectParts: (palletId: number, quantity: number, description?: string, machineId?: number) => Promise<DefectPartsResponse>;
+  redistributeParts: (sourcePalletId: number, distributions: PartDistribution[]) => Promise<RedistributePartsResponse>;
 }
 
 // Пользовательский хук для управления данными о производственных поддонах
@@ -198,7 +205,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
               ...pallet, 
               bufferCell: selectedBufferCell,
               machine: null, // Поддон больше не на станке
-              currentOperation: operation as OperationDto // может быть null
+              currentOperation: operation as OperationDto // Обновляем операцию
             };
           }
           return pallet;
@@ -260,6 +267,60 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       setLoading(false);
     }
   }, [currentDetailId, fetchPallets]);
+
+  // Функция для отбраковки деталей
+  const defectPartsHandler = useCallback(async (
+    palletId: number,
+    quantity: number,
+    description?: string,
+    machineId?: number
+  ): Promise<DefectPartsResponse> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await defectParts(palletId, quantity, description, machineId);
+      
+      // После успешной отбраковки обновляем список поддонов
+      if (currentDetailId) {
+        await fetchPallets(currentDetailId);
+      }
+
+      return response;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Ошибка при отбраковке деталей');
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDetailId, fetchPallets]);
+
+  // Функция для перераспределения деталей
+  const redistributePartsHandler = useCallback(async (
+    sourcePalletId: number,
+    distributions: PartDistribution[]
+  ): Promise<RedistributePartsResponse> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await redistributeParts(sourcePalletId, distributions);
+      
+      // После успешного перераспределения обновляем список поддонов
+      if (currentDetailId) {
+        await fetchPallets(currentDetailId);
+      }
+
+      return response;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Ошибка при перераспределении деталей');
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDetailId, fetchPallets]);
   
   // Инициализация с начальным ID детали, если он предоставлен
   useEffect(() => {
@@ -280,7 +341,9 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     machines,
     loadSegmentResources,
     refreshPalletData,
-    createPallet
+    createPallet,
+    defectParts: defectPartsHandler,
+    redistributeParts: redistributePartsHandler
   };
 };
 

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './TaskSidebar.module.css';
 import useMachines from '../../../../../hooks/masterPage/useMachinesMaster';
 import { MachineTask } from '../../../../../api/masterPage/machineMasterService';
+import { startPalletProcessing, completePalletProcessing } from '../../../../../api/machineApi/machinProductionPalletsService';
 
 // Типы статусов деталей
 type TaskStatus = 'PENDING' | 'BUFFERED' | 'ON_MACHINE' | 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED' ;
@@ -304,7 +305,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     updatePriority,
     availableMachines,
     availableMachinesLoading,
-    fetchAvailableMachines
+    fetchAvailableMachines,
+    updateStatus
   } = useMachines();
   
   // Состояние для модального окна частичной обработки
@@ -314,6 +316,11 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   // Состояние для модального окна редактирования приоритета
   const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
   const [selectedGroupForPriority, setSelectedGroupForPriority] = useState<GroupedDetail | null>(null);
+  
+  // Состояние для обработки операций с поддонами
+  const [processingPalletId, setProcessingPalletId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Состояние для отслеживания развернутых групп деталей
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -347,6 +354,18 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     }
   }, [machineTasks]);
   
+  // Очистка сообщений через 5 секунд
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+        setErrorMessage(null);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+  
   // Обработчик частичной обработки
   const handlePartialProcessing = (operationId: number) => {
     const task = machineTasks.find(item => item.operationId === operationId);
@@ -367,6 +386,67 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     if (task && task.quantity - quantity <= 0) {
       // Если все детали обработаны, удаляем задание
       handleDeleteItem(operationId);
+    }
+  };
+  
+  // Функция для получения данных пользователя из localStorage
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        console.error('Данные пользователя не найдены в localStorage');
+        return null;
+      }
+      const parsedData = JSON.parse(userData);
+      console.log('Данные пользователя из localStorage:', parsedData);
+      return parsedData;
+    } catch (error) {
+      console.error('Ошибка при получении данных пользователя:', error);
+      return null;
+    }
+  };
+  
+  // Обработчик для кнопки "В работе"
+  const handleStartWork = async (operationId: number) => {
+    try {
+      setProcessingPalletId(operationId);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      
+      const success = await updateStatus(operationId, 'IN_PROGRESS');
+      if (success) {
+        setSuccessMessage(`Поддон №${operationId} успешно переведен в статус "В работе"`);
+        await fetchTasks(machineId);
+      } else {
+        setErrorMessage('Не удалось перевести поддон в работу');
+      }
+    } catch (error) {
+      console.error(`Ошибка при переводе поддона ${operationId} в работу:`, error);
+      setErrorMessage('Не удалось перевести поддон в работу');
+    } finally {
+      setProcessingPalletId(null);
+    }
+  };
+  
+  // Обработчик для кнопки "Готово"
+  const handleComplete = async (operationId: number) => {
+    try {
+      setProcessingPalletId(operationId);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      
+      const success = await updateStatus(operationId, 'COMPLETED');
+      if (success) {
+        setSuccessMessage(`Поддон №${operationId} успешно отмечен как готовый`);
+        await fetchTasks(machineId);
+      } else {
+        setErrorMessage('Не удалось отметить поддон как готовый');
+      }
+    } catch (error) {
+      console.error(`Ошибка при отметке поддона ${operationId} как готовый:`, error);
+      setErrorMessage('Не удалось отметить поддон как готовый');
+    } finally {
+      setProcessingPalletId(null);
     }
   };
   
@@ -643,6 +723,19 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         </div>
         
         <div className={styles.sidebarContent}>
+          {/* Отображение сообщений об успехе и ошибках */}
+          {successMessage && (
+            <div className={styles.successNotification}>
+              <span>✓ {successMessage}</span>
+            </div>
+          )}
+          
+          {errorMessage && (
+            <div className={styles.errorNotification}>
+              <span>⚠️ {errorMessage}</span>
+            </div>
+          )}
+          
           {tasksLoading ? (
             <div className={styles.loadingContainer}>
               <div className={styles.loadingSpinner}></div>
@@ -790,12 +883,27 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             
                             <div className={styles.palletActions}>
                               <button 
-                                className={`${styles.actionButton} ${styles.partialButton}`}
-                                onClick={() => handlePartialProcessing(pallet.operationId)}
-                                title="Частичная обработка"
-                                disabled={mapApiStatusToUiStatus(pallet.status) === 'COMPLETED'}
+                                className={`${styles.actionButton} ${styles.inProgressButton}`}
+                                onClick={() => handleStartWork(pallet.operationId)}
+                                disabled={processingPalletId === pallet.operationId || 
+                                         mapApiStatusToUiStatus(pallet.status) === 'IN_PROGRESS' ||
+                                         mapApiStatusToUiStatus(pallet.status) === 'COMPLETED'}
+                                title="В работе"
                               >
-                                Частично
+                                В работе
+                              </button>
+                              
+                              <button 
+                                className={`${styles.actionButton} ${styles.completedButton}`}
+                                onClick={() => handleComplete(pallet.operationId)}
+                                disabled={processingPalletId === pallet.operationId || 
+                                         mapApiStatusToUiStatus(pallet.status) === 'COMPLETED' ||
+                                         mapApiStatusToUiStatus(pallet.status) === 'PENDING' ||
+                                         !mapApiStatusToUiStatus(pallet.status) ||
+                                         mapApiStatusToUiStatus(pallet.status) !== 'IN_PROGRESS'}
+                                title="Готово"
+                              >
+                                Готово
                               </button>
              
                               <select 

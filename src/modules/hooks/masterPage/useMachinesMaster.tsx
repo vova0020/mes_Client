@@ -8,7 +8,8 @@ import {
   MachineTask,
   fetchMachinesBySegmentId,
   MachineDto,
-  updateTaskPriority
+  updateTaskPriority,
+  updateOperationStatus
 } from '../../api/masterPage/machineMasterService';
 
 // Определение интерфейса результата хука
@@ -28,6 +29,7 @@ interface UseMachinesResult {
   removeTask: (operationId: number) => Promise<boolean>;
   transferTask: (operationId: number, targetMachineId: number) => Promise<boolean>;
   updatePriority: (partId: number, machineId: number, priority: number) => Promise<boolean>;
+  updateStatus: (operationId: number, status: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED', masterId?: number) => Promise<boolean>;
   
   // Функции для работы с доступными станками
   availableMachines: MachineDto[];
@@ -145,6 +147,21 @@ const useMachines = (): UseMachinesResult => {
     }
   }, []);
   
+  // Функция для обновления статуса операции
+  const updateStatus = useCallback(async (
+    operationId: number, 
+    status: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED',
+    masterId?: number
+  ): Promise<boolean> => {
+    try {
+      await updateOperationStatus(operationId, status, masterId);
+      return true;
+    } catch (err) {
+      console.error(`Ошибка при обновлении статуса операции ${operationId}:`, err);
+      return false;
+    }
+  }, []);
+  
   // Функция для получения списка всех доступных станков для выбора
   const fetchAvailableMachines = useCallback(async () => {
     setAvailableMachinesLoading(true);
@@ -201,7 +218,10 @@ const useMachines = (): UseMachinesResult => {
     // Данные и функции для работы с доступными станками
     availableMachines,
     availableMachinesLoading,
-    fetchAvailableMachines
+    fetchAvailableMachines,
+    
+    // Функция для обновления статуса операции
+    updateStatus
   };
 };
 
