@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
 import useDetails from '../../../hooks/masterPage/useDetailsMaster';
 import PalletsSidebar from '../PalletsSidebar/MasterPalletsSidebar';
+import DetailForm from '../../../detail-form/DetailForm';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
@@ -18,6 +19,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
   
   // Состояние для боковой панели с поддонами
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen2, setSidebarOpen2] = useState(false);
   const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
   const [selectedInfoDetailForPallets, setSelectedInfoDetailForPallets] = useState([]);
   
@@ -69,17 +71,22 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
 
   // Синхронизация выделенной строки с состоянием боковой панели
   useEffect(() => {
-    // Когда закрывается панель, снимаем выделение
-    if (!sidebarOpen) {
+    // Когда закрывается панель, снимаем выделение только если не открыта панель МЛ
+    if (!sidebarOpen && !sidebarOpen2) {
       setActiveDetailId(null);
-    } else {
+    } else if (sidebarOpen) {
       // Когда открывается панель, выделяем соответствующую строку
       setActiveDetailId(selectedDetailForPallets);
     }
-  }, [sidebarOpen, selectedDetailForPallets]);
+  }, [sidebarOpen, sidebarOpen2, selectedDetailForPallets]);
 
   // Обработчик клика по строке таблицы с возможностью сброса выбора
   const handleRowClick = (detailId: number) => {
+    // Если открыта боковая панель с поддонами, игнорируем все клики по строкам
+    if (sidebarOpen) {
+      return;
+    }
+    
     // Если нажали на уже выбранную строку, сбрасываем выбор
     if (activeDetailId === detailId) {
       setActiveDetailId(null);
@@ -106,6 +113,19 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
   // Обработчик закрытия боковой панели
   const handleCloseSidebar = () => {
     setSidebarOpen(false);
+    // Снимаем выделение только если не открыта панель МЛ
+    if (!sidebarOpen2) {
+      setActiveDetailId(null);
+    }
+  };
+  // Обработчик закрытия боковой панели
+  const handleCloseSidebar2 = () => {
+    setSidebarOpen2(false);
+  };
+
+   // Обработчик кнопки МЛ (маршрутный лист)
+  const handleOpenML = () => {
+   setSidebarOpen2(true);
   };
 
   // Отображаем сообщение о загрузке
@@ -257,14 +277,21 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
         </table>
       </div>
 
-      {/* Боковая панель с поддонами, временно закоментировано чтобы не мешало отладке */}
+      {/* Боковая панель с поддонами */}
       <PalletsSidebar 
+        handleOpenML={handleOpenML}
         detailId={selectedDetailForPallets} 
         detailInfo={selectedInfoDetailForPallets} 
         isOpen={sidebarOpen} 
         onClose={handleCloseSidebar}
         onDataUpdate={onDataUpdate}
       />
+
+      {/* Боковая панель маршрутный лист */}
+          <DetailForm 
+            isOpen={sidebarOpen2} 
+            onClose={handleCloseSidebar2}
+          />
     </div>
   );
 };

@@ -4,16 +4,19 @@ import styles from './PalletsSidebar.module.css';
 import useProductionPallets from '../../../hooks/masterPage/productionPalletsMaster';
 import { getPalletRouteSheet, getOperationStatusText, getProcessStepText } from '../../../api/masterPage/productionPalletsServiceMaster';
 import RedistributeModal from './RedistributeModal';
+import DetailForm from '../../../detail-form/DetailForm';
 
 interface PalletsSidebarProps {
   detailInfo: any;
   detailId: number | null;
   isOpen: boolean;
   onClose: () => void;
+  handleOpenML: () => void;
   onDataUpdate?: () => void;
+  onOpenDetailForm?: (palletId: number) => void;
 }
 
-const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, isOpen, onClose, onDataUpdate }) => {
+const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, isOpen, onClose, onDataUpdate, handleOpenML }) => {
   // Ref для боковой панели
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +65,9 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   const [showRedistributeModal, setShowRedistributeModal] = useState<boolean>(false);
   const [redistributePalletId, setRedistributePalletId] = useState<number | null>(null);
   const [isRedistributing, setIsRedistributing] = useState<boolean>(false);
+//  маршрутник =======================
+  // const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
   // Получаем значение из localStorage
   const getdefaultSegmentId = (): number | null => {
@@ -94,32 +100,32 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
 
   const defaultSegmentId = getdefaultSegmentId();
 
-  // Добавляем обработчик кликов вне боковой панели
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      // Проверяем, что sidebar открыт и что клик был не внутри него
-      if (isOpen &&
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
+  // Обработчик кликов вне панели отключен, чтобы не мешать работе с другими панелями
+  // useEffect(() => {
+  //   const handleOutsideClick = (event: MouseEvent) => {
+  //     if (isOpen &&
+  //       sidebarRef.current &&
+  //       !sidebarRef.current.contains(event.target as Node)) {
+  //       onClose();
+  //     }
+  //   };
 
-    // Добавляем обработчик только если панель открыта
-    if (isOpen) {
-      // Используем setTimeout, чтобы не сработало закрытие сразу после открытия
-      setTimeout(() => {
-        document.addEventListener('mousedown', handleOutsideClick);
-      }, 100);
-    }
+  //   if (isOpen) {
+  //     setTimeout(() => {
+  //       document.addEventListener('mousedown', handleOutsideClick);
+  //     }, 100);
+  //   }
 
-    // Удаляем обработчик при закрытии панели или размонтировании компонента
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [isOpen, onClose]);
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleOutsideClick);
+  //   };
+  // }, [isOpen, onClose]);
 
-
+// //  маршрутник =======================
+//  // Обработчик закрытия боковой панели
+//   const handleCloseSidebar = () => {
+//     setSidebarOpen(false);
+//   };
 
   // Загрузка данных о поддонах для выбранной детали
   useEffect(() => {
@@ -199,31 +205,10 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     }
   };
 
-  // Обработчик кнопки МЛ (маршрутный лист)
-  const handleOpenML = async (palletId: number) => {
-    try {
-      setProcessingPalletId(palletId);
-      const blob = await getPalletRouteSheet(palletId);
-
-      // Создаем URL для скачивания файла
-      const url = window.URL.createObjectURL(blob);
-
-      // Создаем ссылку для скачивания
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Маршрутный_лист_поддон_${palletId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-
-      // Очищаем ресурсы
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      setErrorMessage('Не удалось получить маршрутный лист');
-    } finally {
-      setProcessingPalletId(null);
-    }
-  };
+  // // Обработчик кнопки МЛ (маршрутный лист)
+  // const handleOpenML = (palletId: number) => {
+  //  setSidebarOpen(true);
+  // };
 
   // Компонент иконки для кнопки МЛ
   const DocumentIcon = () => (
@@ -789,7 +774,7 @@ return (
                 onClick={handleOpenCreatePalletModal}
                 disabled={isCreatingPallet}
               >
-                {isCreatingPallet ? 'Созда��ие...' : '+ Создать поддон'}
+                {isCreatingPallet ? 'Создание...' : '+ Создать поддон'}
               </button>
             </div>
           )}
@@ -838,7 +823,7 @@ return (
                     <td className={styles.actionsCell}>
                       <button
                         className={`${styles.actionButton} ${styles.mlButton}`}
-                        onClick={() => handleOpenML(pallet.id)}
+                        onClick={() => handleOpenML()}
                         disabled={processingPalletId === pallet.id}
                         title="Маршрутный лист"
                       >
@@ -1074,6 +1059,11 @@ return (
         isProcessing={isRedistributing}
       />
     )}
+    {/* Боковая панель с поддонами, временно закоментировано чтобы не мешало отладке */}
+          {/* <DetailForm 
+            isOpen={sidebarOpen} 
+            onClose={handleCloseSidebar}
+          /> */}
   </div>
 );
 
