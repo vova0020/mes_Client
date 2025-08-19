@@ -21,6 +21,7 @@ interface PalletsSidebarProps {
   detailId: number | null;
   isOpen: boolean;
   onClose: () => void;
+  handleOpenML: (palletId?: number) => void;
   position?: { top: number; right: number };
   onDataUpdate?: () => void;
 }
@@ -30,6 +31,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   detailId, 
   isOpen, 
   onClose,
+  handleOpenML,
   position = { top: 120, right: 20 },
   onDataUpdate
 }) => {
@@ -303,37 +305,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     }
   };
 
-  // Обработчик кнопки МЛ (маршрутный лист)
-  const handleOpenML = async (palletId: number) => {
-    try {
-      setProcessingPalletId(palletId);
-      setErrorMessage(null);
-      setSuccessMessage(null);
-      setNextStepInfo(null);
-      
-      const blob = await getPalletRouteSheet(palletId);
 
-      // Создаем URL для скачивания файла
-      const url = window.URL.createObjectURL(blob);
-
-      // Создаем ссылку для скачивания
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Маршрутный_лист_поддон_${palletId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-
-      // Очищаем ресурсы
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      setSuccessMessage(`Маршрутный лист для поддона №${palletId} скачивается...`);
-    } catch (err) {
-      setErrorMessage('Не удалось получить маршрутный лист');
-    } finally {
-      setProcessingPalletId(null);
-    }
-  };
 
   // Компонент иконки для кнопки МЛ
   const DocumentIcon = () => (

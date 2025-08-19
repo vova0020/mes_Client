@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import styles from './MacinsDetailsTable.module.css';
 import { useDetails } from '../../../hooks/machinhook/useDetails';
 import PalletsSidebar from '../PalletsSidebar/MacinsPalletsSidebar';
+import DetailForm from '../../../detail-form/DetailForm';
 
 const DetailsTable: React.FC = () => {
   // Состояние для отслеживания активной задачи
@@ -15,6 +16,10 @@ const DetailsTable: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // Состояние для позиции сайдбара
   const [sidebarPosition, setSidebarPosition] = useState({ top: 120, right: 20 });
+  
+  // Состояние для боковой панели маршрутного листа
+  const [isMLSidebarOpen, setIsMLSidebarOpen] = useState(false);
+  const [selectedPalletId, setSelectedPalletId] = useState<number | null>(null);
   
   // Используем хук для получения данных о задачах
   const { 
@@ -78,6 +83,20 @@ const DetailsTable: React.FC = () => {
   // Обработчик закрытия сайдбара
   const handleCloseSidebar = () => {
     setIsSidebarOpen(false);
+  };
+
+  // Обработчик открытия маршрутного листа
+  const handleOpenML = (palletId?: number) => {
+    if (palletId) {
+      setSelectedPalletId(palletId);
+    }
+    setIsMLSidebarOpen(true);
+  };
+
+  // Обработчик закрытия маршрутного листа
+  const handleCloseMLSidebar = () => {
+    setIsMLSidebarOpen(false);
+    setSelectedPalletId(null);
   };
 
   // Отображаем сообщение о загрузке
@@ -215,7 +234,15 @@ const DetailsTable: React.FC = () => {
           null}
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
+        handleOpenML={handleOpenML}
         // position={sidebarPosition}
+      />
+      
+      {/* Боковая панель маршрутного листа */}
+      <DetailForm 
+        isOpen={isMLSidebarOpen} 
+        onClose={handleCloseMLSidebar}
+        palletId={selectedPalletId || undefined}
       />
     </div>
   );

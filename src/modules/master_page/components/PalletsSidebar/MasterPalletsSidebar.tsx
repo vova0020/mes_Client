@@ -11,7 +11,7 @@ interface PalletsSidebarProps {
   detailId: number | null;
   isOpen: boolean;
   onClose: () => void;
-  handleOpenML: () => void;
+  handleOpenML: (palletId?: number) => void;
   onDataUpdate?: () => void;
   onOpenDetailForm?: (palletId: number) => void;
 }
@@ -66,7 +66,6 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   const [redistributePalletId, setRedistributePalletId] = useState<number | null>(null);
   const [isRedistributing, setIsRedistributing] = useState<boolean>(false);
 //  маршрутник =======================
-  // const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
   // Получаем значение из localStorage
@@ -823,7 +822,9 @@ return (
                     <td className={styles.actionsCell}>
                       <button
                         className={`${styles.actionButton} ${styles.mlButton}`}
-                        onClick={() => handleOpenML()}
+                        onClick={() => {
+                          handleOpenML(pallet.id);
+                        }}
                         disabled={processingPalletId === pallet.id}
                         title="Маршрутный лист"
                       >

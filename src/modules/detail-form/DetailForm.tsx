@@ -2,14 +2,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import Header from './components/Header';
 import EdgeDiagram from './components/EdgeDiagram';
 import RoutingTable from './components/RoutingTable';
+import { useRouteList } from '../hooks/routeListHook';
 import styles from './styles.module.css';
 
 interface PalletsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  palletId?: number;
 }
 
-const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose }) => {
+const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose, palletId }) => {
+  const { data, loading, error } = useRouteList(palletId || null);
   // Ref для боковой панели
   const sidebarRef = useRef<HTMLDivElement>(null);
   // Добавляем обработчик кликов вне боковой панели
@@ -67,7 +70,7 @@ const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
           <div className={styles.right}>
-            <RoutingTable />
+            <RoutingTable routeStages={data?.routeStages || []} />
           </div>
         </div>
         <div>
@@ -94,31 +97,37 @@ const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className={styles.card}>
+          {loading && <div>Загрузка...</div>}
+          {error && <div style={{color: 'red'}}>Ошибка: {error}</div>}
           <div className={styles.cardHeader}>
-            <h2>Маршрутный лист детали</h2>
+            <h2>Деталь: {data?.partSku || '-' } {data?.partName || '-'}</h2>
           </div>
 
           <div className={styles.topSection}>
             <div className={styles.infoFields}>
               <div className={styles.field}>
-                <label>Артикул:</label>
-                <span className={styles.fieldValue}>МДФ-001-2024</span>
+                <label>Артикул: </label>
+                <span className={styles.fieldValue}>{data?.partSku || '-'}</span>
               </div>
               <div className={styles.field}>
-                <label>Подраздел №:</label>
-                <span className={styles.fieldValue}>П-15</span>
+                <label>Поддон №: </label>
+                <span className={styles.fieldValue}>{data?.palletNumber || '-'}</span>
               </div>
               <div className={styles.field}>
-                <label>Дата:</label>
-                <span className={styles.fieldValue}>15.01.2024</span>
+                <label>Дата: </label>
+                <span className={styles.fieldValue}>{data?.partCreatedAt ? new Date(data.partCreatedAt).toLocaleDateString() : '-'}</span>
               </div>
               <div className={styles.field}>
-                <label>Количество:</label>
-                <span className={styles.fieldValue}>5 шт</span>
+                <label>Количество: </label>
+                <span className={styles.fieldValue}>{data?.quantity || 0} шт</span>
               </div>
               <div className={styles.field}>
-                <label>Материал:</label>
-                <span className={styles.fieldValue}>МДФ 18мм</span>
+                <label>Материал: </label>
+                <span className={styles.fieldValue}>{data?.materialName || '-'}</span>
+              </div>
+              <div className={styles.field}>
+                <label>Адрес: </label>
+                <span className={styles.fieldValue}>{data?.bufferCellAddress || '-'}</span>
               </div>
             </div>
             <div className={styles.qrSection}>
@@ -130,19 +139,19 @@ const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className={styles.inputGroup}>
+          {/* <div className={styles.inputGroup}>
             <label>Название детали:</label>
-            <span className={styles.fieldValue}>Боковина шкафа левая</span>
-          </div>
+            <span className={styles.fieldValue}>{data?.partName || '-'}</span>
+          </div> */}
 
           <div className={styles.sizeSection}>
             <div className={styles.sizeField}>
               <label>Размер по раскрою:</label>
-              <div className={styles.grayBox}>2500x1210</div>
+              <div className={styles.grayBox}>{data?.partSize || '-'}</div>
             </div>
             <div className={styles.sizeField}>
               <label>Размер готовой детали:</label>
-              <div className={styles.grayBox}>2480x1200</div>
+              <div className={styles.grayBox}>{data?.finishedLength && data?.finishedWidth ? `${data.finishedLength}x${data.finishedWidth}` : '-'}</div>
             </div>
           </div>
 
@@ -151,21 +160,26 @@ const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose }) => {
               <div className={styles.cardHeader}>
                 <h3>Схема детали</h3>
               </div>
-              <EdgeDiagram />
+              <EdgeDiagram 
+                width={data?.finishedLength || undefined}
+                height={data?.finishedWidth || undefined}
+                edgingNameL1={data?.edgingNameL1}
+                edgingNameW1={data?.edgingNameW1}
+              />
               <div className={styles.inputGroup}>
                 <label>Паз:</label>
-                <span className={styles.fieldValue}>L1: 2мм, L2: 0.4мм</span>
+                <span className={styles.fieldValue}>{data?.groove || '-'}</span>
               </div>
             </div>
 
             <div className={styles.rightColumn}>
-              <RoutingTable />
+              <RoutingTable routeStages={data?.routeStages || []} />
             </div>
           </div>
 
           <div className={styles.inputGroup}>
             <label>Название и номер заказа:</label>
-            <span className={styles.fieldValue}>Кухня "Модерн" - Заказ №2024-0156</span>
+            <span className={styles.fieldValue}>{data ? `${data.orderName} - ${data.orderNumber}` : '-'}</span>
           </div>
           <button className={styles.modernBtn}>Открыть чертеж</button>
         </div>

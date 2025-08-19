@@ -19,6 +19,7 @@ interface PalletsSidebarProps {
   detailId: number | null;
   isOpen: boolean;
   onClose: () => void;
+  handleOpenML: (palletId?: number) => void;
   position?: { top: number; right: number };
 }
 
@@ -26,6 +27,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   detailId, 
   isOpen, 
   onClose,
+  handleOpenML,
   position = { top: 120, right: 20 }
 }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -616,7 +618,7 @@ useEffect(() => {
                       <td className={styles.actionsCell}>
                         <button 
                           className={`${styles.actionButton} ${styles.mlButton}`}
-                          onClick={() => handleRouteSheet(pallet.id)}
+                          onClick={() => handleOpenML(pallet.id)}
                           disabled={processingPalletId === pallet.id}
                           title="Маршрутный лист"
                         >

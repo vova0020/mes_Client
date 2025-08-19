@@ -1,20 +1,33 @@
 import React from 'react';
+import { RouteStage } from '../../api/routeListApi/routeListApi';
 import styles from '../styles.module.css';
 
-const RoutingTable: React.FC = () => {
-  const testOperations = [
-    { operation: 'Распил', date: '2025-08-17', quantity: '1', address: 'А-1', operator: 'Иванов', status: 'завершено' },
-    { operation: 'Кромкование', date: '2025-08-18', quantity: '1', address: 'Б-2', operator: 'Петров', status: 'завершено' },
-    { operation: 'Сверление', date: '', quantity: '', address: '', operator: '', status: 'ожидание' },
-    { operation: 'Сборка', date: '', quantity: '', address: '', operator: '', status: 'ожидание' },
-  ];
+interface RoutingTableProps {
+  routeStages: RouteStage[];
+}
+
+const RoutingTable: React.FC<RoutingTableProps> = ({ routeStages }) => {
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'завершено': return '#28a745';
-      case 'в процессе': return '#ffc107';
-      case 'ожидание': return '#6c757d';
+      case 'COMPLETED': return '#28a745';
+      case 'IN_PROGRESS': return '#ffc107';
+      case 'PENDING': return '#17a2b8';
+      case 'NOT_PROCESSED': return '#6c757d';
+      case 'AWAITING_PACKAGING': return '#fd7e14';
       default: return '#6c757d';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'COMPLETED': return 'Завершено';
+      case 'IN_PROGRESS': return 'В процессе';
+      case 'PENDING': return 'Ожидает';
+      case 'NOT_PROCESSED': return 'Не обработано';
+      case 'AWAITING_PACKAGING': return 'Ожидает упаковки';
+      default: return status;
     }
   };
 
@@ -29,26 +42,22 @@ const RoutingTable: React.FC = () => {
             <tr>
               <th>Операции</th>
               <th>Дата</th>
-              <th>Кол-во</th>
-              <th>Адрес</th>
               <th>Оператор</th>
               <th>Статус</th>
             </tr>
           </thead>
           <tbody>
-            {testOperations.map((op, index) => (
+            {routeStages.map((stage, index) => (
               <tr key={index}>
-                <td className={styles.operationCell}>{op.operation}</td>
-                <td>{op.date}</td>
-                <td>{op.quantity}</td>
-                <td>{op.address}</td>
-                <td>{op.operator}</td>
+                <td className={styles.operationCell}>{stage.stageName}</td>
+                <td>{stage.completedAt ? new Date(stage.completedAt).toLocaleDateString() : '-'}</td>
+                <td>-</td>
                 <td>
                   <span 
                     className={styles.statusBadge}
-                    style={{ backgroundColor: getStatusColor(op.status) }}
+                    style={{ backgroundColor: getStatusColor(stage.status) }}
                   >
-                    {op.status}
+                    {getStatusText(stage.status)}
                   </span>
                 </td>
               </tr>

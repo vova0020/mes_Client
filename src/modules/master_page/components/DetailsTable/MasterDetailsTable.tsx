@@ -121,11 +121,18 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
   // Обработчик закрытия боковой панели
   const handleCloseSidebar2 = () => {
     setSidebarOpen2(false);
+    setSelectedPalletId(null);
   };
 
+  // Состояние для выбранного поддона
+  const [selectedPalletId, setSelectedPalletId] = useState<number | null>(null);
+
    // Обработчик кнопки МЛ (маршрутный лист)
-  const handleOpenML = () => {
-   setSidebarOpen2(true);
+  const handleOpenML = (palletId?: number) => {
+    if (palletId) {
+      setSelectedPalletId(palletId);
+    }
+    setSidebarOpen2(true);
   };
 
   // Отображаем сообщение о загрузке
@@ -291,6 +298,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
           <DetailForm 
             isOpen={sidebarOpen2} 
             onClose={handleCloseSidebar2}
+            palletId={selectedPalletId || undefined}
           />
     </div>
   );

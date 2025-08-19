@@ -12,7 +12,7 @@ const Header: React.FC = () => {
             <input type="text" className={styles.underlineInput} />
           </div>
           <div className={styles.field}>
-            <label>Подраздел N°:</label>
+            <label>Поддон N°:</label>
             <input type="text" className={styles.underlineInput} />
           </div>
           <div className={styles.field}>

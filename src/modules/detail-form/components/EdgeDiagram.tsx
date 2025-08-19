@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface EdgeDiagramProps {
   width?: number;
   height?: number;
-  l1EdgeType?: string;
-  W2EdgeType?: string;
+  edgingNameL1?: string | null;
+  edgingNameW1?: string | null;
 }
 
 const EdgeDiagram: React.FC<EdgeDiagramProps> = ({
-  width = 2500,
-  height = 1210,
-  l1EdgeType = 'L1',
-  W2EdgeType = 'W2'
+  width,
+  height,
+  edgingNameL1,
+  edgingNameW1
 }) => {
-  const [dimensions, setDimensions] = useState({ width, height });
-  const [edgeTypes, setEdgeTypes] = useState({ l1: l1EdgeType, W2: W2EdgeType });
+  // Используем реальные размеры с сервера или значения по умолчанию
+  const dimensions = { 
+    width: width || 0, 
+    height: height || 0 
+  };
 
   // Определяем ориентацию прямоугольника
   const isVertical = dimensions.height > dimensions.width;
@@ -35,64 +38,16 @@ const EdgeDiagram: React.FC<EdgeDiagramProps> = ({
 
   return (
     <div className="diagram-wrapper">
-      {/* Панель управления */}
-      {/* <div className="controls">
-        <div className="control-group">
-          <label>Ширина (мм):</label>
-          <input 
-            type="number" 
-            value={dimensions.width}
-            onChange={(e) => setDimensions(prev => ({ ...prev, width: parseInt(e.target.value) || 0 }))}
-            className="size-input"
-          />
-        </div>
-        <div className="control-group">
-          <label>Высота (мм):</label>
-          <input 
-            type="number" 
-            value={dimensions.height}
-            onChange={(e) => setDimensions(prev => ({ ...prev, height: parseInt(e.target.value) || 0 }))}
-            className="size-input"
-          />
-        </div>
-        <div className="control-group">
-          <label>Тип кромки L1:</label>
-          <input 
-            type="text" 
-            value={edgeTypes.l1}
-            onChange={(e) => setEdgeTypes(prev => ({ ...prev, l1: e.target.value }))}
-            className="edge-input"
-          />
-        </div>
-        <div className="control-group">
-          <label>Тип кромки L2:</label>
-          <input 
-            type="text" 
-            value={edgeTypes.l2}
-            onChange={(e) => setEdgeTypes(prev => ({ ...prev, l2: e.target.value }))}
-            className="edge-input"
-          />
-        </div>
-      </div> */}
 
-      {/* Информация об ориентации */}
-      {/* <div className="orientation-info">
-        <span>Ориентация: </span>
-        <strong>
-          {isSquare ? 'Квадрат' : isVertical ? 'Вертикальная' : 'Горизонтальная'}
-        </strong>
-        <span> (соотношение {aspectRatio.toFixed(2)}:1)</span>
-      </div> */}
 
       {/* Диаграмма */}
       <div className="diagram-container">
         {/* Левая сторона */}
         <div className="left-side">
           <div className="edge-label vertical-text">
-            Обозначение облицовки кромки1 [{edgeTypes.W2}]
+            {edgingNameW1 || 'Кромка W1'}
           </div>
           <div className="dimension-label vertical-text dimension-left">
-            {/* {dimensions.height} мм */}
           </div>
           <div className="arrow-left">►</div>
         </div>
@@ -101,7 +56,7 @@ const EdgeDiagram: React.FC<EdgeDiagramProps> = ({
         <div className="center-section">
           {/* Верхнее обозначение */}
           <div className="top-label">
-            <div className="edge-text">Обозначение облицовки кромки2 [{edgeTypes.l1}]</div>
+            <div className="edge-text">{edgingNameL1 || 'Кромка L1'}</div>
             <div className="triangle-down"></div>
           </div>
 
@@ -120,7 +75,7 @@ const EdgeDiagram: React.FC<EdgeDiagramProps> = ({
           {/* Нижнее обозначение */}
           <div className="bottom-label">
             <div className="triangle-up"></div>
-            <div className="edge-text">Обозначение облицовки 3 [{edgeTypes.l1}]</div>
+            <div className="edge-text">{edgingNameL1 || 'Кромка L1'}</div>
           </div>
         </div>
 
@@ -128,30 +83,14 @@ const EdgeDiagram: React.FC<EdgeDiagramProps> = ({
         <div className="right-side">
           <div className="arrow-right">◄</div>
           <div className="dimension-label vertical-text dimension-right">
-            {/* {dimensions.height} мм */}
           </div>
           <div className="edge-label vertical-text">
-            Обозначение облицовки кромки4 [{edgeTypes.W2}]
+            {edgingNameW1 || 'Кромка W1'}
           </div>
         </div>
       </div>
 
-      {/* Предустановленные размеры */}
-      <div className="presets">
-        <h3>Примеры размеров:</h3>
-        <button onClick={() => setDimensions({ width: 2500, height: 1210 })}>
-          Горизонтальный: 2500×1210 мм
-        </button>
-        <button onClick={() => setDimensions({ width: 805, height: 1500 })}>
-          Вертикальный: 805×1500 мм
-        </button>
-        <button onClick={() => setDimensions({ width: 1000, height: 1000 })}>
-          Квадрат: 1000×1000 мм
-        </button>
-        <button onClick={() => setDimensions({ width: 450, height: 805 })}>
-          Вертикальный: 450×805 мм
-        </button>
-      </div>
+
 
       <style>{`
        .diagram-container {
@@ -166,61 +105,9 @@ const EdgeDiagram: React.FC<EdgeDiagramProps> = ({
           overflow: hidden;
         }
 
-        .controls {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 20px;
-          padding: 15px;
-          background: #f5f5f5;
-          border-radius: 8px;
-          flex-wrap: wrap;
-        }
 
-        .control-group {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
 
-        .control-group label {
-          font-size: 12px;
-          font-weight: bold;
-          color: #333;
-        }
 
-        .size-input, .edge-input {
-          padding: 5px 8px;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          width: 80px;
-          font-size: 14px;
-        }
-
-        .edge-input {
-          width: 60px;
-        }
-
-        .orientation-info {
-          margin-bottom: 20px;
-          padding: 10px;
-          background: #e8f4f8;
-          border-radius: 4px;
-          font-size: 14px;
-          text-align: center;
-        }
-
-        .diagram-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          // padding: 40px 20px;
-          background: white;
-          min-height: 350px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          // margin-bottom: 20px;
-          overflow: hidden;
-        }
 
         .left-side, .right-side {
           display: flex;
@@ -342,40 +229,7 @@ const EdgeDiagram: React.FC<EdgeDiagramProps> = ({
           transform: translateY(-50%);
         }
 
-        .presets {
-          padding: 15px;
-          background: #f9f9f9;
-          border-radius: 8px;
-        }
-
-        .presets h3 {
-          margin: 0 0 10px 0;
-          font-size: 14px;
-          color: #333;
-        }
-
-        .presets button {
-          margin-right: 10px;
-          margin-bottom: 8px;
-          padding: 8px 12px;
-          background: #e0e0e0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 12px;
-          transition: background-color 0.2s;
-        }
-
-        .presets button:hover {
-          background: #d0d0d0;
-        }
-
         @media (max-width: 768px) {
-          .controls {
-            flex-direction: column;
-            gap: 10px;
-          }
-          
           .diagram-container {
             padding: 20px 10px;
             overflow-x: auto;

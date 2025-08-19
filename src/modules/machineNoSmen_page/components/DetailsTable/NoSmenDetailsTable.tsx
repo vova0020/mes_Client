@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
 import useDetails from '../../../hooks/machinNoSmenHook/useDetails';
 import PalletsSidebar from '../PalletsSidebar/NoSmenPalletsSidebar';
+import DetailForm from '../../../detail-form/DetailForm';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
@@ -19,6 +20,10 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // Состояние для позиции сайдбара
   const [sidebarPosition, setSidebarPosition] = useState({ top: 120, right: 20 });
+  
+  // Состояние для боковой панели маршрутного листа
+  const [isMLSidebarOpen, setIsMLSidebarOpen] = useState(false);
+  const [selectedPalletId, setSelectedPalletId] = useState<number | null>(null);
   
   // Используем хук для получения данных о деталях
   const { details, loading, error, fetchDetails } = useDetails();
@@ -106,6 +111,20 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
   // Обработчик закрытия сайдбара
   const handleCloseSidebar = () => {
     setIsSidebarOpen(false);
+  };
+
+  // Обработчик открытия маршрутного листа
+  const handleOpenML = (palletId?: number) => {
+    if (palletId) {
+      setSelectedPalletId(palletId);
+    }
+    setIsMLSidebarOpen(true);
+  };
+
+  // Обработчик закрытия маршрутного листа
+  const handleCloseMLSidebar = () => {
+    setIsMLSidebarOpen(false);
+    setSelectedPalletId(null);
   };
 
   // Отображаем сообщение о загрузке
@@ -259,8 +278,16 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
         detailId={activeDetailId}
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
+        handleOpenML={handleOpenML}
         onDataUpdate={onDataUpdate}
         // position={sidebarPosition}
+      />
+      
+      {/* Боковая панель маршрутного листа */}
+      <DetailForm 
+        isOpen={isMLSidebarOpen} 
+        onClose={handleCloseMLSidebar}
+        palletId={selectedPalletId || undefined}
       />
     </div>
   );
