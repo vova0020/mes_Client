@@ -2,10 +2,11 @@
 // src/modules/settings_page/components/blocks/StreamsSettings/components/StreamsList.tsx
 // ================================================
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { streamsApi } from '../api/streamsApi';
 import { ProductionLine } from '../types/streams.types';
 import { Material } from '../types/materials.types';
+import { useStreams, useDeleteStream } from '../hooks/useStreamsQuery';
 import styles from './StreamsList.module.css';
 
 interface StreamsListProps {
@@ -149,32 +150,21 @@ export const StreamsList: React.FC<StreamsListProps> = ({ onStreamEdit }) => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  // Получение списка потоков с правильной типизацией
+  // Получение списка потоков с WebSocket интеграцией
   const {
     data: streams = [],
     isLoading,
-    error
-  } = useQuery<ProductionLine[], Error>({
-    queryKey: ['streams'],
-    queryFn: () => streamsApi.getStreams(),
-    staleTime: 1000 * 60 * 2, // 2 минуты
-  });
+    error,
+    isWebSocketConnected
+  } = useStreams();
 
   // Мутация для удаления потока
-  const deleteMutation = useMutation({
-    mutationFn: streamsApi.deleteStream,
-    onSuccess: (_, streamId) => {
-      // Инвалидируем основной кеш потоков
-      queryClient.invalidateQueries({ queryKey: ['streams'] });
+  const deleteMutation = useDeleteStream();
 
-      // Удаляем кеш материалов и этапов удаленного потока
-      queryClient.removeQueries({ queryKey: ['stream-materials', streamId] });
-      queryClient.removeQueries({ queryKey: ['stream-stages', streamId] });
-      queryClient.removeQueries({ queryKey: ['stream', streamId] });
-
-      setDeleteConfirmId(null);
-    },
-  });
+  // Обработчик успешного удаления
+  const handleDeleteSuccess = () => {
+    setDeleteConfirmId(null);
+  };
 
   // Фильтрация потоков по поисковому запросу
   const filteredStreams = streams.filter((stream: ProductionLine) =>
@@ -184,7 +174,9 @@ export const StreamsList: React.FC<StreamsListProps> = ({ onStreamEdit }) => {
 
   const handleDelete = (streamId: number) => {
     if (deleteConfirmId === streamId) {
-      deleteMutation.mutate(streamId);
+      deleteMutation.mutate(streamId, {
+        onSuccess: handleDeleteSuccess
+      });
     } else {
       setDeleteConfirmId(streamId);
     }
@@ -208,7 +200,7 @@ export const StreamsList: React.FC<StreamsListProps> = ({ onStreamEdit }) => {
       <div className={styles.errorContainer}>
         <p>Ошибка загрузки потоков: {error.message}</p>
         <button
-          onClick={() => queryClient.invalidateQueries({ queryKey: ['streams'] })}
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['streams', 'streams', 'list'] })}
           className={styles.retryButton}
         >
           Повторить
@@ -233,6 +225,9 @@ export const StreamsList: React.FC<StreamsListProps> = ({ onStreamEdit }) => {
         </div>
         <div className={styles.resultsCount}>
           Найдено: {filteredStreams.length} из {streams.length}
+          {isWebSocketConnected && (
+            <span className={styles.realtimeIndicator}> • Live</span>
+          )}
         </div>
       </div>
 

@@ -2,9 +2,9 @@
 // src/modules/settings_page/components/blocks/StreamsSettings/components/stages/StagesLevel2List.tsx
 // ================================================
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { streamsApi } from '../../api/streamsApi';
+import { useQueryClient } from '@tanstack/react-query';
 import { ProductionStageLevel2 } from '../../types/streams.types';
+import { useStagesLevel1, useStagesLevel2, useDeleteStageLevel2 } from '../../hooks/useStreamsQuery';
 import styles from './StagesList.module.css';
 
 interface StagesLevel2ListProps {
@@ -20,35 +20,29 @@ export const StagesLevel2List: React.FC<StagesLevel2ListProps> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  // Получение списка подэтапов 2 уровня
+  // Получение списка подэтапов 2 уровня с WebSocket интеграцией
   const { 
     data: substages = [], 
     isLoading, 
     error, 
-    refetch 
-  } = useQuery({
-    queryKey: ['production-stages-level2'],
-    queryFn: () => streamsApi.getProductionStagesLevel2(),
-  });
+    refetch,
+    isWebSocketConnected
+  } = useStagesLevel2();
 
   // Получение списка этапов 1 уровня для отображения родительских операций
-  const { data: parentStages = [] } = useQuery({
-    queryKey: ['production-stages-level1'],
-    queryFn: () => streamsApi.getProductionStagesLevel1(),
-  });
+  const { data: parentStages = [] } = useStagesLevel1();
 
   // Мутация для удаления подэтапа
-  const deleteSubstageMutation = useMutation({
-    mutationFn: (substageId: number) => streamsApi.deleteProductionStageLevel2(substageId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['production-stages-level2'] });
-      queryClient.invalidateQueries({ queryKey: ['production-stages-level1'] }); // Обновляем счетчики
-      setDeleteConfirmId(null);
-    },
-    onError: (error: Error) => {
-      alert(`Ошибка удаления подэтапа: ${error.message}`);
-    }
-  });
+  const deleteSubstageMutation = useDeleteStageLevel2();
+
+  // Обработчики успешного удаления и ошибки
+  const handleDeleteSuccess = () => {
+    setDeleteConfirmId(null);
+  };
+
+  const handleDeleteError = (error: Error) => {
+    alert(`Ошибка удаления подэтапа: ${error.message}`);
+  };
 
   // Создаем map для быстрого поиска родительских операций
   const parentStagesMap = parentStages.reduce((acc, stage) => {
@@ -109,7 +103,10 @@ export const StagesLevel2List: React.FC<StagesLevel2ListProps> = ({
 
   const handleDeleteSubstage = (substageId: number) => {
     if (deleteConfirmId === substageId) {
-      deleteSubstageMutation.mutate(substageId);
+      deleteSubstageMutation.mutate(substageId, {
+        onSuccess: handleDeleteSuccess,
+        onError: handleDeleteError
+      });
     } else {
       setDeleteConfirmId(substageId);
     }
@@ -171,6 +168,9 @@ export const StagesLevel2List: React.FC<StagesLevel2ListProps> = ({
           <span className={styles.statsText}>
             Всего подэтапов: <strong>{filteredSubstages.length}</strong>
             {searchTerm && ` (найдено из ${substages.length})`}
+            {isWebSocketConnected && (
+              <span className={styles.realtimeIndicator}> • Live</span>
+            )}
           </span>
         </div>
       </div>

@@ -258,7 +258,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   const handleRefreshPallet = async (palletId: number) => {
     try {
       setProcessingPalletId(palletId);
-      await refreshPalletData(palletId);
+      await refreshPalletData(palletId.toString());
       console.log(`Данные поддона ${palletId} обн��влены`);
     } catch (err) {
       setErrorMessage('Не удалось обновить данные поддона');

@@ -2,7 +2,8 @@
 // src/modules/settings_page/components/blocks/StreamsSettings/components/stages/StageLevel1Form.tsx
 // ================================================
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCreateStageLevel1, useUpdateStageLevel1 } from '../../hooks/useStreamsQuery';
 import { streamsApi } from '../../api/streamsApi';
 import { CreateStageLevel1Data, UpdateStageLevel1Data } from '../../types/streams.types';
 import styles from '../StreamForm.module.css';
@@ -35,35 +36,24 @@ export const StageLevel1Form: React.FC<StageLevel1FormProps> = ({
     enabled: isEditing,
   });
 
-  // Мутация для создания этапа
-  const createMutation = useMutation({
-    mutationFn: (data: CreateStageLevel1Data) => streamsApi.createProductionStageLevel1(data),
-    onSuccess: (newStage) => {
-      console.log('✅ Технологическая операция создана успешно:', newStage);
-      queryClient.invalidateQueries({ queryKey: ['production-stages-level1'] });
-      onSaved();
-    },
-    onError: (error: Error) => {
-      console.error('❌ Ошибка создания технологической операции:', error);
-      setErrors({ submit: error.message });
-    },
-  });
+  // Мутации для создания и обновления этапа с WebSocket интеграцией
+  const createMutation = useCreateStageLevel1();
+  const updateMutation = useUpdateStageLevel1();
 
-  // Мутация для обновления этапа
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateStageLevel1Data }) =>
-      streamsApi.updateProductionStageLevel1(id, data),
-    onSuccess: (updatedStage) => {
-      console.log('✅ Технологическая операция обновлена успе��но:', updatedStage);
-      queryClient.invalidateQueries({ queryKey: ['production-stages-level1'] });
-      queryClient.invalidateQueries({ queryKey: ['production-stage-level1', editId] });
-      onSaved();
-    },
-    onError: (error: Error) => {
-      console.error('❌ Ошибка обновления технологической операции:', error);
-      setErrors({ submit: error.message });
-    },
-  });
+  const handleCreateSuccess = () => {
+    console.log('✅ Технологическая операция создана успешно');
+    onSaved();
+  };
+
+  const handleUpdateSuccess = () => {
+    console.log('✅ Технологическая операция обновлена успешно');
+    onSaved();
+  };
+
+  const handleError = (error: Error) => {
+    console.error('❌ Ошибка:', error);
+    setErrors({ submit: error.message });
+  };
 
   // Заполнение формы при редактировании
   useEffect(() => {
@@ -125,9 +115,15 @@ export const StageLevel1Form: React.FC<StageLevel1FormProps> = ({
     };
 
     if (isEditing && editId !== undefined) {
-      updateMutation.mutate({ id: editId, data: stageData });
+      updateMutation.mutate({ id: editId, data: stageData }, {
+        onSuccess: handleUpdateSuccess,
+        onError: handleError
+      });
     } else {
-      createMutation.mutate(stageData as CreateStageLevel1Data);
+      createMutation.mutate(stageData as CreateStageLevel1Data, {
+        onSuccess: handleCreateSuccess,
+        onError: handleError
+      });
     }
   };
 

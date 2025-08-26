@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useMemo } from 'react';
 import { MachinesApiService } from '../services/machinesApi';
 import { Machine, CreateMachineDto, UpdateMachineDto } from '../MachineSettings';
+import { useWebSocketRoom } from '../../../../../../hooks/useWebSocketRoom';
 
 // Ключи для кэширования запросов
 export const MACHINES_QUERY_KEYS = {
@@ -16,9 +18,134 @@ export const MACHINES_QUERY_KEYS = {
   machineStages: (machineId: number) => [...MACHINES_QUERY_KEYS.all, 'machine-stages', machineId] as const,
 };
 
+// === WebSocket ИНТЕГРАЦИЯ ===
+
+// Хук для WebSocket интеграции с данными станков
+export const useMachinesWebSocket = () => {
+  const queryClient = useQueryClient();
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => 'room:technologist', []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для обновления всех данных станков
+  const refreshMachineData = async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для станков:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          // Инвалидируем все запросы станков для обновления
+          queryClient.invalidateQueries({ queryKey: MACHINES_QUERY_KEYS.all });
+          console.log('Данные станков обновлены (debounced).');
+        } catch (err) {
+          console.error('Ошибка обновления данных станков:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshMachineData:', err);
+    }
+  };
+
+  // Функция для обновления данных этапов
+  const refreshStagesData = async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для этапов:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          // Инвалидируем запросы этапов для обновления
+          queryClient.invalidateQueries({ queryKey: MACHINES_QUERY_KEYS.stages() });
+          console.log('Данные этапов обновлены (debounced).');
+        } catch (err) {
+          console.error('Ошибка обновления данных этапов:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshStagesData:', err);
+    }
+  };
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для станков в комнате:', room);
+
+    // Обработчик события изменения настроек станков
+    const handleMachineSettingsEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие machine_setting:event - status:', data.status);
+      await refreshMachineData(data.status);
+    };
+
+    // Обработчик события изменения этапов
+    const handleStage1Event = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие stage1:event - status:', data.status);
+      await refreshStagesData(data.status);
+    };
+
+    // Обработчик события изменения подэтапов
+    const handleStage2Event = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие stage2:event - status:', data.status);
+      await refreshStagesData(data.status);
+    };
+
+    // Регистрируем обработчики событий
+    socket.on('machine_setting:event', handleMachineSettingsEvent);
+    socket.on('stage1:event', handleStage1Event);
+    socket.on('stage2:event', handleStage2Event);
+
+    // Cleanup функция
+    return () => {
+      socket.off('machine_setting:event', handleMachineSettingsEvent);
+      socket.off('stage1:event', handleStage1Event);
+      socket.off('stage2:event', handleStage2Event);
+
+      // очистка debounce таймера при unmount/переподключении
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, queryClient]);
+
+  return {
+    isWebSocketConnected,
+    webSocketError
+  };
+};
+
 // Хук для получения всех станков
 export const useMachines = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useMachinesWebSocket();
+  
+  const query = useQuery({
     queryKey: MACHINES_QUERY_KEYS.lists(),
     queryFn: async () => {
       const machines = await MachinesApiService.getAllMachines();
@@ -27,53 +154,104 @@ export const useMachines = () => {
     },
     staleTime: 1000 * 60 * 5, // 5 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения станка по ID
 export const useMachine = (id: number | undefined) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useMachinesWebSocket();
+  
+  const query = useQuery({
     queryKey: MACHINES_QUERY_KEYS.detail(id!),
     queryFn: () => MachinesApiService.getMachineById(id!),
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения этапов с подэтапами
 export const useStagesWithSubstages = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useMachinesWebSocket();
+  
+  const query = useQuery({
     queryKey: MACHINES_QUERY_KEYS.stagesWithSubstages(),
     queryFn: MachinesApiService.getAvailableStagesWithSubstages,
     staleTime: 1000 * 60 * 10, // 10 минут (данные изменяются редко)
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения подэтапов сгруппированных по этапам
 export const useSubstagesGrouped = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useMachinesWebSocket();
+  
+  const query = useQuery({
     queryKey: MACHINES_QUERY_KEYS.substagesGrouped(),
     queryFn: MachinesApiService.getSubstagesGrouped,
     staleTime: 1000 * 60 * 10,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения статистики
 export const useStagesStatistics = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useMachinesWebSocket();
+  
+  const query = useQuery({
     queryKey: MACHINES_QUERY_KEYS.statistics(),
     queryFn: MachinesApiService.getStagesStatistics,
     staleTime: 1000 * 60 * 2, // 2 минуты
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения этапов станка
 export const useMachineStages = (machineId: number | undefined) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useMachinesWebSocket();
+  
+  const query = useQuery({
     queryKey: MACHINES_QUERY_KEYS.machineStages(machineId!),
     queryFn: () => MachinesApiService.getMachineStages(machineId!),
     enabled: !!machineId,
     staleTime: 1000 * 60 * 5,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для создания станка

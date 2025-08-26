@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SocketProvider } from '../../../../../contexts/SocketContext';
-import { SocketConnectionIndicator } from '../../../../../components/SocketConnectionIndicator/SocketConnectionIndicator';
 import { BufferResponse, BufferDetailResponse } from './types/buffers.types';
 import BuffersList from './components/BuffersList';
 import BufferForm from './components/BufferForm';
 import BufferDetail from './components/BufferDetail';
 import { useBuffersStatistics } from './hooks/useBuffersQuery';
-import { useBuffersSocket } from './hooks/useBuffersSocket';
 import styles from './BufferSettings.module.css';
-import { API_URL } from '../../../../api/config';
 
 // Создаем Query Client
 const queryClient = new QueryClient({
@@ -30,8 +26,7 @@ const BufferSettingsContent: React.FC = () => {
   const [editBufferId, setEditBufferId] = useState<number>();
   const [showForm, setShowForm] = useState(false);
 
-  // Подключаем WebSocket для real-time обновлений
-  const { isConnected } = useBuffersSocket();
+
 
   const { 
     data: statistics, 
@@ -118,11 +113,7 @@ const BufferSettingsContent: React.FC = () => {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Socket.IO Connection Indicator */}
-      <SocketConnectionIndicator 
-        position="bottom-right" 
-        showDetails={true} 
-      />
+
 
       {/* Header */}
       <div className={styles.pageHeader}>
@@ -133,11 +124,7 @@ const BufferSettingsContent: React.FC = () => {
           </h1>
           <p className={styles.pageSubtitle}>
             Настройка буферов, их ячеек и связей с этапами производства
-            {isConnected && (
-              <span className={styles.realtimeIndicator}>
-                • Обновления в реальном времени
-              </span>
-            )}
+
           </p>
           {renderStatistics()}
         </div>
@@ -189,24 +176,11 @@ const BufferSettingsContent: React.FC = () => {
   );
 };
 
-// Промежуточный компонент с QueryClientProvider
-const BufferSettingsWithQuery: React.FC = () => {
+const BufferSettings: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BufferSettingsContent />
     </QueryClientProvider>
-  );
-};
-
-// Основной компонент с обоими провайдерами
-const BufferSettings: React.FC = () => {
-  return (
-    <SocketProvider 
-      serverUrl= {API_URL} 
-      autoConnect={true}
-    >
-      <BufferSettingsWithQuery />
-    </SocketProvider>
   );
 };
 

@@ -1,4 +1,5 @@
 // src/modules/api/orderManagementApi/index.ts
+import axios from 'axios';
 import { API_URL } from '../config';
 
 // Типы данных
@@ -95,18 +96,8 @@ class OrderManagementApi {
   // Получение списка всех заказов
   async getOrders(): Promise<Order[]> {
     try {
-      const response = await fetch(this.baseUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      const response = await axios.get<Order[]>(this.baseUrl);
+      return response.data;
     } catch (error) {
       console.error('Ошибка при получении заказов:', error);
       throw error;
@@ -116,22 +107,12 @@ class OrderManagementApi {
   // Получение детальной информации о заказе
   async getOrderDetails(orderId: number): Promise<OrderDetailsResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/${orderId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Заказ не найден');
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      const response = await axios.get<OrderDetailsResponse>(`${this.baseUrl}/${orderId}`);
+      return response.data;
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw new Error('Заказ не найден');
+      }
       console.error('Ошибка при получении деталей заказа:', error);
       throw error;
     }
@@ -140,27 +121,17 @@ class OrderManagementApi {
   // Изменение статуса заказа
   async updateOrderStatus(orderId: number, status: OrderStatus): Promise<StatusUpdateResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
+      const response = await axios.patch<StatusUpdateResponse>(`${this.baseUrl}/${orderId}/status`, { status });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
           throw new Error('Заказ не найден');
         }
-        if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Недопустимый переход статуса');
+        if (error.response?.status === 400) {
+          throw new Error(error.response.data?.message || 'Недопустимый переход статуса');
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      return await response.json();
-    } catch (error) {
       console.error('Ошибка при изменении статуса заказа:', error);
       throw error;
     }
@@ -184,26 +155,17 @@ class OrderManagementApi {
   // Функция для отложения заказа
   async postponeOrder(orderId: number): Promise<StatusUpdateResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/${orderId}/postpone`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
+      const response = await axios.patch<StatusUpdateResponse>(`${this.baseUrl}/${orderId}/postpone`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
           throw new Error('Заказ не найден');
         }
-        if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Недопустимая операция отложения');
+        if (error.response?.status === 400) {
+          throw new Error(error.response.data?.message || 'Недопустимая операция отложения');
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      return await response.json();
-    } catch (error) {
       console.error('Ошибка при отложении заказа:', error);
       throw error;
     }
@@ -212,26 +174,17 @@ class OrderManagementApi {
   // Функция для удаления заказа
   async deleteOrder(orderId: number): Promise<{ message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/${orderId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
+      const response = await axios.delete<{ message: string }>(`${this.baseUrl}/${orderId}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
           throw new Error('Заказ не найден');
         }
-        if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Недопустимая операция удаления');
+        if (error.response?.status === 400) {
+          throw new Error(error.response.data?.message || 'Недопустимая операция удаления');
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      return await response.json();
-    } catch (error) {
       console.error('Ошибка при удалении заказа:', error);
       throw error;
     }
@@ -240,27 +193,17 @@ class OrderManagementApi {
   // Функция для изменения приоритета заказа
   async updateOrderPriority(orderId: number, priority: number): Promise<Order> {
     try {
-      const response = await fetch(`${API_URL}/production-orders/${orderId}/priority`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ priority }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
+      const response = await axios.patch<Order>(`${API_URL}/production-orders/${orderId}/priority`, { priority });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
           throw new Error('Заказ не найден');
         }
-        if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Недопустимое значение приоритета');
+        if (error.response?.status === 400) {
+          throw new Error(error.response.data?.message || 'Недопустимое значение приоритета');
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      return await response.json();
-    } catch (error) {
       console.error('Ошибка при изменении приоритета заказа:', error);
       throw error;
     }
@@ -271,18 +214,15 @@ class OrderManagementApi {
 export const orderManagementApi = new OrderManagementApi();
 
 // Универсальная функция обработки ошибок
-export async function handleApiRequest<T>(request: () => Promise<Response>): Promise<T> {
+export async function handleApiRequest<T>(request: () => Promise<{ data: T }>): Promise<T> {
   try {
     const response = await request();
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const message = errorData.message || `HTTP error! status: ${response.status}`;
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message || error.message;
       throw new Error(message);
     }
-    
-    return await response.json();
-  } catch (error) {
     if (error instanceof Error) {
       throw error;
     }

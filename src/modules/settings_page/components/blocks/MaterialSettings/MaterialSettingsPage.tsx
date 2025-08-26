@@ -3,14 +3,10 @@
 // ================================================
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SocketProvider } from '../../../../../contexts/SocketContext';
-import { SocketConnectionIndicator } from '../../../../../components/SocketConnectionIndicator/SocketConnectionIndicator';
 import { MaterialGroups } from './components/MaterialGroups';
 import { MaterialsList } from './components/MaterialsList';
 import { MaterialForm } from './components/MaterialForm';
-import { useMaterialsSocket } from './hooks/useMaterialsSocket';
 import styles from './MaterialSettingsPage.module.css';
-import { API_URL } from '../../../../api/config';
 
 // Создаем Query Client
 const queryClient = new QueryClient({
@@ -31,8 +27,7 @@ const MaterialSettingsContent: React.FC = () => {
   const [editMaterialId, setEditMaterialId] = useState<number>();
   const [showForm, setShowForm] = useState(false);
 
-  // Подключаем Socket.IO обработчики
-  const { isConnected } = useMaterialsSocket();
+
 
   const handleGroupSelect = (groupId: number) => {
     setSelectedGroup(groupId === 0 ? undefined : groupId);
@@ -65,11 +60,7 @@ const MaterialSettingsContent: React.FC = () => {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Socket.IO Connection Indicator */}
-      <SocketConnectionIndicator 
-        position="bottom-right" 
-        showDetails={true} 
-      />
+
 
       {/* Header */}
       <div className={styles.pageHeader}>
@@ -141,10 +132,8 @@ const MaterialSettingsContent: React.FC = () => {
 
 export const MaterialSettingsPage: React.FC = () => {
   return (
-    <SocketProvider serverUrl={API_URL} autoConnect={true}>
-      <QueryClientProvider client={queryClient}>
-        <MaterialSettingsContent />
-      </QueryClientProvider>
-    </SocketProvider>
+    <QueryClientProvider client={queryClient}>
+      <MaterialSettingsContent />
+    </QueryClientProvider>
   );
 };

@@ -7,11 +7,9 @@ export { usePackageDirectory } from './packageDirectoryHook';
 export type { LoadingState as PackageDirectoryLoadingState } from './packageDirectoryHook';
 
 // Route Management Hooks
-export { useRouteManagement, useRouteManagementWebSocket } from './routeManagementHook';
+export { useRouteManagement } from './routeManagementHook';
 export type { 
-  LoadingState as RouteManagementLoadingState,
-  PartRouteUpdatedEvent,
-  PartRouteUpdatedHandler
+  LoadingState as RouteManagementLoadingState
 } from './routeManagementHook';
 
 // Order Management Hooks
@@ -19,6 +17,5 @@ export {
   useOrders, 
   useOrderDetails, 
   useOrderStatusUpdate, 
-  useOrderManagement,
-  useOrderManagementSocket 
+  useOrderManagement
 } from './orderManagementHook';

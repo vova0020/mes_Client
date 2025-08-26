@@ -1,5 +1,4 @@
-
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { 
   ProductionPallet, 
   fetchProductionPalletsByDetailId,
@@ -14,6 +13,7 @@ import {
   CompleteProcessingResponseDto
 } from '../../api/machineApi/machinProductionPalletsService';
 import { DefectPalletPartsDto, DefectPartsResponse } from '../../api/machineApi/machineApi';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
 // Определение интерфейса результата хука
 interface UseProductionPalletsResult {
@@ -22,14 +22,41 @@ interface UseProductionPalletsResult {
   error: Error | null;
   bufferCells: BufferCellDto[];
   machines: MachineDto[];
+  isWebSocketConnected: boolean;
+  webSocketError: string | null;
   fetchPallets: (detailId: number | null) => Promise<void>;
   loadSegmentResources: () => Promise<void>;
   refreshPalletData: (palletId: number) => Promise<void>;
+  refreshPalletsData: (status: string) => Promise<void>;
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
   startPalletProcessing: (palletId: number) => Promise<void>;
   completePalletProcessing: (palletId: number) => Promise<CompleteProcessingResponseDto>;
   defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
 }
+
+// Получение комнаты из localStorage
+const getRoomFromStorage = (): string => {
+  // Временно закомментировано - используем фиксированную комнату
+  // try {
+  //   const userData = localStorage.getItem('user');
+  //   if (userData) {
+  //     const user = JSON.parse(userData);
+  //     if (user.department) {
+  //       return `room:${user.department}`;
+  //     }
+  //     if (user.role === 'master') {
+  //       return 'room:masterceh';
+  //     }
+  //   }
+  //   return 'room:masterceh';
+  // } catch (error) {
+  //   console.error('Ошибка при получении комнаты из localStorage:', error);
+  //   return 'room:masterceh';
+  // }
+  
+  // Фиксированная комната (может быть несколько: room1, room2, etc.)
+  return 'room:machines';
+};
 
 // Пользовательский хук для управления данными о производственных поддонах
 const useProductionPallets = (initialDetailId: number | null = null): UseProductionPalletsResult => {
@@ -40,6 +67,101 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   // Состояние для ячеек буфера и станков
   const [bufferCells, setBufferCells] = useState<BufferCellDto[]>([]);
   const [machines, setMachines] = useState<MachineDto[]>([]);
+  
+  // debounce refs
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => getRoomFromStorage(), []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для умного обновления массива поддонов
+  const updatePalletsSmartly = useCallback((newPallets: ProductionPallet[]) => {
+    setPallets(currentPallets => {
+      if (currentPallets.length === 0) {
+        return newPallets;
+      }
+
+      const currentPalletsMap = new Map(currentPallets.map(p => [p.id, p]));
+      const updatedPallets: ProductionPallet[] = [];
+      let hasChanges = false;
+
+      newPallets.forEach(newPallet => {
+        const currentPallet = currentPalletsMap.get(newPallet.id);
+        
+        if (!currentPallet) {
+          updatedPallets.push(newPallet);
+          hasChanges = true;
+        } else {
+          const palletChanged = JSON.stringify(currentPallet) !== JSON.stringify(newPallet);
+
+          if (palletChanged) {
+            updatedPallets.push(newPallet);
+            hasChanges = true;
+          } else {
+            updatedPallets.push(currentPallet);
+          }
+        }
+      });
+
+      const newPalletIds = new Set(newPallets.map(p => p.id));
+      const removedPallets = currentPallets.filter(p => !newPalletIds.has(p.id));
+      if (removedPallets.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedPallets : currentPallets;
+    });
+  }, []);
+
+  // Функция для умного обновления ячеек буфера
+  const updateBufferCellsSmartly = useCallback((newBufferCells: BufferCellDto[]) => {
+    setBufferCells(currentBufferCells => {
+      if (currentBufferCells.length === 0) {
+        return newBufferCells;
+      }
+
+      const currentBufferCellsMap = new Map(currentBufferCells.map(c => [c.id, c]));
+      const updatedBufferCells: BufferCellDto[] = [];
+      let hasChanges = false;
+
+      newBufferCells.forEach(newCell => {
+        const currentCell = currentBufferCellsMap.get(newCell.id);
+        
+        if (!currentCell) {
+          updatedBufferCells.push(newCell);
+          hasChanges = true;
+        } else {
+          const cellChanged = JSON.stringify(currentCell) !== JSON.stringify(newCell);
+
+          if (cellChanged) {
+            updatedBufferCells.push(newCell);
+            hasChanges = true;
+          } else {
+            updatedBufferCells.push(currentCell);
+          }
+        }
+      });
+
+      const newCellIds = new Set(newBufferCells.map(c => c.id));
+      const removedCells = currentBufferCells.filter(c => !newCellIds.has(c.id));
+      if (removedCells.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedBufferCells : currentBufferCells;
+    });
+  }, []);
   
   // Функция для получения поддонов для конкретной детали
   const fetchPallets = useCallback(async (detailId: number | null) => {
@@ -57,12 +179,9 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       // Получаем данные о поддонах - новая структура API уже содержит всю необходимую информацию
       const fetchedPallets = await fetchProductionPalletsByDetailId(detailId);
       
-      // Отладочная информация
-      // console.log('Полученные данные о поддонах:', fetchedPallets);
-      
       // Устанавливаем полученные данные напрямую
       // Новая структура API уже содержит currentStageProgress и другие необходимые поля
-      setPallets(fetchedPallets || []);
+      updatePalletsSmartly(fetchedPallets || []);
       
     } catch (err) {
       console.error('Ошибка при получении поддонов:', err);
@@ -70,7 +189,61 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updatePalletsSmartly]);
+
+  // Функция для обновления данных поддонов
+  const refreshPalletsData = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket:', status);
+        return;
+      }
+
+      if (currentDetailId === null) return;
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const fetchedPallets = await fetchProductionPalletsByDetailId(currentDetailId);
+          updatePalletsSmartly(fetchedPallets || []);
+          console.log(`Данные поддонов обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления данных поддонов:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshPalletsData:', err);
+    }
+  }, [currentDetailId, updatePalletsSmartly]);
+
+  // Функция для обновления ячеек буфера
+  const refreshBufferCells = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для буфера:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const bufferCellsData = await fetchBufferCellsBySegmentId();
+          updateBufferCellsSmartly(bufferCellsData);
+          console.log(`Ячейки буфера обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления ячеек буфера:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshBufferCells:', err);
+    }
+  }, [updateBufferCellsSmartly]);
 
   // Функция для обновления данных конкретного поддона
   const refreshPalletData = useCallback(async (palletId: number) => {
@@ -86,6 +259,35 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       console.error(`Ошибка обновления данных поддона ${palletId}:`, err);
     }
   }, [currentDetailId, fetchPallets]);
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для поддонов в комнате:', room);
+
+    const handlePalletEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие pallet:event - status:', data.status);
+      await refreshPalletsData(data.status);
+    };
+
+    const handleBufferSettingsEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие buffer_settings:event - status:', data.status);
+      await refreshBufferCells(data.status);
+    };
+
+    socket.on('pallet:event', handlePalletEvent);
+    socket.on('buffer_settings:event', handleBufferSettingsEvent);
+
+    return () => {
+      socket.off('pallet:event', handlePalletEvent);
+      socket.off('buffer_settings:event', handleBufferSettingsEvent);
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, refreshPalletsData, refreshBufferCells]);
 
   // Функция для изменения буферной ячейки поддона
   const handleUpdateBufferCell = useCallback(async (palletId: number, bufferCellId: number) => {
@@ -120,9 +322,6 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     try {
       // Вызываем API-метод для перевода поддона в статус "Готово"
       const response = await completePalletProcessing(palletId);
-      
-      // Отладочный вывод для проверки структуры ответа
-      // console.log(`Ответ API при завершении обработки поддона ${palletId}:`, response);
       
       // Обновляем данные о всех поддонах для обеспечения актуальности
       await refreshPalletData(palletId);
@@ -159,8 +358,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     try {
       // Загружаем данные о ячейках буфера
       const bufferCellsData = await fetchBufferCellsBySegmentId();
-      // console.log('Получены данные о ячейках буфера:', bufferCellsData);
-      setBufferCells(bufferCellsData);
+      updateBufferCellsSmartly(bufferCellsData);
       
       // Примечание: в productionPalletsService.ts нет функции fetchMachinesBySegmentId
       // Поэтому оставляем пустой массив для machines
@@ -168,9 +366,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     } catch (err) {
       console.error('Ошибка при загрузке ресурсов сегмента:', err);
       // Не устанавливаем error здесь, так как это вспомогательная операция
-      // setError(err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке ресурсов'));
     }
-  }, []);
+  }, [updateBufferCellsSmartly]);
   
   // Инициализация с начальным ID детали, если он предоставлен
   useEffect(() => {
@@ -183,11 +380,14 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     pallets,
     loading,
     error,
+    isWebSocketConnected,
+    webSocketError,
     fetchPallets,
     bufferCells,
     machines,
     loadSegmentResources,
     refreshPalletData,
+    refreshPalletsData,
     updateBufferCell: handleUpdateBufferCell,
     startPalletProcessing: handleStartPalletProcessing,
     completePalletProcessing: handleCompletePalletProcessing,

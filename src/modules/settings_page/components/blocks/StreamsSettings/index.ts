@@ -105,4 +105,3 @@ export type {
 } from './types/materials.types';
 
 // Хуки
-export { useStreamsSocket } from './hooks/useStreamsSocket';

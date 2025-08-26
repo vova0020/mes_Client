@@ -18,7 +18,7 @@ import {
   RedistributePartsResponse,
   PartDistribution,
 } from '../../api/masterPage/productionPalletsServiceMaster';
-import useWebSocket from './useWebSocket';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
 // Определение интерфейса результата хука
 interface UseProductionPalletsResult {
@@ -42,26 +42,26 @@ interface UseProductionPalletsResult {
 
 // Получение комнаты из localStorage или конфигурации
 const getRoomFromStorage = (): string => {
-  try {
-    // Получаем данные пользователя из localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      // Формируем название комнаты на основе роли или отдела пользователя
-n      if (user.department) {
-        return `room:${user.department}`;
-      }
-      if (user.role === 'master') {
-        return 'room:masterceh'; // Комната для мастеров цеха
-      }
-    }
-    
-    // Если данных пользователя нет, используем комнату по умолчанию
-    return 'room:masterceh';
-  } catch (error) {
-    console.error('Ошибка при получении комнаты из localStorage:', error);
-    return 'room:masterceh';
-  }
+  // Временно закомментировано - используем фиксированную комнату
+  // try {
+  //   const userData = localStorage.getItem('user');
+  //   if (userData) {
+  //     const user = JSON.parse(userData);
+  //     if (user.department) {
+  //       return `room:${user.department}`;
+  //     }
+  //     if (user.role === 'master') {
+  //       return 'room:masterceh';
+  //     }
+  //   }
+  //   return 'room:masterceh';
+  // } catch (error) {
+  //   console.error('Ошибка при получении комнаты из localStorage:', error);
+  //   return 'room:masterceh';
+  // }
+  
+  // Фиксированная комната (может быть несколько: room1, room2, etc.)
+  return 'room:masterceh';
 };
 
 const useProductionPallets = (initialDetailId: number | null = null): UseProductionPalletsResult => {
@@ -85,9 +85,9 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     socket, 
     isConnected: isWebSocketConnected, 
     error: webSocketError 
-  } = useWebSocket({ 
+  } = useWebSocketRoom({ 
     room,
-    autoConnect: true 
+    autoJoin: true 
   });
 
   // Функция для умного обновления массива поддонов
@@ -146,6 +146,45 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     });
   }, []);
 
+  // Функция для умного обновления ячеек буфера
+  const updateBufferCellsSmartly = useCallback((newBufferCells: BufferCellDto[]) => {
+    setBufferCells(currentBufferCells => {
+      if (currentBufferCells.length === 0) {
+        return newBufferCells;
+      }
+
+      const currentBufferCellsMap = new Map(currentBufferCells.map(c => [c.id, c]));
+      const updatedBufferCells: BufferCellDto[] = [];
+      let hasChanges = false;
+
+      newBufferCells.forEach(newCell => {
+        const currentCell = currentBufferCellsMap.get(newCell.id);
+        
+        if (!currentCell) {
+          updatedBufferCells.push(newCell);
+          hasChanges = true;
+        } else {
+          const cellChanged = JSON.stringify(currentCell) !== JSON.stringify(newCell);
+
+          if (cellChanged) {
+            updatedBufferCells.push(newCell);
+            hasChanges = true;
+          } else {
+            updatedBufferCells.push(currentCell);
+          }
+        }
+      });
+
+      const newCellIds = new Set(newBufferCells.map(c => c.id));
+      const removedCells = currentBufferCells.filter(c => !newCellIds.has(c.id));
+      if (removedCells.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedBufferCells : currentBufferCells;
+    });
+  }, []);
+
   // Функция для получения поддонов для конкретной детали
   const fetchPallets = useCallback(async (detailId: number | null) => {
     if (detailId === null) {
@@ -186,7 +225,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   const refreshPalletData = useCallback(async (status: string) => {
     try {
       // реагируем только на ожидаемый сигнал
-      if (status !== 'update') {
+      if (status !== 'updated') {
         console.warn('Игнорируем неожиданный status from socket:', status);
         return;
       }
@@ -219,6 +258,32 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       console.error('Ошибка в refreshPalletData:', err);
     }
   }, [currentDetailId, updatePalletsSmartly]);
+
+  // Функция для обновления ячеек буфера
+  const refreshBufferCells = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для буфера:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const bufferCellsData = await fetchBufferCellsBySegmentId();
+          updateBufferCellsSmartly(bufferCellsData);
+          console.log(`Ячейки буфера обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления ячеек буфера:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshBufferCells:', err);
+    }
+  }, [updateBufferCellsSmartly]);
   
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
@@ -228,16 +293,24 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
 
     // Обработчик события изменения поддона
     const handlePalletEvent = async (data: { status: string }) => {
-      console.log('Получено WebSocket событие - status:', data.status);
+      console.log('Получено WebSocket событие pallet:event - status:', data.status);
       await refreshPalletData(data.status);
+    };
+
+    // Обработчик события изменения настроек буфера
+    const handleBufferSettingsEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие buffer_settings:event - status:', data.status);
+      await refreshBufferCells(data.status);
     };
 
     // Регистрируем обработчики событий
     socket.on('pallet:event', handlePalletEvent);
+    socket.on('buffer_settings:event', handleBufferSettingsEvent);
 
     // Cleanup функция
     return () => {
       socket.off('pallet:event', handlePalletEvent);
+      socket.off('buffer_settings:event', handleBufferSettingsEvent);
 
       // очистка debounce таймера при unmount/переподключении
       if (refreshTimeoutRef.current) {
@@ -245,7 +318,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, refreshPalletData]);
+  }, [socket, isWebSocketConnected, room, refreshPalletData, refreshBufferCells]);
   
   // Функция для обновления станка для поддона
   const updateMachine = useCallback(async (

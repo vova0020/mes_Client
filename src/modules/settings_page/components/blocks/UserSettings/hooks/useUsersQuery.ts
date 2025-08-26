@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useMemo } from 'react';
 import { 
   UsersApiService, 
   User, 
@@ -17,6 +18,7 @@ import {
   UpdatePickerDto,
   CreatePickerWithRoleResponse
 } from '../services/usersApi';
+import { useWebSocketRoom } from '../../../../../../hooks/useWebSocketRoom';
 
 // Ключи для кэширования запросов
 export const USERS_QUERY_KEYS = {
@@ -38,25 +40,123 @@ export const USERS_QUERY_KEYS = {
   pickerByUser: (userId: number) => [...USERS_QUERY_KEYS.pickers(), 'by-user', userId] as const,
 };
 
+// === WebSocket ИНТЕГРАЦИЯ ===
+
+// Хук для WebSocket интеграции с данными пользователей
+export const useUsersWebSocket = () => {
+  const queryClient = useQueryClient();
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => 'room:technologist', []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для обновления данных пользователей
+  const refreshUserData = async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для пользователей:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          // Инвалидируем все запросы пользователей для обновления
+          queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEYS.all });
+          console.log('Данные пользователей обновлены (debounced).');
+        } catch (err) {
+          console.error('Ошибка обновления данных пользователей:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshUserData:', err);
+    }
+  };
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для пользователей в комнате:', room);
+
+    // Обработчик события изменения настроек пользователей
+    const handleUserSettingsEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие user_settings:event - status:', data.status);
+      await refreshUserData(data.status);
+    };
+
+    // Регистрируем обработчик события
+    socket.on('user_settings:event', handleUserSettingsEvent);
+
+    // Cleanup функция
+    return () => {
+      socket.off('user_settings:event', handleUserSettingsEvent);
+
+      // очистка debounce таймера при unmount/переподключении
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, queryClient]);
+
+  return {
+    isWebSocketConnected,
+    webSocketError
+  };
+};
+
 // Хуки для CRUD операций с пользователями
 
 // Получить всех пользователей
 export const useUsers = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.lists(),
     queryFn: UsersApiService.getAllUsers,
     staleTime: 1000 * 60 * 5, // 5 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Получить пользователя по ID
 export const useUser = (id: number | undefined) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.detail(id!),
     queryFn: () => UsersApiService.getUserById(id!),
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Создать пользователя
@@ -138,21 +238,39 @@ export const useDeleteUser = () => {
 
 // Получить всех комплектовщиков
 export const usePickers = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.pickersList(),
     queryFn: UsersApiService.getAllPickers,
     staleTime: 1000 * 60 * 5, // 5 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Получить комплектовщика по ID
 export const usePicker = (id: number | undefined) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.pickerDetail(id!),
     queryFn: () => UsersApiService.getPickerById(id!),
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Получить комплектовщика по ID пользователя
@@ -273,21 +391,39 @@ export const useDeletePicker = () => {
 
 // Получить роли пользователя
 export const useUserRoles = (userId: number | undefined) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.userRoles(userId!),
     queryFn: () => UsersApiService.getUserRoles(userId!),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Получить доступные роли
 export const useAvailableRoles = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.availableRoles(),
     queryFn: UsersApiService.getAvailableRoles,
     staleTime: 1000 * 60 * 10, // 10 минут (данные изменяются редко)
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Назначить глобальную роль
@@ -345,29 +481,56 @@ export const useRemoveRoleBinding = () => {
 
 // Получить станки для привязки
 export const useContextMachines = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.contextMachines(),
     queryFn: UsersApiService.getContextMachines,
     staleTime: 1000 * 60 * 10, // 10 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Получить этапы для привязки
 export const useContextStages = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.contextStages(),
     queryFn: UsersApiService.getContextStages,
     staleTime: 1000 * 60 * 10, // 10 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Получить комплектовщиков для привязки
 export const useContextPickers = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useUsersWebSocket();
+  
+  const query = useQuery({
     queryKey: USERS_QUERY_KEYS.contextPickers(),
     queryFn: UsersApiService.getContextPickers,
     staleTime: 1000 * 60 * 10, // 10 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для проверки доступности API

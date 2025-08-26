@@ -8,7 +8,7 @@ import {
   useCreateMaterial,
   useUpdateMaterial,
 } from '../api';
-import { useSocket } from '../../../../../../contexts/SocketContext';
+
 import { CreateMaterialDto, UpdateMaterialDto } from '../types';
 import styles from './MaterialForm.module.css';
 
@@ -39,8 +39,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
   const createMutation = useCreateMaterial();
   const updateMutation = useUpdateMaterial();
 
-  // Socket.IO статус
-  const { isConnected } = useSocket();
+
 
   const loading = createMutation.isPending || updateMutation.isPending;
 
@@ -157,7 +156,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
             <span className={styles.formIcon}>✏️</span>
             Загрузка материала...
             {/* Socket.IO индикатор */}
-            <span className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`} />
+            
           </h2>
         </div>
         <div className={styles.formContent}>
@@ -179,10 +178,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
           </span>
           {isEditing ? 'Редактировать материал' : 'Создать новый материал'}
           {/* Socket.IO индикатор */}
-          <span 
-            className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`}
-            title={isConnected ? 'Подключено к серверу' : 'Отключено от сервера'}
-          />
+          
         </h2>
         <button
           onClick={handleClose}
@@ -196,12 +192,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
 
       <form onSubmit={handleSubmit} className={styles.formContent}>
         {/* Connection Warning */}
-        {!isConnected && (
-          <div className={styles.warningMessage}>
-            <span className={styles.warningIcon}>⚠️</span>
-            Отсутствует подключение к серверу. Изменения могут не синхронизироваться.
-          </div>
-        )}
+        
 
         {/* General Error */}
         {(errors.general || createMutation.error || updateMutation.error) && (
@@ -214,14 +205,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
           </div>
         )}
 
-        {/* Success indicator for real-time sync */}
-        {isConnected && (
-          <div className={styles.syncStatus}>
-            <span className={styles.syncIcon}>🌐</span>
-            <span className={styles.syncText}>Синхронизация с сервером активна</span>
-          </div>
-        )}
-
+     
         {/* Артикул материала */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>
@@ -291,11 +275,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
           <label className={styles.formLabel}>
             Группы материалов
             <span className={styles.optional}>(необязательно)</span>
-            {isConnected && (
-              <span className={styles.realtimeIndicator} title="Группы обновляются в реальном времени">
-                🔄
-              </span>
-            )}
+           
           </label>
           
           {groupsLoading ? (
@@ -404,12 +384,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
             <span className={styles.helpIcon}>⚡</span>
             Используйте Escape для быстрого закрытия формы
           </div>
-          {isConnected && (
-            <div className={styles.helpText}>
-              <span className={styles.helpIcon}>🔄</span>
-              Изменения будут синхронизированы с другими пользователями в реальном времени
-            </div>
-          )}
+          
         </div>
       </form>
     </div>

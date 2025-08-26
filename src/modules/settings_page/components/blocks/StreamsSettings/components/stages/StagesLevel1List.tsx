@@ -2,9 +2,9 @@
 // src/modules/settings_page/components/blocks/StreamsSettings/components/stages/StagesLevel1List.tsx
 // ================================================
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { streamsApi } from '../../api/streamsApi';
+import { useQueryClient } from '@tanstack/react-query';
 import { ProductionStageLevel1 } from '../../types/streams.types';
+import { useStagesLevel1, useDeleteStageLevel1 } from '../../hooks/useStreamsQuery';
 import styles from './StagesList.module.css';
 
 interface StagesLevel1ListProps {
@@ -20,28 +20,26 @@ export const StagesLevel1List: React.FC<StagesLevel1ListProps> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  // Получение этапов 1 уровня
+  // Получение этапов 1 уровня с WebSocket интеграцией
   const { 
     data: stages, 
     isLoading, 
     error, 
-    refetch 
-  } = useQuery({
-    queryKey: ['production-stages-level1'],
-    queryFn: () => streamsApi.getProductionStagesLevel1(),
-  });
+    refetch,
+    isWebSocketConnected
+  } = useStagesLevel1();
 
   // Мутация для удаления этапа
-  const deleteStageMutation = useMutation({
-    mutationFn: (stageId: number) => streamsApi.deleteProductionStageLevel1(stageId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['production-stages-level1'] });
-      setDeleteConfirmId(null);
-    },
-    onError: (error: Error) => {
-      alert(`Ошибка удаления операции: ${error.message}`);
-    }
-  });
+  const deleteStageMutation = useDeleteStageLevel1();
+
+  // Обработчик успешного удаления
+  const handleDeleteSuccess = () => {
+    setDeleteConfirmId(null);
+  };
+
+  const handleDeleteError = (error: Error) => {
+    alert(`Ошибка удаления операции: ${error.message}`);
+  };
 
   // Улучшенная фильтрация этапов по поиску
   const filteredStages = stages?.filter(stage => {
@@ -86,7 +84,10 @@ export const StagesLevel1List: React.FC<StagesLevel1ListProps> = ({
 
   const handleDeleteStage = (stageId: number) => {
     if (deleteConfirmId === stageId) {
-      deleteStageMutation.mutate(stageId);
+      deleteStageMutation.mutate(stageId, {
+        onSuccess: handleDeleteSuccess,
+        onError: handleDeleteError
+      });
     } else {
       setDeleteConfirmId(stageId);
     }
@@ -148,6 +149,9 @@ export const StagesLevel1List: React.FC<StagesLevel1ListProps> = ({
           <span className={styles.statsText}>
             Всего операций: <strong>{filteredStages.length}</strong>
             {searchTerm && ` (найдено из ${stages?.length || 0})`}
+            {isWebSocketConnected && (
+              <span className={styles.realtimeIndicator}> • Live</span>
+            )}
           </span>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMaterials, useDeleteMaterial } from '../api';
-import { useSocket } from '../../../../../../contexts/SocketContext';
+
 import { Material } from '../types';
 import styles from './MaterialsList.module.css';
 import socketStyles from '../../../../../../styles/SocketStyles.module.css';
@@ -21,8 +21,7 @@ export const MaterialsList: React.FC<MaterialsListProps> = ({
   const { data: materials = [], isLoading: loading, error } = useMaterials(filterGroupId);
   const deleteMutation = useDeleteMaterial();
 
-  // Socket.IO статус
-  const { isConnected } = useSocket();
+
 
   const handleDelete = async (material: Material) => {
     if (!window.confirm(`Удалить материал "${material.materialName}"?`)) {
@@ -65,7 +64,7 @@ export const MaterialsList: React.FC<MaterialsListProps> = ({
             <span className={styles.cardIcon}>📋</span>
             Материалы
             {/* Socket.IO индикатор */}
-            <span className={`${socketStyles.connectionDot} ${isConnected ? socketStyles.connected : socketStyles.disconnected}`} />
+           
           </h2>
         </div>
         <div className={styles.cardContent}>
@@ -142,11 +141,10 @@ export const MaterialsList: React.FC<MaterialsListProps> = ({
         </div>
 
         {/* Error Message */}
-        {(error || deleteMutation.error || !isConnected) && (
+        {(error || deleteMutation.error ) && (
           <div className={styles.errorMessage}>
             <span className={styles.errorIcon}>⚠️</span>
-            {!isConnected ? 'Отсутствует подключение к серверу. Данные могут быть неактуальными.' :
-             error?.message || deleteMutation.error?.message || 'Произошла ошибка'}
+            {error?.message || deleteMutation.error?.message || 'Произошла ошибка'}
           </div>
         )}
 
@@ -258,11 +256,7 @@ export const MaterialsList: React.FC<MaterialsListProps> = ({
                 {' '}по запросу "{searchTerm}"
               </span>
             )}
-            {isConnected && (
-              <span className={styles.syncStatus}>
-                {' '}• Синхронизировано
-              </span>
-            )}
+            
           </div>
         )}
       </div>

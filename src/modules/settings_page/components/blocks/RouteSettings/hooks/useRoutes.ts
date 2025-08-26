@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useMemo } from 'react';
 import { routesApi, Route, CreateRouteDto, UpdateRouteDto, UpdateRouteCompleteDto, UpdateRoutePartialDto, CreateRouteStageDto, UpdateRouteStageDto, ReorderRouteStagesDto, ProductionLine, LineStagesResponse } from '../api/routes.api';
+import { useWebSocketRoom } from '../../../../../../hooks/useWebSocketRoom';
 
 // Ключи для запросов
 export const ROUTES_QUERY_KEYS = {
@@ -15,52 +17,177 @@ export const ROUTES_QUERY_KEYS = {
 
 
 
+// === WebSocket ИНТЕГРАЦИЯ ===
+
+// Хук для WebSocket интеграции с данными маршрутов
+export const useRoutesWebSocket = () => {
+  const queryClient = useQueryClient();
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => 'room:technologist', []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для обновления всех данных маршрутов
+  const refreshRouteData = async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для маршрутов:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          // Инвалидируем все запросы маршрутов для обновления
+          queryClient.invalidateQueries({ queryKey: ROUTES_QUERY_KEYS.all });
+          console.log('Данные маршрутов обновлены (debounced).');
+        } catch (err) {
+          console.error('Ошибка обновления данных маршрутов:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshRouteData:', err);
+    }
+  };
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для маршрутов в комнате:', room);
+
+    // Обработчик события изменения маршрутов
+    const handleTechnologyRouteEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие technology_route:event - status:', data.status);
+      await refreshRouteData(data.status);
+    };
+
+    // Регистрируем обработчик события
+    socket.on('technology_route:event', handleTechnologyRouteEvent);
+
+    // Cleanup функция
+    return () => {
+      socket.off('technology_route:event', handleTechnologyRouteEvent);
+
+      // очистка debounce таймера при unmount/переподключении
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, queryClient]);
+
+  return {
+    isWebSocketConnected,
+    webSocketError
+  };
+};
+
 // Хук для получения всех маршрутов
 export const useRoutes = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useRoutesWebSocket();
+  
+  const query = useQuery({
     queryKey: ROUTES_QUERY_KEYS.lists(),
     queryFn: routesApi.getAllRoutes,
     staleTime: 5 * 60 * 1000, // 5 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения маршрута по ID
 export const useRoute = (id: number) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useRoutesWebSocket();
+  
+  const query = useQuery({
     queryKey: ROUTES_QUERY_KEYS.detail(id),
     queryFn: () => routesApi.getRouteById(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения этапов маршрута
 export const useRouteStages = (routeId: number) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useRoutesWebSocket();
+  
+  const query = useQuery({
     queryKey: ROUTES_QUERY_KEYS.stages(routeId),
     queryFn: () => routesApi.getRouteStages(routeId),
     enabled: !!routeId,
     staleTime: 5 * 60 * 1000,
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения всех производственных линий
 export const useProductionLines = () => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useRoutesWebSocket();
+  
+  const query = useQuery({
     queryKey: ROUTES_QUERY_KEYS.productionLines,
     queryFn: routesApi.getProductionLines,
     staleTime: 10 * 60 * 1000, // 10 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для получения этапов производственной линии
 export const useLineStages = (lineId: number) => {
-  return useQuery({
+  // Инициализируем WebSocket интеграцию
+  const { isWebSocketConnected, webSocketError } = useRoutesWebSocket();
+  
+  const query = useQuery({
     queryKey: ROUTES_QUERY_KEYS.lineStages(lineId),
     queryFn: () => routesApi.getLineStages(lineId),
     enabled: !!lineId,
     staleTime: 10 * 60 * 1000, // 10 минут
   });
+
+  return {
+    ...query,
+    isWebSocketConnected,
+    webSocketError
+  };
 };
 
 // Хук для создания маршрута

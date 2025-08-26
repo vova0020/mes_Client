@@ -3,14 +3,12 @@
 // ================================================
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SocketProvider } from '../../../../../contexts/SocketContext';
-import { SocketConnectionIndicator } from '../../../../../components/SocketConnectionIndicator/SocketConnectionIndicator';
+
 import { StreamsList } from './components/StreamsList';
 import { StreamForm } from './components/StreamForm';
 import { StagesManagement } from './components/stages/StagesManagement';
-import { useStreamsSocket } from './hooks/useStreamsSocket';
+import { useStreamsWebSocket } from './hooks/useStreamsQuery';
 import styles from './StreamsSettingsPage.module.css';
-import { API_URL } from '../../../../api/config';
 // Создаем Query Client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,8 +30,8 @@ const StreamsSettingsContent: React.FC = () => {
   const [editStreamId, setEditStreamId] = useState<number>();
   const [showForm, setShowForm] = useState(false);
 
-  // Подключаем Socket.IO обработчики
-  const { isConnected } = useStreamsSocket();
+  // Подключаем WebSocket обработчики
+  const { isWebSocketConnected } = useStreamsWebSocket();
 
   const handleStreamEdit = (streamId: number) => {
     setEditStreamId(streamId);
@@ -73,11 +71,6 @@ const StreamsSettingsContent: React.FC = () => {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Socket.IO Connection Indicator */}
-      <SocketConnectionIndicator 
-        position="bottom-right" 
-        showDetails={true} 
-      />
 
       {/* Header */}
       <div className={styles.pageHeader}>
@@ -90,11 +83,11 @@ const StreamsSettingsContent: React.FC = () => {
           </h1>
           <p className={styles.pageSubtitle}>
             {tabs.find(tab => tab.id === activeTab)?.description}
-            {/* {isConnected && (
+            {isWebSocketConnected && (
               <span className={styles.realtimeIndicator}>
                 • Обновления в реальном времени
               </span>
-            )} */}
+            )}
           </p>
         </div>
         <div className={styles.pageHeaderActions}>
@@ -158,10 +151,8 @@ const StreamsSettingsContent: React.FC = () => {
 
 export const StreamsSettingsPage: React.FC = () => {
   return (
-    <SocketProvider serverUrl={API_URL} autoConnect={true}>
-      <QueryClientProvider client={queryClient}>
-        <StreamsSettingsContent />
-      </QueryClientProvider>
-    </SocketProvider>
+    <QueryClientProvider client={queryClient}>
+      <StreamsSettingsContent />
+    </QueryClientProvider>
   );
 };

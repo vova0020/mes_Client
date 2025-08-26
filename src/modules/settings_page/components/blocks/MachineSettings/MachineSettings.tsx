@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SocketProvider } from '../../../../../contexts/SocketContext';
-import { SocketConnectionIndicator } from '../../../../../components/SocketConnectionIndicator/SocketConnectionIndicator';
 import { MachineList } from './components/MachineList';
 import { MachineDetails } from './components/MachineDetails';
 import { MachineForm } from './components/MachineForm';
-import { useMachinesSocket } from './hooks/useMachinesSocket';
 import { useMachines } from './hooks/useMachinesQuery';
 import styles from './MachineSettings.module.css';
-import { API_URL } from '../../../../api/config';
 
 // Создаем Query Client
 const queryClient = new QueryClient({
@@ -100,8 +96,7 @@ const MachineSettingsContent: React.FC = () => {
   // Получаем данные станков
   const { data: machines = [] } = useMachines();
   
-  // Подключаем Socket.IO обработчики
-  const { isConnected } = useMachinesSocket();
+
 
   // Обновляем selectedMachine при изменении списка станков
   useEffect(() => {
@@ -161,11 +156,7 @@ const MachineSettingsContent: React.FC = () => {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Socket.IO Connection Indicator */}
-      <SocketConnectionIndicator 
-        position="bottom-right" 
-        showDetails={true} 
-      />
+
 
       {/* Header */}
       <div className={styles.pageHeader}>
@@ -176,11 +167,7 @@ const MachineSettingsContent: React.FC = () => {
           </h1>
           <p className={styles.pageSubtitle}>
             Настройка станков, их статусов и связей с этапами производства
-            {isConnected && (
-              <span className={styles.realtimeIndicator}>
-                • Обновления в реальном времени
-              </span>
-            )}
+
           </p>
         </div>
         <div className={styles.pageHeaderActions}>
@@ -237,11 +224,9 @@ const MachineSettingsContent: React.FC = () => {
 
 export const MachineSettings: React.FC = () => {
   return (
-    <SocketProvider serverUrl={API_URL} autoConnect={true}>
-      <QueryClientProvider client={queryClient}>
-        <MachineSettingsContent />
-      </QueryClientProvider>
-    </SocketProvider>
+    <QueryClientProvider client={queryClient}>
+      <MachineSettingsContent />
+    </QueryClientProvider>
   );
 };
 

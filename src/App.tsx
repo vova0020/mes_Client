@@ -11,12 +11,14 @@ import YpakMachinePage from './modules/ypak_machin_page/YpakMachinePage';
 import ComplectPage from './modules/complectPage/ComplectPage';
 import SettingsPage from './modules/settings_page/SettingsPage';
 import OrderManagementBlok from './modules/order_management/OrderManagementBlok';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 
 
 function App() {
   return (
-    <Router>
-      <div className="App">
+    <WebSocketProvider>
+      <Router>
+        <div className="App">
         <Routes>
           {/* Публичный маршрут для авторизации */}
           <Route path="/login" element={<AuthPage />} />
@@ -71,10 +73,9 @@ function App() {
           {/* Обработка неизвестных маршрутов */}
            <Route path="*" element={<Navigate to="/login" replace />} /> 
         </Routes>
-      </div>
-
-    </Router>
-
+        </div>
+      </Router>
+    </WebSocketProvider>
   );
 }
 

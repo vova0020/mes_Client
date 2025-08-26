@@ -24,9 +24,7 @@ import {
 } from '@mui/material';
 import { Search, Clear, FilterList } from '@mui/icons-material';
 import { 
-  useRouteManagement, 
-  useRouteManagementWebSocket,
-  PartRouteUpdatedEvent 
+  useRouteManagement
 } from '../../../hooks';
 import { 
   OrderForRoutesResponseDto, 
@@ -131,25 +129,9 @@ const DetailRouteManagement: React.FC = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  // Обработчик WebSocket события обновления маршрута
-  const handlePartRouteUpdated = (event: PartRouteUpdatedEvent) => {
-    console.log('Получено WebSocket событие обновления маршрута:', event);
-    
-    // Показываем уведомление о том, что маршрут был изменен другим пользовател��м
-    setSnackbar({
-      open: true,
-      message: `Маршрут детали "${event.partRouteUpdate.partCode}" был изменен другим пользователем на "${event.partRouteUpdate.newRoute.routeName}"`,
-      severity: 'info'
-    });
+  
 
-    // Если это заказ, который мы сейчас просматриваем, обновляем данные
-    if (selectedOrderId === event.orderId && selectedOrderParts) {
-      fetchOrderParts(event.orderId);
-    }
-  };
-
-  // Подключаем WebSocket для получения обновлений в реальном времени
-  useRouteManagementWebSocket(handlePartRouteUpdated, true);
+  // WebSocket интеграция уже встроена в useRouteManagement
 
   // Получить статус заказа на русском языке
   const getOrderStatusText = (status: string) => {

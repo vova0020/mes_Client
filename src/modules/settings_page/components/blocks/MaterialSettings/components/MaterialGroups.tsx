@@ -5,7 +5,7 @@ import {
   useUpdateMaterialGroup,
   useDeleteMaterialGroup,
 } from '../api';
-import { useSocket } from '../../../../../../contexts/SocketContext';
+
 import { MaterialGroup, CreateMaterialGroupDto, UpdateMaterialGroupDto } from '../types';
 import styles from './MaterialGroups.module.css';
 
@@ -14,9 +14,9 @@ interface MaterialGroupsProps {
   selectedGroupId?: number;
 }
 
-export const MaterialGroups: React.FC<MaterialGroupsProps> = ({ 
-  onGroupSelect, 
-  selectedGroupId 
+export const MaterialGroups: React.FC<MaterialGroupsProps> = ({
+  onGroupSelect,
+  selectedGroupId
 }) => {
   const [newName, setNewName] = useState('');
   const [editingGroup, setEditingGroup] = useState<MaterialGroup | null>(null);
@@ -28,12 +28,11 @@ export const MaterialGroups: React.FC<MaterialGroupsProps> = ({
   const updateMutation = useUpdateMaterialGroup();
   const deleteMutation = useDeleteMaterialGroup();
 
-  // Socket.IO статус
-  const { isConnected } = useSocket();
+
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
-    
+
     try {
       const dto: CreateMaterialGroupDto = { groupName: newName.trim() };
       await createMutation.mutateAsync(dto);
@@ -125,7 +124,7 @@ export const MaterialGroups: React.FC<MaterialGroupsProps> = ({
             <span className={styles.cardIcon}>📁</span>
             Группы материалов
             {/* Socket.IO индикатор */}
-            <span className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`} />
+
           </h2>
         </div>
         <div className={styles.cardContent}>
@@ -146,10 +145,7 @@ export const MaterialGroups: React.FC<MaterialGroupsProps> = ({
             <span className={styles.cardIcon}>📁</span>
             Группы материалов
             {/* Socket.IO индикатор */}
-            <span 
-              className={`${styles.connectionDot} ${isConnected ? styles.connected : styles.disconnected}`}
-              title={isConnected ? 'Подключено к серверу' : 'Отключено от сервера'}
-            />
+
           </h2>
         </div>
         <div className={styles.badgeGroup}>
@@ -187,21 +183,16 @@ export const MaterialGroups: React.FC<MaterialGroupsProps> = ({
               )}
             </button>
           </div>
-          
+
           {/* Real-time status */}
-         
+
         </div>
 
         {/* Error Message */}
-        {(error || createMutation.error || updateMutation.error || deleteMutation.error || !isConnected) && (
+        {(error || createMutation.error || updateMutation.error || deleteMutation.error ) && (
           <div className={styles.errorMessage}>
             <span className={styles.errorIcon}>⚠️</span>
-            {!isConnected ? 'Отсутствует подключение к серверу. Данные могут быть неактуальными.' :
-             error?.message || 
-             createMutation.error?.message || 
-             updateMutation.error?.message || 
-             deleteMutation.error?.message || 
-             'Произошла ошибка'}
+           
           </div>
         )}
 
@@ -218,9 +209,8 @@ export const MaterialGroups: React.FC<MaterialGroupsProps> = ({
               {groups.map((group) => (
                 <div
                   key={group.groupId}
-                  className={`${styles.groupItem} ${
-                    selectedGroupId === group.groupId ? styles.groupItemSelected : ''
-                  } ${processingId === group.groupId ? styles.groupItemProcessing : ''}`}
+                  className={`${styles.groupItem} ${selectedGroupId === group.groupId ? styles.groupItemSelected : ''
+                    } ${processingId === group.groupId ? styles.groupItemProcessing : ''}`}
                   onClick={() => !editingGroup && handleGroupClick(group.groupId)}
                 >
                   {editingGroup?.groupId === group.groupId ? (
@@ -305,12 +295,7 @@ export const MaterialGroups: React.FC<MaterialGroupsProps> = ({
               <span className={styles.helpIcon}>💡</span>
               Нажмите на группу чтобы отфильтровать материалы. Повторный клик снимает фильтр.
             </div>
-            {isConnected && (
-              <div className={styles.helpText}>
-                <span className={styles.helpIcon}>🔄</span>
-                Данные обновляются автоматически при изменениях других пользователей.
-              </div>
-            )}
+            
           </div>
         )}
       </div>

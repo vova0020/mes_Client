@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BufferResponse } from '../types/buffers.types';
 import { useBuffers, useDeleteBuffer, useCopyBuffer } from '../hooks/useBuffersQuery';
-import { useBuffersSocket } from '../hooks/useBuffersSocket';
+
 import styles from './BuffersList.module.css';
 
 interface BuffersListProps {
@@ -29,8 +29,7 @@ const BuffersList: React.FC<BuffersListProps> = ({
   const deleteBufferMutation = useDeleteBuffer();
   const copyBufferMutation = useCopyBuffer();
 
-  // Подключаем WebSocket
-  useBuffersSocket();
+
 
   const handleDeleteBuffer = async (bufferId: number, bufferName: string) => {
     if (window.confirm(`Вы уверены, что хотите удалить буфер "${bufferName}"?`)) {

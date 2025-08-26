@@ -1,16 +1,12 @@
 
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SocketProvider } from '../../../../../contexts/SocketContext';
-import { SocketConnectionIndicator } from '../../../../../components/SocketConnectionIndicator/SocketConnectionIndicator';
 import { useUsers } from './hooks/useUsersQuery';
-import { useUsersSocket } from './hooks/useUsersSocket';
 import { UserList } from './components/UserList';
 import { UserForm } from './components/UserForm';
 import { UserDetails } from './components/UserDetails';
 import { User } from './services/usersApi';
 import styles from './UserSettings.module.css';
-import { API_URL } from '../../../../api/config';
 
 
 // Создаем Query Client для управления пользователями
@@ -38,7 +34,7 @@ const UserSettingsContent: React.FC<UserSettingsContentProps> = ({ className }) 
 
   // Подключаем хуки
   const { data: users, isLoading, error } = useUsers();
-  useUsersSocket(); // Подключаем WebSocket для обновлений в реальном времени
+
 
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
@@ -124,11 +120,7 @@ const UserSettingsContent: React.FC<UserSettingsContentProps> = ({ className }) 
 
   return (
     <div className={`${styles.userSettings} ${className || ''}`}>
-      {/* Socket.IO Connection Indicator */}
-      <SocketConnectionIndicator 
-        position="bottom-right" 
-        showDetails={true} 
-      />
+
 
       <div className={styles.header}>
         <div className={styles.headerContent}>
@@ -138,9 +130,7 @@ const UserSettingsContent: React.FC<UserSettingsContentProps> = ({ className }) 
           </h1>
           <p className={styles.headerSubtitle}>
             Настройка пользователей системы и управление их ролями 
-            <span className={styles.realtimeIndicator}>
-               • Обновления в реальном времени
-            </span>
+
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -208,10 +198,8 @@ interface UserSettingsProps {
 
 export const UserSettings: React.FC<UserSettingsProps> = ({ className }) => {
   return (
-    <SocketProvider serverUrl={API_URL} autoConnect={true}>
-      <QueryClientProvider client={queryClient}>
-        <UserSettingsContent className={className} />
-      </QueryClientProvider>
-    </SocketProvider>
+    <QueryClientProvider client={queryClient}>
+      <UserSettingsContent className={className} />
+    </QueryClientProvider>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSocket } from '../../contexts/SocketContext';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import styles from './SocketConnectionIndicator.module.css';
 
 interface SocketConnectionIndicatorProps {
@@ -11,7 +11,8 @@ export const SocketConnectionIndicator: React.FC<SocketConnectionIndicatorProps>
   position = 'bottom-right',
   showDetails = false,
 }) => {
-  const { isConnected, connectionAttempts, reconnect, disconnect } = useSocket();
+  const { isConnected, error } = useWebSocketContext();
+  const connectionAttempts = 0; // Заглушка для совместимости
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getStatusText = () => {
@@ -31,11 +32,13 @@ export const SocketConnectionIndicator: React.FC<SocketConnectionIndicatorProps>
   };
 
   const handleReconnect = () => {
-    reconnect();
+    // Переподключение через новый WebSocket контекст
+    window.location.reload();
   };
 
   const handleDisconnect = () => {
-    disconnect();
+    // Отключение через новый WebSocket контекст
+    console.log('Отключение WebSocket');
   };
 
   return (

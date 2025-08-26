@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   productionOrdersApi, 
   ProductionOrderResponseDto, 
@@ -9,6 +9,7 @@ import {
   DeleteProductionOrderResponse,
   PackageDirectoryResponseDto
 } from '../../api/productionOrdersApi/productionOrdersApi';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
 // Типы состояний загрузки
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
@@ -19,6 +20,8 @@ interface UseProductionOrdersResult {
   loading: LoadingState;
   error: Error | null;
   selectedOrder: ProductionOrderResponseDto | null;
+  isWebSocketConnected: boolean;
+  webSocketError: string | null;
   
   // Операции CRUD
   createOrder: (createDto: CreateProductionOrderDto) => Promise<ProductionOrderResponseDto>;
@@ -60,6 +63,62 @@ export const useProductionOrders = (
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  // debounce refs
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => 'room:technologist', []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для умного обновления массива заказов
+  const updateOrdersSmartly = useCallback((newOrders: ProductionOrderResponseDto[]) => {
+    setOrders(currentOrders => {
+      if (currentOrders.length === 0) {
+        return newOrders;
+      }
+
+      const currentOrdersMap = new Map(currentOrders.map(o => [o.orderId, o]));
+      const updatedOrders: ProductionOrderResponseDto[] = [];
+      let hasChanges = false;
+
+      newOrders.forEach(newOrder => {
+        const currentOrder = currentOrdersMap.get(newOrder.orderId);
+        
+        if (!currentOrder) {
+          updatedOrders.push(newOrder);
+          hasChanges = true;
+        } else {
+          const orderChanged = JSON.stringify(currentOrder) !== JSON.stringify(newOrder);
+
+          if (orderChanged) {
+            updatedOrders.push(newOrder);
+            hasChanges = true;
+          } else {
+            updatedOrders.push(currentOrder);
+          }
+        }
+      });
+
+      const newOrderIds = new Set(newOrders.map(o => o.orderId));
+      const removedOrders = currentOrders.filter(o => !newOrderIds.has(o.orderId));
+      if (removedOrders.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedOrders : currentOrders;
+    });
+  }, []);
+
   // Функция для загрузки всех заказов
   const fetchOrders = useCallback(async (status?: OrderStatus): Promise<void> => {
     try {
@@ -70,7 +129,7 @@ export const useProductionOrders = (
       const data = await productionOrdersApi.findAll(status);
       console.log('Получены производственные заказы:', data);
       
-      setOrders(data);
+      updateOrdersSmartly(data);
       setLoading('success');
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке заказов');
@@ -78,7 +137,7 @@ export const useProductionOrders = (
       setLoading('error');
       console.error('Ошибка при загрузке производственных заказов:', error);
     }
-  }, []);
+  }, [updateOrdersSmartly]);
 
   // Функция ��ля получения заказа по ID
   const fetchOrderById = useCallback(async (id: number): Promise<ProductionOrderResponseDto> => {
@@ -226,6 +285,59 @@ export const useProductionOrders = (
     console.log('Выбор произво��ственного заказа сброшен');
   }, []);
 
+  // Функция для обновления данных заказов
+  const refreshOrdersData = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для заказов:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const data = await productionOrdersApi.findAll(statusFilter);
+          updateOrdersSmartly(data);
+          console.log(`Производственные заказы обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления заказов:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshOrdersData:', err);
+    }
+  }, [statusFilter, updateOrdersSmartly]);
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для заказов в комнате:', room);
+
+    // Обработчик события изменения заказов
+    const handleOrderEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие order:event - status:', data.status);
+      await refreshOrdersData(data.status);
+    };
+
+    // Регистрируем обработчик события
+    socket.on('order:event', handleOrderEvent);
+
+    // Cleanup функция
+    return () => {
+      socket.off('order:event', handleOrderEvent);
+
+      // очистка debounce таймера при unmount/переподключении
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, refreshOrdersData]);
+
   // Автоматическая загрузка данных при инициализации
   useEffect(() => {
     if (autoFetch) {
@@ -238,6 +350,8 @@ export const useProductionOrders = (
     loading,
     error,
     selectedOrder,
+    isWebSocketConnected,
+    webSocketError,
     
     // Операции CRUD
     createOrder,

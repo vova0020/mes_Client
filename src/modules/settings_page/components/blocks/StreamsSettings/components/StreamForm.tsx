@@ -2,10 +2,11 @@
 // src/modules/settings_page/components/blocks/StreamsSettings/components/StreamForm.tsx
 // ================================================
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { streamsApi } from '../api/streamsApi';
 import { ProductionLine, CreateStreamData, UpdateStreamData } from '../types/streams.types';
 import { Material, MaterialGroup } from '../types/materials.types';
+import { useStream, useCreateStream, useUpdateStream, useStagesLevel1 } from '../hooks/useStreamsQuery';
 import styles from './StreamForm.module.css';
 
 interface StreamFormProps {
@@ -29,13 +30,8 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
   const queryClient = useQueryClient();
   const isEditing = Boolean(editId);
 
-  // Получение данных для редактирования
-  const { data: editStream } = useQuery({
-    queryKey: ['stream', editId],
-    queryFn: () => streamsApi.getStream(editId!),
-    enabled: isEditing,
-    staleTime: 1000 * 60 * 2, // 2 минуты
-  });
+  // Получение данных для редактирования с WebSocket интеграцией
+  const { data: editStream } = useStream(editId);
 
   // Получение списка материалов с автообновлением
   const { data: materials = [] } = useQuery({
@@ -51,60 +47,27 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
     staleTime: 1000 * 60 * 2, // 2 минуты
   });
 
-  // Получение списка этапов производства с автообновлением
-  const { data: productionStages = [] } = useQuery({
-    queryKey: ['production-stages-level1'],
-    queryFn: () => streamsApi.getProductionStagesLevel1(),
-    staleTime: 1000 * 60 * 2, // 2 минуты
-  });
+  // Получение списка этапов производства с WebSocket интеграцией
+  const { data: productionStages = [] } = useStagesLevel1();
 
-  // Мутация для создания потока
-  const createMutation = useMutation({
-    mutationFn: (data: CreateStreamData) => streamsApi.createStream(data),
-    onSuccess: (newStream) => {
-      console.log('✅ Поток создан успешно:', newStream);
-      
-      // Инвалидируем основные кеши
-      queryClient.invalidateQueries({ queryKey: ['streams'] });
-      
-      // Инвалидируем кеши материалов и этапов для нового потока
-      queryClient.invalidateQueries({ queryKey: ['stream-materials', newStream.lineId] });
-      queryClient.invalidateQueries({ queryKey: ['stream-stages', newStream.lineId] });
-      
-      // Обновляем кеш конкретного потока
-      queryClient.setQueryData(['stream', newStream.lineId], newStream);
-      
-      onSaved();
-    },
-    onError: (error) => {
-      console.error('❌ Ошибка создания потока:', error);
-    },
-  });
+  // Мутации для создания и обновления потока с WebSocket интеграцией
+  const createMutation = useCreateStream();
+  const updateMutation = useUpdateStream();
 
-  // Мутация для обновления потока
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateStreamData }) =>
-      streamsApi.updateStream(id, data),
-    onSuccess: (updatedStream) => {
-      console.log('✅ Поток обновлен успешно:', updatedStream);
-      
-      // Инвалидируем основные кеши
-      queryClient.invalidateQueries({ queryKey: ['streams'] });
-      queryClient.invalidateQueries({ queryKey: ['stream', editId] });
-      
-      // Обязательно инвалидируем кеши материалов и этапов для обновленного потока
-      queryClient.invalidateQueries({ queryKey: ['stream-materials', editId] });
-      queryClient.invalidateQueries({ queryKey: ['stream-stages', editId] });
-      
-      // Обновляем кеш конкретного потока
-      queryClient.setQueryData(['stream', editId], updatedStream);
-      
-      onSaved();
-    },
-    onError: (error) => {
-      console.error('❌ Ошибка обновления потока:', error);
-    },
-  });
+  // Обработчики успешного сохранения
+  const handleCreateSuccess = () => {
+    console.log('✅ Поток создан успешно');
+    onSaved();
+  };
+
+  const handleUpdateSuccess = () => {
+    console.log('✅ Поток обновлен успешно');
+    onSaved();
+  };
+
+  const handleError = (error: Error) => {
+    console.error('❌ Ошибка:', error);
+  };
 
   // Заполнение формы при редактировании
   useEffect(() => {
@@ -252,9 +215,15 @@ export const StreamForm: React.FC<StreamFormProps> = ({ editId, onSaved, onCance
     };
 
     if (isEditing && editId !== undefined) {
-      updateMutation.mutate({ id: editId, data: streamData });
+      updateMutation.mutate({ id: editId, data: streamData }, {
+        onSuccess: handleUpdateSuccess,
+        onError: handleError
+      });
     } else {
-      createMutation.mutate(streamData as CreateStreamData);
+      createMutation.mutate(streamData as CreateStreamData, {
+        onSuccess: handleCreateSuccess,
+        onError: handleError
+      });
     }
   };
 
