@@ -55,6 +55,7 @@ export const MachineList: React.FC<MachineListProps> = ({
       [MachineStatus.ACTIVE]: { text: 'Активен', className: styles.statusActive },
       [MachineStatus.INACTIVE]: { text: 'Неактивен', className: styles.statusInactive },
       [MachineStatus.MAINTENANCE]: { text: 'Обслуживание', className: styles.statusMaintenance },
+      [MachineStatus.BROKEN]: { text: 'Сломан', className: styles.statusBroken },
     };
 
     const config = statusConfig[status];

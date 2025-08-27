@@ -242,6 +242,30 @@ const getSegmentIdFromStorage = (): number | null => {
     return null;
   }
 };
+/**
+ * Получает ID сегмента из выбранного поля из localStorage
+ * @returns ID сегмента или null, если не удалось получить
+ */
+const getSegmentIdFromSelectedStage = (): number | null => {
+  try {
+    const selectedStage = localStorage.getItem('selectedStage');
+    if (!selectedStage) {
+      console.error('Отсутствуют данные selectedStage в localStorage');
+      return null;
+    }
+    
+    const parsedData = JSON.parse(selectedStage);
+    if (!parsedData || parsedData.length === 0) {
+      console.error('Нет данных selectedStage отсутствуют segments');
+      return null;
+    }
+
+    return parsedData.id;
+  } catch (error) {
+    console.error('Ошибка при получении segmentId из localStorage:', error);
+    return null;
+  }
+};
 
 const getMachinIdFromStorage = (): number | null => {
   try {
@@ -424,13 +448,13 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
 export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> => {
   try {
     // Получаем segmentId из локального хранилища
-    const assignmentsData = getAssignmentsData();
-    if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
-      console.error('Отсутствуют данные о станке или сегменте в localStorage');
-      throw new Error('Отсутствуют данные о станке или сегменте в localStorage');
+    const segmentId = getSegmentIdFromSelectedStage();
+    if (!segmentId) {
+      console.error('Отсутствуют данные о сегменте в localStorage');
+      throw new Error('Отсутствуют данные о сегменте в localStorage');
     }
     
-    const segmentId = assignmentsData.machines[0].segmentId;
+    
     
     // Формируем URL с обязательным параметром segmentId
     const response = await axios.get(`${API_URL}/buffer/cells?segmentId=${segmentId}`);

@@ -11,15 +11,10 @@ export const useWebSocketRoom = ({ room, autoJoin = true }: UseWebSocketRoomOpti
 
   useEffect(() => {
     if (isConnected && autoJoin) {
+      console.log('[useWebSocketRoom] joining room:', room);
       joinRoom(room);
     }
-
-    return () => {
-      if (isConnected) {
-        leaveRoom(room);
-      }
-    };
-  }, [room, isConnected, autoJoin, joinRoom, leaveRoom]);
+  }, [room, isConnected, autoJoin, joinRoom]);
 
   return {
     socket,

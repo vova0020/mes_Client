@@ -351,13 +351,17 @@
 }
 
 .statusInactive {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #991b1b;
+  background: linear-gradient(135deg, #fee2e2 0%, #969494 100%);
+  color: #000000;
 }
 
 .statusMaintenance {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   color: #92400e;
+}
+.statusBroken {
+  background: linear-gradient(135deg, #d18a8a 0%, #df1818 100%);
+  color: #040303;
 }
 
 .machineDetails {

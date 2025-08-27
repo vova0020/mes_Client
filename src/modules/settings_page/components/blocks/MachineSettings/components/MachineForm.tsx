@@ -33,7 +33,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
     machineName: '',
     status: MachineStatus.INACTIVE,
     recommendedLoad: '',
-    loadUnit: 'кг',
+    loadUnit: '',
     noSmenTask: false,
   });
 
@@ -93,7 +93,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
     if (!formData.loadUnit.trim()) {
       newErrors.loadUnit = 'Единица измерения обязательна';
     } else if (formData.loadUnit.length > 20) {
-      newErrors.loadUnit = 'Единица измерения не должна превышат�� 20 символов';
+      newErrors.loadUnit = 'Единица измерения не должна превышать 20 символов';
     }
 
     setErrors(newErrors);
@@ -205,6 +205,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
             <option value={MachineStatus.ACTIVE}>Активен</option>
             <option value={MachineStatus.INACTIVE}>Неактивен</option>
             <option value={MachineStatus.MAINTENANCE}>Обслуживание</option>
+            <option value={MachineStatus.BROKEN}>Поломан</option>
           </select>
           {errors.status && (
             <span className={styles.errorText}>{errors.status}</span>

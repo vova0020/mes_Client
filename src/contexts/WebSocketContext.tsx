@@ -33,8 +33,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const socketRef = useRef<Socket | null>(null);
 
   const connect = useCallback(() => {
-    if (socketRef.current?.connected) return;
+    if (socketRef.current?.connected) {
+      console.log('[WebSocketContext] already connected, skipping');
+      return;
+    }
 
+    console.log('[WebSocketContext] connecting to:', serverUrl);
     const newSocket = io(serverUrl, {
       transports: ['websocket', 'polling'],
       timeout: 5000,
@@ -42,15 +46,18 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     });
 
     newSocket.on('connect', () => {
+      console.log('[WebSocketContext] connected, socket.id:', newSocket.id);
       setIsConnected(true);
       setError(null);
     });
 
-    newSocket.on('disconnect', () => {
+    newSocket.on('disconnect', (reason) => {
+      console.log('[WebSocketContext] disconnected, reason:', reason);
       setIsConnected(false);
     });
 
     newSocket.on('connect_error', (err) => {
+      console.error('[WebSocketContext] connect_error:', err.message);
       setError(`Connection error: ${err.message}`);
       setIsConnected(false);
     });
@@ -61,19 +68,35 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
   const joinRoom = useCallback((room: string) => {
     if (socketRef.current?.connected) {
+      console.log('[WebSocketContext] joining room:', room);
       socketRef.current.emit('join_room', { room });
+    } else {
+      console.warn('[WebSocketContext] cannot join room - not connected:', room);
     }
   }, []);
 
   const leaveRoom = useCallback((room: string) => {
     if (socketRef.current?.connected) {
+      console.log('[WebSocketContext] leaving room:', room);
       socketRef.current.emit('leave_room', { room });
+    } else {
+      console.warn('[WebSocketContext] cannot leave room - not connected:', room);
     }
   }, []);
 
   useEffect(() => {
     connect();
+    
+    const handleBeforeUnload = () => {
+      if (socketRef.current?.connected) {
+        socketRef.current.disconnect();
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       if (socketRef.current) {
         socketRef.current.disconnect();
       }

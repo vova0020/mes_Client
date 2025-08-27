@@ -104,17 +104,7 @@ export const useDetails = (): UseDetailsResult => {
     autoJoin: true 
   });
 
-  // Функция для умного обновления данных
-  const updateMachineDetailsSmartly = useCallback((newMachineDetails: MachineDetails) => {
-    setMachineDetails(currentDetails => {
-      if (!currentDetails) {
-        return newMachineDetails;
-      }
 
-      const detailsChanged = JSON.stringify(currentDetails) !== JSON.stringify(newMachineDetails);
-      return detailsChanged ? newMachineDetails : currentDetails;
-    });
-  }, []);
 
   // Функция для загрузки данных о задачах и деталях
   const fetchDetails = useCallback(async (): Promise<void> => {
@@ -123,21 +113,21 @@ export const useDetails = (): UseDetailsResult => {
       setError(null);
 
       const data = await getSmenOrders();
-      updateMachineDetailsSmartly(data);
+      setMachineDetails(data);
       setLoading('success');
     } catch (err) {
       setLoading('error');
       setError(err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке деталей'));
       console.error('Ошибка при загрузке данных о деталях:', err);
     }
-  }, [updateMachineDetailsSmartly]);
+  }, []);
 
   // Функция для обновления данных деталей
   const refreshDetailsData = useCallback(async (status: string) => {
     try {
-      // Обрабатываем события обновления, добавления и удаления
-      if (status !== 'updated' && status !== 'added' && status !== 'created' && status !== 'deleted' && status !== 'removed') {
-        console.warn('Игнорируем неожиданный status from socket:', status);
+      const validStatuses = ['updated', 'added', 'created', 'deleted', 'removed', 'connected'];
+      if (!validStatuses.includes(status)) {
+        console.warn('[useDetails] ignoring unexpected status:', status);
         return;
       }
 
@@ -147,44 +137,102 @@ export const useDetails = (): UseDetailsResult => {
 
       refreshTimeoutRef.current = window.setTimeout(async () => {
         try {
+          console.log('[useDetails] fetching data for status:', status);
           const data = await getSmenOrders();
-          setMachineDetails(data); // Принудительное обновление при WebSocket событиях
-          console.log(`Данные деталей обновлены (debounced) для status: ${status}`);
+          
+          // Обрабатываем пустые данные корректно
+          if (data && typeof data === 'object') {
+            setMachineDetails(data);
+            console.log('[useDetails] data updated, tasks count:', data.tasks?.length || 0);
+          } else {
+            console.warn('[useDetails] received invalid data:', data);
+          }
         } catch (err) {
-          console.error('Ошибка обновления данных деталей:', err);
+          console.error('[useDetails] error updating data:', err);
         }
       }, REFRESH_DEBOUNCE_MS);
     } catch (err) {
-      console.error('Ошибка в refreshDetailsData:', err);
+      console.error('[useDetails] error in refreshDetailsData:', err);
     }
   }, []);
 
   // Настройка WebSocket обработчиков событий
-  useEffect(() => {
-    if (!socket || !isWebSocketConnected) return;
+useEffect(() => {
+  const s = socket;
+  if (!s) {
+    console.log('[useDetails] socket отсутствует — обработчики не ставим');
+    return;
+  }
 
-    console.log('Настройка WebSocket обработчиков для деталей в комнате:', room);
+  console.log('[useDetails] Настройка WebSocket handlers. room=', room, ' socket.id=', (s as any).id);
 
-    const handleDetailEvent = async (data: { status: string }) => {
-      console.log('Получено WebSocket событие для деталей - status:', data.status);
+  const handleDetailEvent = async (data: { status: string }) => {
+    try {
+      console.log('[useDetails] got detail:event', data);
       await refreshDetailsData(data.status);
-    };
+    } catch (err) {
+      console.error('[useDetails] handleDetailEvent error', err);
+    }
+  };
 
-    socket.on('detail:event', handleDetailEvent);
+  // debug: логировать абсолютно все входящие события для этого socket
+  const onAny = (...args: any[]) => {
+    // Первый аргумент в onAny — имя события. В некоторых версиях socket.io это (event, ...args)
+    console.log('[useDetails] onAny event:', ...args);
+  };
 
-    return () => {
-      socket.off('detail:event', handleDetailEvent);
+  const attachHandlers = () => {
+    try {
+      s.off('detail:event', handleDetailEvent); // защита от дублей
+      s.on('detail:event', handleDetailEvent);
+      // подписка на onAny для отладки:
+      // @ts-ignore
+      if (typeof s.onAny === 'function') s.onAny(onAny);
+      console.log('[useDetails] handlers attached for detail:event');
+    } catch (err) {
+      console.error('[useDetails] attachHandlers error', err);
+    }
+  };
+
+  const onConnect = () => {
+    console.log('[useDetails] socket reconnected, re-attaching handlers for room:', room);
+    attachHandlers();
+    // Обновляем данные при переподключении
+    refreshDetailsData('connected').catch(e => console.warn('[useDetails] refresh on reconnect failed:', e));
+  };
+
+  s.on('connect', onConnect);
+
+  // если уже подключён, сразу прикрепляем
+  if ((s as any).connected) {
+    attachHandlers();
+  }
+
+  return () => {
+    try {
+      s.off('connect', onConnect);
+      s.off('detail:event', handleDetailEvent);
+      // @ts-ignore
+      if (typeof s.offAny === 'function') s.offAny(onAny);
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
         refreshTimeoutRef.current = null;
       }
-    };
-  }, [socket, isWebSocketConnected, room, refreshDetailsData]);
+      console.log('[useDetails] cleanup socket handlers for room=', room);
+    } catch (err) {
+      console.error('[useDetails] cleanup error', err);
+    }
+  };
+}, [socket, room, refreshDetailsData]);
+
+
 
   // Загрузка данных при первом рендере
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
+
+
 
   // Получение списка всех задач
   const tasks = machineDetails?.tasks || [];

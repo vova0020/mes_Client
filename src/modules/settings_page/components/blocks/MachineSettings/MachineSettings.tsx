@@ -24,7 +24,8 @@ const queryClient = new QueryClient({
 export enum MachineStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE", 
-  MAINTENANCE = "MAINTENANCE"
+  MAINTENANCE = "MAINTENANCE",
+  BROKEN = "BROKEN"
 }
 
 export interface MachineStage {

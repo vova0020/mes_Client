@@ -16,6 +16,7 @@ interface UseMachineResult {
   isBroken: boolean;
   isOnMaintenance: boolean;
   refetch: () => Promise<void>;
+  forceRefresh: () => void;
   machineId: number | undefined;
   segmentId: number | null | undefined;
   changeStatus: (status: MachineStatus) => Promise<void>;
@@ -147,9 +148,17 @@ export const useMachine = (machineId?: number): UseMachineResult => {
         try {
           const data = await machineApi.getMachineById(effectiveId);
           setMachine(data);
-          console.log(`Данные станка обновлены (debounced).`);
+          
+          // Обновляем состояние загрузки
+          if (loadingRef.current === 'loading') {
+            setLoading('success');
+          }
+          
+          console.log(`Данные станка обновлены (debounced):`, data);
         } catch (err) {
           console.error('Ошибка обновления данных станка:', err);
+          setLoading('error');
+          setError(err instanceof Error ? err : new Error('Ошибка обновления'));
         }
       }, REFRESH_DEBOUNCE_MS);
     } catch (err) {
@@ -187,10 +196,24 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       await refreshMachineData(data.status);
     };
 
+    const handleDisconnect = () => {
+      console.log('WebSocket соединение потеряно для станка, перезагружаем данные');
+      fetchMachine();
+    };
+
+    const handleReconnect = () => {
+      console.log('WebSocket переподключение для станка, обновляем данные');
+      fetchMachine();
+    };
+
     socket.on('machine:event', handleMachineEvent);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('reconnect', handleReconnect);
 
     return () => {
       socket.off('machine:event', handleMachineEvent);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('reconnect', handleReconnect);
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
         refreshTimeoutRef.current = null;
@@ -321,6 +344,10 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     isBroken,
     isOnMaintenance,
     refetch: fetchMachine,
+    forceRefresh: () => {
+      console.log('Принудительное обновление данных станка');
+      fetchMachine();
+    },
     machineId: effectiveId,
     segmentId: machine?.segmentId,
     changeStatus,
