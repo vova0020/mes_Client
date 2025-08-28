@@ -5,9 +5,9 @@ import styles from './PalletsSidebar.module.css';
 import useProductionPallets from '../../../hooks/machinhook/machinProductionPallets';
 import { useMachine } from '../../../hooks/machinhook/useMachine';
 import DefectModal from './DefectModal';
-import { 
-  ProductionPallet, 
-  BufferCellDto, 
+import {
+  ProductionPallet,
+  BufferCellDto,
   getPalletRouteSheet,
   getOperationStatusText,
   getProcessStepText,
@@ -16,6 +16,7 @@ import {
 import { DefectPalletPartsDto } from '../../../api/machineApi/machineApi';
 
 interface PalletsSidebarProps {
+  detailInfo: any;
   detailId: number | null;
   isOpen: boolean;
   onClose: () => void;
@@ -23,9 +24,10 @@ interface PalletsSidebarProps {
   position?: { top: number; right: number };
 }
 
-const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ 
-  detailId, 
-  isOpen, 
+const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
+  detailInfo,
+  detailId,
+  isOpen,
   onClose,
   handleOpenML,
   position = { top: 120, right: 20 }
@@ -38,10 +40,10 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   const [nextStepInfo, setNextStepInfo] = useState<string | null>(null);
   const [defectModalOpen, setDefectModalOpen] = useState<boolean>(false);
   const [selectedPallet, setSelectedPallet] = useState<ProductionPallet | null>(null);
-  
+
   // Используем хук для получения данных о станке и пользователе
   const { machine, machineId } = useMachine();
-  
+
   // Получаем ID пользователя из localStorage (предполагаем, что он там хранится)
   const getUserId = (): number => {
     try {
@@ -55,12 +57,12 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     }
     return 1; // ID по умолчанию
   };
-  
+
   // Используем хук для получения данных о поддонах
-  const { 
-    pallets, 
-    loading, 
-    error, 
+  const {
+    pallets,
+    loading,
+    error,
     fetchPallets,
     bufferCells,
     loadSegmentResources,
@@ -79,7 +81,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
       setNextStepInfo(null);
-      
+
       // Используем Promise.all для выполнения запросов параллельно
       const loadData = async () => {
         try {
@@ -88,7 +90,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
             loadSegmentResources()
           ]);
           console.log("PalletsSidebar - Данные успешно загружены");
-          
+
           // Показываем детали с небольшой задержкой для анимации
           setTimeout(() => {
             setShowDetails(true);
@@ -98,7 +100,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
           setErrorMessage((err as Error).message || 'Произошла ошибка при загрузке данных');
         }
       };
-      
+
       loadData();
     }
   }, [isOpen, detailId, fetchPallets, loadSegmentResources]);
@@ -119,7 +121,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       const timer = setTimeout(() => {
         setSuccessMessage(null);
       }, 5000);
-      
+
       return () => {
         clearTimeout(timer);
       };
@@ -127,11 +129,11 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   }, [successMessage]);
 
   // Обработчик закрытия при клике вне сайдбара
-// Больше не закрываем сайдбар кликом вне — закрытие только через крестик
-useEffect(() => {
-  // intentionally empty: closing happens only via close button
-  return () => {};
-}, []);
+  // Больше не закрываем сайдбар кликом вне — закрытие только через крестик
+  useEffect(() => {
+    // intentionally empty: closing happens only via close button
+    return () => { };
+  }, []);
 
   // Получение адреса ячейки буфера по коду - аналогично функции из компонента мастера
   const getBufferCellAddress = (bufferCell: any): string => {
@@ -152,22 +154,22 @@ useEffect(() => {
   // Обработчик изменения выбранной ячейки буфера для поддона
   const handleBufferChange = async (palletId: number, bufferCellAddress: string) => {
     if (!bufferCellAddress) return;
-    
+
     // Находим ID ячейки буфера по адресу/коду
     const bufferCell = bufferCells.find(cell => cell.code === bufferCellAddress);
     if (!bufferCell) return;
-    
+
     try {
       setProcessingPalletId(palletId);
       setErrorMessage(null);
       setSuccessMessage(null);
       setNextStepInfo(null);
       console.log(`Выбрана ячейка буфера ${bufferCell.id} (${bufferCellAddress}) для поддона ${palletId}`);
-      
+
       // Вызываем API-метод для обновления ячейки буфера
       await updateBufferCell(palletId, bufferCell.id);
       await refreshPalletData(palletId);
-      
+
       // Показываем сообщение об успешном обновлении
       setSuccessMessage(`Поддон ${palletId} перемещен в ячейку буфера ${bufferCellAddress}`);
     } catch (error) {
@@ -221,8 +223,8 @@ useEffect(() => {
         value={currentBufferCellCode}
         onChange={(e) => handleBufferChange(pallet.id, e.target.value)}
         disabled={isProcessing || pallet.currentOperation?.status === 'IN_PROGRESS'}
-        title={pallet.currentOperation?.status === 'IN_PROGRESS' ? 
-              'Нельзя изменить буфер во время обработки' : 'Выберите ячейку буфера для поддона'}
+        title={pallet.currentOperation?.status === 'IN_PROGRESS' ?
+          'Нельзя изменить буфер во время обработки' : 'Выберите ячейку буфера для поддона'}
       >
         <option value="">Выберите ячейку</option>
         {/* Добавляем сначала текущую ячейку буфера, если она есть */}
@@ -255,20 +257,20 @@ useEffect(() => {
       setSuccessMessage(null);
       setNextStepInfo(null);
       console.log(`Поддон ${palletId} переводится в работу...`);
-      
+
       // Вызываем API-метод для изменения статуса поддона
       await startPalletProcessing(palletId);
       console.log(`Поддон ${palletId} успешно переведен в работу`);
-      
+
       // Показываем сообщение об успехе
       setSuccessMessage(`Поддон №${palletId} успешно переведен в статус "В работу"`);
     } catch (error) {
       console.error(`Ошибка при переводе поддона ${palletId} в работу:`, error);
-      
+
       // Извлекаем сообщение об ошибке из ответа API, если возможно
       const apiError = error as any;
-      const errorMsg = apiError.response?.data?.message || apiError.message || 
-                      'Неизвестная ошибка при переводе поддона в работу';
+      const errorMsg = apiError.response?.data?.message || apiError.message ||
+        'Неизвестная ошибка при переводе поддона в работу';
       setErrorMessage(`Не удалось перевести поддон в работу: ${errorMsg}`);
     } finally {
       setProcessingPalletId(null);
@@ -283,26 +285,26 @@ useEffect(() => {
       setSuccessMessage(null);
       setNextStepInfo(null);
       console.log(`Поддон ${palletId} отмечается как готовый...`);
-      
+
       // Вызываем API-метод для изменения статуса поддона на "Готово"
       const response = await completePalletProcessing(palletId);
       console.log(`Поддон ${palletId} успешно отмечен как готовый:`, response);
-      
+
       // Обрабатываем успешный ответ API
       if (response) {
         console.log('Ответ от API completePalletProcessing:', response);
-        
+
         // Сохраняем информацию о следующем шаге
         setNextStepInfo(response.nextStep || 'Этап обработки завершен');
-        
+
         // Формируем сообщение об успешной операции
         const pallet = response.pallet;
         console.log('Объект pallet из ответа:', pallet);
-        
+
         if (pallet) {
           const isCompleted = !pallet.currentStepId;
           console.log('isCompleted:', isCompleted, 'currentStepId:', pallet.currentStepId);
-          
+
           // Отображаем сообщение об успешном завершении
           if (isCompleted) {
             setSuccessMessage(`Обработка поддона ${pallet.name || `№${pallet.id}`} полностью завершена`);
@@ -318,18 +320,18 @@ useEffect(() => {
         // Если ответ пустой, показываем общее сообщение об успехе
         setSuccessMessage(`Поддон №${palletId} успешно отмечен как готовый`);
       }
-      
+
       // Обновляем данные поддонов после успешной операции
       if (detailId) {
         await refreshPalletData(palletId);
       }
     } catch (error) {
       console.error(`Ошибка при отметке поддона ${palletId} как готовый:`, error);
-      
+
       // Обрабатываем специфические ошибки API согласно документации
       const apiError = error as any;
       const errorMessage = apiError.response?.data?.message || apiError.message;
-      
+
       // Отображаем пользовательское сообщение в зависимости от типа ошибки
       if (errorMessage.includes('Поддон не найден')) {
         setErrorMessage(`Поддон не найден в системе`);
@@ -356,26 +358,26 @@ useEffect(() => {
       setErrorMessage(null);
       setSuccessMessage(null);
       setNextStepInfo(null);
-      
+
       // Получаем маршрутный лист в виде Blob
       const routeSheetBlob = await getPalletRouteSheet(palletId);
-      
+
       // Создаем URL для скачивания
       const url = window.URL.createObjectURL(routeSheetBlob);
-      
+
       // Создаем временную ссылку для скачивания
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `Маршрутный_лист_поддон_${palletId}.pdf`);
-      
+
       // Добавляем ссылку в DOM, имитируем клик и удаляем
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Освобождаем URL
       window.URL.revokeObjectURL(url);
-      
+
       // Показываем сообщение об успехе
       setSuccessMessage(`Маршрутный лист для поддона №${palletId} скачивается...`);
     } catch (error) {
@@ -398,26 +400,26 @@ useEffect(() => {
       setErrorMessage(null);
       setSuccessMessage(null);
       setNextStepInfo(null);
-      
+
       const response = await defectPalletParts(defectData);
-      
+
       // Показываем сообщение об успешной отбраковке
       setSuccessMessage(
         `Отбраковано ${response.reclamation.quantity} деталей с поддона ${response.pallet.name}. ` +
         `Осталось: ${response.pallet.newQuantity} деталей.`
       );
-      
+
       // Обновляем данные о поддонах
       if (detailId) {
         await fetchPallets(detailId);
       }
     } catch (error) {
       console.error('Ошибка при отбраковке деталей:', error);
-      
+
       // Обрабатываем ошибки согласно документации API
       const apiError = error as any;
       const errorMessage = apiError.response?.data?.message || apiError.message;
-      
+
       if (errorMessage.includes('Недостаточно деталей')) {
         setErrorMessage('Недостаточно деталей на поддоне для отбраковки');
       } else if (errorMessage.includes('Поддон не найден')) {
@@ -433,7 +435,7 @@ useEffect(() => {
   // Функция для получения класса стиля в зависимости от статуса операции
   const getOperationStatusClass = (operation?: any): string => {
 
-    
+
     if (!operation) return '';
 
     // Сначала проверяем completionStatus (если есть)
@@ -447,22 +449,22 @@ useEffect(() => {
     //     default: return '';
     //   }
     // } else if (operation.status) {
-      // Используем status, если completionStatus отсутствует
-      switch (operation.status) {
-        case 'PENDING': return styles.statusOnMachine;
-        case 'IN_PROGRESS': return styles.statusInProgress;
-        case 'BUFFERED': return styles.statusBuffered;
-        case 'COMPLETED': return styles.statusCompleted;
-        case 'FAILED': return styles.statusFailed;
-        default: return '';
-      }
+    // Используем status, если completionStatus отсутствует
+    switch (operation.status) {
+      case 'PENDING': return styles.statusOnMachine;
+      case 'IN_PROGRESS': return styles.statusInProgress;
+      case 'BUFFERED': return styles.statusBuffered;
+      case 'COMPLETED': return styles.statusCompleted;
+      case 'FAILED': return styles.statusFailed;
+      default: return '';
+    }
     // }
     // return '';
   };
 
   // Компонент для отображения статуса операции
   const OperationStatus = ({ operation }: { operation?: any }) => {
-        console.log('Статус');
+    console.log('Статус');
     console.log(operation);
     if (!operation) {
       return <span className={styles.noOperation}>Не в обработке</span>;
@@ -517,14 +519,33 @@ useEffect(() => {
 
   // Содержимое сайдбара
   const sidebarContent = (
-    <div 
-      className={`${styles.sidebar} ${isOpen ? styles.open : ''}`} 
+    <div
+      className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
       ref={sidebarRef}
     >
       <div className={styles.sidebarHeader}>
-        <h2>Поддоны детали</h2>
+        <h2>Информация о поддонах</h2>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
+      
+        {detailInfo && (
+          <div className={styles.detailInfo}>
+            <div className={styles.detailProperty}>
+              <span className={styles.propertyLabel}>Артикул:</span>
+              <span className={styles.propertyValue}>{detailInfo.articleNumber}</span>
+            </div>
+            <div className={styles.detailProperty}>
+              <span className={styles.propertyLabel}>Название:</span>
+              <span className={styles.propertyValue}>{detailInfo.name}</span>
+            </div>
+            <div className={styles.detailProperty}>
+              <span className={styles.propertyLabel}>Размер:</span>
+              <span className={styles.propertyValue}>{detailInfo.size}</span>
+            </div>
+
+          </div>
+        )}
+      
 
       <div className={styles.sidebarContent}>
         {/* Отображение сообщения об успешной операции */}
@@ -610,13 +631,13 @@ useEffect(() => {
                         <OperationStatus operation={pallet.currentOperation} />
                         {/* {pallet.currentStepName} текущий */}
                         {/* {pallet.currentStepName && !pallet.currentOperation && ( */}
-                          {/* <span className={styles.nextStep} title="Следующий этап обработки"> */}
-                            {/* Следующий: {pallet.currentStepName} */}
-                          {/* </span> */}
+                        {/* <span className={styles.nextStep} title="Следующий этап обработки"> */}
+                        {/* Следующий: {pallet.currentStepName} */}
+                        {/* </span> */}
                         {/* )} */}
                       </td>
                       <td className={styles.actionsCell}>
-                        <button 
+                        <button
                           className={`${styles.actionButton} ${styles.mlButton}`}
                           onClick={() => handleOpenML(pallet.id)}
                           disabled={processingPalletId === pallet.id}
@@ -625,7 +646,7 @@ useEffect(() => {
                           <DocumentIcon />
                           МЛ
                         </button>
-                        <button 
+                        <button
                           className={`${styles.actionButton} ${styles.defectButton}`}
                           onClick={() => handleDefectClick(pallet)}
                           disabled={processingPalletId === pallet.id || pallet.quantity <= 0}
@@ -633,22 +654,22 @@ useEffect(() => {
                         >
                           Брак
                         </button>
-                        <button 
+                        <button
                           className={`${styles.actionButton} ${styles.inProgressButton}`}
                           onClick={() => handleStartWork(pallet.id)}
-                          disabled={processingPalletId === pallet.id || 
-                                 pallet.currentOperation?.status === 'IN_PROGRESS'}
+                          disabled={processingPalletId === pallet.id ||
+                            pallet.currentOperation?.status === 'IN_PROGRESS'}
                           title="В работу"
                         >
                           В работу
                         </button>
-                        <button 
+                        <button
                           className={`${styles.actionButton} ${styles.completedButton}`}
                           onClick={() => handleComplete(pallet.id)}
-                          disabled={processingPalletId === pallet.id || 
-                                 pallet.currentOperation?.status === 'COMPLETED' ||
-                                 pallet.currentOperation?.status === 'PENDING' ||
-                                 !pallet.currentOperation?.status}
+                          disabled={processingPalletId === pallet.id ||
+                            pallet.currentOperation?.status === 'COMPLETED' ||
+                            pallet.currentOperation?.status === 'PENDING' ||
+                            !pallet.currentOperation?.status}
                           title="Готово"
                         >
                           Готово

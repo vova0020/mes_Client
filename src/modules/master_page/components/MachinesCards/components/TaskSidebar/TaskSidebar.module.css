@@ -1308,7 +1308,7 @@
 }
 
 .expandIcon.expanded {
-  transform: rotate(90deg);
+  transform: rotate(0deg);
 }
 
 /* Информация о группе детали */
@@ -1525,6 +1525,7 @@
 }
 
 .palletName {
+      text-align: start;
   font-size: 14px;
   font-weight: 500;
   color: #2c3e50;

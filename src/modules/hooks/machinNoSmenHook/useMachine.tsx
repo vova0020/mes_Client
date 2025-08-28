@@ -146,9 +146,11 @@ export const useMachine = (machineId?: number): UseMachineResult => {
         try {
           const data = await machineApi.getMachineById(effectiveId);
           setMachine(data);
+          setLoading('success');
           console.log(`Данные станка обновлены (debounced).`);
         } catch (err) {
           console.error('Ошибка обновления данных станка:', err);
+          setLoading('error');
         }
       }, REFRESH_DEBOUNCE_MS);
     } catch (err) {
@@ -262,18 +264,14 @@ export const useMachine = (machineId?: number): UseMachineResult => {
         setMachine(updatedMachine);
         setLoading('success');
       } else {
-        // Форсируем обновление через небольшую задержку для корректного рендеринга компонентов
+        // Обновляем машину сразу, а loading сбросится через WebSocket событие
+        setMachine(updatedMachine);
+        // Устанавливаем таймаут как fallback на случай, если WebSocket событие не придет
         setTimeout(() => {
-          // Проверяем, пришло ли обновление через сокет
-          if (machineRef.current?.status !== status) {
-            setMachine({
-              ...updatedMachine,
-              // Убедимся, что статус обновился
-              status: status
-            });
+          if (loadingRef.current === 'loading') {
             setLoading('success');
           }
-        }, 1000); // Уменьшаем таймаут до 1 секунды для более быстрой реакции UI
+        }, 2000);
       }
     } catch (err) {
       setLoading('error');

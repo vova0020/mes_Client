@@ -85,29 +85,29 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   const [isRedistributing, setIsRedistributing] = useState<boolean>(false);
 
   // Добавляем обработчик кликов вне боковой па��ели
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      // Проверяем, что sidebar открыт и что клик был не внутри него
-      if (isOpen &&
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
+  // useEffect(() => {
+  //   const handleOutsideClick = (event: MouseEvent) => {
+  //     // Проверяем, что sidebar открыт и что клик был не внутри него
+  //     if (isOpen &&
+  //       sidebarRef.current &&
+  //       !sidebarRef.current.contains(event.target as Node)) {
+  //       onClose();
+  //     }
+  //   };
 
-    // Добавляем обработчик только если панель открыта
-    if (isOpen) {
-      // Используем setTimeout, чтобы не сработало закрытие сразу после открытия
-      setTimeout(() => {
-        document.addEventListener('mousedown', handleOutsideClick);
-      }, 100);
-    }
+  //   // Добавляем обработчик только если панель открыта
+  //   if (isOpen) {
+  //     // Используем setTimeout, чтобы не сработало закрытие сразу после открытия
+  //     setTimeout(() => {
+  //       document.addEventListener('mousedown', handleOutsideClick);
+  //     }, 100);
+  //   }
 
-    // Удаляем обработчик при закрытии панели или размонтировании компонента
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [isOpen, onClose]);
+  //   // Удаляем обработчик при закрытии панели или размонтировании компонента
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleOutsideClick);
+  //   };
+  // }, [isOpen, onClose]);
 
   // Загрузка данных о поддонах для выбранной детали
   useEffect(() => {
@@ -642,7 +642,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     >
       <div className={styles.sidebarHeader}>
         <div className={styles.headerTop}>
-          <h2>Поддоны детали</h2>
+          <h2>Информация о поддонах</h2>
           <button className={styles.closeButton} onClick={onClose}>×</button>
         </div>
         {detailInfo && (

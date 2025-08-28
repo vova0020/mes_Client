@@ -109,7 +109,7 @@ const Header: React.FC = () => {
           {techStageName}
         </div>
         <div className={styles.navButtons}>
-          <button className={styles.navButton}>{productionLineName}</button>
+          {/* <button className={styles.navButton}>{productionLineName}</button> */}
           <Navbar />
         </div>
       </div>

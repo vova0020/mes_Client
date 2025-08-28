@@ -12,6 +12,7 @@ export interface Detail {
   readyForProcessing: number;
   distributed: number;
   completed: number;
+  packageCode: string;
 }
 
 const getSegmentIdFromStorage = (): number | null => {

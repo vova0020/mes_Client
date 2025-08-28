@@ -254,7 +254,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
                 onClick={() => handleRowClick(detail.id)}
               >
                 <td>{detail.articleNumber}</td>
-                <td>тут будет артикул упаковки</td>
+                <td>{detail.packageCode}</td>
                 <td>{detail.name}</td>
                 <td>{detail.material}</td>
                 <td>{detail.size}</td>

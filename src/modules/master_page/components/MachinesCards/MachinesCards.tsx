@@ -184,11 +184,11 @@ const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Выполнено:</span>
                         <span className={styles.infoValue}>
-                          {machine.completedQuantity} {machine.load_unit}. ({calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%)
+                          {machine.completedQuantity} {machine.load_unit}. ({calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%)
                           <div className={styles.progressBar}>
                             <div 
                               className={styles.progressFill}  
-                              style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%` }}
+                              style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%` }}
                             />
                           </div>
                         </span>

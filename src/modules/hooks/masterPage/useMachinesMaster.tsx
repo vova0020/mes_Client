@@ -241,8 +241,13 @@ const useMachines = (): UseMachinesResult => {
         return;
       }
 
-      // Обновляем задания только если есть активный станок
-      if (!machineId && !currentMachineId) {
+      // Обновляем задания только если есть активный станок и событие касается именно этого станка
+      if (!currentMachineId) {
+        return;
+      }
+
+      // Если указан machineId в событии, обновляем только если это текущий активный станок
+      if (machineId && machineId !== currentMachineId) {
         return;
       }
 
@@ -252,13 +257,9 @@ const useMachines = (): UseMachinesResult => {
 
       refreshTimeoutRef.current = window.setTimeout(async () => {
         try {
-          const targetMachineId = machineId || currentMachineId;
-          
-          if (targetMachineId) {
-            const fetchedTasks = await fetchMachineTasks(targetMachineId);
-            updateMachineTasksSmartly(fetchedTasks);
-            console.log(`Задания станка ${targetMachineId} обновлены (debounced).`);
-          }
+          const fetchedTasks = await fetchMachineTasks(currentMachineId);
+          updateMachineTasksSmartly(fetchedTasks);
+          console.log(`Задания станка ${currentMachineId} обновлены (debounced).`);
         } catch (err) {
           console.error('Ошибка обновления заданий станков:', err);
         }

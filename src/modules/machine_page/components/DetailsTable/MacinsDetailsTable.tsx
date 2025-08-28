@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import styles from './MacinsDetailsTable.module.css';
 import { useDetails } from '../../../hooks/machinhook/useDetails';
 import PalletsSidebar from '../PalletsSidebar/MacinsPalletsSidebar';
@@ -32,6 +31,37 @@ const DetailsTable: React.FC = () => {
   
   // Ref для контейнера таблицы
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Сортируем задачи: сначала те, у которых есть приоритет (по возрастанию числа), затем без приоритета
+  const sortedTasks = useMemo(() => {
+    if (!tasks || tasks.length === 0) return tasks;
+
+    const getPri = (t: any) => {
+      // Считаем, что пустые строки, undefined, null и 0 (а также отрицательные числа) = отсутствие приоритета
+      if (t.priority === null || t.priority === undefined || t.priority === '') return null;
+      const n = Number(t.priority);
+      if (Number.isNaN(n)) return null;
+      // Приоритеты считаются от 1. Если значение < 1 (включая 0), считаем, что приоритета нет.
+      if (n < 1) return null;
+      return n;
+    };
+
+    // создаём копию, чтобы не мутировать исходный массив
+    return [...tasks].sort((a, b) => {
+      const pa = getPri(a);
+      const pb = getPri(b);
+
+      // оба приоритета отсутствуют — сохраняем относительный порядок
+      if (pa === null && pb === null) return 0;
+      // только a без приоритета — он должен идти ниже
+      if (pa === null) return 1;
+      // только b без приоритета — b ниже
+      if (pb === null) return -1;
+
+      // оба имеют приоритет — сортируем по числу (меньшее — выше)
+      return pa - pb;
+    });
+  }, [tasks]);
 
   // Показываем детали с анимацией после загрузки
   React.useEffect(() => {
@@ -186,7 +216,7 @@ const DetailsTable: React.FC = () => {
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {tasks.map((task, index) => (
+            {sortedTasks.map((task, index) => (
               <tr
                 key={task.operationId}
                 className={`
@@ -229,8 +259,11 @@ const DetailsTable: React.FC = () => {
       
       {/* Боковая панель поддонов */}
       <PalletsSidebar 
+        detailInfo={activeTaskId ? 
+          sortedTasks.find(task => task.operationId === activeTaskId)?.detail || null : 
+          null}
         detailId={activeTaskId !== null ? 
-          tasks.find(task => task.operationId === activeTaskId)?.detail.id || null : 
+          sortedTasks.find(task => task.operationId === activeTaskId)?.detail.id || null : 
           null}
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}

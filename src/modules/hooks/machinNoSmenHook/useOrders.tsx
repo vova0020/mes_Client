@@ -50,43 +50,9 @@ const useOrders = () => {
     autoJoin: true 
   });
 
-  // Функция для умного обновления массива заказов
+  // Функция для обновления массива заказов
   const updateOrdersSmartly = useCallback((newOrders: Order[]) => {
-    setOrders(currentOrders => {
-      if (currentOrders.length === 0) {
-        return newOrders;
-      }
-
-      const currentOrdersMap = new Map(currentOrders.map(o => [o.id, o]));
-      const updatedOrders: Order[] = [];
-      let hasChanges = false;
-
-      newOrders.forEach(newOrder => {
-        const currentOrder = currentOrdersMap.get(newOrder.id);
-        
-        if (!currentOrder) {
-          updatedOrders.push(newOrder);
-          hasChanges = true;
-        } else {
-          const orderChanged = JSON.stringify(currentOrder) !== JSON.stringify(newOrder);
-
-          if (orderChanged) {
-            updatedOrders.push(newOrder);
-            hasChanges = true;
-          } else {
-            updatedOrders.push(currentOrder);
-          }
-        }
-      });
-
-      const newOrderIds = new Set(newOrders.map(o => o.id));
-      const removedOrders = currentOrders.filter(o => !newOrderIds.has(o.id));
-      if (removedOrders.length > 0) {
-        hasChanges = true;
-      }
-
-      return hasChanges ? updatedOrders : currentOrders;
-    });
+    setOrders(newOrders);
   }, []);
 
   // Функция загрузки заказов
@@ -121,9 +87,12 @@ const useOrders = () => {
         try {
           const data = await orderService.getAllOrders();
           updateOrdersSmartly(data);
+          setLoading(false);
           console.log(`Данные заказов обновлены (debounced).`);
         } catch (err) {
           console.error('Ошибка обновления данных заказов:', err);
+          setError(err instanceof Error ? err : new Error('Ошибка обновления заказов'));
+          setLoading(false);
         }
       }, REFRESH_DEBOUNCE_MS);
     } catch (err) {

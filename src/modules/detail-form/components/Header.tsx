@@ -38,8 +38,8 @@ const Header: React.FC = () => {
       </div>
       <div className={styles.sizeSection}>
         <div className={styles.sizeField}>
-          <label>Размер по раскрою:</label>
-          <div className={styles.grayBox}>2500x1210</div>
+          {/* <label>Размер по раскрою:</label>
+          <div className={styles.grayBox}>2500x1210</div> */}
         </div>
         <div className={styles.sizeField}>
           <label>Размер готовой детали:</label>

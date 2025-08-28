@@ -146,8 +146,8 @@ const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose, palletId }
 
           <div className={styles.sizeSection}>
             <div className={styles.sizeField}>
-              <label>Размер по раскрою:</label>
-              <div className={styles.grayBox}>{data?.partSize || '-'}</div>
+              {/* <label>Размер по раскрою:</label>
+              <div className={styles.grayBox}>{data?.partSize || '-'}</div> */}
             </div>
             <div className={styles.sizeField}>
               <label>Размер готовой детали:</label>

@@ -326,6 +326,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   
   // Состояние для отслеживания развернутых групп деталей
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   // Загрузка данных сменного задания при открытии
   useEffect(() => {
@@ -335,12 +336,15 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       
       // Загружаем список доступных станков
       fetchAvailableMachines();
+      
+      // Сбрасываем флаг начальной загрузки при открытии нового станка
+      setIsInitialLoad(true);
     }
   }, [isOpen, machineId, fetchTasks, fetchAvailableMachines]);
   
-  // Автоматическое разворачивание групп с высоким приоритетом
+  // Автоматическое разворачивание групп с высоким приоритетом только при первой загрузке
   useEffect(() => {
-    if (machineTasks.length > 0) {
+    if (machineTasks.length > 0 && isInitialLoad) {
       const groupedDetails = groupTasksByDetail(machineTasks);
       const highPriorityGroups = new Set<string>();
       
@@ -353,8 +357,9 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       });
       
       setExpandedGroups(highPriorityGroups);
+      setIsInitialLoad(false);
     }
-  }, [machineTasks]);
+  }, [machineTasks, isInitialLoad]);
   
   // Очистка сообщений через 5 секунд
   useEffect(() => {
@@ -698,13 +703,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         <div className={styles.sidebarHeader}>
           <h2>Сменное задание: {machineName}</h2>
           <div className={styles.headerControls}>
-            <button 
+            {/* <button 
               className={styles.sortButton} 
               onClick={handleSortByPriority}
               title="Сортировать по приоритету"
             >
               ↑↓
-            </button>
+            </button> */}
             <button 
               className={styles.expandAllButton} 
               onClick={() => {
@@ -784,7 +789,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                       onClick={() => toggleGroupExpansion(groupKey)}
                     >
                       <div className={`${styles.expandIcon} ${isExpanded ? styles.expanded : ''}`}>
-                        {isExpanded ? '▼' : '▶'}
+                        {isExpanded ? '▲' : '▼'}
                       </div>
                       
                       <div className={styles.detailGroupInfo}>
@@ -963,7 +968,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               </span>
             </div>
           </div>
-          <div className={styles.footerButtons}>
+          {/* <div className={styles.footerButtons}>
             <button 
               className={styles.printButton} 
               onClick={handlePrintTask}
@@ -978,7 +983,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
             >
               Экспорт в Excel
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
       
