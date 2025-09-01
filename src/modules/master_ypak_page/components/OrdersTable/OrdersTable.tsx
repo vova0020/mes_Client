@@ -1,3 +1,4 @@
+// файл: OrdersTable.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './OrdersTable.module.css';
 import useOrders from '../../../hooks/ypakMasterHook/useOrdersMaster';
@@ -7,31 +8,54 @@ interface OrdersTableProps {
   onOrderSelect?: (orderId: number | null) => void;
   onViewOrderComposition?: (orderId: number) => void;
   onViewOrderConsumption?: (orderId: number) => void;
+
+  // Добавляем optional prop для синхронизации с родителем
+  selectedOrderId?: number | null;
 }
 
-const OrdersTable: React.FC<OrdersTableProps> = ({ 
-  onOrderSelect, 
-  onViewOrderComposition, 
-  onViewOrderConsumption 
+const OrdersTable: React.FC<OrdersTableProps> = ({
+  onOrderSelect,
+  onViewOrderComposition,
+  onViewOrderConsumption,
+  selectedOrderId // <- новый проп
 }) => {
   const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
   const [showOrders, setShowOrders] = useState(false);
   const { orders, loading, error, fetchOrders } = useOrders();
   const isFirstLoad = useRef(true);
 
+  // Синхронизация локального activeOrderId с пропом selectedOrderId (если передан)
+  useEffect(() => {
+    // Если родитель явно передаёт selectedOrderId — синхронизируем
+    if (typeof selectedOrderId !== 'undefined') {
+      setActiveOrderId(selectedOrderId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOrderId]);
+
+  // Оповещаем родителя о выборе (через callback)
   useEffect(() => {
     if (onOrderSelect) {
       onOrderSelect(activeOrderId);
-    } 
+    }
   }, [activeOrderId, onOrderSelect]);
 
-  // Сбрасываем активный заказ при изменении списка заказов (например, при смене этапа)
+  // Сбрасываем активный заказ при изменении списка заказов
   useEffect(() => {
-    if (orders.length > 0 && activeOrderId && !orders.find(order => order.id === activeOrderId)) {
+    // Если список заказов пуст — явно очищаем выбор
+    if (orders.length === 0) {
+      if (activeOrderId !== null) {
+        setActiveOrderId(null);
+      }
+      return;
+    }
+
+    // Иначе — если выбранный заказ больше не в списке, очищаем
+    if (activeOrderId && !orders.find(order => order.id === activeOrderId)) {
       setActiveOrderId(null);
     }
   }, [orders, activeOrderId]);
-  
+
   useEffect(() => {
     if (!loading && orders.length > 0) {
       if (isFirstLoad.current) {
@@ -59,15 +83,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       setActiveOrderId(orderId);
     }
   };
-   const getProgress = (order: Order) => {
-      return `${order.completed || 0} %`;
-    };
-  
-    const getAvailability = (order: Order) => {
-      return `${order.available || 0 } %`;
-    };
+  const getProgress = (order: Order) => {
+    return `${order.completed || 0} %`;
+  };
 
-  
+  const getAvailability = (order: Order) => {
+    return `${order.available || 0 } %`;
+  };
 
   const handleViewComposition = (e: React.MouseEvent, orderId: number) => {
     e.stopPropagation();
@@ -112,11 +134,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
         <h2 className={styles.title}>ЗАКАЗЫ</h2>
         <div className={styles.stateContainer}>
           <div className={styles.errorIcon}>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" stroke="currentColor" strokeWidth="2" />
-              <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="12" cy="16" r="1" fill="currentColor" />
-            </svg>
+            {/* ... svg */}
           </div>
           <div className={styles.errorMessage}>
             <h3>Не удалось загрузить заказы</h3>
@@ -137,11 +155,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
         {orders.length === 0 ? (
           <div className={styles.stateContainer}>
             <div className={styles.emptyIcon}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5Z" stroke="currentColor" strokeWidth="2" />
-                <path d="M12 10V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M10 12H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              {/* ... svg */}
             </div>
             <div className={styles.emptyMessage}>
               <h3>Нет доступных заказов</h3>

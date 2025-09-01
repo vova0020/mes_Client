@@ -70,7 +70,7 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
       <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
           <h3>Частичная обработка детали</h3>
-          <button className={styles.modalCloseButton} onClick={onClose}>&times;</button>
+          <button className={styles.modalCloseButton}  onClick={onClose}>&times;</button>
         </div>
         
         <div className={styles.modalBody}>
@@ -627,6 +627,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             <button 
                               className={`${styles.actionButton} ${styles.partialButton}`}
                               onClick={() => handlePartialProcessing(item.taskId)}
+                              disabled={true}
                               title="Частично"
                             >
                               Частично
@@ -676,7 +677,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               </span>
             </div>
           </div>
-          <div className={styles.footerButtons}>
+          {/* <div className={styles.footerButtons}>
             <button 
               className={styles.printButton} 
               onClick={handlePrintTask}
@@ -691,7 +692,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
             >
               Экспорт в Excel
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
       

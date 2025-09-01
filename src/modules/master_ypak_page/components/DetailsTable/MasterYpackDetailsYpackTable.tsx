@@ -19,6 +19,9 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
   
+  // Состояние для уведомлений
+  const [notification, setNotification] = useState<{message: string, type: 'error' | 'success'} | null>(null);
+  
   // Используем хук для получения данных о упаковках
   const { 
     packagingItems: packages, 
@@ -80,6 +83,16 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
       setActivePackagingId(selectedDetailForPallets);
     }
   }, [sidebarOpen, selectedDetailForPallets]);
+
+  // Автоматически скрываем уведомление через 5 секунд
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   // // Обработчик кликов за пределами боковой панели
   // useEffect(() => {
@@ -188,21 +201,29 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     e.stopPropagation(); // Предотвращаем всплытие события
     const machineId = parseInt(e.target.value);
     if (!isNaN(machineId)) {
-      console.log(`Назначить ста��ок ${machineId} для упаковки ${packageId}`);
+      console.log(`Назначить станок ${machineId} для упаковки ${packageId}`);
       
-      // Отправляем запрос на назначение упаковки на станок
-      const success = await assignPackageToMachine(packageId, machineId);
-      
-      if (success) {
-        console.log(`Упаковка ${packageId} успешно назначена на станок ${machineId}`);
-        // Перезагружаем данные упаковок для обновления состояния
-        if (selectedOrderId !== null) {
-          fetchPackagesByOrderId(selectedOrderId);
+      try {
+        // Отправляем запрос на назначение упаковки на станок
+        const result = await assignPackageToMachine(packageId, machineId);
+        
+        if (result.success) {
+          console.log(`Упаковка ${packageId} успешно назначена на станок ${machineId}`);
+          setNotification({message: 'Упаковка успешно назначена на станок', type: 'success'});
+          // Перезагружаем данные упаковок для обновления состояния
+          if (selectedOrderId !== null) {
+            fetchPackagesByOrderId(selectedOrderId);
+          }
+        } else {
+          // Показываем сообщение об ошибке от сервера
+          const errorMessage = result.error?.message || 'Не удалось назначить упаковку на станок';
+          setNotification({message: errorMessage, type: 'error'});
+          // Сбрасываем выбор в селекте при ошибке
+          e.target.value = "";
         }
-      } else {
-        console.error(`Не удалось назначить упаковку ${packageId} на станок ${machineId}`);
-        // Можно добавить уведомление об ошибке
-        // Сбрасываем выбор в селекте при ошибке
+      } catch (error) {
+        console.error(`Ошибка при назначении упаковки ${packageId} на станок ${machineId}:`, error);
+        setNotification({message: 'Произошла ошибка при назначении упаковки', type: 'error'});
         e.target.value = "";
       }
     }
@@ -429,6 +450,21 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
           </tbody>
         </table>
       </div>
+
+      {/* Уведомления */}
+      {notification && (
+        <div className={`${styles.notification} ${styles[notification.type]}`}>
+          <div className={styles.notificationContent}>
+            <span>{notification.message}</span>
+            <button 
+              className={styles.closeNotification}
+              onClick={() => setNotification(null)}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Боковая панель с деталями и поддонами */}
       <PackagingDetailsSidebar 

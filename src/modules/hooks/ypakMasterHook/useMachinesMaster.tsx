@@ -48,7 +48,7 @@ interface UseMachinesResult {
   fetchAvailableMachines: () => Promise<void>;
   
   // Функция для создания назначения упаковки на станок
-  assignPackageToMachine: (packageId: number, machineId: number) => Promise<boolean>;
+  assignPackageToMachine: (packageId: number, machineId: number) => Promise<{success: boolean, error?: {message: string}}>;
   
   // Функции для управления статусом заданий упаковки
   startPackingWork: (taskId: number, machineId: number) => Promise<boolean>;
@@ -72,6 +72,9 @@ const useMachines = (): UseMachinesResult => {
   // Состояния для доступных станков
   const [availableMachines, setAvailableMachines] = useState<MachineDto[]>([]);
   const [availableMachinesLoading, setAvailableMachinesLoading] = useState<boolean>(false);
+  
+  // Текущий станок для отслеживания обновлений
+  const [currentMachineId, setCurrentMachineId] = useState<number | null>(null);
 
   // Ref для предотвращения множественных запросов
   const isLoadingRef = useRef<boolean>(false);
@@ -156,6 +159,7 @@ const useMachines = (): UseMachinesResult => {
   const fetchTasks = useCallback(async (machineId: number) => {
     setTasksLoading(true);
     setTasksError(null);
+    setCurrentMachineId(machineId);
     
     try {
       const tasks = await fetchMachineTasks(machineId);
@@ -237,28 +241,48 @@ const useMachines = (): UseMachinesResult => {
     const handleMachineEvent = async (data: { status: string }) => {
       console.log('Получено WebSocket событие machine:event - status:', data.status);
       await refreshMachinesData(data.status);
+      
+      // Если открыт TaskSidebar для какого-то станка, обновляем его задания
+      if (currentMachineId !== null) {
+        console.log('Обновляем задания для станка:', currentMachineId);
+        await fetchTasks(currentMachineId);
+      }
+    };
+
+    const handleTaskEvent = async (data: { status: string, machineId?: number }) => {
+      console.log('Получено WebSocket событие task:event - status:', data.status, 'machineId:', data.machineId);
+      // Если есть конкретный станок в состоянии заданий, обновляем его
+      if (machineTasks.length > 0 && data.machineId) {
+        await fetchTasks(data.machineId);
+      }
     };
 
     socket.on('machine:event', handleMachineEvent);
+    socket.on('task:event', handleTaskEvent);
 
     return () => {
       socket.off('machine:event', handleMachineEvent);
+      socket.off('task:event', handleTaskEvent);
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, refreshMachinesData]);
+  }, [socket, isWebSocketConnected, room, refreshMachinesData, machineTasks, fetchTasks, currentMachineId]);
 
   // Функция для назначения упаковки на станок
-  const assignPackageToMachine = useCallback(async (packageId: number, machineId: number): Promise<boolean> => {
+  const assignPackageToMachine = useCallback(async (packageId: number, machineId: number): Promise<{success: boolean, error?: {message: string}}> => {
     try {
       await createPackingAssignment(packageId, machineId);
-      // console.log(`Упаковка ${packageId} успешно назначена на станок ${machineId}`);
-      return true;
-    } catch (err) {
+      return { success: true };
+    } catch (err: any) {
       console.error(`Ошибка при назначении упаковки ${packageId} на станок ${machineId}:`, err);
-      return false;
+      return { 
+        success: false, 
+        error: { 
+          message: err?.response?.data?.message || err?.message || 'Не удалось назначить упаковку на станок' 
+        } 
+      };
     }
   }, []);
 

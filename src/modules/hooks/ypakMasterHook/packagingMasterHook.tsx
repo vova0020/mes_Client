@@ -243,12 +243,11 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
     };
   }, [socket, isWebSocketConnected, room, refreshPackagingData]);
 
-  // Инициализация с начальным ID заказа, если он предоставлен
-  useEffect(() => {
-    if (initialOrderId !== null) {
-      fetchPackagingItems(initialOrderId);
-    }
-  }, [initialOrderId, fetchPackagingItems]);
+ // Реагируем на любые изменения initialOrderId — если он null, fetchPackagingItems очистит список
+useEffect(() => {
+  fetchPackagingItems(initialOrderId);
+}, [initialOrderId, fetchPackagingItems]);
+
   
   return {
     packagingItems,

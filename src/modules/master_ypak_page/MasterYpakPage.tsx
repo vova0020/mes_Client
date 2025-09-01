@@ -13,7 +13,7 @@ import PackagingModal from './PackagingModal';
 const MasterYpakPage: React.FC = () => {
   // Состояние для отслеживания выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  
+
   // Состояние для модального окна с упаковками
   const [isPackagingModalOpen, setIsPackagingModalOpen] = useState(false);
   const [packagingOrderId, setPackagingOrderId] = useState<number | null>(null);
@@ -42,10 +42,10 @@ const MasterYpakPage: React.FC = () => {
   // Обработка открытия модального окна с составом заказа
   const handleViewOrderComposition = (orderId: number) => {
     const order = orders.find(o => o.id === orderId);
-    const orderDisplayName = order 
+    const orderDisplayName = order
       ? `${order.batchNumber} - ${order.orderName || 'Без названия'}`
       : `Заказ ${orderId}`;
-    
+
     setPackagingOrderId(orderId);
     setPackagingOrderName(orderDisplayName);
     setIsPackagingModalOpen(true);
@@ -64,7 +64,7 @@ const MasterYpakPage: React.FC = () => {
       <div className={styles.Sidebar_Block}>
         <Sidebar />
       </div>
-      
+
       {/* Основной блок контента (прижат к правому краю) */}
       <div className={styles.Content_Block}>
         {/* Шапка */}
@@ -78,18 +78,19 @@ const MasterYpakPage: React.FC = () => {
           <div className={styles.topRow}>
             {/* Секция с таблицей заказов */}
             <div className={styles.ordersSection}>
-              <OrdersTable 
+              <OrdersTable
+                selectedOrderId={selectedOrderId}
                 onOrderSelect={handleOrderSelect}
                 onViewOrderComposition={handleViewOrderComposition}
               />
             </div>
-            
+
             {/* Секция с карточками станков */}
             <div className={styles.machinesSection}>
               <MachinesCards />
             </div>
           </div>
-          
+
           {/* Нижний ряд с таблицей деталей на всю ширину */}
           <div className={styles.bottomRow}>
             <div className={styles.detailsSection}>
@@ -98,7 +99,7 @@ const MasterYpakPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Модальное окно с упаковками */}
       <PackagingModal
         isOpen={isPackagingModalOpen}
