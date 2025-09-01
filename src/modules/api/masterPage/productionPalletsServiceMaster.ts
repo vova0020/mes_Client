@@ -293,25 +293,9 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
 export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> => {
   try {
     // Получаем segmentId из локального хранилища
-    const assignmentsData = localStorage.getItem('assignments');
-    let segmentId: number;
 
-    if (!assignmentsData) {
-      console.error('Отсутствуют данные assignments в localStorage');
-      throw new Error('Отсутствуют данные assignments в localStorage');
-    }
+    let segmentId = getSegmentIdFromStorage();
 
-    try {
-      const parsedData = JSON.parse(assignmentsData);
-      if (!parsedData.stages || parsedData.stages.length === 0) {
-        console.error('В данных assignments отсутствуют segments');
-        throw new Error('В данных assignments отсутствуют segments');
-      }
-      segmentId = parsedData.stages[0].id;
-    } catch (parseError) {
-      console.error('Ошибка при парсинге данных из localStorage:', parseError);
-      throw parseError;
-    }
 
     // Формируем URL с обязательным параметром segmentId
     const response = await axios.get(`${API_URL}/buffer/cells?segmentId=${segmentId}`);

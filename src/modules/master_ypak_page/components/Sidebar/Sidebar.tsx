@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
 
-// Пример: вы можете подключать SVG-иконки напрямую
-// или использовать готовые иконки из библиотеки (например, react-icons).
-// Здесь показан условный пример:
-
 import { ReactComponent as StatisticIcon } from '../../../../assets/sidebar/statistic.svg';
 import { ReactComponent as HistoriIcon } from '../../../../assets/sidebar/historiButton.svg';
 import { ReactComponent as ReclamaciIcon } from '../../../../assets/sidebar/reclamaciButton.svg';
@@ -13,14 +9,20 @@ import { ReactComponent as PolomkaInActiveIcon } from '../../../../assets/sideba
 import { ReactComponent as PolomkaActiveIcon } from '../../../../assets/sidebar/slomanActive.svg';
 
 import { Button } from '@mui/material';
+import YpakMachineStatusMenu from './YpakMachineStatusMenu';
 
 const Sidebar: React.FC = () => {
-  // Добавляем состояние для отслеживания активности кнопки Start
   const [isStartActive, setIsStartActive] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
 
-  // Функция для переключения состояния кнопки
-  const toggleStartButton = () => {
-    setIsStartActive(prevState => !prevState);
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setMenuAnchorEl(event.currentTarget);
+    setIsStartActive(true);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setIsStartActive(false);
   };
 
   return (
@@ -30,8 +32,8 @@ const Sidebar: React.FC = () => {
 
       <button 
           className={`${styles.startButton} ${isStartActive ? styles.startButtonActive : ''}`}
-          onClick={toggleStartButton}
-          aria-label="Start"
+          onClick={handleMenuOpen}
+          aria-label="Изменить статус станка упаковки"
         >
           <div className={styles.startIconContainer}>
             {isStartActive ? (
@@ -41,6 +43,12 @@ const Sidebar: React.FC = () => {
             )}
           </div>
         </button>
+
+        <YpakMachineStatusMenu
+          anchorEl={menuAnchorEl}
+          open={Boolean(menuAnchorEl)}
+          onClose={handleMenuClose}
+        />
 
 
 

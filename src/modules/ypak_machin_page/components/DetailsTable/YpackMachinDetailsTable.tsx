@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './DetailsTable.module.css';
 import { useYpakMachine } from '../../../hooks/ypakMachine/useYpakMachine';
+import { usePackingTasks } from '../../../hooks/ypakMachine/usePackingTasks';
 import { YpakTask } from '../../../api/ypakMachine/ypakMachineApi';
 import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
-// import PalletsSidebar from '../PalletsSidebar/YpackMachinPalletsSidebar';
 
 const DetailsTable: React.FC = () => {
   // Состояние для отслеживания активной задачи
@@ -34,6 +34,9 @@ const DetailsTable: React.FC = () => {
     partiallyCompleteOperation,
     getPackingScheme
   } = useYpakMachine();
+  
+  // Используем хук для работы с заданиями упаковки
+  const { startPackingWork, completePackingWork } = usePackingTasks();
   
   // Ref для контейнера таблицы
   const containerRef = useRef<HTMLDivElement>(null);
@@ -142,8 +145,20 @@ const DetailsTable: React.FC = () => {
       setProcessingTaskId(taskId);
       setActionError(null);
       
-      await startOperation(taskId);
-      setSuccessMessage('Задача успешно переведена в работу');
+      // Получаем ID станка из данных о станке
+      const machineId = machineDetails?.machineId;
+      if (!machineId) {
+        throw new Error('ID станка не найден');
+      }
+      
+      const success = await startPackingWork(taskId, machineId);
+      if (success) {
+        setSuccessMessage('Задача успешно переведена в работу');
+        // Перезагружаем данные для обновления статуса
+        refetch();
+      } else {
+        throw new Error('Не удалось перевести задачу в работу');
+      }
     } catch (error) {
       setActionError(`Ошибка при переводе в работу: ${(error as Error).message}`);
     } finally {
@@ -159,8 +174,20 @@ const DetailsTable: React.FC = () => {
       setProcessingTaskId(taskId);
       setActionError(null);
       
-      await completeOperation(taskId);
-      setSuccessMessage('Задача успешно завершена');
+      // Получаем ID станка из данных о станке
+      const machineId = machineDetails?.machineId;
+      if (!machineId) {
+        throw new Error('ID станка не найден');
+      }
+      
+      const success = await completePackingWork(taskId, machineId);
+      if (success) {
+        setSuccessMessage('Задача успешно завершена');
+        // Перезагружаем данные для обновления статуса
+        refetch();
+      } else {
+        throw new Error('Не удалось завершить задачу');
+      }
     } catch (error) {
       setActionError(`Ошибка при завершении задачи: ${(error as Error).message}`);
     } finally {
@@ -364,7 +391,8 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={styles.schemeButton}
                     onClick={(e) => handlePackingSchemeClick(e, task.packageId)}
-                    disabled={processingTaskId === task.packageId}
+                    // disabled={processingTaskId === task.packageId}
+                    disabled= {true}
                   >
                     Схема укладки
                   </button>
@@ -380,7 +408,8 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={`${styles.actionButton} ${styles.monitorButton}`}
                     onClick={(e) => handleSendToMonitors(e, task.taskId)}
-                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED'}
+                    // disabled={processingTaskId === task.taskId || task.status === 'COMPLETED'}
+                    disabled= {true}
                     title="Отправить на мониторы"
                   >
                     На мониторы
@@ -404,7 +433,8 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={`${styles.actionButton} ${styles.partialButton}`}
                     onClick={(e) => handleOpenPartialModal(e, task)}
-                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
+                    // disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
+                    disabled= {true}
                     title="Частично завершить задачу"
                   >
                     Частично

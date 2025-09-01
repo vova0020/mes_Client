@@ -5,12 +5,22 @@ import OrdersTable from './components/OrdersTable/OrdersTable';
 import DetailsYpakTable from './components/DetailsTable/MasterYpackDetailsYpackTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
 import { useStageListener } from '../../componentsGlobal/Navbar/useStageListener';
+import useOrders from '../hooks/ypakMasterHook/useOrdersMaster';
 
 import styles from './MasterYpakPage.module.css';
+import PackagingModal from './PackagingModal';
 
 const MasterYpakPage: React.FC = () => {
-  // Добавляем только состояние для отслеживания выбранного заказа
+  // Состояние для отслеживания выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  
+  // Состояние для модального окна с упаковками
+  const [isPackagingModalOpen, setIsPackagingModalOpen] = useState(false);
+  const [packagingOrderId, setPackagingOrderId] = useState<number | null>(null);
+  const [packagingOrderName, setPackagingOrderName] = useState<string>('');
+
+  // Получаем данные заказов
+  const { orders, loading, error, fetchOrders } = useOrders();
 
   // Отслеживаем изменения выбранного этапа
   const currentStage = useStageListener();
@@ -27,6 +37,25 @@ const MasterYpakPage: React.FC = () => {
   // Обработчик выбора заказа
   const handleOrderSelect = (orderId: number | null) => {
     setSelectedOrderId(orderId);
+  };
+
+  // Обработка открытия модального окна с составом заказа
+  const handleViewOrderComposition = (orderId: number) => {
+    const order = orders.find(o => o.id === orderId);
+    const orderDisplayName = order 
+      ? `${order.batchNumber} - ${order.orderName || 'Без названия'}`
+      : `Заказ ${orderId}`;
+    
+    setPackagingOrderId(orderId);
+    setPackagingOrderName(orderDisplayName);
+    setIsPackagingModalOpen(true);
+  };
+
+  // Обработка закрытия модального окна
+  const handleClosePackagingModal = () => {
+    setIsPackagingModalOpen(false);
+    setPackagingOrderId(null);
+    setPackagingOrderName('');
   };
 
   return (
@@ -49,7 +78,10 @@ const MasterYpakPage: React.FC = () => {
           <div className={styles.topRow}>
             {/* Секция с таблицей заказов */}
             <div className={styles.ordersSection}>
-              <OrdersTable onOrderSelect={handleOrderSelect} />
+              <OrdersTable 
+                onOrderSelect={handleOrderSelect}
+                onViewOrderComposition={handleViewOrderComposition}
+              />
             </div>
             
             {/* Секция с карточками станков */}
@@ -66,6 +98,14 @@ const MasterYpakPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Модальное окно с упаковками */}
+      <PackagingModal
+        isOpen={isPackagingModalOpen}
+        onClose={handleClosePackagingModal}
+        orderId={packagingOrderId}
+        orderName={packagingOrderName}
+      />
     </div>
   );
 };

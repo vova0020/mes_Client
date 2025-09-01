@@ -15,6 +15,14 @@ interface PartialProcessingModalProps {
   onConfirm: (taskId: number, quantity: number) => void;
 }
 
+// Интерфейс для модального окна редактирования приоритета
+interface PriorityModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  taskItem: MachineTask | null;
+  onConfirm: (taskId: number, priority: number) => void;
+}
+
 interface TaskSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -140,6 +148,108 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   );
 };
 
+// Компонент модального окна для редактирования приоритета
+const PriorityModal: React.FC<PriorityModalProps> = ({ 
+  isOpen, 
+  onClose,
+  taskItem,
+  onConfirm
+}) => {
+  const [priority, setPriority] = useState<number>(0);
+  
+  useEffect(() => {
+    if (isOpen && taskItem) {
+      setPriority(taskItem.priority || 0);
+    }
+  }, [isOpen, taskItem]);
+  
+  const handleConfirm = () => {
+    if (taskItem && priority >= 0 && priority <= 10) {
+      onConfirm(taskItem.taskId, priority);
+      onClose();
+    }
+  };
+  
+  if (!isOpen || !taskItem) return null;
+  
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalHeader}>
+          <h3>Редактирование приоритета</h3>
+          <button className={styles.modalCloseButton} onClick={onClose}>&times;</button>
+        </div>
+        
+        <div className={styles.modalBody}>
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Заказ:</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.order.orderName}</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Артикул упаковки:</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.packageCode}</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Наименование упаковки:</span>
+            <span className={styles.modalValue}>{taskItem.productionPackage.packageName}</span>
+          </div>
+          
+          <div className={styles.quantityInputContainer}>
+            <label className={styles.quantityLabel} htmlFor="priority-input">
+              Приоритет (0-10):
+            </label>
+            <div className={styles.quantityInputWrapper}>
+              <button 
+                className={styles.quantityButton}
+                onClick={() => priority > 0 && setPriority(priority - 1)}
+                disabled={priority <= 0}
+              >
+                -
+              </button>
+              <input
+                id="priority-input"
+                type="number"
+                className={styles.quantityInput}
+                value={priority}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10);
+                  if (!isNaN(value) && value >= 0 && value <= 10) {
+                    setPriority(value);
+                  }
+                }}
+                min={0}
+                max={10}
+              />
+              <button 
+                className={styles.quantityButton}
+                onClick={() => priority < 10 && setPriority(priority + 1)}
+                disabled={priority >= 10}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className={styles.modalFooter}>
+          <button className={styles.modalCancelButton} onClick={onClose}>
+            Отмена
+          </button>
+          <button 
+            className={styles.modalConfirmButton} 
+            onClick={handleConfirm}
+            disabled={priority < 0 || priority > 10}
+          >
+            Сохранить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TaskSidebar: React.FC<TaskSidebarProps> = ({ 
   isOpen, 
   onClose, 
@@ -154,14 +264,21 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     fetchTasks,
     removeTask,
     transferTask,
+    updatePriority,
     availableMachines,
     availableMachinesLoading,
-    fetchAvailableMachines
+    fetchAvailableMachines,
+    startPackingWork,
+    completePackingWork
   } = useMachines();
   
   // Состояние для модального окна частичной обработки
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<MachineTask | null>(null);
+  
+  // Состояние для модального окна приоритета
+  const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
+  const [selectedTaskForPriority, setSelectedTaskForPriority] = useState<MachineTask | null>(null);
   
   // Загрузка данных сменного задания при открытии
   useEffect(() => {
@@ -255,18 +372,80 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     }
   };
   
-  // Функция для отображения индикатора приоритета (числового)
-  const renderPriorityIndicator = (priority: number | null) => {
-    if (priority === null) {
+  // Обработчик открытия модального окна приоритета
+  const handleOpenPriorityModal = (taskId: number) => {
+    const task = machineTasks.find(item => item.taskId === taskId);
+    if (task) {
+      setSelectedTaskForPriority(task);
+      setIsPriorityModalOpen(true);
+    }
+  };
+  
+  // Обработчик изменения приоритета
+  const handlePriorityChange = async (taskId: number, newPriority: number) => {
+    try {
+      const success = await updatePriority(taskId, newPriority);
+      if (!success) {
+        alert('Ошибка при обновлении приоритета');
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении приоритета:', error);
+      alert('Ошибка при обновлении приоритета');
+    }
+  };
+
+  // Обработчик кнопки "В работу"
+  const handleStartWork = async (taskId: number) => {
+    try {
+      const success = await startPackingWork(taskId, machineId);
+      if (success) {
+        // Перезагружаем задания для обновления статуса
+        await fetchTasks(machineId);
+      } else {
+        alert('Ошибка при начале работы');
+      }
+    } catch (error) {
+      console.error('Ошибка при начале работы:', error);
+      alert('Ошибка при начале работы');
+    }
+  };
+
+  // Обработчик кнопки "Готово"
+  const handleCompleteWork = async (taskId: number) => {
+    try {
+      const success = await completePackingWork(taskId, machineId);
+      if (success) {
+        // Перезагружаем задания для обновления статуса
+        await fetchTasks(machineId);
+      } else {
+        alert('Ошибка при завершении работы');
+      }
+    } catch (error) {
+      console.error('Ошибка при завершении работы:', error);
+      alert('Ошибка при завершении работы');
+    }
+  };
+
+  // Функция для отображения индикатора приоритета
+  const renderPriorityIndicator = (taskId: number, priority: number | null) => {
+    if (priority === null || priority === 0) {
       return (
-        <div className={`${styles.priorityIndicator} ${styles.noPriority}`}>
+        <div 
+          className={`${styles.priorityIndicator} ${styles.noPriority}`}
+          onClick={() => handleOpenPriorityModal(taskId)}
+          title="Нажмите для установки приоритета"
+        >
           -
         </div>
       );
     }
     
     return (
-      <div className={`${styles.priorityIndicator} ${getPriorityClass(priority)}`}>
+      <div 
+        className={`${styles.priorityIndicator} ${getPriorityClass(priority)}`}
+        onClick={() => handleOpenPriorityModal(taskId)}
+        title={`Приоритет: ${priority}. Нажмите для изменения`}
+      >
         {priority}
       </div>
     );
@@ -274,13 +453,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   
   // Функция для определения класса приоритета
   const getPriorityClass = (priority: number): string => {
+    // 0 не считается приоритетом
+    if (priority === 0) return styles.noPriority;
     // Чем меньше число, тем выше приоритет (1 - самый высокий)
-    if (priority === 1) return styles.highPriority;
-    if (priority === 2) return styles.mediumPriority;
-    if (priority === 3) return styles.lowPriority;
-    if (priority > 3) return styles.veryLowPriority;
+    if (priority === 1) return styles.criticalPriority;
+    if (priority === 2) return styles.highPriority;
+    if (priority <= 4) return styles.mediumPriority;
+    if (priority <= 6) return styles.normalPriority;
+    if (priority <= 8) return styles.lowPriority;
     
-    return styles.normalPriority;
+    return styles.veryLowPriority;
   };
   
   // Функция для отображения статуса
@@ -329,12 +511,28 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   };
   
   // Функция сортировки заданий по приоритету
-  const handleSortByPriority = () => {
-    // Данную функцию оставляем как есть, поскольку сортировка 
-    // выполняется на стороне клиента для уже полученных данных
-    console.log('Сортировка по приоритету');
-    // Сортировка будет происходить на сервере при следующем запросе
-  };
+  const sortedTasks = React.useMemo(() => {
+    return [...machineTasks].sort((a, b) => {
+      const priorityA = a.priority && a.priority > 0 ? a.priority : null;
+      const priorityB = b.priority && b.priority > 0 ? b.priority : null;
+      
+      // Если у обеих задач есть приоритет, сортируем по приоритету (меньше = выше приоритет)
+      if (priorityA !== null && priorityB !== null) {
+        return priorityA - priorityB;
+      }
+      
+      // Если только у одной задачи есть приоритет, она идет первой
+      if (priorityA !== null && priorityB === null) {
+        return -1;
+      }
+      if (priorityA === null && priorityB !== null) {
+        return 1;
+      }
+      
+      // Если у обеих задач нет приоритета, сортируем по ID
+      return a.taskId - b.taskId;
+    });
+  }, [machineTasks]);
   
   return (
     <>
@@ -342,13 +540,6 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         <div className={styles.sidebarHeader}>
           <h2>Сменное задание: {machineName}</h2>
           <div className={styles.headerControls}>
-            <button 
-              className={styles.sortButton} 
-              onClick={handleSortByPriority}
-              title="Сортировать по приоритету"
-            >
-              ↑↓
-            </button>
             <button className={styles.closeButton} onClick={onClose}>×</button>
           </div>
         </div>
@@ -395,10 +586,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {machineTasks.map(item => (
+                    {sortedTasks.map(item => (
                       <tr key={item.taskId} className={styles[`status-${mapApiStatusToUiStatus(item.status)}`]}>
                         <td className={styles.priorityCell}>
-                          {renderPriorityIndicator(item.priority)}
+                          {renderPriorityIndicator(item.taskId, item.priority)}
                         </td>
                         <td>{item.productionPackage?.order?.orderName || '-'}</td>
                          {/* <td>{item.productionPackage?.order?.batchNumber || '-'}</td  > */}
@@ -412,6 +603,35 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                         </td>
                         <td className={styles.actionsCell}>
                           <div className={styles.actionButtonsContainer}>
+                            <button 
+                              className={`${styles.actionButton} ${styles.inProgressButton}`}
+                              onClick={() => handleStartWork(item.taskId)}
+                              disabled={
+                                mapApiStatusToUiStatus(item.status) === 'processing' || 
+                                mapApiStatusToUiStatus(item.status) === 'completed'
+                              }
+                              title="В работу"
+                            >
+                              В работу
+                            </button>
+                            
+                            <button 
+                              className={`${styles.actionButton} ${styles.completedButton}`}
+                              onClick={() => handleCompleteWork(item.taskId)}
+                              disabled={mapApiStatusToUiStatus(item.status) !== 'processing'}
+                              title="Готово"
+                            >
+                              Готово
+                            </button>
+                            
+                            <button 
+                              className={`${styles.actionButton} ${styles.partialButton}`}
+                              onClick={() => handlePartialProcessing(item.taskId)}
+                              title="Частично"
+                            >
+                              Частично
+                            </button>
+                            
                             <select 
                               className={styles.machineSelect}
                               onChange={(e) => handleMachineChange(item.taskId, e.target.value)}
@@ -481,6 +701,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         onClose={() => setIsModalOpen(false)}
         taskItem={selectedTask}
         onConfirm={handleConfirmPartialProcessing}
+      />
+      
+      {/* Модальное окно для редактирования приоритета */}
+      <PriorityModal
+        isOpen={isPriorityModalOpen}
+        onClose={() => setIsPriorityModalOpen(false)}
+        taskItem={selectedTaskForPriority}
+        onConfirm={handlePriorityChange}
       />
     </>
   );

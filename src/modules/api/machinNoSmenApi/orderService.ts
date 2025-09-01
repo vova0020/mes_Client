@@ -10,6 +10,7 @@ export interface Order {
   completionPercentage: number;
     available: number;
   completed: number;
+  priority?: number;
   // добавьте дополнительные поля, если нужно
 }
 

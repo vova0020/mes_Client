@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { 
   partsApi, 
   PartDto, 
@@ -7,22 +7,14 @@ import {
   PartsStatisticsDto,
   PackageInfoDto
 } from '../../api/ypakMasterApi/partsApi';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
-interface UsePartsResult {
-  parts: PartDto[];
-  packageInfo?: PackageInfoDto;
-  partsCount: number;
-  pagination?: PartsResponse['pagination'];
-  statistics?: PartsStatisticsDto;
-  loading: boolean;
-  error: Error | null;
-  fetchPartsByPackageId: (packageId: string | number, params?: Omit<PartsQueryParams, 'packageId'>) => Promise<void>;
-  fetchPartFromPackage: (packageId: string | number, partId: string | number) => Promise<PartDto | null>;
-  fetchPartsStatistics: (packageId: string | number) => Promise<void>;
-  clearParts: () => void;
-}
+// Получение комнаты из localStorage
+const getRoomFromStorage = (): string => {
+  return 'room:masterypack';
+};
 
-export const useParts = (initialPackageId?: string | number): UsePartsResult => {
+const useParts = () => {
   const [parts, setParts] = useState<PartDto[]>([]);
   const [packageInfo, setPackageInfo] = useState<PackageInfoDto>();
   const [partsCount, setPartsCount] = useState<number>(0);
@@ -30,6 +22,67 @@ export const useParts = (initialPackageId?: string | number): UsePartsResult => 
   const [statistics, setStatistics] = useState<PartsStatisticsDto>();
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const [currentPackageId, setCurrentPackageId] = useState<string | number | null>(null);
+  
+  // debounce refs
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => getRoomFromStorage(), []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для умного обновления массива деталей
+  const updatePartsSmartly = useCallback((response: PartsResponse) => {
+    setParts(currentParts => {
+      if (currentParts.length === 0) {
+        return response.parts;
+      }
+
+      const currentPartsMap = new Map(currentParts.map(p => [p.partId, p]));
+      const updatedParts: PartDto[] = [];
+      let hasChanges = false;
+
+      response.parts.forEach(newPart => {
+        const currentPart = currentPartsMap.get(newPart.partId);
+        
+        if (!currentPart) {
+          updatedParts.push(newPart);
+          hasChanges = true;
+        } else {
+          const partChanged = JSON.stringify(currentPart) !== JSON.stringify(newPart);
+
+          if (partChanged) {
+            updatedParts.push(newPart);
+            hasChanges = true;
+          } else {
+            updatedParts.push(currentPart);
+          }
+        }
+      });
+
+      const newPartIds = new Set(response.parts.map(p => p.partId));
+      const removedParts = currentParts.filter(p => !newPartIds.has(p.partId));
+      if (removedParts.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedParts : currentParts;
+    });
+    
+    setPackageInfo(response.packageInfo);
+    setPartsCount(response.partsCount);
+    setPagination(response.pagination);
+  }, []);
 
   // Функция для получения деталей упаковки
   const fetchPartsByPackageId = useCallback(async (
@@ -38,21 +91,18 @@ export const useParts = (initialPackageId?: string | number): UsePartsResult => 
   ) => {
     setLoading(true);
     setError(null);
+    setCurrentPackageId(packageId);
 
     try {
       const response = await partsApi.getPartsByPackageId(packageId, params);
-      setParts(response.parts);
-      setPackageInfo(response.packageInfo);
-      setPartsCount(response.partsCount);
-      setPagination(response.pagination);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(`Ошибка при получении деталей для упаковки ${packageId}`);
-      setError(error);
-      console.error('Ошибка в useParts.fetchPartsByPackageId:', error);
+      updatePartsSmartly(response);
+    } catch (err: any) {
+      console.error(`Ошибка при получении деталей для упаковки ${packageId}:`, err);
+      setError(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updatePartsSmartly]);
 
   // Функция для получения конкретной детали из упаковки
   const fetchPartFromPackage = useCallback(async (
@@ -65,10 +115,9 @@ export const useParts = (initialPackageId?: string | number): UsePartsResult => 
     try {
       const part = await partsApi.getPartFromPackage(packageId, partId);
       return part;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(`Ошибка при получении детали ${partId} из упаковки ${packageId}`);
-      setError(error);
-      console.error('Ошибка в useParts.fetchPartFromPackage:', error);
+    } catch (err: any) {
+      console.error(`Ошибка при получении детали ${partId} из упаковки ${packageId}:`, err);
+      setError(err);
       return null;
     } finally {
       setLoading(false);
@@ -83,16 +132,65 @@ export const useParts = (initialPackageId?: string | number): UsePartsResult => 
     try {
       const stats = await partsApi.getPartsStatistics(packageId);
       setStatistics(stats);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(`Ошибка при получении статистики деталей для упаковки ${packageId}`);
-      setError(error);
-      console.error('Ошибка в useParts.fetchPartsStatistics:', error);
+    } catch (err: any) {
+      console.error(`Ошибка при получении статистики деталей для упаковки ${packageId}:`, err);
+      setError(err);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Функция для очистки дан��ых о деталях
+  // Функция для обновления данных деталей
+  const refreshPartsData = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket:', status);
+        return;
+      }
+
+      if (currentPackageId === null) return;
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const data = await partsApi.getPartsByPackageId(currentPackageId);
+          updatePartsSmartly(data);
+          console.log(`Данные деталей обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления данных деталей:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshPartsData:', err);
+    }
+  }, [currentPackageId, updatePartsSmartly]);
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для деталей в комнате:', room);
+
+    const handlePartEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие для деталей - status:', data.status);
+      await refreshPartsData(data.status);
+    };
+
+    socket.on('detail:event', handlePartEvent);
+
+    return () => {
+      socket.off('detail:event', handlePartEvent);
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, refreshPartsData]);
+
+  // Функция для очистки данных о деталях
   const clearParts = useCallback(() => {
     setParts([]);
     setPackageInfo(undefined);
@@ -100,14 +198,9 @@ export const useParts = (initialPackageId?: string | number): UsePartsResult => 
     setPagination(undefined);
     setStatistics(undefined);
     setError(null);
+    setLoading(false);
+    setCurrentPackageId(null);
   }, []);
-
-  // Инициализация с начальным ID упаковки
-  useEffect(() => {
-    if (initialPackageId) {
-      fetchPartsByPackageId(initialPackageId);
-    }
-  }, [initialPackageId, fetchPartsByPackageId]);
 
   return {
     parts,
@@ -117,9 +210,14 @@ export const useParts = (initialPackageId?: string | number): UsePartsResult => 
     statistics,
     loading,
     error,
+    isWebSocketConnected,
+    webSocketError: webSocketError as string | null,
     fetchPartsByPackageId,
     fetchPartFromPackage,
     fetchPartsStatistics,
-    clearParts
+    clearParts,
+    refreshPartsData
   };
 };
+
+export default useParts;

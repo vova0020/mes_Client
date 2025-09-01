@@ -12,6 +12,7 @@ export interface Order {
   status: string;
   available: number;
   completed: number;
+  priority?: number;
 }
 
 // Получение всех заказов (GET)

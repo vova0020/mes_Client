@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { 
   palletsApi, 
   PalletDto, 
@@ -7,22 +7,14 @@ import {
   PalletsStatisticsDto,
   PartInfoDto
 } from '../../api/ypakMasterApi/palletsApi';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
-interface UsePalletsResult {
-  pallets: PalletDto[];
-  partInfo?: PartInfoDto;
-  palletsCount: number;
-  pagination?: PalletsResponse['pagination'];
-  statistics?: PalletsStatisticsDto;
-  loading: boolean;
-  error: Error | null;
-  fetchPalletsByPartId: (partId: string | number, params?: PalletsQueryParams) => Promise<void>;
-  fetchPalletByPartAndPalletId: (partId: string | number, palletId: string | number) => Promise<PalletDto | null>;
-  fetchPalletsStatistics: (partId: string | number) => Promise<void>;
-  clearPallets: () => void;
-}
+// Получение комнаты из localStorage
+const getRoomFromStorage = (): string => {
+  return 'room:masterypack';
+};
 
-export const usePallets = (initialPartId?: string | number): UsePalletsResult => {
+const usePallets = () => {
   const [pallets, setPallets] = useState<PalletDto[]>([]);
   const [partInfo, setPartInfo] = useState<PartInfoDto>();
   const [palletsCount, setPalletsCount] = useState<number>(0);
@@ -30,6 +22,67 @@ export const usePallets = (initialPartId?: string | number): UsePalletsResult =>
   const [statistics, setStatistics] = useState<PalletsStatisticsDto>();
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const [currentPartId, setCurrentPartId] = useState<string | number | null>(null);
+  
+  // debounce refs
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => getRoomFromStorage(), []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для умного обновления массива поддонов
+  const updatePalletsSmartly = useCallback((response: PalletsResponse) => {
+    setPallets(currentPallets => {
+      if (currentPallets.length === 0) {
+        return response.pallets;
+      }
+
+      const currentPalletsMap = new Map(currentPallets.map(p => [p.palletId, p]));
+      const updatedPallets: PalletDto[] = [];
+      let hasChanges = false;
+
+      response.pallets.forEach(newPallet => {
+        const currentPallet = currentPalletsMap.get(newPallet.palletId);
+        
+        if (!currentPallet) {
+          updatedPallets.push(newPallet);
+          hasChanges = true;
+        } else {
+          const palletChanged = JSON.stringify(currentPallet) !== JSON.stringify(newPallet);
+
+          if (palletChanged) {
+            updatedPallets.push(newPallet);
+            hasChanges = true;
+          } else {
+            updatedPallets.push(currentPallet);
+          }
+        }
+      });
+
+      const newPalletIds = new Set(response.pallets.map(p => p.palletId));
+      const removedPallets = currentPallets.filter(p => !newPalletIds.has(p.palletId));
+      if (removedPallets.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedPallets : currentPallets;
+    });
+    
+    setPartInfo(response.partInfo);
+    setPalletsCount(response.palletsCount);
+    setPagination(response.pagination);
+  }, []);
 
   // Функция для получения поддонов детали
   const fetchPalletsByPartId = useCallback(async (
@@ -38,21 +91,18 @@ export const usePallets = (initialPartId?: string | number): UsePalletsResult =>
   ) => {
     setLoading(true);
     setError(null);
+    setCurrentPartId(partId);
 
     try {
       const response = await palletsApi.getPalletsByPartId(partId, params);
-      setPallets(response.pallets);
-      setPartInfo(response.partInfo);
-      setPalletsCount(response.palletsCount);
-      setPagination(response.pagination);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(`Ошибка при получении поддонов для детали ${partId}`);
-      setError(error);
-      console.error('Ошибка в usePallets.fetchPalletsByPartId:', error);
+      updatePalletsSmartly(response);
+    } catch (err: any) {
+      console.error(`Ошибка при получении поддонов для детали ${partId}:`, err);
+      setError(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updatePalletsSmartly]);
 
   // Функция для получения конкретного поддона
   const fetchPalletByPartAndPalletId = useCallback(async (
@@ -65,10 +115,9 @@ export const usePallets = (initialPartId?: string | number): UsePalletsResult =>
     try {
       const pallet = await palletsApi.getPalletByPartAndPalletId(partId, palletId);
       return pallet;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(`Ошибка при получении поддона ${palletId} для детали ${partId}`);
-      setError(error);
-      console.error('Ошибка в usePallets.fetchPalletByPartAndPalletId:', error);
+    } catch (err: any) {
+      console.error(`Ошибка при получении поддона ${palletId} для детали ${partId}:`, err);
+      setError(err);
       return null;
     } finally {
       setLoading(false);
@@ -83,14 +132,63 @@ export const usePallets = (initialPartId?: string | number): UsePalletsResult =>
     try {
       const stats = await palletsApi.getPalletsStatistics(partId);
       setStatistics(stats);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(`Ошибка при получении статистики поддонов для детали ${partId}`);
-      setError(error);
-      console.error('Ошибка в usePallets.fetchPalletsStatistics:', error);
+    } catch (err: any) {
+      console.error(`Ошибка при получении статистики поддонов для детали ${partId}:`, err);
+      setError(err);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Функция для обновления данных поддонов
+  const refreshPalletsData = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket:', status);
+        return;
+      }
+
+      if (currentPartId === null) return;
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const data = await palletsApi.getPalletsByPartId(currentPartId);
+          updatePalletsSmartly(data);
+          console.log(`Данные поддонов обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления данных поддонов:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshPalletsData:', err);
+    }
+  }, [currentPartId, updatePalletsSmartly]);
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для поддонов в комнате:', room);
+
+    const handlePalletEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие для поддонов - status:', data.status);
+      await refreshPalletsData(data.status);
+    };
+
+    socket.on('pallet:event', handlePalletEvent);
+
+    return () => {
+      socket.off('pallet:event', handlePalletEvent);
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, refreshPalletsData]);
 
   // Функция для очистки данных о поддонах
   const clearPallets = useCallback(() => {
@@ -100,14 +198,9 @@ export const usePallets = (initialPartId?: string | number): UsePalletsResult =>
     setPagination(undefined);
     setStatistics(undefined);
     setError(null);
+    setLoading(false);
+    setCurrentPartId(null);
   }, []);
-
-  // Инициализация с начальным ID детали
-  useEffect(() => {
-    if (initialPartId) {
-      fetchPalletsByPartId(initialPartId);
-    }
-  }, [initialPartId, fetchPalletsByPartId]);
 
   return {
     pallets,
@@ -117,9 +210,14 @@ export const usePallets = (initialPartId?: string | number): UsePalletsResult =>
     statistics,
     loading,
     error,
+    isWebSocketConnected,
+    webSocketError: webSocketError as string | null,
     fetchPalletsByPartId,
     fetchPalletByPartAndPalletId,
     fetchPalletsStatistics,
-    clearPallets
+    clearPallets,
+    refreshPalletsData
   };
 };
+
+export default usePallets;

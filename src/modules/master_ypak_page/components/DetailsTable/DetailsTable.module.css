@@ -492,106 +492,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-/* Общие стили для кнопок действий */
-.actionButton {
-  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-}
 
-.actionButton:hover {
-  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
-  border-color: #999;
-  box-shadow: 
-    0 2px 3px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.actionButton:active {
-  background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
-  transform: translateY(1px);
-}
-
-/* Стили для разных типов кнопок действий */
-.inProgressButton {
-  background: linear-gradient(to bottom, #f39c12, #e67e22);
-  color: white;
-  border-color: #d35400;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.inProgressButton:hover {
-  background: linear-gradient(to bottom, #f5b041, #f39c12);
-  border-color: #e67e22;
-  box-shadow: 
-    0 2px 3px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.inProgressButton:active {
-  background: linear-gradient(to bottom, #e67e22, #d35400);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.completedButton {
-  background: linear-gradient(to bottom, #2ecc71, #27ae60);
-  color: white;
-  border-color: #27ae60;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.completedButton:hover {
-  background: linear-gradient(to bottom, #58d68d, #2ecc71);
-  border-color: #2ecc71;
-  box-shadow: 
-    0 2px 3px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.completedButton:active {
-  background: linear-gradient(to bottom, #27ae60, #219d55);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.partiallyCompletedButton {
-  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
-  color: white;
-  border-color: #8e44ad;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.partiallyCompletedButton:hover {
-  background: linear-gradient(to bottom, #a569bd, #9b59b6);
-  border-color: #9b59b6;
-  box-shadow: 
-    0 2px 3px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.partiallyCompletedButton:active {
-  background: linear-gradient(to bottom, #8e44ad, #7d3c98);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-}
 
 /* Стили для статусов упаковки */
 .statusBadge {
@@ -649,7 +550,7 @@
 
 /* Стили для адаптивности новых элементов при маленьких экранах */
 @media screen and (max-width: 991px) {
-  .workerSelect, .actionButton {
+  .workerSelect {
     font-size: 10px;
     padding: 3px 6px;
   }
@@ -673,7 +574,7 @@
 }
 
 @media screen and (max-width: 767px) {
-  .workerSelect, .actionButton {
+  .workerSelect {
     font-size: 9px;
     padding: 2px 5px;
   }

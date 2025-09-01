@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   Machine, 
   fetchMachinesBySegment, 
@@ -9,18 +9,28 @@ import {
   fetchMachinesBySegmentId,
   MachineDto,
   updateTaskPriority,
+  updatePackingTaskPriority,
   createPackingAssignment,
   startPackingTask,
   completePackingTask
 } from '../../api/ypakMasterApi/machineMasterService';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
+
+// Получение комнаты из localStorage
+const getRoomFromStorage = (): string => {
+  return 'room:masterypack';
+};
 
 // Определение интерфейса результата хука
 interface UseMachinesResult {
   machines: Machine[];
   loading: boolean;
   error: Error | null;
+  isWebSocketConnected: boolean;
+  webSocketError: string | null;
   fetchMachines: () => Promise<void>;
   refreshMachines: () => Promise<void>;
+  refreshMachinesData: (status: string) => Promise<void>;
   
   // Новые функции для работы с заданиями
   machineTasks: MachineTask[];
@@ -41,8 +51,8 @@ interface UseMachinesResult {
   assignPackageToMachine: (packageId: number, machineId: number) => Promise<boolean>;
   
   // Функции для управления статусом заданий упаковки
-  startPackingWork: (taskId: number) => Promise<boolean>;
-  completePackingWork: (taskId: number) => Promise<boolean>;
+  startPackingWork: (taskId: number, machineId: number) => Promise<boolean>;
+  completePackingWork: (taskId: number, machineId: number) => Promise<boolean>;
 }
 
 /**
@@ -65,12 +75,35 @@ const useMachines = (): UseMachinesResult => {
 
   // Ref для предотвращения множественных запросов
   const isLoadingRef = useRef<boolean>(false);
+  
+  // debounce refs
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => getRoomFromStorage(), []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+
+  // Функция для обновления массива станков (временно без умного сравнения)
+  const updateMachinesSmartly = useCallback((newMachines: Machine[]) => {
+    console.log('updateMachinesSmartly вызвана с данными:', newMachines);
+    console.log('Принудительно обновляем данные станков');
+    setMachines(newMachines);
+  }, []);
 
   // Функция для получения данных о станках
   const fetchMachines = useCallback(async () => {
     // Предотвращаем множественные одновременные запросы
     if (isLoadingRef.current) {
-      // console.log('Запрос машин уже выполняется, пропускаем...');
       return;
     }
 
@@ -80,7 +113,7 @@ const useMachines = (): UseMachinesResult => {
     
     try {
       const fetchedMachines = await fetchMachinesBySegment();
-      setMachines(fetchedMachines);
+      updateMachinesSmartly(fetchedMachines);
     } catch (err) {
       console.error('Ошибка при получении данных о станках:', err);
       setError(err instanceof Error ? err : new Error('Неизвестная ошибка при получении данных о станках'));
@@ -88,10 +121,36 @@ const useMachines = (): UseMachinesResult => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, []);
+  }, [updateMachinesSmartly]);
   
   // Функция для обновления данных о станках (алиас для fetchMachines для улучшения читаемости кода)
   const refreshMachines = fetchMachines;
+
+  // Функция для обновления данных станков
+  const refreshMachinesData = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const data = await fetchMachinesBySegment();
+          updateMachinesSmartly(data);
+          console.log(`Данные станков обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления данных станков:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshMachinesData:', err);
+    }
+  }, [updateMachinesSmartly]);
 
   // Функция для получения заданий для станка
   const fetchTasks = useCallback(async (machineId: number) => {
@@ -140,17 +199,17 @@ const useMachines = (): UseMachinesResult => {
     }
   }, []);
 
-  // Функция для обновления приоритета задания
+  // Функция для обновления приоритета задания упаковки
   const updatePriority = useCallback(async (taskId: number, priority: number): Promise<boolean> => {
     try {
-      await updateTaskPriority(taskId, 0, priority); // Передаем 0 как machineId, так как API изменился
+      await updatePackingTaskPriority(taskId, priority);
       // Обновляем локальное состояние - находим задание и обновляем его приоритет
       setMachineTasks(prev => prev.map(task => 
         task.taskId === taskId ? { ...task, priority } : task
       ));
       return true;
     } catch (err) {
-      console.error(`Ошибка при обновлении приоритета для задания ${taskId}:`, err);
+      console.error(`Ошибка при обновлении приоритета для задания упаковки ${taskId}:`, err);
       return false;
     }
   }, []);
@@ -169,6 +228,28 @@ const useMachines = (): UseMachinesResult => {
     }
   }, []);
 
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для станков упаковки в комнате:', room);
+
+    const handleMachineEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие machine:event - status:', data.status);
+      await refreshMachinesData(data.status);
+    };
+
+    socket.on('machine:event', handleMachineEvent);
+
+    return () => {
+      socket.off('machine:event', handleMachineEvent);
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, refreshMachinesData]);
+
   // Функция для назначения упаковки на станок
   const assignPackageToMachine = useCallback(async (packageId: number, machineId: number): Promise<boolean> => {
     try {
@@ -182,10 +263,9 @@ const useMachines = (): UseMachinesResult => {
   }, []);
 
   // Функция для запуска работы над заданием упаковки
-  const startPackingWork = useCallback(async (taskId: number): Promise<boolean> => {
+  const startPackingWork = useCallback(async (taskId: number, machineId: number): Promise<boolean> => {
     try {
-      await startPackingTask(taskId);
-      // console.log(`Задание упаковки ${taskId} переведено в статус "В работе"`);
+      await startPackingTask(taskId, machineId);
       return true;
     } catch (err) {
       console.error(`Ошибка при запуске задания упаковки ${taskId}:`, err);
@@ -194,10 +274,9 @@ const useMachines = (): UseMachinesResult => {
   }, []);
 
   // Функция для завершения работы над заданием упаковки
-  const completePackingWork = useCallback(async (taskId: number): Promise<boolean> => {
+  const completePackingWork = useCallback(async (taskId: number, machineId: number): Promise<boolean> => {
     try {
-      await completePackingTask(taskId);
-      // console.log(`Задание упаковки ${taskId} переведено в статус "Завершено"`);
+      await completePackingTask(taskId, machineId);
       return true;
     } catch (err) {
       console.error(`Ошибка при завершении задания упаковки ${taskId}:`, err);
@@ -205,10 +284,12 @@ const useMachines = (): UseMachinesResult => {
     }
   }, []);
 
+
+
   // Загрузка данных о станках при первом рендере
   useEffect(() => {
     fetchMachines();
-  }, []);
+  }, [fetchMachines]);
 
   // Подписка на изменения выбранного этапа
   useEffect(() => {
@@ -222,14 +303,17 @@ const useMachines = (): UseMachinesResult => {
     return () => {
       window.removeEventListener('stageChanged', handleStageChange as EventListener);
     };
-  }, []);
+  }, [fetchMachines, fetchAvailableMachines]);
   
   return {
     machines,
     loading,
     error,
+    isWebSocketConnected,
+    webSocketError,
     fetchMachines,
     refreshMachines,
+    refreshMachinesData,
     
     // Данные и функции для работы с заданиями
     machineTasks,

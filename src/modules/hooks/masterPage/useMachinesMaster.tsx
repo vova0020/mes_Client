@@ -33,7 +33,7 @@ interface UseMachinesResult {
   removeTask: (operationId: number) => Promise<boolean>;
   transferTask: (operationId: number, targetMachineId: number) => Promise<boolean>;
   updatePriority: (partId: number, machineId: number, priority: number) => Promise<boolean>;
-  updateStatus: (operationId: number, status: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED', masterId?: number) => Promise<boolean>;
+  updateStatus: (operationId: number, status: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED', masterId?: number) => Promise<{ success: boolean; error?: string }>;
   
   // Функции для работы с доступными станками
   availableMachines: MachineDto[];
@@ -341,13 +341,22 @@ const useMachines = (): UseMachinesResult => {
     operationId: number, 
     status: 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED',
     masterId?: number
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       await updateOperationStatus(operationId, status, masterId);
-      return true;
-    } catch (err) {
+      return { success: true };
+    } catch (err: any) {
       console.error(`Ошибка при обновлении статуса операции ${operationId}:`, err);
-      return false;
+      
+      // Извлекаем сообщение об ошибке от сервера
+      let errorMessage = 'Не удалось обновить статус операции';
+      if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message.replace(/поддон \d+/g, 'поддон');
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      return { success: false, error: errorMessage };
     }
   }, []);
   

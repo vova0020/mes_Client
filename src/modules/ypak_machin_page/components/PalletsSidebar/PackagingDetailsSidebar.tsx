@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './PalletsSidebar.module.css';
 import { useParts, usePallets } from '../../../hooks/ypakMasterHook';
-import { useYpakMachine } from '../../../hooks/ypakMachine/useYpakMachine';
+import { assignPalletToPackage } from '../../../api/ypakMachine/ypakMachineApi';
 
 interface PackagingDetailsSidebarProps {
   isOpen: boolean;
@@ -42,8 +42,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
     clearPallets
   } = usePallets();
 
-  // Хук для работы с API упаковки
-  const { assignPalletToPackage } = useYpakMachine();
+  // API функция для назначения поддона на упаковку импортирована напрямую
 
   // Общие состояния загрузки и ошибок
   const loading = partsLoading || palletsLoading;
@@ -183,7 +182,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
       className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
     >
       <div className={styles.sidebarHeader}>
-        <h2>Детали и поддоны</h2>
+        <h2>Информация о деталях и поддонах</h2>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
 

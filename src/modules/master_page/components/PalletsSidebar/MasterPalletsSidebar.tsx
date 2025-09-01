@@ -674,7 +674,7 @@ return (
   >
     <div className={styles.sidebarHeader}>
       <div className={styles.headerTop}>
-        <h2>Поддоны детали</h2>
+        <h2>Информация о поддонах</h2>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
       <div className={styles.detailInfo}>

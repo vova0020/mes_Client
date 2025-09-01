@@ -185,7 +185,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
         await fetchPalletsWithUnallocated(detailId);
       }
       
-      setSuccessMessage(`Поддон ${palletId} перемещен в ячейку буфера ${bufferCellAddress}`);
+      setSuccessMessage(`Поддон  перемещен в ячейку буфера ${bufferCellAddress}`);
       console.log(`Поддон ${palletId} перемещен в ячейку буфера: ${bufferCellAddress}`);
     } catch (err) {
       setErrorMessage('Не удалось обновить ячейку буфера для поддона');
@@ -220,13 +220,13 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       if (response && response.assignment) {
         const assignment = response.assignment;
         const palletName = assignment.pallet?.palletName || `№${assignment.pallet?.palletId || palletId}`;
-        setSuccessMessage(`Поддон ${palletName} успешно взят в работу`);
+        setSuccessMessage(`Поддон  успешно взят в работу`);
         
         if (response.operation && response.operation.processStep) {
           setNextStepInfo(`Начата обработка: ${response.operation.processStep.name}`);
         }
       } else {
-        setSuccessMessage(`Поддон №${palletId} успешно взят в работу`);
+        setSuccessMessage(`Поддон  успешно взят в работу`);
       }
     } catch (error) {
       console.error(`Ошибка при взятии поддона ${palletId} в работу:`, error);
@@ -234,7 +234,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       const apiError = error as any;
       const errorMessage = apiError.response?.data?.message || apiError.message;
       
-      if (errorMessage && errorMessage.includes('Поддон не найден')) {
+      // Проверяем, является ли это ошибкой о незавершенном предыдущем этапе
+      if (errorMessage && errorMessage.includes('Нельзя взять поддон') && errorMessage.includes('в работу. Предыдущий этап')) {
+        // Извлекаем название этапа из сообщения
+        const stageMatch = errorMessage.match(/Предыдущий этап "([^"]+)" не завершен/);
+        const stageName = stageMatch ? stageMatch[1] : 'предыдущий этап';
+        
+        setErrorMessage(`Поддон  не может быть взят в работу. Необходимо завершить этап "${stageName}".`);
+      } else if (errorMessage && errorMessage.includes('Поддон не найден')) {
         setErrorMessage(`Поддон не найден в системе`);
       } else if (errorMessage && errorMessage.includes('Станок не найден')) {
         setErrorMessage(`Станок не найден в системе`);
@@ -678,6 +685,18 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
           <div className={styles.successNotification}>
             <CheckIcon />
             <span>{successMessage}</span>
+          </div>
+        )}
+
+        {/* Отображение сообщения об ошибке */}
+        {errorMessage && (
+          <div className={styles.errorNotification}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <span>{errorMessage}</span>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './PalletsSidebar.module.css';
 import { useParts, usePallets } from '../../../hooks/ypakMasterHook';
+import { assignPalletToPackage } from '../../../api/ypakMachine/ypakMachineApi';
 
 interface PackagingDetailsSidebarProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
   const [showTables, setShowTables] = useState<boolean>(false);
   const [selectedDetailId, setSelectedDetailId] = useState<number | null>(null);
   const [showPalletsLoading, setShowPalletsLoading] = useState<boolean>(false);
+  const [movingPalletId, setMovingPalletId] = useState<number | null>(null);
 
   // Хуки для работы с данными
   const {
@@ -39,6 +41,8 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
     fetchPalletsByPartId,
     clearPallets
   } = usePallets();
+
+  // API функция для назначения поддона на упаковку импортирована напрямую
 
   // Общие состояния загрузки и ошибок
   const loading = partsLoading || palletsLoading;
@@ -84,9 +88,49 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
   };
 
   // Обработчик кнопки "Переместить на упаковку"
-  const handleMoveToPackaging = (palletId: number) => {
-    console.log(`Перемещение поддона ${palletId} на упаковку`);
-    // Здесь будет логика перемещения поддона на упаковку
+  const handleMoveToPackaging = async (palletId: number) => {
+    if (!selectedPackageId || !partInfo) {
+      console.error('Не выбрана упаковка или деталь');
+      return;
+    }
+
+    // Находим поддон для получения количества
+    const pallet = pallets.find(p => p.palletId === palletId);
+    if (!pallet) {
+      console.error('Поддон не найден');
+      return;
+    }
+
+    setMovingPalletId(palletId);
+    
+    try {
+      const result = await assignPalletToPackage(
+        palletId,
+        selectedPackageId,
+        pallet.quantity
+      );
+      
+      console.log('Поддон успешно перемещен на упаковку:', result.message);
+      
+      // Обновляем данные поддонов для текущей детали
+      if (selectedDetailId) {
+        await fetchPalletsByPartId(selectedDetailId);
+      }
+    } catch (error: any) {
+      console.error('Ошибка при перемещении поддона на упаковку:', error);
+      
+      // Показываем пользователю сообщение об ошибке
+      let errorMessage = 'Произошла ошибка при перемещении поддона';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setMovingPalletId(null);
+    }
   };
 
   // Добавляем обработчик кликов вне боковой панели
@@ -138,7 +182,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
       className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
     >
       <div className={styles.sidebarHeader}>
-        <h2>Детали и поддоны</h2>
+        <h2>Информация о деталях и поддонах</h2>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
 
@@ -182,7 +226,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                 </h3>
                 <div style={{ display: 'flex', gap: '20px', fontSize: '13px', color: '#666' }}>
                   <span><strong>Код:</strong> {packageInfo.packageCode}</span>
-                  <span><strong>Готовность:</strong> {packageInfo.completionPercentage}%</span>
+                  <span><strong>Готовность:</strong> {packageInfo.readiness}%</span>
                   <span><strong>Заказ:</strong> {packageInfo.order.orderName}</span>
                 </div>
               </div>
@@ -279,13 +323,20 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                               <td>{pallet.quantity}</td>
                               <td>{pallet.currentCell?.cellCode || '-'}</td>
                               <td className={styles.actionsCell}>
-                                <button
-                                  className={`${styles.actionButton} ${styles.moveToPackagingButton}`}
-                                  onClick={() => handleMoveToPackaging(pallet.palletId)}
-                                  title="Переместить на упаковку"
-                                >
-                                  Переместить на упаковку
-                                </button>
+                                {pallet.assignedToPackage && pallet.status === 'AWAITING_PACKAGING' ? (
+                                  <span className={styles.statusBadge}>
+                                    Ожидает упаковки
+                                  </span>
+                                ) : (
+                                  <button
+                                    className={`${styles.actionButton} ${styles.moveToPackagingButton}`}
+                                    onClick={() => handleMoveToPackaging(pallet.palletId)}
+                                    disabled={movingPalletId === pallet.palletId}
+                                    title="Переместить на упаковку"
+                                  >
+                                    {movingPalletId === pallet.palletId ? 'Перемещение...' : 'Переместить на упаковку'}
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}

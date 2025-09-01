@@ -180,11 +180,11 @@ const MachinesCards: React.FC = () => {
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Выполнено:</span>
                         <span className={styles.infoValue}>
-                          {machine.completedQuantity} шт. ({calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%)
+                          {machine.completedQuantity} {machine.load_unit}. ({calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%)
                           <div className={styles.progressBar}>
                             <div 
-                              className={styles.progressFill} 
-                              style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.plannedQuantity)}%` }}
+                              className={styles.progressFill}  
+                              style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%` }}
                             />
                           </div>
                         </span>

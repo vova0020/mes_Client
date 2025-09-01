@@ -8,6 +8,7 @@ export interface Machine {
   status: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'BROKEN';
   recommendedLoad: number;
   plannedQuantity: number;
+  load_unit: number;
   completedQuantity: number;
 }
 
@@ -236,6 +237,36 @@ export const fetchMachinesBySegmentId = async (): Promise<MachineDto[]> => {
 };
 
 /**
+ * Обновляет приоритет задания упаковки
+ * @param taskId ID задания
+ * @param priority Новый приоритет
+ * @returns Сообщение об успешном обновлении
+ */
+export const updatePackingTaskPriority = async (
+  taskId: number,
+  priority: number
+): Promise<{ message: string }> => {
+  try {
+    const response = await axios.put<{ message: string }>(
+      `${API_URL}/packing-task-management/${taskId}/priority`,
+      {
+        priority
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при обновлении приоритета для задания упаковки ${taskId}:`, error);
+    throw error;
+  }
+};
+
+/**
  * Обновляет приоритет задания
  * @param partId ID детали
  * @param machineId ID станка
@@ -301,13 +332,16 @@ export const createPackingAssignment = async (
 /**
  * Обновляет статус задания упаковки на "В работе"
  * @param taskId ID задания
+ * @param machineId ID станка
  * @returns Сообщение об успешном обновлении
  */
-export const startPackingTask = async (taskId: number): Promise<{ message: string }> => {
+export const startPackingTask = async (taskId: number, machineId: number): Promise<{ message: string }> => {
   try {
     const response = await axios.put<{ message: string }>(
       `${API_URL}/packing-task-management/${taskId}/start`,
-      {},
+      {
+        machineId
+      },
       {
         headers: {
           'Content-Type': 'application/json'
@@ -325,13 +359,16 @@ export const startPackingTask = async (taskId: number): Promise<{ message: strin
 /**
  * Обновляет статус задания упаковки на "Завершено"
  * @param taskId ID задания
+ * @param machineId ID станка
  * @returns Сообщение об успешном обновлении
  */
-export const completePackingTask = async (taskId: number): Promise<{ message: string }> => {
+export const completePackingTask = async (taskId: number, machineId: number): Promise<{ message: string }> => {
   try {
     const response = await axios.put<{ message: string }>(
       `${API_URL}/packing-task-management/${taskId}/complete`,
-      {},
+      {
+        machineId
+      },
       {
         headers: {
           'Content-Type': 'application/json'

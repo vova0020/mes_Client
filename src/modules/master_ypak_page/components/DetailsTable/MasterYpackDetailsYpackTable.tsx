@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './DetailsTable.module.css';
-import { usePackaging } from '../../../hooks/ypakMasterHook';
+import usePackagingDetails from '../../../hooks/ypakMasterHook/packagingMasterHook';
 import useMachines from '../../../hooks/ypakMasterHook/useMachinesMaster';
 import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
 
@@ -21,21 +21,18 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   
   // Используем хук для получения данных о упаковках
   const { 
-    packages, 
+    packagingItems: packages, 
     loading, 
     error, 
-    fetchPackagesByOrderId,
-    clearPackages
-  } = usePackaging();
+    fetchPackagingItems: fetchPackagesByOrderId
+  } = usePackagingDetails(selectedOrderId);
 
   // Используем хук для получения данных о станках
   const {
     availableMachines,
     availableMachinesLoading,
     fetchAvailableMachines,
-    assignPackageToMachine,
-    startPackingWork,
-    completePackingWork
+    assignPackageToMachine
   } = useMachines();
   
   // Ref для отслеживания предыдущего ID заказа
@@ -55,36 +52,11 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     console.log('availableMachines:', availableMachines);
   }, [availableMachines]);
 
-  // Загружаем упаковки при изменении выбранного заказа
+  // Сбрасываем активную упаковку при смене заказа
   useEffect(() => {
-    // Если меняется ID заказа, сначала скрываем детали с анимацией
-    if (prevOrderIdRef.current !== selectedOrderId && !loading && packages && packages.length > 0) {
-      setShowDetails(false);
-      
-      // Используем setTimeout для создания "задержки" при смене данных
-      const timer = setTimeout(() => {
-        if (selectedOrderId !== null) {
-          fetchPackagesByOrderId(selectedOrderId);
-        } else {
-          clearPackages();
-        }
-        // Сбрасываем активную упаковку при смене заказа
-        setActivePackagingId(null);
-      }, 300); // Задержка должна быть равна или меньше времени анимации исчезновения
-      
-      return () => clearTimeout(timer);
-    } else {
-      if (selectedOrderId !== null) {
-        fetchPackagesByOrderId(selectedOrderId);
-      } else {
-        clearPackages();
-      }
-      // Сбрасываем активную упаковку при смене заказа
-      setActivePackagingId(null);
-    }
-    
+    setActivePackagingId(null);
     prevOrderIdRef.current = selectedOrderId;
-  }, [selectedOrderId, fetchPackagesByOrderId, clearPackages]);
+  }, [selectedOrderId]);
 
   // Показываем упаковки с анимацией после загрузки
   useEffect(() => {
@@ -209,6 +181,8 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     return assignedMachine.status === 'IN_PROGRESS' && !assignedMachine.completedAt;
   };
 
+
+
   // Обработчик изменения выбора упаковщика (станка)
   const handleAssignPackagerChange = async (e: React.ChangeEvent<HTMLSelectElement>, packageId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
@@ -234,50 +208,11 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     }
   };
 
-  // Обработчики кнопок статусов
-  const handleInProgressClick = async (e: React.MouseEvent, packageId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
-    
-    // Находим упаковку и получаем ID задания
-    const packaging = (packages || []).find(p => p.id === packageId);
-    if (packaging) {
-      const assignedMachine = getAssignedMachine(packaging);
-      if (assignedMachine && assignedMachine.taskId) {
-        const success = await startPackingWork(assignedMachine.taskId);
-        
-        if (success) {
-          // Перезагружаем данные для обновления состояния
-          if (selectedOrderId !== null) {
-            fetchPackagesByOrderId(selectedOrderId);
-          }
-        }
-      }
-    }
-  };
 
-  const handleCompletedClick = async (e: React.MouseEvent, packageId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
-    
-    // Находим упаковку и получаем ID задания
-    const packaging = (packages || []).find(p => p.id === packageId);
-    if (packaging) {
-      const assignedMachine = getAssignedMachine(packaging);
-      if (assignedMachine && assignedMachine.taskId) {
-        const success = await completePackingWork(assignedMachine.taskId);
-        
-        if (success) {
-          // Перезагружаем данные для обновления состояния
-          if (selectedOrderId !== null) {
-            fetchPackagesByOrderId(selectedOrderId);
-          }
-        }
-      }
-    }
-  };
 
-  const handlePartiallyCompletedClick = (e: React.MouseEvent, packageId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
+  const handlePartiallyCompletedClick = (packageId: number) => {
     // updateStatus(packageId, 'partially_completed');
+    console.log(`Частичное завершение упаковки ${packageId}`);
   };
 
   // Функция для получения класса стиля в зависимости от статуса упаковки
@@ -409,7 +344,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
               <th>Статус упаковки</th>
               {/* <th>Разрешить паковать вне линии</th> */}
               <th>Назначить станок</th>
-              <th colSpan={4}>Действия</th>
+              <th>Действия</th>
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
@@ -437,7 +372,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                 <td>{packaging.readyForPackaging}</td>
                 <td>{packaging.distributed}</td>
                 <td>{packaging.assembled}</td>
-                <td>{packaging.packaged}</td>
+                <td>{packaging.completed}</td>
                 <td>
                   <span className={`${styles.statusBadge} ${getPackingStatusClass(packaging.packingStatus || 'NOT_PROCESSED')}`}>
                     {getPackingStatusText(packaging.packingStatus || 'NOT_PROCESSED')}
@@ -457,51 +392,29 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                 <td>
                   {(() => {
                     const assignedMachine = getAssignedMachine(packaging);
+                    
                     return (
                       <select 
                         className={styles.workerSelect}
                         value={assignedMachine ? assignedMachine.machineId : ""}
                         onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
                         onClick={(e) => e.stopPropagation()}
-                        disabled={availableMachinesLoading}
+                        disabled={availableMachinesLoading || !!assignedMachine}
                       >
                         <option value="">
                           {availableMachinesLoading ? 'Загрузка...' : 'Выберите станок'}
                         </option>
                         {availableMachines.map((machine) => (
-                          <option key={machine.id} value={machine.id}>
+                          <option 
+                            key={machine.id} 
+                            value={machine.id}
+                          >
                             {machine.name}
                           </option>
                         ))}
                       </select>
                     );
                   })()}
-                </td>
-                <td>
-                  <button 
-                    className={`${styles.actionButton} ${styles.inProgressButton}`}
-                    onClick={(e) => handleInProgressClick(e, packaging.id)}
-                    disabled={!canStartWork(packaging)}
-                  >
-                    В работу
-                  </button>
-                </td>
-                <td>
-                  <button 
-                    className={`${styles.actionButton} ${styles.completedButton}`}
-                    onClick={(e) => handleCompletedClick(e, packaging.id)}
-                    disabled={!canComplete(packaging)}
-                  >
-                    Готово
-                  </button>
-                </td>
-                <td>
-                  <button 
-                    className={`${styles.actionButton} ${styles.partiallyCompletedButton}`}
-                    onClick={(e) => handlePartiallyCompletedClick(e, packaging.id)}
-                  >
-                    Частично
-                  </button>
                 </td>
                 <td>
                   <button 

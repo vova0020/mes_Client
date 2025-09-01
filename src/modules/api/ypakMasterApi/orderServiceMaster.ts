@@ -12,6 +12,7 @@ export interface Order {
   status: string;
   available: number;
   completed: number;
+  priority?: number;
 }
 
 // Получение всех заказов (GET)
@@ -33,7 +34,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
     throw new Error('stageId is required');
   }
   
-  const response = await axios.get(`${API_URL}/orders`, {
+  const response = await axios.get(`${API_URL}/ordersYpack`, {
     params: { stageId }
   });
   return response.data;
@@ -41,6 +42,6 @@ export const getAllOrders = async (): Promise<Order[]> => {
 
 // Получение заказа по идентификатору (GET)
 export const getOrderById = async (id: number): Promise<Order> => {
-  const response = await axios.get(`${API_URL}/orders/${id}`);
+  const response = await axios.get(`${API_URL}/ordersYpack/${id}`);
   return response.data;
 };

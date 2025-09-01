@@ -123,7 +123,11 @@ const usePackaging = () => {
         return;
       }
 
-      if (currentOrderId === null) return;
+      // Проверяем, что есть текущий заказ и данные упаковок уже загружены
+      if (currentOrderId === null || packagingData.length === 0) {
+        console.log('Пропускаем обновление: нет активного заказа или данных упаковок');
+        return;
+      }
 
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
@@ -134,7 +138,7 @@ const usePackaging = () => {
           const data = await fetchPackagingByOrderId(currentOrderId);
           const sortedData = data.sort((a, b) => a.id - b.id);
           updatePackagingSmartly(sortedData);
-          console.log(`Данные упаковок обновлены (debounced).`);
+          console.log(`Данные упаковок обновлены для заказа ${currentOrderId} (debounced).`);
         } catch (err) {
           console.error('Ошибка обновления данных упаковок:', err);
         }
@@ -142,7 +146,7 @@ const usePackaging = () => {
     } catch (err) {
       console.error('Ошибка в refreshPackagingData:', err);
     }
-  }, [currentOrderId, updatePackagingSmartly]);
+  }, [currentOrderId, packagingData.length, updatePackagingSmartly]);
 
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
@@ -151,8 +155,11 @@ const usePackaging = () => {
     console.log('Настройка WebSocket обработчиков для упаковок в комнате:', room);
 
     const handlePackagingEvent = async (data: { status: string }) => {
-      console.log('Получено WebSocket событие для упаковок - status:', data.status);
-      await refreshPackagingData(data.status);
+      console.log('Получено WebSocket событие для упаковок - status:', data.status, 'currentOrderId:', currentOrderId);
+      // Обновляем данные только если модальное окно открыто и есть активный заказ
+      if (currentOrderId !== null && packagingData.length > 0) {
+        await refreshPackagingData(data.status);
+      }
     };
 
     socket.on('package:event', handlePackagingEvent);

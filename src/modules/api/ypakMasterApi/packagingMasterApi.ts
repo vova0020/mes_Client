@@ -4,14 +4,17 @@ import { API_URL } from '../config';
 // Интерфейсы для данных
 export interface PackagingDataDto {
   id: number;
-  article: string;
-  name: string;
+  orderId: number;
+  packageCode: string;
+  packageName: string;
   totalQuantity: number;
   readyForPackaging: number;
-  allocated: number;
+  distributed: number;
   assembled: number;
-  packed: number;
-  allowPackingOutsideLine: boolean;
+  completed: number;
+  packingStatus: string;
+  tasks?: any[];
+  allowPackingOutsideLine?: boolean;
   assignedPackager?: string;
 }
 
@@ -30,17 +33,25 @@ export const fetchPackagingByOrderId = async (orderId: number | null): Promise<P
     const response = await axios.get(`${API_URL}/packaging/by-order/${orderId}`);
     // console.log(response.data);
     
-    return response.data.packages.map((item: any, index: number) => ({
-      id: item.id, 
-      article: item.packageCode || 'Н/Д',
-      name: item.packageName,
-      // totalQuantity: item.totalQuantity,
-      // readyForPackaging: item.readyForPackaging,
-      // allocated: item.allocated,
-      // assembled: item.assembled,
-      // packed: item.packed,
-      // allowPackingOutsideLine: false, // По умолчанию выключено
-      // assignedPackager: undefined
+    // Фильтруем данные только для конкретного заказа
+    const filteredPackages = response.data.packages.filter((item: any) => 
+      item.orderId === orderId
+    );
+    
+    return filteredPackages.map((item: any) => ({
+      id: item.id,
+      orderId: item.orderId,
+      packageCode: item.packageCode || 'Н/Д',
+      packageName: item.packageName,
+      totalQuantity: item.totalQuantity || 0,
+      readyForPackaging: item.readyForPackaging || 0,
+      distributed: item.distributed || 0,
+      assembled: item.assembled || 0,
+      completed: item.completed || 0,
+      packingStatus: item.packingStatus || 'NOT_PROCESSED',
+      tasks: item.tasks || [],
+      allowPackingOutsideLine: false,
+      assignedPackager: undefined
     }));
   } catch (error) {
     console.error('Ошибка при получении данных об упаковках:', error);

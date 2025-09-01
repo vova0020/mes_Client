@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { 
   fetchPackagingByOrderId, 
   fetchPackagingWorkers,
@@ -8,16 +8,25 @@ import {
   PackagingDataDto,
   PackagingWorkerDto
 } from '../../api/ypakMasterApi/packagingMasterApi';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
+
+// Получение комнаты из localStorage
+const getRoomFromStorage = (): string => {
+  return 'room:masterypack';
+};
 
 interface UsePackagingDetailsResult {
   packagingItems: PackagingDataDto[];
   workers: PackagingWorkerDto[];
   loading: boolean;
   error: Error | null;
+  isWebSocketConnected: boolean;
+  webSocketError: string | null;
   fetchPackagingItems: (orderId: number | null) => Promise<void>;
   assignWorker: (packagingId: number, workerId: number) => Promise<void>;
   toggleAllowOutsidePacking: (packagingId: number, allow: boolean) => Promise<void>;
   updateStatus: (packagingId: number, status: 'in_progress' | 'completed' | 'partially_completed') => Promise<void>;
+  refreshPackagingData: (status: string) => Promise<void>;
 }
 
 const usePackagingDetails = (initialOrderId: number | null = null): UsePackagingDetailsResult => {
@@ -25,32 +34,86 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
   const [workers, setWorkers] = useState<PackagingWorkerDto[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const [currentOrderId, setCurrentOrderId] = useState<number | null>(initialOrderId);
   
+  // debounce refs
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => getRoomFromStorage(), []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
+  
+  // Функция для умного обновления массива упаковок
+  const updatePackagingSmartly = useCallback((newPackaging: PackagingDataDto[]) => {
+    setPackagingItems(currentPackaging => {
+      if (currentPackaging.length === 0) {
+        return newPackaging;
+      }
+
+      const currentPackagingMap = new Map(currentPackaging.map(p => [p.id, p]));
+      const updatedPackaging: PackagingDataDto[] = [];
+      let hasChanges = false;
+
+      newPackaging.forEach(newPack => {
+        const currentPack = currentPackagingMap.get(newPack.id);
+        
+        if (!currentPack) {
+          updatedPackaging.push(newPack);
+          hasChanges = true;
+        } else {
+          const packChanged = JSON.stringify(currentPack) !== JSON.stringify(newPack);
+
+          if (packChanged) {
+            updatedPackaging.push(newPack);
+            hasChanges = true;
+          } else {
+            updatedPackaging.push(currentPack);
+          }
+        }
+      });
+
+      const newPackIds = new Set(newPackaging.map(p => p.id));
+      const removedPacks = currentPackaging.filter(p => !newPackIds.has(p.id));
+      if (removedPacks.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedPackaging : currentPackaging;
+    });
+  }, []);
+
   // Функция для получения данных об упаковках
   const fetchPackagingItems = useCallback(async (orderId: number | null) => {
     if (orderId === null) {
       setPackagingItems([]);
+      setCurrentOrderId(null);
       return;
     }
     
     setLoading(true);
     setError(null);
+    setCurrentOrderId(orderId);
     
     try {
       const fetchedItems = await fetchPackagingByOrderId(orderId);
-      setPackagingItems(fetchedItems);
-      
-      // Загружаем список сотрудников, если ещё не загружен
-      // if (workers.length === 0) {
-      //   const fetchedWorkers = await fetchPackagingWorkers();
-      //   setWorkers(fetchedWorkers);
-      // }
+      const sortedData = fetchedItems.sort((a, b) => a.id - b.id);
+      updatePackagingSmartly(sortedData);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Произошла неизвестная ошибка'));
     } finally {
       setLoading(false); 
     }
-  }, [workers.length]);
+  }, [updatePackagingSmartly]);
   
   // Функция для назначения упаковщика
   const assignWorker = useCallback(async (packagingId: number, workerId: number) => {
@@ -108,10 +171,10 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
             
             switch (status) {
               case 'in_progress':
-                newItem.allocated = Math.min(item.readyForPackaging, item.allocated + 1);
+                newItem.distributed = Math.min(item.readyForPackaging, item.distributed + 1);
                 break;
               case 'completed':
-                newItem.packed = Math.min(item.readyForPackaging, item.packed + 1);
+                newItem.completed = Math.min(item.readyForPackaging, item.completed + 1);
                 break;
               case 'partially_completed':
                 newItem.assembled = Math.min(item.readyForPackaging, item.assembled + 1);
@@ -129,6 +192,57 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
     }
   }, []);
   
+  // Функция для обновления данных упаковок
+  const refreshPackagingData = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket:', status);
+        return;
+      }
+
+      if (currentOrderId === null) return;
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const data = await fetchPackagingByOrderId(currentOrderId);
+          const sortedData = data.sort((a, b) => a.id - b.id);
+          updatePackagingSmartly(sortedData);
+          console.log(`Данные упаковок обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления данных упаковок:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshPackagingData:', err);
+    }
+  }, [currentOrderId, updatePackagingSmartly]);
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для упаковок в комнате:', room);
+
+    const handlePackagingEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие для упаковок - status:', data.status);
+      await refreshPackagingData(data.status);
+    };
+
+    socket.on('package:event', handlePackagingEvent);
+
+    return () => {
+      socket.off('package:event', handlePackagingEvent);
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, refreshPackagingData]);
+
   // Инициализация с начальным ID заказа, если он предоставлен
   useEffect(() => {
     if (initialOrderId !== null) {
@@ -141,10 +255,13 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
     workers,
     loading,
     error,
+    isWebSocketConnected,
+    webSocketError,
     fetchPackagingItems,
     assignWorker,
     toggleAllowOutsidePacking,
-    updateStatus
+    updateStatus,
+    refreshPackagingData
   };
 };
 

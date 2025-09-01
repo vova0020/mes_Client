@@ -171,7 +171,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       await refreshPalletData(palletId);
 
       // Показываем сообщение об успешном обновлении
-      setSuccessMessage(`Поддон ${palletId} перемещен в ячейку буфера ${bufferCellAddress}`);
+      setSuccessMessage(`Поддон  перемещен в ячейку буфера ${bufferCellAddress}`);
     } catch (error) {
       console.error(`Ошибка при изменении ячейки буфера для поддона ${palletId}:`, error);
       setErrorMessage(`Не удалось обновить ячейку буфера: ${(error as Error).message}`);
@@ -263,15 +263,25 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       console.log(`Поддон ${palletId} успешно переведен в работу`);
 
       // Показываем сообщение об успехе
-      setSuccessMessage(`Поддон №${palletId} успешно переведен в статус "В работу"`);
+      setSuccessMessage(`Поддон успешно переведен в статус "В работу"`);
     } catch (error) {
       console.error(`Ошибка при переводе поддона ${palletId} в работу:`, error);
 
-      // Извлекаем сообщение об ошибке из ответа API, если возможно
+      // Извлекаем сообщение об ошибке из ответа API
       const apiError = error as any;
-      const errorMsg = apiError.response?.data?.message || apiError.message ||
-        'Неизвестная ошибка при переводе поддона в работу';
-      setErrorMessage(`Не удалось перевести поддон в работу: ${errorMsg}`);
+      const errorMsg = apiError.response?.data?.message || apiError.message;
+      
+      // Проверяем, является ли это ошибкой о незавершенном предыдущем этапе
+      if (errorMsg && errorMsg.includes('Нельзя взять поддон') && errorMsg.includes('в работу. Предыдущий этап')) {
+        // Извлекаем название этапа из сообщения
+        const stageMatch = errorMsg.match(/Предыдущий этап "([^"]+)" не завершен/);
+        const stageName = stageMatch ? stageMatch[1] : 'предыдущий этап';
+        
+        setErrorMessage(`Поддон  не может быть взят в работу. Необходимо завершить этап "${stageName}".`);
+      } else {
+        // Обрабатываем другие типы ошибок
+        setErrorMessage(`Не удалось перевести поддон в работу: ${errorMsg || 'Неизвестная ошибка'}`);
+      }
     } finally {
       setProcessingPalletId(null);
     }
@@ -553,6 +563,18 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
           <div className={styles.successNotification}>
             <CheckIcon />
             <span>{successMessage}</span>
+          </div>
+        )}
+
+        {/* Отображение сообщения об ошибке */}
+        {errorMessage && (
+          <div className={styles.errorNotification}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <span>{errorMessage}</span>
           </div>
         )}
 

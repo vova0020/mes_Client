@@ -420,15 +420,15 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
       
-      const success = await updateStatus(operationId, 'IN_PROGRESS');
-      if (success) {
-        setSuccessMessage(`Поддон №${operationId} успешно переведен в статус "В работе"`);
+      const result = await updateStatus(operationId, 'IN_PROGRESS');
+      if (result.success) {
+        setSuccessMessage(`Поддон успешно переведен в статус "В работе"`);
         await fetchTasks(machineId);
         if (onDataUpdate) {
           onDataUpdate();
         }
       } else {
-        setErrorMessage('Не удалось перевести поддон в работу');
+        setErrorMessage(result.error || 'Не удалось перевести поддон в работу');
       }
     } catch (error) {
       console.error(`Ошибка при переводе поддона ${operationId} в работу:`, error);
@@ -445,15 +445,15 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
       
-      const success = await updateStatus(operationId, 'COMPLETED');
-      if (success) {
-        setSuccessMessage(`Поддон №${operationId} успешно отмечен как готовый`);
+      const result = await updateStatus(operationId, 'COMPLETED');
+      if (result.success) {
+        setSuccessMessage(`Поддон успешно отмечен как готовый`);
         await fetchTasks(machineId);
         if (onDataUpdate) {
           onDataUpdate();
         }
       } else {
-        setErrorMessage('Не удалось отметить поддон как готовый');
+        setErrorMessage(result.error || 'Не удалось отметить поддон как готовый');
       }
     } catch (error) {
       console.error(`Ошибка при отметке поддона ${operationId} как готовый:`, error);

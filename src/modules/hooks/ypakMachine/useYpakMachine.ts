@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { 
   YpakMachineDetails, 
   YpakTask,
@@ -11,6 +11,12 @@ import {
   assignPalletToPackage,
   AssignPalletToPackageResponse
 } from '../../api/ypakMachine/ypakMachineApi';
+import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
+
+// Получение комнаты из localStorage
+const getRoomFromStorage = (): string => {
+  return 'room:machinesypack';
+};
 
 // Тип для состояния загрузки
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
@@ -21,6 +27,8 @@ interface UseYpakMachineResult {
   tasks: YpakTask[];
   loading: LoadingState;
   error: Error | null;
+  isWebSocketConnected: boolean;
+  webSocketError: string | null;
   refetch: () => Promise<void>;
   sendToMonitors: (taskId: number) => Promise<void>;
   startOperation: (taskId: number) => Promise<void>;
@@ -38,6 +46,23 @@ export const useYpakMachine = (): UseYpakMachineResult => {
   const [machineDetails, setMachineDetails] = useState<YpakMachineDetails | null>(null);
   const [loading, setLoading] = useState<LoadingState>('idle');
   const [error, setError] = useState<Error | null>(null);
+  
+  // debounce refs
+  const refreshTimeoutRef = useRef<number | null>(null);
+  const REFRESH_DEBOUNCE_MS = 300;
+  
+  // Получаем комнату для WebSocket подключения
+  const room = useMemo(() => getRoomFromStorage(), []);
+  
+  // Инициализируем WebSocket подключение
+  const { 
+    socket, 
+    isConnected: isWebSocketConnected, 
+    error: webSocketError 
+  } = useWebSocketRoom({ 
+    room,
+    autoJoin: true 
+  });
 
   // Функция для загрузки данных о задачах станка упаковки
   const fetchMachineDetails = useCallback(async (): Promise<void> => {
@@ -136,6 +161,54 @@ export const useYpakMachine = (): UseYpakMachineResult => {
     }
   }, [fetchMachineDetails]);
 
+  // Функция для обновления данных станка
+  const refreshMachineData = useCallback(async (status: string) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket:', status);
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const data = await getMachineTask();
+          setMachineDetails(data);
+          console.log(`Данные станка упаковки обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления данных станка:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshMachineData:', err);
+    }
+  }, []);
+
+  // Настройка WebSocket обработчиков событий
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected) return;
+
+    console.log('Настройка WebSocket обработчиков для станка упаковки в комнате:', room);
+
+    const handleYpakEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие для станка упаковки - status:', data.status);
+      await refreshMachineData(data.status);
+    };
+
+    socket.on('package:event', handleYpakEvent);
+
+    return () => {
+      socket.off('package:event', handleYpakEvent);
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [socket, isWebSocketConnected, room, refreshMachineData]);
+
   // Получение списка всех задач
   const tasks = machineDetails?.tasks || [];
 
@@ -144,6 +217,8 @@ export const useYpakMachine = (): UseYpakMachineResult => {
     tasks,
     loading,
     error,
+    isWebSocketConnected,
+    webSocketError,
     refetch: fetchMachineDetails,
     sendToMonitors: handleSendToMonitors,
     startOperation: handleStartOperation,
