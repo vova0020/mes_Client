@@ -115,8 +115,16 @@
 }
 
 .selectedPackage {
-  background: #bee3f8 !important;
-  border-left: 3px solid #3182ce;
+  background: linear-gradient(135deg, #bee3f8, #90cdf4) !important;
+  border-left: 4px solid #3182ce;
+  box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
+  transform: scale(1.01);
+}
+
+.selectedPackage td {
+  background: transparent !important;
+  font-weight: 600;
+  color: #1e40af !important;
 }
 
 .detailsSection {

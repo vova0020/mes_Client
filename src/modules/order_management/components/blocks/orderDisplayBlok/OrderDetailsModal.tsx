@@ -40,7 +40,16 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
   };
 
   const handlePackageClick = (packageId: number) => {
+    console.log('Package clicked:', packageId);
     setSelectedPackageId(selectedPackageId === packageId ? null : packageId);
+  };
+
+  const isPartRelatedToPackage = (partId: number, packageId: number | null) => {
+    if (!packageId) return false;
+    const selectedPackage = orderDetails.packages.find(pkg => pkg.packageId === packageId);
+    const part = orderDetails.parts.find(p => p.partId === partId);
+    const isRelated = part?.packages.includes(selectedPackage?.packageName || '') || false;
+    return isRelated;
   };
 
   const allStages = Array.from(new Set(orderDetails.parts.flatMap(part => 
@@ -105,7 +114,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                   {orderDetails.parts.map((part) => (
                     <React.Fragment key={part.partId}>
                       <tr 
-                        className={styles.detailRow}
+                        className={`${styles.detailRow} ${isPartRelatedToPackage(part.partId, selectedPackageId) ? styles.highlightedDetail : ''}`}
                         onClick={() => toggleDetailExpansion(part.partId)}
                       >
                         <td>{part.partCode}</td>
