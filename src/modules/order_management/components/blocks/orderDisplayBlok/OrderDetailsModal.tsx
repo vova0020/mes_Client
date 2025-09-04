@@ -163,6 +163,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, packages
                                 <thead>
                                   <tr>
                                     <th>Поддон</th>
+                                    <th>Количество</th>
                                     {detail.route.map(stage => (
                                       <th key={stage}>{stage}</th>
                                     ))}
@@ -172,6 +173,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, packages
                                   {detail.pallets.map((pallet) => (
                                     <tr key={pallet.id}>
                                       <td>{pallet.id}</td>
+                                      <td>10</td>
                                       {detail.route.map(stage => (
                                         <td key={stage}>
                                           <span 

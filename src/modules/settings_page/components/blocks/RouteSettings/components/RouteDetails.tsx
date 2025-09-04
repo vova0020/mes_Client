@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Route } from '../api/routes.api';
 import { useMoveRouteStage, useRoute } from '../hooks/useRoutes';
 import styles from './RouteDetails.module.css';
@@ -19,55 +19,55 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
     
     // Используем актуальные данные, если они есть, иначе fallback на переданные
     const routeToDisplay = currentRoute || selectedRoute;
+    
+    // Состояние для drag and drop
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-    const handleMoveStage = async (stageId: number, direction: 'up' | 'down') => {
-        if (!routeToDisplay) return;
+    // Drag and drop обработчики
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+    };
 
-        const sortedStages = [...routeToDisplay.routeStages].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
-        const currentIndex = sortedStages.findIndex(s => s.routeStageId === stageId);
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+        e.preventDefault();
         
-        if (currentIndex === -1) return;
-        
-        let newIndex: number;
-        if (direction === 'up') {
-            if (currentIndex === 0) return; // Уже первый
-            newIndex = currentIndex - 1;
-        } else {
-            if (currentIndex === sortedStages.length - 1) return; // Уже последний
-            newIndex = currentIndex + 1;
+        if (draggedIndex === null || draggedIndex === dropIndex || !routeToDisplay) {
+            setDraggedIndex(null);
+            return;
         }
 
+        const sortedStages = [...routeToDisplay.routeStages].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+        const draggedStage = sortedStages[draggedIndex];
+        const targetStage = sortedStages[dropIndex];
+        
         // Используем номер последовательности целевой позиции
-        const targetStage = sortedStages[newIndex];
         const newSequenceNumber = Number(targetStage.sequenceNumber);
 
-        console.log('Moving stage:', { 
-            stageId, 
-            direction, 
-            currentIndex, 
-            newIndex, 
-            currentSequence: sortedStages[currentIndex].sequenceNumber, 
-            newSequenceNumber,
-            newSequenceNumberType: typeof newSequenceNumber
-        });
-
         try {
-            const updatedStages = await moveRouteStage.mutateAsync({
-                stageId: Number(stageId),
+            await moveRouteStage.mutateAsync({
+                stageId: Number(draggedStage.routeStageId),
                 newSequenceNumber
             });
             
-            // Если есть callback и обновленные данные, обновляем родительский компонент
-            if (onRouteUpdate && updatedStages && updatedStages.length > 0) {
-                // Получаем обновленный маршрут из кэша
-                const updatedRoute = currentRoute;
-                if (updatedRoute) {
-                    onRouteUpdate(updatedRoute);
-                }
+            // Если есть callback, обновляем родительский компонент
+            if (onRouteUpdate && currentRoute) {
+                onRouteUpdate(currentRoute);
             }
         } catch (error) {
             console.error('Ошибка при перемещении этапа:', error);
         }
+        
+        setDraggedIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
     };
 
     if (!routeToDisplay) {
@@ -118,48 +118,36 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({
                             Последовательность этапов обработки
                         </h3>
                         <div className={styles.stageFlowHint}>
-                            💡 Используйте стрелки ↑↓ для изменения порядка этапов. Порядок определяет последовательность обработки деталей.
+                            💡 Перетащите этапы для изменения порядка. Порядок определяет последовательность обработки деталей.
                         </div>
                         <div className={styles.stagesFlow}>
                             {sortedStages.map((stage, index) => (
-                                <React.Fragment key={stage.routeStageId}>
-                                    <div className={styles.stageCard}>
-                                        <div className={styles.stageNumber}>
-                                            {index + 1}
-                                        </div>
-                                        <div className={styles.stageInfo}>
-                                            <div className={styles.stageName}>
-                                                {stage.stage.stageName}
-                                            </div>
-                                            {stage.substage && (
-                                                <div className={styles.substageName}>
-                                                    → {stage.substage.substageName}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className={styles.stageActions}>
-                                            <button
-                                                className={`${styles.actionButton} ${styles.moveButton}`}
-                                                onClick={() => handleMoveStage(stage.routeStageId, 'up')}
-                                                disabled={index === 0 || moveRouteStage.isPending}
-                                                title="Переместить вверх"
-                                            >
-                                                ↑
-                                            </button>
-                                            <button
-                                                className={`${styles.actionButton} ${styles.moveButton}`}
-                                                onClick={() => handleMoveStage(stage.routeStageId, 'down')}
-                                                disabled={index === sortedStages.length - 1 || moveRouteStage.isPending}
-                                                title="Переместить вниз"
-                                            >
-                                                ↓
-                                            </button>
-                                        </div>
+                                <div 
+                                    key={stage.routeStageId}
+                                    className={`${styles.stageCard} ${draggedIndex === index ? styles.dragging : ''}`}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, index)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, index)}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <div className={styles.dragHandle} title="Перетащите для изменения порядка">
+                                        ⋮⋮
                                     </div>
-                                    {index < sortedStages.length - 1 && (
-                                        <div className={styles.stageArrow}></div>
-                                    )}
-                                </React.Fragment>
+                                    <div className={styles.stageNumber}>
+                                        {index + 1}
+                                    </div>
+                                    <div className={styles.stageInfo}>
+                                        <div className={styles.stageName}>
+                                            {stage.stage.stageName}
+                                        </div>
+                                        {stage.substage && (
+                                            <div className={styles.substageName}>
+                                                → {stage.substage.substageName}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>

@@ -44,6 +44,8 @@ const RouteForm: React.FC<RouteFormProps> = ({
     const [lineStages, setLineStages] = useState<LineStagesResponse | null>(null);
     const [selectedStages, setSelectedStages] = useState<SelectedStage[]>([]);
     
+    // Состояние для drag and drop
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     
     // Состояние загрузки
     const [loadingLines, setLoadingLines] = useState(false);
@@ -144,8 +146,9 @@ const RouteForm: React.FC<RouteFormProps> = ({
 
     // Управление этапами при загрузке этапов линии
     useEffect(() => {
-        if (!lineStages) return;
+        if (!lineStages || isEditing) return;
 
+        // При создании нового маршрута всегда показываем все этапы линии
         const allStages = lineStages.stagesLevel1.map((stage, index) => ({
             stageId: stage.stageId,
             substageId: undefined,
@@ -153,21 +156,9 @@ const RouteForm: React.FC<RouteFormProps> = ({
             stageName: stage.stageName,
             substageName: undefined
         }));
-
-        // При создании нового маршрута всегда показываем все этапы линии
-        if (!isEditing) {
-            setSelectedStages(allStages);
-            return;
-        }
-
-        // При редактировании и смене линии показываем все этапы новой линии
-        if (route?.lineId !== routeForm.lineId) {
-            setSelectedStages(allStages);
-        }
-        // При редактировании с той же линией оставляем текущие этапы
-        // (они обновятся через handleLineChange если пользователь специально выберет ту же линию)
         
-    }, [lineStages, isEditing, route?.lineId, routeForm.lineId]);
+        setSelectedStages(allStages);
+    }, [lineStages, isEditing]);
 
     // Обработчик изменения поля формы
     const handleRouteFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,38 +180,76 @@ const RouteForm: React.FC<RouteFormProps> = ({
         
         setSelectedStages(updatedStages);
     };
-    
-    const handleMoveUp = (index: number) => {
-        if (index === 0) return;
+
+    // Обработчик выбора подэтапа
+    const handleSubstageChange = (stageIndex: number, substageId: number | undefined) => {
+        const updatedStages = [...selectedStages];
+        const stage = updatedStages[stageIndex];
         
-        const stages = [...selectedStages];
-        const temp = stages[index];
-        stages[index] = stages[index - 1];
-        stages[index - 1] = temp;
+        if (substageId && lineStages) {
+            const substage = lineStages.stagesLevel2.find(s => s.substageId === substageId);
+            updatedStages[stageIndex] = {
+                ...stage,
+                substageId: substageId,
+                substageName: substage?.substageName
+            };
+        } else {
+            updatedStages[stageIndex] = {
+                ...stage,
+                substageId: undefined,
+                substageName: undefined
+            };
+        }
         
-        const reorderedStages = stages.map((stage, idx) => ({
-            ...stage,
-            sequenceNumber: idx + 1
-        }));
-        
-        setSelectedStages(reorderedStages);
+        console.log(`Обновлен этап ${stageIndex}:`, updatedStages[stageIndex]);
+        setSelectedStages(updatedStages);
+    };
+
+    // Получить подэтапы для конкретного этапа
+    const getSubstagesForStage = (stageId: number) => {
+        if (!lineStages) return [];
+        return lineStages.stagesLevel2.filter(substage => substage.stageId === stageId);
     };
     
-    // Переместить этап вниз
-    const handleMoveDown = (index: number) => {
-        if (index === selectedStages.length - 1) return;
+    // Drag and drop обработчики
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+        e.preventDefault();
         
+        if (draggedIndex === null || draggedIndex === dropIndex) {
+            setDraggedIndex(null);
+            return;
+        }
+
         const stages = [...selectedStages];
-        const temp = stages[index];
-        stages[index] = stages[index + 1];
-        stages[index + 1] = temp;
+        const draggedStage = stages[draggedIndex];
         
+        // Удаляем перетаскиваемый элемент
+        stages.splice(draggedIndex, 1);
+        // Вставляем на новое место
+        stages.splice(dropIndex, 0, draggedStage);
+        
+        // Обновляем номера последовательности
         const reorderedStages = stages.map((stage, idx) => ({
             ...stage,
             sequenceNumber: idx + 1
         }));
         
         setSelectedStages(reorderedStages);
+        setDraggedIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
     };
 
     // Обработчик сохранения
@@ -235,6 +264,7 @@ const RouteForm: React.FC<RouteFormProps> = ({
             }))
         };
         
+        console.log('Сохраняемые данные маршрута:', routeData);
         onSave(routeData);
     };
 
@@ -282,6 +312,14 @@ const RouteForm: React.FC<RouteFormProps> = ({
                             <select
                                 value={routeForm.lineId}
                                 onChange={(e) => handleLineChange(Number(e.target.value))}
+                                onClick={(e) => {
+                                    if (isEditing && e.target instanceof HTMLSelectElement) {
+                                        const selectedValue = Number(e.target.value);
+                                        if (selectedValue > 0) {
+                                            handleLineChange(selectedValue);
+                                        }
+                                    }
+                                }}
                                 className={styles.select}
                                 disabled={loadingLines}
                             >
@@ -319,7 +357,7 @@ const RouteForm: React.FC<RouteFormProps> = ({
                     {/* Выбранные этапы */}
                     <div className={styles.formSection}>
                         <h3 className={styles.sectionTitle}>
-                            Этапы производственной линии (настройка порядка выполнения)
+                            Этапы производственной линии (перетащите для изменения порядка)
                         </h3>
                         
                         {selectedStages.length === 0 ? (
@@ -338,8 +376,16 @@ const RouteForm: React.FC<RouteFormProps> = ({
                                 {selectedStages.map((stage, index) => (
                                     <div 
                                         key={`${stage.stageId}-${stage.substageId || 'none'}-${index}`}
-                                        className={styles.stageItem}
+                                        className={`${styles.stageItem} ${draggedIndex === index ? styles.dragging : ''}`}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, index)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        onDragEnd={handleDragEnd}
                                     >
+                                        <div className={styles.dragHandle} title="Перетащите для изменения порядка">
+                                            ⋮⋮
+                                        </div>
                                         <div className={styles.stageSequence}>
                                             {index + 1}
                                         </div>
@@ -354,24 +400,21 @@ const RouteForm: React.FC<RouteFormProps> = ({
                                             )}
                                         </div>
                                         <div className={styles.stageActions}>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleMoveUp(index)}
-                                                disabled={index === 0}
-                                                className={styles.actionButton}
-                                                title="Переместить вверх"
-                                            >
-                                                ↑
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleMoveDown(index)}
-                                                disabled={index === selectedStages.length - 1}
-                                                className={styles.actionButton}
-                                                title="Переместить вниз"
-                                            >
-                                                ↓
-                                            </button>
+                                            {getSubstagesForStage(stage.stageId).length > 0 && (
+                                                <select
+                                                    value={stage.substageId || ''}
+                                                    onChange={(e) => handleSubstageChange(index, e.target.value ? Number(e.target.value) : undefined)}
+                                                    className={styles.substageSelect}
+                                                    title="Выбрать подэтап"
+                                                >
+                                                    <option value="">Без подэтапа</option>
+                                                    {getSubstagesForStage(stage.stageId).map(substage => (
+                                                        <option key={substage.substageId} value={substage.substageId}>
+                                                            {substage.substageName}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            )}
                                             <button
                                                 type="button"
                                                 onClick={() => handleDeleteStage(stage)}
