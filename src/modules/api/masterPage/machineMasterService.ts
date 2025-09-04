@@ -9,6 +9,7 @@ export interface Machine {
   recommendedLoad: number;
   plannedQuantity: number;
   load_unit: string;
+  noSmenTask: boolean;
   completedQuantity: number;
 }
 

@@ -1,37 +1,16 @@
 import React, { useState } from 'react';
 import styles from './OrderDetailsModal.module.css';
-
-interface Package {
-  id: string;
-  name: string;
-  quantity: number;
-  details: Detail[];
-}
-
-interface Detail {
-  id: string;
-  name: string;
-  totalQuantity: number;
-  route: string[];
-  stages: { [key: string]: number };
-  pallets: Pallet[];
-  packageId: string;
-}
-
-interface Pallet {
-  id: string;
-  stages: { [key: string]: 'completed' | 'in-progress' | 'not-started' };
-}
+import { OrderDetailedStatistic, PalletStageStatus } from '../../../../api/orderManagementApi/orderStatisticsApi';
 
 interface OrderDetailsModalProps {
   orderId: string;
-  packages: Package[];
+  orderDetails: OrderDetailedStatistic;
   onClose: () => void;
 }
 
-const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, packages, onClose }) => {
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
-  const [expandedDetail, setExpandedDetail] = useState<string | null>(null);
+const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDetails, onClose }) => {
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
+  const [expandedDetail, setExpandedDetail] = useState<number | null>(null);
 
   const getStageColor = (percentage: number) => {
     if (percentage === 0) return 'linear-gradient(135deg, #fc8181, #e53e3e)';
@@ -40,38 +19,39 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, packages
     return 'linear-gradient(135deg, #68d391, #38a169)';
   };
 
-  const getStatusIcon = (status: 'completed' | 'in-progress' | 'not-started') => {
+  const getStatusIcon = (status: PalletStageStatus) => {
     switch (status) {
-      case 'completed': return '✓';
-      case 'in-progress': return '⏳';
-      case 'not-started': return '○';
+      case 'COMPLETED': return '✓';
+      case 'IN_PROGRESS': return '⏳';
+      case 'NOT_STARTED': return '○';
     }
   };
 
-  const getStatusColor = (status: 'completed' | 'in-progress' | 'not-started') => {
+  const getStatusColor = (status: PalletStageStatus) => {
     switch (status) {
-      case 'completed': return '#38a169';
-      case 'in-progress': return '#dd6b20';
-      case 'not-started': return '#e53e3e';
+      case 'COMPLETED': return '#38a169';
+      case 'IN_PROGRESS': return '#dd6b20';
+      case 'NOT_STARTED': return '#e53e3e';
     }
   };
 
-  const toggleDetailExpansion = (detailId: string) => {
+  const toggleDetailExpansion = (detailId: number) => {
     setExpandedDetail(expandedDetail === detailId ? null : detailId);
   };
 
-  const handlePackageClick = (packageId: string) => {
+  const handlePackageClick = (packageId: number) => {
     setSelectedPackageId(selectedPackageId === packageId ? null : packageId);
   };
 
-  const allDetails = packages.flatMap(pkg => pkg.details);
-  const allStages = Array.from(new Set(allDetails.flatMap(detail => detail.route)));
+  const allStages = Array.from(new Set(orderDetails.parts.flatMap(part => 
+    part.stages.map(stage => stage.stageName)
+  )));
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>Детали заказа {orderId}</h3>
+          <h3>Детали заказа {orderDetails.batchNumber}</h3>
           <button className={styles.closeButton} onClick={onClose}>×</button>
         </div>
 
@@ -82,21 +62,23 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, packages
               <table>
                 <thead>
                   <tr>
+                    <th>Код упаковки</th>
                     <th>Название упаковки</th>
                     <th>Количество</th>
                     <th>Деталей</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {packages.map((pkg) => (
+                  {orderDetails.packages.map((pkg) => (
                     <tr 
-                      key={pkg.id} 
-                      className={`${styles.packageRow} ${selectedPackageId === pkg.id ? styles.selectedPackage : ''}`}
-                      onClick={() => handlePackageClick(pkg.id)}
+                      key={pkg.packageId} 
+                      className={`${styles.packageRow} ${selectedPackageId === pkg.packageId ? styles.selectedPackage : ''}`}
+                      onClick={() => handlePackageClick(pkg.packageId)}
                     >
-                      <td>{pkg.name}</td>
+                      <td>{pkg.packageCode}</td>
+                      <td>{pkg.packageName}</td>
                       <td>{pkg.quantity}</td>
-                      <td>{pkg.details.length}</td>
+                      <td>{pkg.partCount}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -110,6 +92,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, packages
               <table>
                 <thead>
                   <tr>
+                    <th>Код</th>
                     <th>Название</th>
                     <th>Количество</th>
                     {allStages.map(stage => (
@@ -119,75 +102,90 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, packages
                   </tr>
                 </thead>
                 <tbody>
-                  {allDetails.map((detail) => (
-                    <React.Fragment key={detail.id}>
+                  {orderDetails.parts.map((part) => (
+                    <React.Fragment key={part.partId}>
                       <tr 
-                        className={`${styles.detailRow} ${
-                          selectedPackageId && detail.packageId === selectedPackageId ? styles.highlightedDetail : ''
-                        }`}
-                        onClick={() => toggleDetailExpansion(detail.id)}
+                        className={styles.detailRow}
+                        onClick={() => toggleDetailExpansion(part.partId)}
                       >
-                        <td>{detail.name}</td>
-                        <td>{detail.totalQuantity}</td>
-                        {allStages.map(stage => (
-                          <td key={stage}>
-                            {detail.route.includes(stage) ? (
-                              <div className={styles.stageProgress}>
-                                <div 
-                                  className={styles.stageBar}
-                                  style={{ 
-                                    width: `${detail.stages[stage] || 0}%`,
-                                    background: getStageColor(detail.stages[stage] || 0)
-                                  }}
-                                />
-                                <span>{detail.stages[stage] || 0}%</span>
-                              </div>
-                            ) : (
-                              <span className={styles.notApplicable}>-</span>
-                            )}
-                          </td>
-                        ))}
+                        <td>{part.partCode}</td>
+                        <td>{part.partName}</td>
+                        <td>{part.totalQuantity}</td>
+                        {allStages.map(stageName => {
+                          const stage = part.stages.find(s => s.stageName === stageName);
+                          return (
+                            <td key={stageName}>
+                              {stage ? (
+                                <div className={styles.stageProgress}>
+                                  <div 
+                                    className={styles.stageBar}
+                                    style={{ 
+                                      width: `${stage.completionPercentage}%`,
+                                      background: getStageColor(stage.completionPercentage)
+                                    }}
+                                  />
+                                  <span>{stage.completionPercentage}%</span>
+                                </div>
+                              ) : (
+                                <span className={styles.notApplicable}>-</span>
+                              )}
+                            </td>
+                          );
+                        })}
                         <td>
                           <span className={styles.expandIcon}>
-                            {expandedDetail === detail.id ? '▼' : '▶'}
+                            {expandedDetail === part.partId ? '▼' : '▶'}
                           </span>
                         </td>
                       </tr>
                       
-                      {expandedDetail === detail.id && (
+                      {expandedDetail === part.partId && (
                         <tr>
                           <td colSpan={allStages.length + 3}>
                             <div className={styles.palletsTable}>
                               <h5>Поддоны:</h5>
-                              <table>
-                                <thead>
-                                  <tr>
-                                    <th>Поддон</th>
-                                    <th>Количество</th>
-                                    {detail.route.map(stage => (
-                                      <th key={stage}>{stage}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {detail.pallets.map((pallet) => (
-                                    <tr key={pallet.id}>
-                                      <td>{pallet.id}</td>
-                                      <td>10</td>
-                                      {detail.route.map(stage => (
-                                        <td key={stage}>
-                                          <span 
-                                            className={styles.statusIcon}
-                                            style={{ color: getStatusColor(pallet.stages[stage]) }}
-                                          >
-                                            {getStatusIcon(pallet.stages[stage])}
-                                          </span>
-                                        </td>
+                              {part.pallets && part.pallets.length > 0 ? (
+                                <table>
+                                  <thead>
+                                    <tr>
+                                      <th>Название поддона</th>
+                                      <th>Количество</th>
+                                      {allStages.map(stage => (
+                                        <th key={stage}>{stage}</th>
                                       ))}
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                                  </thead>
+                                  <tbody>
+                                    {part.pallets.map((pallet) => (
+                                      <tr key={pallet.palletId}>
+                                        <td>{pallet.palletName}</td>
+                                        <td>{pallet.quantity}</td>
+                                        {allStages.map(stageName => {
+                                          const stage = pallet.stages.find(s => s.stageName === stageName);
+                                          return (
+                                            <td key={stageName}>
+                                              {stage ? (
+                                                <span 
+                                                  className={styles.statusIcon}
+                                                  style={{ color: getStatusColor(stage.status) }}
+                                                >
+                                                  {getStatusIcon(stage.status)}
+                                                </span>
+                                              ) : (
+                                                <span className={styles.notApplicable}>-</span>
+                                              )}
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <div className={styles.noPallets}>
+                                  Поддоны еще не сформированы
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>

@@ -19,24 +19,23 @@ const OrderManagementBlok: React.FC = () => {
     setActiveSection(section);
   };
 
+  // Функция для возврата к главному экрану
+  const handleBackToMain = () => {
+    setActiveSection(null);
+  };
+
   // Функция для рендеринга соответствующего компонента в зависимости от активного разд��ла
   const renderActiveComponent = () => {
     switch (activeSection) {
       case 'creatOrder':
-        return <OrderCreation />;
+        return <OrderCreation onBack={handleBackToMain} />;
       case 'detailRouteManagement':
-        return <DetailRouteManagement />;
+        return <DetailRouteManagement onBack={handleBackToMain} />;
       case 'orderManagement':
-        return <OrderPlanning />;
+        return <OrderPlanning onBack={handleBackToMain} />;
       case 'orderDisplay':
-        return <OrderDisplay />;
       default:
-        return (
-          <div className={styles.welcomeContent}>
-            <h2>Добро пожаловать в управление заказами MES системы</h2>
-            <p>Выберите раздел в боковом меню</p>
-          </div>
-        );
+        return <OrderDisplay />;
     }
   };
   useEffect(()=>{

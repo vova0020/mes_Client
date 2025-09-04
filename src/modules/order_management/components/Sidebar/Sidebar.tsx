@@ -75,11 +75,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
             <OrderManagement className={getButtonClass('orderManagement')} />
           </Button>
         </Tooltip>
-        <Tooltip title="Отображение заказов" placement="right">
+        {/* <Tooltip title="Отображение заказов" placement="right">
           <Button onClick={() => onSectionChange('orderDisplay')}>
             <OrderManagement className={getButtonClass('orderDisplay')} />
           </Button>
-        </Tooltip>
+        </Tooltip> */}
 
      
       </div>

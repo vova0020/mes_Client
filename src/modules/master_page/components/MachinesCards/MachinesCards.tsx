@@ -176,10 +176,12 @@ const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
                         <span className={styles.infoValue}>{machine.recommendedLoad} {machine.load_unit}.</span>
                       </div>
                       
-                      <div className={styles.infoRow}>
-                        <span className={styles.infoLabel}>Запланировано:</span>
-                        <span className={styles.infoValue}>{machine.plannedQuantity} {machine.load_unit}.</span>
-                      </div>
+                      {!machine.noSmenTask && (
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>Запланировано:</span>
+                          <span className={styles.infoValue}>{machine.plannedQuantity} {machine.load_unit}.</span>
+                        </div>
+                      )}
                       
                       <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>Выполнено:</span>
@@ -196,15 +198,17 @@ const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
                     </>
                   )}
                   
-                  {/* Кнопка "Открыть сменное задание" отображается всегда */}
-                  <div className={styles.buttonContainer}>
-                    <button 
-                      className={styles.openTaskButton}
-                      onClick={() => handleOpenTask(machine.id, machine.name)}
-                    >
-                      Открыть сменное задание
-                    </button>
-                  </div>
+                  {/* Кнопка "Открыть сменное задание" отображается только для станков без noSmenTask */}
+                  {!machine.noSmenTask && (
+                    <div className={styles.buttonContainer}>
+                      <button 
+                        className={styles.openTaskButton}
+                        onClick={() => handleOpenTask(machine.id, machine.name)}
+                      >
+                        Открыть сменное задание
+                      </button>
+                    </div>
+                  )}
                   
                   {machine.status.toLowerCase() === 'inactive' && renderInactiveOverlay()}
                   {machine.status.toLowerCase() === 'maintenance' && renderMaintenanceOverlay()}

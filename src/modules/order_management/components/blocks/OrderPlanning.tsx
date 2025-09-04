@@ -222,7 +222,11 @@ const SortableOrderRow: React.FC<SortableOrderRowProps> = ({
   );
 };
 
-const OrderPlanning: React.FC = () => {
+interface Props {
+  onBack?: () => void;
+}
+
+const OrderPlanning: React.FC<Props> = ({ onBack }) => {
   // Используем хук для управления заказами
   const {
     orders: apiOrders,
@@ -366,7 +370,25 @@ const OrderPlanning: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Планирование заказов</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {onBack && (
+            <Button 
+              onClick={onBack} 
+              variant="outlined" 
+              size="small"
+              sx={{ 
+                minWidth: 'auto',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontSize: '14px'
+              }}
+            >
+              ← Назад
+            </Button>
+          )}
+          <h2 className={styles.title}>Планирование заказов</h2>
+        </div>
       </div>
 
       {/* Таблица планирования заказов */}

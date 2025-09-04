@@ -68,7 +68,11 @@ const getStatusClass = (status: OrderStatus): string => {
   }
 };
 
-const OrderCreation: React.FC = () => {
+interface Props {
+  onBack?: () => void;
+}
+
+const OrderCreation: React.FC<Props> = ({ onBack }) => {
   // Хуки для работы с API
   const {
     orders,
@@ -351,7 +355,25 @@ const OrderCreation: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Создание заказов</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {onBack && (
+            <Button 
+              onClick={onBack} 
+              variant="outlined" 
+              size="small"
+              sx={{ 
+                minWidth: 'auto',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontSize: '14px'
+              }}
+            >
+              ← Назад
+            </Button>
+          )}
+          <h2 className={styles.title}>Создание заказов</h2>
+        </div>
       </div>
 
       {/* Показываем ошибки, если есть */}

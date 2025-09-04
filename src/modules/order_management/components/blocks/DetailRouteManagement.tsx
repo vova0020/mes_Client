@@ -33,7 +33,11 @@ import {
 } from '../../../api/routeManagementApi';
 import styles from './DetailRouteManagement.module.css';
 
-const DetailRouteManagement: React.FC = () => {
+interface Props {
+  onBack?: () => void;
+}
+
+const DetailRouteManagement: React.FC<Props> = ({ onBack }) => {
   // Используем хук для управления маршрутами
   const {
     routes,
@@ -302,7 +306,25 @@ const DetailRouteManagement: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Управление маршрутами деталей</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {onBack && (
+            <Button 
+              onClick={onBack} 
+              variant="outlined" 
+              size="small"
+              sx={{ 
+                minWidth: 'auto',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontSize: '14px'
+              }}
+            >
+              ← Назад
+            </Button>
+          )}
+          <h2 className={styles.title}>Управление маршрутами деталей</h2>
+        </div>
       </div>
 
       <div className={styles.content}>

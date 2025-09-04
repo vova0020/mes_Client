@@ -1,129 +1,24 @@
 import React, { useState } from 'react';
 import OrderDetailsModal from './OrderDetailsModal';
 import styles from './OrderDisplay.module.css';
-
-interface Order {
-  id: string;
-  status: string;
-  progress: number;
-  completionDate: string;
-}
-
-interface Package {
-  id: string;
-  name: string;
-  quantity: number;
-  details: Detail[];
-}
-
-interface Detail {
-  id: string;
-  name: string;
-  totalQuantity: number;
-  route: string[];
-  stages: { [key: string]: number };
-  pallets: Pallet[];
-  packageId: string;
-}
-
-interface Pallet {
-  id: string;
-  stages: { [key: string]: 'completed' | 'in-progress' | 'not-started' };
-}
+import { useOrderStatistics, useOrderDetailedStatistics } from '../../../../hooks/orderManagementHook/useOrderStatistics';
+import { OrderStatus } from '../../../../api/orderManagementApi/orderStatisticsApi';
 
 const OrderDisplay: React.FC = () => {
-  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const { orders, loading, error } = useOrderStatistics();
+  const { orderDetails } = useOrderDetailedStatistics(selectedOrderId);
 
-  // Моковые данные
-  const orders: Order[] = [
-    { id: 'ORD-001', status: 'В работе', progress: 65, completionDate: '2024-01-15' },
-    { id: 'ORD-002', status: 'Завершен', progress: 100, completionDate: '2024-01-10' },
-    { id: 'ORD-003', status: 'Планируется', progress: 0, completionDate: '2024-01-20' },
-  ];
-
-  const orderDetails: { [key: string]: Package[] } = {
-    'ORD-001': [
-      {
-        id: 'PKG-001',
-        name: 'Упаковка А',
-        quantity: 50,
-        details: [
-          {
-            id: 'DET-001',
-            name: 'Деталь А1',
-            totalQuantity: 100,
-            route: ['раскрой', 'присадка', 'упаковка'],
-            stages: { 'раскрой': 30, 'присадка': 10, 'упаковка': 0 },
-            packageId: 'PKG-001',
-            pallets: [
-              { id: 'PAL-001', stages: { 'раскрой': 'completed', 'присадка': 'in-progress', 'упаковка': 'not-started' } },
-              { id: 'PAL-002', stages: { 'раскрой': 'completed', 'присадка': 'not-started', 'упаковка': 'not-started' } },
-            ]
-          },
-          {
-            id: 'DET-002',
-            name: 'Деталь А2',
-            totalQuantity: 75,
-            route: ['раскрой', 'упаковка'],
-            stages: { 'раскрой': 80, 'упаковка': 20 },
-            packageId: 'PKG-001',
-            pallets: [
-              { id: 'PAL-003', stages: { 'раскрой': 'completed', 'упаковка': 'in-progress' } },
-            ]
-          }
-        ]
-      },
-      {
-        id: 'PKG-002',
-        name: 'Упаковка Б',
-        quantity: 30,
-        details: [
-          {
-            id: 'DET-003',
-            name: 'Деталь Б1',
-            totalQuantity: 60,
-            route: ['раскрой', 'присадка', 'сборка', 'упаковка'],
-            stages: { 'раскрой': 100, 'присадка': 70, 'сборка': 40, 'упаковка': 0 },
-            packageId: 'PKG-002',
-            pallets: [
-              { id: 'PAL-004', stages: { 'раскрой': 'completed', 'присадка': 'completed', 'сборка': 'in-progress', 'упаковка': 'not-started' } },
-            ]
-          }
-        ]
-      }
-    ],
-    'ORD-002': [
-      {
-        id: 'PKG-003',
-        name: 'Упаковка В',
-        quantity: 100,
-        details: [
-          {
-            id: 'DET-004',
-            name: 'Деталь В1',
-            totalQuantity: 200,
-            route: ['раскрой', 'присадка', 'упаковка'],
-            stages: { 'раскрой': 100, 'присадка': 100, 'упаковка': 100 },
-            packageId: 'PKG-003',
-            pallets: [
-              { id: 'PAL-005', stages: { 'раскрой': 'completed', 'присадка': 'completed', 'упаковка': 'completed' } },
-              { id: 'PAL-006', stages: { 'раскрой': 'completed', 'присадка': 'completed', 'упаковка': 'completed' } },
-            ]
-          }
-        ]
-      }
-    ]
-  };
-
-  const handleShowDetails = (orderId: string) => {
-    setSelectedOrder(orderId);
+  const handleShowDetails = (orderId: number) => {
+    setSelectedOrderId(orderId);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedOrder(null);
+    setSelectedOrderId(null);
   };
 
   const getProgressColor = (progress: number) => {
@@ -132,14 +27,37 @@ const OrderDisplay: React.FC = () => {
     return '#44ff44';
   };
 
-  const getStatusClass = (status: string) => {
+  const getStatusText = (status: OrderStatus) => {
     switch (status) {
-      case 'В работе': return styles.statusInProgress;
-      case 'Завершен': return styles.statusCompleted;
-      case 'Планируется': return styles.statusPlanned;
+      case 'PRELIMINARY': return 'Предварительный';
+      case 'APPROVED': return 'Утверждено';
+      case 'LAUNCH_PERMITTED': return 'Разрешено к запуску';
+      case 'IN_PROGRESS': return 'В работе';
+      case 'COMPLETED': return 'Завершен';
+      case 'POSTPONED': return 'Отложен';
+      default: return status;
+    }
+  };
+
+  const getStatusClass = (status: OrderStatus) => {
+    switch (status) {
+      case 'IN_PROGRESS': return styles.statusInProgress;
+      case 'COMPLETED': return styles.statusCompleted;
+      case 'PRELIMINARY':
+      case 'APPROVED':
+      case 'LAUNCH_PERMITTED': return styles.statusPlanned;
+      case 'POSTPONED': return styles.statusPostponed;
       default: return styles.statusPlanned;
     }
   };
+
+  if (loading) {
+    return <div className={styles.loading}>Загрузка...</div>;
+  }
+
+  if (error) {
+    return <div className={styles.error}>Ошибка: {error}</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -153,18 +71,19 @@ const OrderDisplay: React.FC = () => {
             <tr className={styles.tableHeader}>
               <th className={styles.headerCell}>Заказ</th>
               <th className={styles.headerCell}>Статус</th>
-              <th className={styles.headerCell}>Прогресс выполнения</th>
+              <th className={styles.headerCell}>Производство</th>
+              <th className={styles.headerCell}>Упаковка</th>
               <th className={styles.headerCell}>Дата завершения</th>
               <th className={styles.headerCell}>Действия</th>
             </tr>
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order.id} className={styles.tableRow}>
-                <td className={styles.cell}>{order.id}</td>
+              <tr key={order.orderId} className={styles.tableRow}>
+                <td className={styles.cell}>{order.batchNumber}</td>
                 <td className={styles.cell}>
                   <span className={`${styles.status} ${getStatusClass(order.status)}`}>
-                    {order.status}
+                    {getStatusText(order.status)}
                   </span>
                 </td>
                 <td className={styles.cell}>
@@ -172,18 +91,30 @@ const OrderDisplay: React.FC = () => {
                     <div 
                       className={styles.progressBar}
                       style={{ 
-                        width: `${order.progress}%`,
-                        backgroundColor: getProgressColor(order.progress)
+                        width: `${order.productionProgress}%`,
+                        backgroundColor: getProgressColor(order.productionProgress)
                       }}
                     />
-                    <span className={styles.progressText}>{order.progress}%</span>
+                    <span className={styles.progressText}>{order.productionProgress}%</span>
                   </div>
                 </td>
-                <td className={styles.cell}>{order.completionDate}</td>
+                <td className={styles.cell}>
+                  <div className={styles.progressContainer}>
+                    <div 
+                      className={styles.progressBar}
+                      style={{ 
+                        width: `${order.packingProgress}%`,
+                        backgroundColor: getProgressColor(order.packingProgress)
+                      }}
+                    />
+                    <span className={styles.progressText}>{order.packingProgress}%</span>
+                  </div>
+                </td>
+                <td className={styles.cell}>{new Date(order.requiredDate).toLocaleDateString()}</td>
                 <td className={styles.cell}>
                   <button 
                     className={styles.detailsButton}
-                    onClick={() => handleShowDetails(order.id)}
+                    onClick={() => handleShowDetails(order.orderId)}
                   >
                     Показать детали
                   </button>
@@ -194,10 +125,10 @@ const OrderDisplay: React.FC = () => {
         </table>
       </div>
 
-      {isModalOpen && selectedOrder && (
+      {isModalOpen && selectedOrderId && orderDetails && (
         <OrderDetailsModal
-          orderId={selectedOrder}
-          packages={orderDetails[selectedOrder] || []}
+          orderId={selectedOrderId.toString()}
+          orderDetails={orderDetails}
           onClose={handleCloseModal}
         />
       )}
