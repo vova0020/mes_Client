@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './OrderDetailsModal.module.css';
 import { OrderDetailedStatistic, PalletStageStatus } from '../../../../api/orderManagementApi/orderStatisticsApi';
 
@@ -11,6 +11,17 @@ interface OrderDetailsModalProps {
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDetails, onClose }) => {
   const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
   const [expandedDetail, setExpandedDetail] = useState<number | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 0,1);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 400);
+  };
 
   const getStageColor = (percentage: number) => {
     if (percentage === 0) return 'linear-gradient(135deg, #fc8181, #e53e3e)';
@@ -57,11 +68,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
   )));
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={`${styles.modalOverlay} ${isVisible ? styles.visible : ''}`} onClick={handleClose}>
+      <div className={`${styles.modalContent} ${isVisible ? styles.slideIn : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h3>Детали заказа {orderDetails.batchNumber}</h3>
-          <button className={styles.closeButton} onClick={onClose}>×</button>
+          <button className={styles.closeButton} onClick={handleClose}>×</button>
         </div>
 
         <div className={styles.modalBody}>
