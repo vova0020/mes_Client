@@ -11,6 +11,162 @@
   margin-bottom: 20px;
 }
 
+.filtersContainer {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.filtersContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4caf50, #45a049, #2e7d32);
+}
+
+.searchContainer {
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 16px 10px 36px;
+  border: 1px solid #e8eaed;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #2c3e50;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: #8e9aaf;
+  font-weight: 400;
+}
+
+.searchContainer::before {
+  content: '🔍';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #8e9aaf;
+  z-index: 1;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  align-items: end;
+}
+
+@media (max-width: 768px) {
+  .filterRow {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.filterLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  position: relative;
+}
+
+.filterLabel::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 16px;
+  height: 1px;
+  background: #4caf50;
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  border: 1px solid #e8eaed;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  padding-right: 28px;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.rangeContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e8eaed;
+}
+
+.rangeInput {
+  width: 50px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #ffffff;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.rangeInput:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
+}
+
+.rangeSeparator {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+}
+
 .title {
   font-size: 24px;
   font-weight: 600;
@@ -23,8 +179,9 @@
   flex: 1;
   overflow: auto;
   background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 0 3px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e3e6ea;
 }
 
 .ordersTable {
