@@ -118,16 +118,14 @@ const RouteForm: React.FC<RouteFormProps> = ({
 
     // Обработчик изменения производственной линии
     const handleLineChange = async (lineId: number) => {
-        const prevLineId = routeForm.lineId;
         setRouteForm(prev => ({ ...prev, lineId }));
         
         if (lineId > 0) {
             // При выборе производственной линии всегда загружаем этапы
             const stagesData = await loadLineStages(lineId);
             
-            // При редактировании: если пользователь выбрал ту же линию повторно,
-            // заменяем текущие этапы маршрута на все этапы линии
-            if (isEditing && lineId === prevLineId && stagesData) {
+            // При редактировании: всегда заменяем этапы на все этапы выбранной линии
+            if (isEditing && stagesData) {
                 const allStages = stagesData.stagesLevel1.map((stage, index) => ({
                     stageId: stage.stageId,
                     substageId: undefined,
