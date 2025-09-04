@@ -17,6 +17,7 @@ export type SettingSection =
   | 'creatOrder'
   | 'detailRouteManagement'
   | 'orderManagement'
+  | 'orderDisplay'
   | null;
 
 interface SidebarProps {
@@ -72,6 +73,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
         <Tooltip title="Управление заказами (планирование)" placement="right">
           <Button onClick={() => onSectionChange('orderManagement')}>
             <OrderManagement className={getButtonClass('orderManagement')} />
+          </Button>
+        </Tooltip>
+        <Tooltip title="Отображение заказов" placement="right">
+          <Button onClick={() => onSectionChange('orderDisplay')}>
+            <OrderManagement className={getButtonClass('orderDisplay')} />
           </Button>
         </Tooltip>
 

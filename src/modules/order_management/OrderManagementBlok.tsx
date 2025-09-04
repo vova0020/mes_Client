@@ -4,6 +4,7 @@ import Sidebar, { SettingSection } from './components/Sidebar/Sidebar';
 import OrderCreation from './components/blocks/OrderCreation';
 import DetailRouteManagement from './components/blocks/DetailRouteManagement';
 import OrderPlanning from './components/blocks/OrderPlanning';
+import OrderDisplay from './components/blocks/orderDisplayBlok/OrderDisplay';
 
 import styles from './OrderManagement.module.css';
 
@@ -27,6 +28,8 @@ const OrderManagementBlok: React.FC = () => {
         return <DetailRouteManagement />;
       case 'orderManagement':
         return <OrderPlanning />;
+      case 'orderDisplay':
+        return <OrderDisplay />;
       default:
         return (
           <div className={styles.welcomeContent}>

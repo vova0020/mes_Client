@@ -254,15 +254,19 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({
           <label className={styles.formLabel}>
             Единица измерения *
           </label>
-          <input
-            type="text"
+          <select
             value={formData.unit}
             onChange={(e) => handleInputChange('unit', e.target.value)}
-            onKeyPress={handleKeyPress}
             className={`${styles.formInput} ${errors.unit ? styles.inputError : ''}`}
-            placeholder="кг, м, шт, л и т.д."
             disabled={loading}
-          />
+          >
+            <option value="">Выберите единицу измерения</option>
+            <option value="м">м</option>
+            <option value="м²">м²</option>
+            <option value="м³">м³</option>
+            <option value="шт">шт</option>
+            <option value="кг">кг</option>
+          </select>
           {errors.unit && (
             <div className={styles.fieldError}>
               {errors.unit}

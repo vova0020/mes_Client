@@ -247,10 +247,10 @@ export const MachineForm: React.FC<MachineFormProps> = ({
             {/* <option value="кг">кг</option> */}
             {/* <option value="т">т</option> */}
             <option value="шт">шт</option>
-            {/* <option value="м">м</option> */}
+            <option value="м">м</option>
             <option value="м²">м²</option>
-            {/* <option value="м³">м³</option> */}
-            {/* <option value="л">л</option> */}
+            <option value="м³">м³</option>
+            <option value="м обработки торца">м обработки торца</option>
           </select>
           {errors.loadUnit && (
             <span className={styles.errorText}>{errors.loadUnit}</span>
