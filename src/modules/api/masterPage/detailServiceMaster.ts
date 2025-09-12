@@ -1,6 +1,20 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// Определение интерфейса упаковки
+export interface Package {
+  packageId: number;
+  packageCode: string;
+  packageName: string;
+  quantity: number;
+}
+
+// Определение интерфейса подэтапа
+export interface Substage {
+  substageId: number;
+  substageName: string;
+}
+
 // Определение интерфейса детали
 export interface Detail {
   id: number;
@@ -12,7 +26,8 @@ export interface Detail {
   readyForProcessing: number;
   distributed: number;
   completed: number;
-  packageCode: string;
+  packages: Package[];
+  substage?: Substage;
 }
 
 const getSegmentIdFromStorage = (): number | null => {

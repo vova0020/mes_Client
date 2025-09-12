@@ -5,6 +5,8 @@ import styles from './PalletsSidebar.module.css';
 import useProductionPallets from '../../../hooks/machinhook/machinProductionPallets';
 import { useMachine } from '../../../hooks/machinhook/useMachine';
 import DefectModal from './DefectModal';
+import RedistributeModal from './RedistributeModal';
+import { PartDistribution, RedistributePartsRequest } from '../../../api/machineApi/machineApi';
 import {
   ProductionPallet,
   BufferCellDto,
@@ -40,6 +42,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   const [nextStepInfo, setNextStepInfo] = useState<string | null>(null);
   const [defectModalOpen, setDefectModalOpen] = useState<boolean>(false);
   const [selectedPallet, setSelectedPallet] = useState<ProductionPallet | null>(null);
+  
+  // Состояния для меню действий с количеством
+  const [showQuantityMenu, setShowQuantityMenu] = useState<number | null>(null);
+  
+  // Состояния для модального окна перераспределения
+  const [showRedistributeModal, setShowRedistributeModal] = useState<boolean>(false);
+  const [redistributePalletId, setRedistributePalletId] = useState<number | null>(null);
+  const [isRedistributing, setIsRedistributing] = useState<boolean>(false);
 
   // Используем хук для получения данных о станке и пользователе
   const { machine, machineId } = useMachine();
@@ -70,7 +80,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     updateBufferCell,
     startPalletProcessing,
     completePalletProcessing,
-    defectPalletParts
+    defectPalletParts,
+    redistributeParts
   } = useProductionPallets(detailId);
 
   // Эффект для загрузки поддонов и ресурсов сегмента
@@ -398,6 +409,26 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     }
   };
 
+  // Обработчик клика по количеству
+  const handleQuantityClick = (palletId: number) => {
+    setShowQuantityMenu(showQuantityMenu === palletId ? null : palletId);
+  };
+
+  // Обработчик выбора действия с количеством
+  const handleQuantityAction = (action: 'defect' | 'redistribute', palletId: number) => {
+    if (action === 'defect') {
+      const pallet = pallets.find(p => p.id === palletId);
+      if (pallet) {
+        setSelectedPallet(pallet);
+        setDefectModalOpen(true);
+      }
+    } else if (action === 'redistribute') {
+      setRedistributePalletId(palletId);
+      setShowRedistributeModal(true);
+    }
+    setShowQuantityMenu(null);
+  };
+
   // Обработчик для открытия модального окна отбраковки
   const handleDefectClick = (pallet: ProductionPallet) => {
     setSelectedPallet(pallet);
@@ -439,6 +470,36 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       } else {
         setErrorMessage(`Ошибка при отбраковке: ${errorMessage}`);
       }
+    }
+  };
+
+  // Обработчик перераспределения деталей
+  const handleRedistributeParts = async (distributions: PartDistribution[]) => {
+    if (!redistributePalletId) return;
+
+    try {
+      setIsRedistributing(true);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      setNextStepInfo(null);
+
+      const redistributeData: RedistributePartsRequest = {
+        sourcePalletId: redistributePalletId,
+        machineId: machineId,
+        distributions
+      };
+
+      const response = await redistributeParts(redistributeData);
+      
+      setShowRedistributeModal(false);
+      setSuccessMessage('Детали успешно перераспределены');
+      
+      console.log('Детали успешно перераспределены:', response);
+    } catch (error) {
+      console.error('Ошибка при перераспределении деталей:', error);
+      setErrorMessage('Не удалось перераспределить детали');
+    } finally {
+      setIsRedistributing(false);
     }
   };
 
@@ -542,7 +603,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
           <div className={styles.detailInfo}>
             <div className={styles.detailProperty}>
               <span className={styles.propertyLabel}>Артикул:</span>
-              <span className={styles.propertyValue}>{detailInfo.articleNumber}</span>
+              <span className={styles.propertyValue}>{detailInfo.article}</span>
             </div>
             <div className={styles.detailProperty}>
               <span className={styles.propertyLabel}>Название:</span>
@@ -645,7 +706,15 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                       data-status={pallet.currentOperation?.status || pallet.currentOperation?.completionStatus || 'NO_OPERATION'}
                     >
                       <td>{pallet.name || `Поддон №${pallet.id}`}</td>
-                      <td>{pallet.quantity}</td>
+                      <td className={styles.quantityCell}>
+                        <button
+                          className={`${styles.quantityButton} quantityButton`}
+                          onClick={() => handleQuantityClick(pallet.id)}
+                          title="Редактировать количество"
+                        >
+                          {pallet.quantity}
+                        </button>
+                      </td>
                       <td>
                         <BufferCellSelector pallet={pallet} />
                       </td>
@@ -668,14 +737,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                           <DocumentIcon />
                           МЛ
                         </button>
-                        <button
-                          className={`${styles.actionButton} ${styles.defectButton}`}
-                          onClick={() => handleDefectClick(pallet)}
-                          disabled={processingPalletId === pallet.id || pallet.quantity <= 0}
-                          title="Отбраковка"
-                        >
-                          Брак
-                        </button>
+
                         <button
                           className={`${styles.actionButton} ${styles.inProgressButton}`}
                           onClick={() => handleStartWork(pallet.id)}
@@ -726,6 +788,58 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
           machineId={machineId}
           stageId={selectedPallet.currentStepId || 1} // Используем текущий этап или 1 по умолчанию
           reportedById={getUserId()}
+        />
+      )}
+      
+      {/* Меню действий с количеством */}
+      {showQuantityMenu !== null && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.quantityMenuContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.quantityMenuHeader}>
+              <h3>Действия с количеством</h3>
+              <button 
+                className={styles.quantityMenuCloseButton}
+                onClick={() => setShowQuantityMenu(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.quantityMenuBody}>
+              <button
+                className={styles.quantityMenuButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuantityAction('defect', showQuantityMenu);
+                }}
+              >
+                Отбраковать детали
+              </button>
+              <button
+                className={styles.quantityMenuButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuantityAction('redistribute', showQuantityMenu);
+                }}
+              >
+                Перераспределить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно перераспределения */}
+      {showRedistributeModal && redistributePalletId && (
+        <RedistributeModal
+          isOpen={showRedistributeModal}
+          onClose={() => {
+            setShowRedistributeModal(false);
+            setRedistributePalletId(null);
+          }}
+          pallet={pallets.find(p => p.id === redistributePalletId)!}
+          existingPallets={pallets}
+          onRedistribute={handleRedistributeParts}
+          isProcessing={isRedistributing}
         />
       )}
     </>

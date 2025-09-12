@@ -209,7 +209,7 @@ const DetailsTable: React.FC = () => {
               <th>Материал</th>
               <th>Размер</th>
               <th>Тех. информация</th>
-              <th>Общее кол-во</th>
+              {/* <th>Общее кол-во</th> */}
               <th>К обработке</th>
               <th>Выполнено</th>
               <th></th> {/* Колонка для кнопки-стрелки */}
@@ -240,7 +240,7 @@ const DetailsTable: React.FC = () => {
                     Чертеж
                   </button>
                 </td>
-                <td>{task.detail.totalNumber}</td>
+                {/* <td>{task.detail.totalNumber}</td> */}
                 <td>{task.readyForProcessing }</td>
                 <td>{task.completed }</td>
                 <td>

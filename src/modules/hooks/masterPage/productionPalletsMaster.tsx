@@ -37,7 +37,7 @@ interface UseProductionPalletsResult {
   refreshPalletData: (status: string) => Promise<void>;
   createPallet: (partId: number, quantity: number, palletName?: string) => Promise<CreatePalletResponse>;
   defectParts: (palletId: number, quantity: number, description?: string, machineId?: number) => Promise<DefectPartsResponse>;
-  redistributeParts: (sourcePalletId: number, distributions: PartDistribution[]) => Promise<RedistributePartsResponse>;
+  redistributeParts: (sourcePalletId: number, distributions: PartDistribution[], machineId?: number) => Promise<RedistributePartsResponse>;
 }
 
 // Получение комнаты из localStorage или конфигурации
@@ -459,13 +459,14 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
 
   const redistributePartsHandler = useCallback(async (
     sourcePalletId: number,
-    distributions: PartDistribution[]
+    distributions: PartDistribution[],
+    machineId?: number
   ): Promise<RedistributePartsResponse> => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await redistributeParts(sourcePalletId, distributions);
+      const response = await redistributeParts(sourcePalletId, distributions, machineId);
       
       if (currentDetailId) {
         await fetchPallets(currentDetailId);

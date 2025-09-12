@@ -364,6 +364,24 @@
     font-size: 13px;
   }
   
+  .packagesContainer {
+    min-width: 140px;
+  }
+  
+  .packageItem {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .packageQuantity {
+    font-size: 11px;
+  }
+  
+  .filterArrow {
+    font-size: 12px;
+    padding: 3px;
+  }
+  
   .loadingSpinner {
     width: 50px;
     height: 50px;
@@ -427,6 +445,20 @@
     font-size: 12px;
   }
   
+  .packagesContainer {
+    min-width: 130px;
+  }
+  
+  .packageItem {
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+  
+  .filterArrow {
+    font-size: 11px;
+    padding: 3px;
+  }
+  
   .loadingSpinner {
     width: 45px;
     height: 45px;
@@ -482,6 +514,20 @@
     width: 24px;
     height: 24px;
     font-size: 12px;
+  }
+  
+  .packagesContainer {
+    min-width: 120px;
+  }
+  
+  .packageItem {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  
+  .filterArrow {
+    font-size: 10px;
+    padding: 2px;
   }
   
   .loadingSpinner {
@@ -554,6 +600,40 @@
     width: 22px;
     height: 22px;
     font-size: 11px;
+  }
+  
+  .packagesContainer {
+    min-width: 100px;
+    gap: 3px;
+  }
+  
+  .packageItem {
+    padding: 2px 5px;
+    font-size: 10px;
+  }
+  
+  .packageQuantity {
+    font-size: 9px;
+  }
+  
+  .filterArrow {
+    font-size: 9px;
+    padding: 2px;
+  }
+  
+  .filterDropdown {
+    min-width: 180px;
+    max-height: 250px;
+  }
+  
+  .filterHeader {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+  
+  .filterOption {
+    padding: 5px 10px;
+    font-size: 10px;
   }
   
   .loadingSpinner {
@@ -629,6 +709,48 @@
     width: 20px;
     height: 20px;
     font-size: 10px;
+  }
+  
+  .packagesContainer {
+    min-width: 90px;
+    gap: 2px;
+  }
+  
+  .packageItem {
+    padding: 2px 4px;
+    font-size: 9px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+  }
+  
+  .packageCode {
+    margin-right: 0;
+  }
+  
+  .packageQuantity {
+    font-size: 8px;
+    align-self: flex-end;
+  }
+  
+  .filterArrow {
+    font-size: 8px;
+    padding: 1px;
+  }
+  
+  .filterDropdown {
+    min-width: 150px;
+    max-height: 200px;
+  }
+  
+  .filterHeader {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+  
+  .filterOption {
+    padding: 4px 8px;
+    font-size: 9px;
   }
   
   /* Уменьшаем отступы в ячейках для экономии места */
@@ -719,4 +841,178 @@
 /* Стилизация для плавного перехода фона таблицы */
 .detailsTable tbody {
   transition: background-color 0.3s ease;
+}
+
+/* Стили для контейнера упаковок */
+.packagesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+/* Стили для отдельной упаковки */
+.packageItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.packageItem:hover {
+  background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Код упаковки */
+.packageCode {
+  font-weight: bold;
+  color: #495057;
+  margin-right: 4px;
+}
+
+/* Количество в упаковке */
+.packageQuantity {
+  color: #6c757d;
+  font-size: 10px;
+  background: rgba(108, 117, 125, 0.1);
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+/* Стили для фильтров */
+.headerWithFilter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+}
+
+.filterContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.filterArrow {
+  font-size: 10px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 2px;
+  border-radius: 2px;
+  user-select: none;
+}
+
+.filterArrow:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.filterActive {
+  color: #3498db !important;
+  background: rgba(52, 152, 219, 0.1) !important;
+}
+
+.filterOpen {
+  transform: rotate(180deg);
+}
+
+.filterDropdown {
+  position: absolute;
+  background: white;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  width: 200px;
+  max-height: 200px;
+  overflow-y: auto;
+  top: calc(100% + 20px);
+  left: 20%;
+  transform: translateX(-50%);
+}
+
+/* Позиционирование для первой колонки */
+.headerWithFilter:first-child .filterDropdown {
+  left: 0;
+  transform: none;
+}
+
+/* Позиционирование для последних трех колонок */
+.headerWithFilter:nth-last-child(-n+3) .filterDropdown {
+  /* left: auto; */
+  right: 0;
+  transform: none;
+}
+
+/* Позиционирование сверху если окно внизу экрана */
+@media screen and (max-height: 600px) {
+  .filterDropdown {
+    top: auto;
+    bottom: calc(100% + 5px);
+  }
+}
+
+.filterHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #dee2e6;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.clearFilter {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.clearFilter:hover {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.filterOptions {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.filterOption {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background-color 0.2s ease;
+  gap: 8px;
+}
+
+.filterOption:hover {
+  background: #f8f9fa;
+}
+
+.filterOption input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.filterOption span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

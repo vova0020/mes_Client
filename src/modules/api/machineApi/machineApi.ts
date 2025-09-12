@@ -45,6 +45,38 @@ export interface DefectPartsResponse {
   };
 }
 
+// Интерфейс для распределения деталей
+export interface PartDistribution {
+  targetPalletId?: number;
+  quantity: number;
+  palletName?: string;
+}
+
+// Интерфейс для запроса перераспределения деталей
+export interface RedistributePartsRequest {
+  sourcePalletId: number;
+  machineId?: number;
+  distributions: PartDistribution[];
+}
+
+// Интерфейс для ответа перераспределения деталей
+export interface RedistributePartsResponse {
+  message: string;
+  result: {
+    sourcePalletDeleted: boolean;
+    createdPallets: {
+      id: number;
+      name: string;
+      quantity: number;
+    }[];
+    updatedPallets: {
+      id: number;
+      name: string;
+      newQuantity: number;
+    }[];
+  };
+}
+
 /**
  * Функция для получения ID станка и ID участка из localStorage
  * @returns Объект с ID станка и ID участка или null, если данные не найдены
@@ -120,6 +152,21 @@ export const machineApi = {
       return response.data;
     } catch (error) {
       console.error('Ошибка при отбраковке деталей:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Перераспределение деталей между поддонами
+   * @param redistributeData - Данные для перераспределения
+   * @returns Promise с результатом перераспределения
+   */
+  redistributeParts: async (redistributeData: RedistributePartsRequest): Promise<RedistributePartsResponse> => {
+    try {
+      const response = await axios.post<RedistributePartsResponse>(`${API_URL}/machins/pallets/redistribute-parts`, redistributeData);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при перераспределении деталей:', error);
       throw error;
     }
   },

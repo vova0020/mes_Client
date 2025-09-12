@@ -12,7 +12,7 @@ import {
   updateBufferCell,
   CompleteProcessingResponseDto
 } from '../../api/machineApi/machinProductionPalletsService';
-import { DefectPalletPartsDto, DefectPartsResponse } from '../../api/machineApi/machineApi';
+import { DefectPalletPartsDto, DefectPartsResponse, RedistributePartsRequest, RedistributePartsResponse } from '../../api/machineApi/machineApi';
 import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
 // Определение интерфейса результата хука
@@ -32,6 +32,7 @@ interface UseProductionPalletsResult {
   startPalletProcessing: (palletId: number) => Promise<void>;
   completePalletProcessing: (palletId: number) => Promise<CompleteProcessingResponseDto>;
   defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
+  redistributeParts: (redistributeData: RedistributePartsRequest) => Promise<RedistributePartsResponse>;
 }
 
 // Получение комнаты из localStorage
@@ -350,6 +351,44 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     }
   }, [refreshPalletData]);
 
+  // Функция для получения machineId из localStorage
+  const getMachineId = useCallback((): number | undefined => {
+    try {
+      const assignmentsData = localStorage.getItem('assignments');
+      if (!assignmentsData) return undefined;
+      
+      const data = JSON.parse(assignmentsData);
+      return data.machines?.[0]?.id;
+    } catch (error) {
+      console.error('Ошибка при получении machineId из localStorage:', error);
+      return undefined;
+    }
+  }, []);
+
+  // Функция для перераспределения деталей между поддонами
+  const handleRedistributeParts = useCallback(async (redistributeData: RedistributePartsRequest): Promise<RedistributePartsResponse> => {
+    try {
+      // Добавляем machineId из localStorage если он не указан
+      if (!redistributeData.machineId) {
+        redistributeData.machineId = getMachineId();
+      }
+      
+      // Используем API напрямую
+      const { machineApi } = await import('../../api/machineApi/machineApi');
+      const response = await machineApi.redistributeParts(redistributeData);
+      
+      // Обновляем данные о всех поддонах после перераспределения
+      if (currentDetailId) {
+        await fetchPallets(currentDetailId);
+      }
+      
+      return response;
+    } catch (err) {
+      console.error(`Ошибка при перераспределении деталей с поддона ${redistributeData.sourcePalletId}:`, err);
+      throw err;
+    }
+  }, [currentDetailId, fetchPallets, getMachineId]);
+
   // Функция для загрузки ресурсов выбранного сегмента
   const loadSegmentResources = useCallback(async () => {
     // Не устанавливаем loading здесь, так как это может конфликтовать с загрузкой поддонов
@@ -391,7 +430,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     updateBufferCell: handleUpdateBufferCell,
     startPalletProcessing: handleStartPalletProcessing,
     completePalletProcessing: handleCompletePalletProcessing,
-    defectPalletParts: handleDefectPalletParts
+    defectPalletParts: handleDefectPalletParts,
+    redistributeParts: handleRedistributeParts
   };
 };
 

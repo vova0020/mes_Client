@@ -4,10 +4,21 @@ import styles from './DetailsTable.module.css';
 import useDetails from '../../../hooks/masterPage/useDetailsMaster';
 import PalletsSidebar from '../PalletsSidebar/MasterPalletsSidebar';
 import DetailForm from '../../../detail-form/DetailForm';
+import { Detail } from '../../../api/masterPage/detailServiceMaster';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
   onDataUpdate?: () => void;
+}
+
+// Интерфейс для фильтров
+interface Filters {
+  articleNumber: string[];
+  packages: string[];
+  name: string[];
+  material: string[];
+  size: string[];
+  substage: string[];
 }
 
 const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpdate }) => {
@@ -16,6 +27,19 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
   
   // Состояние для анимации (показывать/скрывать детали)
   const [showDetails, setShowDetails] = useState(false);
+  
+  // Состояние для фильтров
+  const [filters, setFilters] = useState<Filters>({
+    articleNumber: [],
+    packages: [],
+    name: [],
+    material: [],
+    size: [],
+    substage: []
+  });
+  
+  // Состояние для отслеживания открытого фильтра
+  const [openFilter, setOpenFilter] = useState<keyof Filters | null>(null);
   
   // Состояние для боковой панели с поддонами
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,6 +65,19 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
 
     // Сбрасываем активную деталь при смене заказа
     setActiveDetailId(null);
+    
+    // Сбрасываем фильтры при смене заказа
+    setFilters({
+      articleNumber: [],
+      packages: [],
+      name: [],
+      material: [],
+      size: [],
+      substage: []
+    });
+    
+    // Закрываем открытый фильтр
+    setOpenFilter(null);
     
     // Если есть предыдущие детали, скрываем их для анимации
     if (prevOrderIdRef.current !== null && details.length > 0) {
@@ -80,8 +117,121 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
     }
   }, [sidebarOpen, sidebarOpen2, selectedDetailForPallets]);
 
+  // Закрываем фильтр при клике вне его и при изменении размера окна
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openFilter && containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpenFilter(null);
+      }
+    };
+
+    const handleResize = () => {
+      setOpenFilter(null);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [openFilter]);
+
+  // Получение уникальных значений для фильтров
+  const getUniqueValues = (field: keyof Detail | 'packages') => {
+    if (field === 'packages') {
+      const packageCodes = details.flatMap(d => d.packages.map(p => p.packageCode));
+      return Array.from(new Set(packageCodes));
+    }
+    if (field === 'substage') {
+      const substageNames = details.map(d => d.substage?.substageName).filter(Boolean) as string[];
+      return Array.from(new Set(substageNames));
+    }
+    const fieldValues = details.map(d => String((d as any)[field]));
+    return Array.from(new Set(fieldValues));
+  };
+
+  // Функция фильтрации деталей
+  const filteredDetails = details.filter(detail => {
+    if (filters.articleNumber.length > 0 && !filters.articleNumber.includes(detail.articleNumber)) return false;
+    if (filters.packages.length > 0 && !detail.packages.some(p => filters.packages.includes(p.packageCode))) return false;
+    if (filters.name.length > 0 && !filters.name.includes(detail.name)) return false;
+    if (filters.material.length > 0 && !filters.material.includes(detail.material)) return false;
+    if (filters.size.length > 0 && !filters.size.includes(detail.size)) return false;
+    if (filters.substage.length > 0 && (!detail.substage || !filters.substage.includes(detail.substage.substageName))) return false;
+    return true;
+  });
+
+  // Обработчик изменения фильтра
+  const handleFilterChange = (column: keyof Filters, value: string, checked: boolean) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: checked 
+        ? [...prev[column], value]
+        : prev[column].filter(v => v !== value)
+    }));
+  };
+
+  // Компонент фильтра
+  const FilterDropdown: React.FC<{
+    column: keyof Filters;
+    values: string[];
+  }> = ({ column, values }) => {
+    const arrowRef = useRef<HTMLSpanElement>(null);
+    const isOpen = openFilter === column;
+    
+    const handleToggle = () => {
+      if (openFilter === column) {
+        setOpenFilter(null);
+      } else {
+        setOpenFilter(column);
+      }
+    };
+    
+    return (
+      <div className={styles.filterContainer}>
+        <span 
+          ref={arrowRef}
+          className={`${styles.filterArrow} ${filters[column].length > 0 ? styles.filterActive : ''} ${isOpen ? styles.filterOpen : ''}`}
+          onClick={handleToggle}
+        >
+          ▼
+        </span>
+        
+        {isOpen && (
+          <div className={styles.filterDropdown}>
+            <div className={styles.filterHeader}>
+              <span>Фильтр</span>
+              <button 
+                className={styles.clearFilter}
+                onClick={() => setFilters(prev => ({ ...prev, [column]: [] }))}
+              >
+                Очистить
+              </button>
+            </div>
+            <div className={styles.filterOptions}>
+              {values.map(value => (
+                <label key={value} className={styles.filterOption}>
+                  <input
+                    type="checkbox"
+                    checked={filters[column].includes(value)}
+                    onChange={(e) => handleFilterChange(column, value, e.target.checked)}
+                  />
+                  <span>{value}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Обработчик клика по строке таблицы с возможностью сброса выбора
   const handleRowClick = (detailId: number) => {
+    // Закрываем открытый фильтр
+    setOpenFilter(null);
+    
     // Если открыта боковая панель с поддонами, игнорируем все клики по строкам
     if (sidebarOpen) {
       return;
@@ -229,11 +379,60 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
         <table className={styles.detailsTable}>
           <thead>
             <tr>
-              <th>Артикул детали</th>
-              <th>Артикул упаковки</th>
-              <th>Название</th>
-              <th>Материал</th>
-              <th>Размер</th>
+              <th>
+                <div className={styles.headerWithFilter}>
+                  <span>Артикул детали</span>
+                  <FilterDropdown 
+                    column="articleNumber" 
+                    values={getUniqueValues('articleNumber')} 
+                  />
+                </div>
+              </th>
+              <th>
+                <div className={styles.headerWithFilter}>
+                  <span>Упаковки</span>
+                  <FilterDropdown 
+                    column="packages" 
+                    values={getUniqueValues('packages')} 
+                  />
+                </div>
+              </th>
+              <th>
+                <div className={styles.headerWithFilter}>
+                  <span>Название</span>
+                  <FilterDropdown 
+                    column="name" 
+                    values={getUniqueValues('name')} 
+                  />
+                </div>
+              </th>
+              <th>
+                <div className={styles.headerWithFilter}>
+                  <span>Материал</span>
+                  <FilterDropdown 
+                    column="material" 
+                    values={getUniqueValues('material')} 
+                  />
+                </div>
+              </th>
+              <th>
+                <div className={styles.headerWithFilter}>
+                  <span>Размер</span>
+                  <FilterDropdown 
+                    column="size" 
+                    values={getUniqueValues('size')} 
+                  />
+                </div>
+              </th>
+              <th>
+                <div className={styles.headerWithFilter}>
+                  <span>Подэтап</span>
+                  <FilterDropdown 
+                    column="substage" 
+                    values={getUniqueValues('substage')} 
+                  />
+                </div>
+              </th>
               <th>Тех. информация</th>
               <th>Общее кол-во</th>
               <th>Готово к обработке</th>
@@ -243,7 +442,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {details.sort((a, b) => a.id - b.id).map((detail, index) => (
+            {filteredDetails.sort((a, b) => a.id - b.id).map((detail, index) => (
               <tr
                 key={detail.id}
                 className={`
@@ -254,10 +453,20 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
                 onClick={() => handleRowClick(detail.id)}
               >
                 <td>{detail.articleNumber}</td>
-                <td>{detail.packageCode}</td>
+                <td>
+                  <div className={styles.packagesContainer}>
+                    {detail.packages.map((pkg, pkgIndex) => (
+                      <div key={pkg.packageId} className={styles.packageItem}>
+                        <span className={styles.packageCode}>{pkg.packageCode}</span>
+                        <span className={styles.packageQuantity}>({pkg.quantity})</span>
+                      </div>
+                    ))}
+                  </div>
+                </td>
                 <td>{detail.name}</td>
                 <td>{detail.material}</td>
                 <td>{detail.size}</td>
+                <td>{detail.substage?.substageName || '-'}</td>
                 <td>
                   <button 
                     className={styles.drawingButton}

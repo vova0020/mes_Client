@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './PalletsSidebar.module.css';
-import { ProductionPallet, PartDistribution } from '../../../api/masterPage/productionPalletsServiceMaster';
+import { ProductionPallet } from '../../../api/machineApi/machinProductionPalletsService';
+import { PartDistribution } from '../../../api/machineApi/machineApi';
 
 interface RedistributeModalProps {
   isOpen: boolean;
@@ -29,20 +30,6 @@ const RedistributeModal: React.FC<RedistributeModalProps> = ({
 }) => {
   const [distributions, setDistributions] = useState<Distribution[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Получаем machineId из localStorage
-  const getMachineIdFromStorage = (): number | undefined => {
-    try {
-      const assignmentsData = localStorage.getItem('assignments');
-      if (!assignmentsData) return undefined;
-      
-      const data = JSON.parse(assignmentsData);
-      return data.machines?.[0]?.id;
-    } catch (error) {
-      console.error('Ошибка при получении machineId из localStorage:', error);
-      return undefined;
-    }
-  };
 
   // Инициализация с одним распределением
   useEffect(() => {
@@ -105,6 +92,20 @@ const RedistributeModal: React.FC<RedistributeModalProps> = ({
     }
 
     return null;
+  };
+
+  // Получаем machineId из localStorage
+  const getMachineIdFromStorage = (): number | undefined => {
+    try {
+      const assignmentsData = localStorage.getItem('assignments');
+      if (!assignmentsData) return undefined;
+      
+      const data = JSON.parse(assignmentsData);
+      return data.machines?.[0]?.id;
+    } catch (error) {
+      console.error('Ошибка при получении machineId из localStorage:', error);
+      return undefined;
+    }
   };
 
   // Обработка отправки

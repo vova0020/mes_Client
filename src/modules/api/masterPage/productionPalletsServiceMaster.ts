@@ -168,6 +168,7 @@ export interface PartDistribution {
 // Интерфейс для запроса перераспределения деталей
 export interface RedistributePartsRequest {
   sourcePalletId: number;
+  machineId?: number;
   distributions: PartDistribution[];
 }
 
@@ -544,16 +545,18 @@ export const defectParts = async (
 // Функция для перераспределения деталей между поддонами
 export const redistributeParts = async (
   sourcePalletId: number,
-  distributions: PartDistribution[]
+  distributions: PartDistribution[],
+  machineId?: number
 ): Promise<RedistributePartsResponse> => {
   try {
     const payload: RedistributePartsRequest = {
       sourcePalletId,
-      distributions
+      distributions,
+      machineId
     };
 
     const response = await axios.post<RedistributePartsResponse>(
-      `${API_URL}/master/redistribute-parts`,
+      `${API_URL}/machins/pallets/redistribute-parts`,
       payload
     );
 

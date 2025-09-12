@@ -1028,7 +1028,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
               </button>
               {(() => {
                 const pallet = pallets.find(p => p.id === showQuantityMenu);
-                const isDisabled = pallet?.currentOperation?.status === 'IN_PROGRESS' || pallet?.currentOperation?.status === 'COMPLETED';
+                const isDisabled =  false;
+                // const isDisabled = pallet?.currentOperation?.status === 'IN_PROGRESS' || pallet?.currentOperation?.status === 'COMPLETED';
                 return (
                   <button
                     className={`${styles.quantityMenuButton} ${isDisabled ? styles.disabledButton : ''}`}

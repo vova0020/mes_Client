@@ -388,14 +388,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   };
 
   // Обработчик перераспределения деталей
-  const handleRedistributeParts = async (distributions: any[]) => {
+  const handleRedistributeParts = async (distributions: any[], machineId?: number) => {
     if (!redistributePalletId) return;
 
     try {
       setIsRedistributing(true);
       setErrorMessage(null);
 
-      await redistributeParts(redistributePalletId, distributions);
+      await redistributeParts(redistributePalletId, distributions, machineId);
       
       setShowRedistributeModal(false);
       console.log('Детали успешно перераспределены');
@@ -1023,7 +1023,8 @@ return (
             </button>
             {(() => {
               const pallet = pallets.find(p => p.id === showQuantityMenu);
-              const isDisabled = pallet?.currentOperation?.status === 'IN_PROGRESS' || pallet?.currentOperation?.status === 'COMPLETED';
+              const isDisabled = false;
+              // const isDisabled = pallet?.currentOperation?.status === 'IN_PROGRESS' || pallet?.currentOperation?.status === 'COMPLETED';
               return (
                 <button
                   className={`${styles.quantityMenuButton} ${isDisabled ? styles.disabledButton : ''}`}

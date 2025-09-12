@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Detail, fetchDetailsByOrderId } from '../../api/masterPage/detailServiceMaster';
+import { Detail, Package, Substage, fetchDetailsByOrderId } from '../../api/masterPage/detailServiceMaster';
 import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
 // Определение интерфейса результата хука
