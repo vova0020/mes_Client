@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import styles from './MachinesCards.module.css';
 import useMachines from '../../../hooks/masterPage/useMachinesMaster';
 import TaskSidebar from './components/TaskSidebar/TaskSidebar';
+import { resetMachineCounter } from '../../../api/masterPage/machineMasterService';
 
 interface MachinesCardsProps {
   onDataUpdate?: () => void;
@@ -68,6 +69,21 @@ const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
   // Обработчик закрытия боковой панели сменного задания
   const handleCloseTaskSidebar = () => {
     setIsTaskSidebarOpen(false);
+  };
+
+  // Обработчик сброса счетчика станка
+  const handleResetCounter = async (machineId: number, machineName: string) => {
+    try {
+      const result = await resetMachineCounter(machineId);
+      console.log(result.message);
+      // Обновляем данные после сброса
+      refreshMachines();
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
+    } catch (error) {
+      console.error('Ошибка при сбросе счетчика:', error);
+    }
   };
 
   // Функция для отображения оверлея неактивного станка
@@ -163,8 +179,19 @@ const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
               >
                 <div className={styles.cardHeader}>
                   <h3 className={styles.machineName}>{machine.name}</h3>
-                  <div className={`${styles.statusIndicator} ${getStatusClass(machine.status)}`}>
-                    {getStatusText(machine.status)}
+                  <div className={styles.headerRight}>
+                    {machine.status.toLowerCase() === 'active' && (
+                      <button 
+                        className={styles.resetButton}
+                        onClick={() => handleResetCounter(machine.id, machine.name)}
+                        title="Сбросить счетчик выполнено"
+                      >
+                        ↻
+                      </button>
+                    )}
+                    <div className={`${styles.statusIndicator} ${getStatusClass(machine.status)}`}>
+                      {getStatusText(machine.status)}
+                    </div>
                   </div>
                 </div>
                 

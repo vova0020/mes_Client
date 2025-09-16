@@ -10,6 +10,8 @@ export interface Machine {
   noShiftAssignment?: boolean;
   segmentId: number | null;
   segmentName: string | null;
+  completionPercentage?: number;
+  completedQuantity?: number;
 }
 
 // Тип для статусов станка

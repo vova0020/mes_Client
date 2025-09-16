@@ -38,6 +38,7 @@ const MachineNoSmen: React.FC = () => {
   
   const refreshOrders = useCallback(() => {
     setOrdersKey(prev => prev + 1);
+    // Не сбрасываем selectedOrderId при обновлении данных
   }, []);
 
   // Функция для отображения соответствующего контента в зависимости от состояния
@@ -73,7 +74,8 @@ const MachineNoSmen: React.FC = () => {
         <div className={styles.ordersSection}>
           <OrdersTable 
             key={ordersKey}
-            onOrderSelect={handleOrderSelect} 
+            onOrderSelect={handleOrderSelect}
+            selectedOrderId={selectedOrderId}
           />
         </div>
         <div className={styles.detailsSection}>

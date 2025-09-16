@@ -5,17 +5,24 @@ import { Order } from '../../../api/machinNoSmenApi/orderService';
 
 interface OrdersTableProps {
   onOrderSelect?: (orderId: number | null) => void;
+  selectedOrderId?: number | null;
 }
 
 const OrdersTable: React.FC<OrdersTableProps> = ({ 
-  onOrderSelect
+  onOrderSelect,
+  selectedOrderId
 }) => {
-  const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
+  const [activeOrderId, setActiveOrderId] = useState<number | null>(selectedOrderId || null);
   const [showOrders, setShowOrders] = useState(false);
   const { orders, loading, error, fetchOrders } = useOrders();
   const isFirstLoad = useRef(true);
   const prevActiveOrderId = useRef<number | null>(null);
 
+  // Синхронизируем внутреннее состояние с пропсом
+  useEffect(() => {
+    setActiveOrderId(selectedOrderId || null);
+  }, [selectedOrderId]);
+  
   // Оптимизируем useEffect, чтобы избежать лишних вызовов
   useEffect(() => {
     // Вызываем onOrderSelect только при фактическом изменении activeOrderId

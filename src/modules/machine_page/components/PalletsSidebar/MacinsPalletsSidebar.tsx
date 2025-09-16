@@ -233,9 +233,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
         className={styles.bufferCellSelect}
         value={currentBufferCellCode}
         onChange={(e) => handleBufferChange(pallet.id, e.target.value)}
-        disabled={isProcessing || pallet.currentOperation?.status === 'IN_PROGRESS'}
-        title={pallet.currentOperation?.status === 'IN_PROGRESS' ?
-          'Нельзя изменить буфер во время обработки' : 'Выберите ячейку буфера для поддона'}
+        disabled={isProcessing}
+        title='Выберите ячейку буфера для поддона'
       >
         <option value="">Выберите ячейку</option>
         {/* Добавляем сначала текущую ячейку буфера, если она есть */}
@@ -753,8 +752,10 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                           disabled={processingPalletId === pallet.id ||
                             pallet.currentOperation?.status === 'COMPLETED' ||
                             pallet.currentOperation?.status === 'PENDING' ||
-                            !pallet.currentOperation?.status}
-                          title="Готово"
+                            !pallet.currentOperation?.status ||
+                            !getBufferCellAddress(pallet.bufferCell)}
+                          title={!getBufferCellAddress(pallet.bufferCell) ? 
+                            "Выберите адрес в буфере" : "Готово"}
                         >
                           Готово
                         </button>
