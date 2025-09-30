@@ -227,7 +227,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                 <div style={{ display: 'flex', gap: '20px', fontSize: '13px', color: '#666' }}>
                   <span><strong>Код:</strong> {packageInfo.packageCode}</span>
                   <span><strong>Готовность:</strong> {packageInfo.readiness}%</span>
-                  <span><strong>Заказ:</strong> {packageInfo.order.orderName}</span>
+                  <span><strong>Заказ:</strong> {packageInfo.order.batchNumber} - {packageInfo.order.orderName}</span>
                 </div>
               </div>
             )}

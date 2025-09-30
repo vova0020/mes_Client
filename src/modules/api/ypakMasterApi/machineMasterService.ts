@@ -29,6 +29,8 @@ export interface MachineTask {
   priority: number;
   assignedAt: string;
   completedAt: string | null;
+  assignedQuantity: number;
+  completedQuantity: number;
   machine: {
     machineId: number;
     machineName: string;
@@ -306,15 +308,22 @@ export const updateTaskPriority = async (
  */
 export const createPackingAssignment = async (
   packageId: number,
-  machineId: number
+  machineId: number,
+  assignedQuantity?: number
 ): Promise<{ message: string }> => {
   try {
+    const payload: any = {
+      packageId,
+      machineId
+    };
+    
+    if (assignedQuantity !== undefined) {
+      payload.assignedQuantity = assignedQuantity;
+    }
+    
     const response = await axios.post<{ message: string }>(
       `${API_URL}/packing-assignments`,
-      {
-        packageId,
-        machineId
-      },
+      payload,
       {
         headers: {
           'Content-Type': 'application/json'
@@ -330,18 +339,26 @@ export const createPackingAssignment = async (
 };
 
 /**
- * Обновляет статус задания упаковки на "В работе"
+ * Обновляет статус задания упаковки
  * @param taskId ID задания
- * @param machineId ID станка
+ * @param status Новый статус
+ * @param completedQuantity Количество выполненных упаковок (опционально)
  * @returns Сообщение об успешном обновлении
  */
-export const startPackingTask = async (taskId: number, machineId: number): Promise<{ message: string }> => {
+export const updatePackingTaskStatus = async (
+  taskId: number, 
+  status: string, 
+  completedQuantity?: number
+): Promise<{ message: string }> => {
   try {
+    const payload: any = { status };
+    if (completedQuantity !== undefined) {
+      payload.completedQuantity = completedQuantity;
+    }
+    
     const response = await axios.put<{ message: string }>(
-      `${API_URL}/packing-task-management/${taskId}/start`,
-      {
-        machineId
-      },
+      `${API_URL}/packing-task-management/${taskId}/status`,
+      payload,
       {
         headers: {
           'Content-Type': 'application/json'
@@ -351,9 +368,19 @@ export const startPackingTask = async (taskId: number, machineId: number): Promi
     
     return response.data;
   } catch (error) {
-    console.error(`Ошибка при запуске задания упаковки ${taskId}:`, error);
+    console.error(`Ошибка при обновлении статуса задания ${taskId}:`, error);
     throw error;
   }
+};
+
+/**
+ * Обновляет статус задания упаковки на "В работе"
+ * @param taskId ID задания
+ * @param machineId ID станка
+ * @returns Сообщение об успешном обновлении
+ */
+export const startPackingTask = async (taskId: number, machineId: number): Promise<{ message: string }> => {
+  return updatePackingTaskStatus(taskId, 'IN_PROGRESS');
 };
 
 /**
@@ -363,22 +390,6 @@ export const startPackingTask = async (taskId: number, machineId: number): Promi
  * @returns Сообщение об успешном обновлении
  */
 export const completePackingTask = async (taskId: number, machineId: number): Promise<{ message: string }> => {
-  try {
-    const response = await axios.put<{ message: string }>(
-      `${API_URL}/packing-task-management/${taskId}/complete`,
-      {
-        machineId
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка при завершении задания упаковки ${taskId}:`, error);
-    throw error;
-  }
+  return updatePackingTaskStatus(taskId, 'COMPLETED');
 };
+

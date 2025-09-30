@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './TaskSidebar.module.css';
 import useMachines from '../../../../../hooks/ypakMasterHook/useMachinesMaster';
-import { MachineTask } from '../../../../../api/ypakMasterApi/machineMasterService';
+import { MachineTask, updatePackingTaskStatus } from '../../../../../api/ypakMasterApi/machineMasterService';
 
 // Типы статусов деталей
 type TaskStatus = 'pending' | 'processing' | 'completed';
@@ -38,7 +38,7 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   onConfirm
 }) => {
   const [quantity, setQuantity] = useState<number>(0);
-  const maxQuantity = taskItem?.productionPackage?.quantity || 0;
+  const maxQuantity = (taskItem?.assignedQuantity || 0) - (taskItem?.completedQuantity || 0);
   
   // Сбрасываем количество при открытии модального окна
   useEffect(() => {
@@ -95,8 +95,8 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
           </div>
           
           <div className={styles.modalInfoRow}>
-            <span className={styles.modalLabel}>Доступно:</span>
-            <span className={styles.modalValue}>{taskItem.productionPackage.quantity} шт.</span>
+            <span className={styles.modalLabel}>Осталось выполнить:</span>
+            <span className={styles.modalValue}>{(taskItem.assignedQuantity || 0) - (taskItem.completedQuantity || 0)} шт.</span>
           </div>
           
           <div className={styles.quantityInputContainer}>
@@ -301,16 +301,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   };
   
   // Обработчик подтверждения частичной обработки
-  const handleConfirmPartialProcessing = (taskId: number, quantity: number) => {
-    console.log(`Частичная обработка для элемента ${taskId}: ${quantity} шт.`);
-    
-    // Обрабатываем частичную обработку (в будущем может быть API)
-    // Сейчас просто обновляем локальное состояние
-    // Если количество становится <= 0, удаляем задание
-    const task = machineTasks.find(t => t.taskId === taskId);
-    if (task && task.productionPackage.quantity - quantity <= 0) {
-      // Если все детали обработаны, удаляем задание
-      handleDeleteItem(taskId);
+  const handleConfirmPartialProcessing = async (taskId: number, quantity: number) => {
+    try {
+      await updatePackingTaskStatus(taskId, 'IN_PROGRESS', quantity);
+      await fetchTasks(machineId);
+    } catch (error) {
+      console.error('Ошибка при частичной обработке:', error);
+      alert('Ошибка при частичной обработке');
     }
   };
   
@@ -413,13 +410,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   // Обработчик кнопки "Готово"
   const handleCompleteWork = async (taskId: number) => {
     try {
-      const success = await completePackingWork(taskId, machineId);
-      if (success) {
-        // Перезагружаем задания для обновления статуса
-        await fetchTasks(machineId);
-      } else {
-        alert('Ошибка при завершении работы');
-      }
+      const task = machineTasks.find(t => t.taskId === taskId);
+      const completedQuantity = task?.assignedQuantity || 0;
+      await updatePackingTaskStatus(taskId, 'COMPLETED', completedQuantity);
+      await fetchTasks(machineId);
     } catch (error) {
       console.error('Ошибка при завершении работы:', error);
       alert('Ошибка при завершении работы');
@@ -578,7 +572,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                       {/* <th>Номер партии</th> */}
                       <th >Артикул упаковки</th>
                       <th >Наименование упаковки</th>
-                      <th >Кол-во</th>
+                      <th >Назначено / Выполнено</th>
                       {/* <th>Процент выполнения</th> */}
                       {/* <th>Назначено</th> */}
                       <th className={styles.statusColumn}>Статус</th>
@@ -595,7 +589,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                          {/* <td>{item.productionPackage?.order?.batchNumber || '-'}</td  > */}
                         <td>{item.productionPackage?.packageCode || '-'}</td>
                         <td>{item.productionPackage?.packageName || '-'}</td>
-                        <td className={styles.quantityCell}>{item.productionPackage?.quantity || 0} шт.</td>
+                        <td className={styles.quantityCell}>{item.assignedQuantity || 0} / {item.completedQuantity || 0} шт.</td>
                         {/* <td>{item.productionPackage?.completionPercentage || 0}%</td> */}
                         {/* <td>{item.assignedAt ? new Date(item.assignedAt).toLocaleString('ru-RU') : '-'}</td> */}
                         <td className={styles.statusCell}>
@@ -627,7 +621,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             <button 
                               className={`${styles.actionButton} ${styles.partialButton}`}
                               onClick={() => handlePartialProcessing(item.taskId)}
-                              disabled={true}
+                              disabled={mapApiStatusToUiStatus(item.status) !== 'processing'}
                               title="Частично"
                             >
                               Частично
@@ -673,7 +667,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Общее количество:</span>
               <span className={styles.infoValue}>
-                {machineTasks.reduce((sum, item) => sum + item.productionPackage?.quantity, 0)} шт.
+                {machineTasks.reduce((sum, item) => sum + (item.assignedQuantity || 0), 0)} шт.
               </span>
             </div>
           </div>

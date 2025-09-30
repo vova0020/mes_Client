@@ -3,6 +3,7 @@ import styles from './DetailsTable.module.css';
 import usePackagingDetails from '../../../hooks/ypakMasterHook/packagingMasterHook';
 import useMachines from '../../../hooks/ypakMasterHook/useMachinesMaster';
 import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
+import QuantityModal from '../QuantityModal/QuantityModal';
 
 interface DetailsYpakTableProps {
   selectedOrderId: number | null;
@@ -11,22 +12,32 @@ interface DetailsYpakTableProps {
 const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) => {
   // Состояние для отслеживания активной упаковки
   const [activePackagingId, setActivePackagingId] = useState<number | null>(null);
-  
+
   // Состояние для анимации (показывать/скрывать упаковки)
   const [showDetails, setShowDetails] = useState(false);
-  
+
   // Состояние для боковой панели с поддонами
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
-  
+
   // Состояние для уведомлений
-  const [notification, setNotification] = useState<{message: string, type: 'error' | 'success'} | null>(null);
-  
+  const [notification, setNotification] = useState<{ message: string, type: 'error' | 'success' } | null>(null);
+
+  // Состояние для модального окна количества
+  const [quantityModal, setQuantityModal] = useState<{
+    isOpen: boolean;
+    packageId: number | null;
+    machineId: number | null;
+    packageName: string;
+    machineName: string;
+    maxQuantity: number;
+  }>({ isOpen: false, packageId: null, machineId: null, packageName: '', machineName: '', maxQuantity: 0 });
+
   // Используем хук для получения данных о упаковках
-  const { 
-    packagingItems: packages, 
-    loading, 
-    error, 
+  const {
+    packagingItems: packages,
+    loading,
+    error,
     fetchPackagingItems: fetchPackagesByOrderId
   } = usePackagingDetails(selectedOrderId);
 
@@ -35,12 +46,13 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     availableMachines,
     availableMachinesLoading,
     fetchAvailableMachines,
-    assignPackageToMachine
+    assignPackageToMachine,
+    assignPackageToMachineWithQuantity
   } = useMachines();
-  
+
   // Ref для отслеживания предыдущего ID заказа
   const prevOrderIdRef = useRef<number | null>(null);
-  
+
   // Ref для контейнера таблицы, используется для определения кликов за пределами sidebar
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -68,7 +80,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
       const timer = setTimeout(() => {
         setShowDetails(true);
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [loading, packages]);
@@ -99,10 +111,10 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   //   const handleOutsideClick = (event: MouseEvent) => {
   //     // Проверяем, что sidebar открыт
   //     if (!sidebarOpen) return;
-      
+
   //     // Получаем элемент sidebar через DOM
   //     const sidebar = document.querySelector(`.${styles.sidebar}`);
-      
+
   //     // Проверяем, что клик был не внутри sidebar и не на кнопке-стрелке
   //     if (sidebar && 
   //         !sidebar.contains(event.target as Node) && 
@@ -113,7 +125,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
 
   //   // Добавляем слушатель событий
   //   document.addEventListener('mousedown', handleOutsideClick);
-    
+
   //   // Удаляем слушатель при размонтировании
   //   return () => {
   //     document.removeEventListener('mousedown', handleOutsideClick);
@@ -135,7 +147,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   const handleSchemeClick = (e: React.MouseEvent, packageId: number) => {
     e.stopPropagation(); // Предотвращаем всплытие события
     console.log(`Открыть схему укладки для упаковки ${packageId}`);
-    
+
     // Здесь будет запрос на получение схемы укладки
     // и открытие её в новом окне или модальном окне
   };
@@ -159,38 +171,50 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     // toggleAllowOutsidePacking(packageId, isChecked);
   };
 
-  // Функция для получения назначенного станка для упаковки
-  const getAssignedMachine = (packaging: any) => {
+  // Функция для получения всех назначенных станков для упаковки
+  const getAssignedMachines = (packaging: any) => {
     if (packaging.tasks && packaging.tasks.length > 0) {
-      // Берем первое задание (предполагаем, что у упаковки одно активное задание)
-      const task = packaging.tasks[0];
-      if (task.machine) {
-        return {
+      return packaging.tasks
+        .filter((task: any) => task.machine)
+        .map((task: any) => ({
           machineId: task.machine.machineId,
           machineName: task.machine.machineName,
           status: task.status,
           completedAt: task.completedAt,
-          taskId: task.taskId
-        };
-      }
+          taskId: task.taskId,
+          quantity: task.quantity || 0
+        }));
     }
-    return null;
+    return [];
+  };
+
+  // Функция для получения оставшегося количества для выдачи
+  const getRemainingQuantity = (packaging: any) => {
+    const assignedMachines = getAssignedMachines(packaging);
+    const totalAssigned = assignedMachines.reduce((sum: number, machine: any) => sum + machine.quantity, 0);
+    return packaging.readyForPackaging - totalAssigned;
+  };
+
+  // Функция для получения назначенного станка для упаковки (для обратной совместимости)
+  const getAssignedMachine = (packaging: any) => {
+    const machines = getAssignedMachines(packaging);
+    return machines.length > 0 ? machines[0] : null;
   };
 
   // Функция для проверки, можно ли нажать кнопку "В работу"
   const canStartWork = (packaging: any) => {
     const assignedMachine = getAssignedMachine(packaging);
     if (!assignedMachine) return false;
-    
-    return (assignedMachine.status === 'PENDING' || assignedMachine.status === 'NOT_PROCESSED') && 
-           !assignedMachine.completedAt;
+
+    return (assignedMachine.status === 'PENDING' || assignedMachine.status === 'NOT_PROCESSED') &&
+      !assignedMachine.completedAt;
   };
 
   // Функция для проверки, можно ли нажать кнопку "Готово"
   const canComplete = (packaging: any) => {
     const assignedMachine = getAssignedMachine(packaging);
     if (!assignedMachine) return false;
-    
+
     return assignedMachine.status === 'IN_PROGRESS' && !assignedMachine.completedAt;
   };
 
@@ -198,35 +222,69 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
 
   // Обработчик изменения выбора упаковщика (станка)
   const handleAssignPackagerChange = async (e: React.ChangeEvent<HTMLSelectElement>, packageId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
+    e.stopPropagation();
     const machineId = parseInt(e.target.value);
     if (!isNaN(machineId)) {
-      console.log(`Назначить станок ${machineId} для упаковки ${packageId}`);
+      const packaging = packages?.find(p => p.id === packageId);
+      const machine = availableMachines.find(m => m.id === machineId);
       
-      try {
-        // Отправляем запрос на назначение упаковки на станок
-        const result = await assignPackageToMachine(packageId, machineId);
-        
-        if (result.success) {
-          console.log(`Упаковка ${packageId} успешно назначена на станок ${machineId}`);
-          setNotification({message: 'Упаковка успешно назначена на станок', type: 'success'});
-          // Перезагружаем данные упаковок для обновления состояния
-          if (selectedOrderId !== null) {
-            fetchPackagesByOrderId(selectedOrderId);
-          }
-        } else {
-          // Показываем сообщение об ошибке от сервера
-          const errorMessage = result.error?.message || 'Не удалось назначить упаковку на станок';
-          setNotification({message: errorMessage, type: 'error'});
-          // Сбрасываем выбор в селекте при ошибке
-          e.target.value = "";
-        }
-      } catch (error) {
-        console.error(`Ошибка при назначении упаковки ${packageId} на станок ${machineId}:`, error);
-        setNotification({message: 'Произошла ошибка при назначении упаковки', type: 'error'});
-        e.target.value = "";
+      if (packaging && machine) {
+        // Открываем модальное окно для ввода количества (оставшееся количество)
+        const remainingQuantity = getRemainingQuantity(packaging);
+        setQuantityModal({
+          isOpen: true,
+          packageId,
+          machineId,
+          packageName: packaging.packageName,
+          machineName: machine.name,
+          maxQuantity: remainingQuantity
+        });
       }
+      
+      // Сбрасываем выбор в селекте
+      e.target.value = "";
     }
+  };
+
+  // Обработчик подтверждения количества в модальном окне
+  const handleQuantityConfirm = async (quantity: number) => {
+    if (!quantityModal.packageId || !quantityModal.machineId) return;
+
+    try {
+      const result = await assignPackageToMachineWithQuantity(
+        quantityModal.packageId, 
+        quantityModal.machineId, 
+        quantity
+      );
+
+      if (result.success) {
+        setNotification({ 
+          message: `Упаковка назначена на станок (${quantity} шт.)`, 
+          type: 'success' 
+        });
+        if (selectedOrderId !== null) {
+          fetchPackagesByOrderId(selectedOrderId);
+        }
+      } else {
+        const errorMessage = result.error?.message || 'Не удалось назначить упаковку на станок';
+        setNotification({ message: errorMessage, type: 'error' });
+      }
+    } catch (error) {
+      console.error('Ошибка при назначении упаковки:', error);
+      setNotification({ message: 'Произошла ошибка при назначении упаковки', type: 'error' });
+    }
+  };
+
+  // Обработчик закрытия модального окна
+  const handleQuantityModalClose = () => {
+    setQuantityModal({ 
+      isOpen: false, 
+      packageId: null, 
+      machineId: null, 
+      packageName: '', 
+      machineName: '', 
+      maxQuantity: 0 
+    });
   };
 
 
@@ -382,8 +440,9 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                 <td>{packaging.packageCode}</td>
                 <td>{packaging.packageName}</td>
                 <td>
-                  <button 
-                    className={styles.schemeButton}
+                  <button
+                    disabled={true}
+                    // className={styles.schemeButton}
                     onClick={(e) => handleSchemeClick(e, packaging.id)}
                   >
                     Схема укладки
@@ -412,33 +471,51 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                 </td> */}
                 <td>
                   {(() => {
-                    const assignedMachine = getAssignedMachine(packaging);
-                    
+                    const assignedMachines = getAssignedMachines(packaging);
+                    const remainingQuantity = getRemainingQuantity(packaging);
+
                     return (
-                      <select 
-                        className={styles.workerSelect}
-                        value={assignedMachine ? assignedMachine.machineId : ""}
-                        onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        disabled={availableMachinesLoading || !!assignedMachine}
-                      >
-                        <option value="">
-                          {availableMachinesLoading ? 'Загрузка...' : 'Выберите станок'}
-                        </option>
-                        {availableMachines.map((machine) => (
-                          <option 
-                            key={machine.id} 
-                            value={machine.id}
+                      <div className={styles.assignmentContainer}>
+                        {assignedMachines.length > 0 && (
+                          <div className={styles.assignedMachinesList}>
+                            {assignedMachines.map((machine: any) => (
+                              <div key={machine.taskId} className={styles.assignedMachine}>
+                                <span>{machine.machineName}</span>
+                                {/* <span>{machine.machineName}: {machine.quantity} шт.</span> */}
+                                <span className={styles.assignedStatus}>
+                                  ({getPackingStatusText(machine.status)})
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {remainingQuantity > 0 && (
+                          <select
+                            className={styles.workerSelect}
+                            value=""
+                            onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={availableMachinesLoading}
                           >
-                            {machine.name}
-                          </option>
-                        ))}
-                      </select>
+                            <option value="">
+                              {availableMachinesLoading ? 'Загрузка...' : `Довыдать ${remainingQuantity} шт.`}
+                            </option>
+                            {availableMachines.map((machine) => (
+                              <option
+                                key={machine.id}
+                                value={machine.id}
+                              >
+                                {machine.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
                     );
                   })()}
                 </td>
                 <td>
-                  <button 
+                  <button
                     className={styles.arrowButton}
                     onClick={(e) => handleArrowClick(e, packaging.id)}
                   >
@@ -456,7 +533,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
         <div className={`${styles.notification} ${styles[notification.type]}`}>
           <div className={styles.notificationContent}>
             <span>{notification.message}</span>
-            <button 
+            <button
               className={styles.closeNotification}
               onClick={() => setNotification(null)}
             >
@@ -467,10 +544,20 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
       )}
 
       {/* Боковая панель с деталями и поддонами */}
-      <PackagingDetailsSidebar 
-        isOpen={sidebarOpen} 
+      <PackagingDetailsSidebar
+        isOpen={sidebarOpen}
         onClose={handleCloseSidebar}
         selectedPackageId={selectedDetailForPallets}
+      />
+
+      {/* Модальное окно для ввода количества */}
+      <QuantityModal
+        isOpen={quantityModal.isOpen}
+        onClose={handleQuantityModalClose}
+        onConfirm={handleQuantityConfirm}
+        packageName={quantityModal.packageName}
+        machineName={quantityModal.machineName}
+        maxQuantity={quantityModal.maxQuantity}
       />
     </div>
   );

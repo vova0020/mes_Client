@@ -1024,3 +1024,149 @@
     margin-left: 8px;
   }
 }
+
+/* Стили для контейнера назначения */
+.assignmentContainer {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.assignmentContainer .workerSelect {
+  flex: 1;
+  min-width: 120px;
+}
+
+.assignAllButton {
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.assignAllButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #f4a62a, #f39c12);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.assignAllButton:disabled {
+  background: linear-gradient(to bottom, #bdc3c7, #95a5a6);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Стили для назначенного станка */
+.assignedMachine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: #333;
+}
+
+.assignedStatus {
+  font-size: 10px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Адаптивные стили для новых элементов */
+@media screen and (max-width: 991px) {
+  .assignmentContainer {
+    gap: 3px;
+  }
+  
+  .assignAllButton {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  
+  .assignedMachine {
+    font-size: 11px;
+  }
+  
+  .assignedStatus {
+    font-size: 9px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .assignmentContainer {
+    gap: 2px;
+  }
+  
+  .assignAllButton {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .assignedMachine {
+    font-size: 10px;
+  }
+  
+  .assignedStatus {
+    font-size: 8px;
+  }
+}
+/* Стили для списка назначенных станков */
+.assignedMachinesList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+  width: 100%;
+}
+
+/* Стили для отдельного назначенного станка */
+.assignedMachine {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: linear-gradient(to bottom, #e8f5e8, #d4f0d4);
+  border: 1px solid #a8d8a8;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #2d5a2d;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.assignedMachine:hover {
+  background: linear-gradient(to bottom, #e0f0e0, #c8e8c8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.assignedMachine span:first-child {
+  font-weight: 600;
+  color: #1e4a1e;
+}
+
+.assignedStatus {
+  font-size: 9px;
+  color: #5a7a5a;
+  font-style: italic;
+  margin-top: 1px;
+}
+
+/* Обновленные стили для контейнера назначения */
+.assignmentContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 150px;
+}
+
+.assignmentContainer .workerSelect {
+  width: 100%;
+  min-width: 120px;
+}

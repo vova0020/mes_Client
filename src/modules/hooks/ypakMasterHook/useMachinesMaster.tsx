@@ -50,6 +50,9 @@ interface UseMachinesResult {
   // Функция для создания назначения упаковки на станок
   assignPackageToMachine: (packageId: number, machineId: number) => Promise<{success: boolean, error?: {message: string}}>;
   
+  // Функция для создания задания с указанием количества
+  assignPackageToMachineWithQuantity: (packageId: number, machineId: number, quantity: number) => Promise<{success: boolean, error?: {message: string}}>;
+  
   // Функции для управления статусом заданий упаковки
   startPackingWork: (taskId: number, machineId: number) => Promise<boolean>;
   completePackingWork: (taskId: number, machineId: number) => Promise<boolean>;
@@ -286,6 +289,22 @@ const useMachines = (): UseMachinesResult => {
     }
   }, []);
 
+  // Функция для назначения упаковки на станок с указанием количества
+  const assignPackageToMachineWithQuantity = useCallback(async (packageId: number, machineId: number, quantity: number): Promise<{success: boolean, error?: {message: string}}> => {
+    try {
+      await createPackingAssignment(packageId, machineId, quantity);
+      return { success: true };
+    } catch (err: any) {
+      console.error(`Ошибка при назначении упаковки ${packageId} на станок ${machineId} с количеством ${quantity}:`, err);
+      return { 
+        success: false, 
+        error: { 
+          message: err?.response?.data?.message || err?.message || 'Не удалось назначить упаковку на станок' 
+        } 
+      };
+    }
+  }, []);
+
   // Функция для запуска работы над заданием упаковки
   const startPackingWork = useCallback(async (taskId: number, machineId: number): Promise<boolean> => {
     try {
@@ -356,6 +375,9 @@ const useMachines = (): UseMachinesResult => {
     
     // Функция для назначения упаковки на станок
     assignPackageToMachine,
+    
+    // Функция для назначения упаковки на станок с указанием количества
+    assignPackageToMachineWithQuantity,
     
     // Функции для управления статусом заданий упаковки
     startPackingWork,
