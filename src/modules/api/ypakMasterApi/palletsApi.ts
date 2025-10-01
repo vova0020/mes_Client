@@ -82,6 +82,7 @@ export interface PalletsQueryParams {
   limit?: number;
   palletName?: string;
   onlyInCells?: boolean;
+  packageId?: number;
 }
 
 export interface PalletsStatisticsDto {

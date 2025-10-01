@@ -159,19 +159,28 @@ const useOrders = () => {
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, refreshOrdersData]);
+  }, [socket, isWebSocketConnected, room]);
 
   // Загрузка заказов при монтировании компонента
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+  }, []);
 
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      setTimeout(() => {
-        fetchOrders();
-      }, 100);
+      const stage = event.detail;
+      if (!stage?.finalStage) {
+        // Загружаем данные для обычного этапа
+        setTimeout(() => {
+          fetchOrders();
+        }, 100);
+      } else {
+        // Очищаем данные при переходе на финальный этап
+        setOrders([]);
+        setError(null);
+        setLoading(false);
+      }
     };
 
     window.addEventListener('stageChanged', handleStageChange as EventListener);
@@ -179,7 +188,7 @@ const useOrders = () => {
     return () => {
       window.removeEventListener('stageChanged', handleStageChange as EventListener);
     };
-  }, [fetchOrders]);
+  }, []);
 
   // Создание нового заказа
   const createOrder = async (orderData: Partial<Order>) => {

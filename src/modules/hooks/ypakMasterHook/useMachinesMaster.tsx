@@ -28,6 +28,7 @@ interface UseMachinesResult {
   error: Error | null;
   isWebSocketConnected: boolean;
   webSocketError: string | null;
+  socket: any;
   fetchMachines: () => Promise<void>;
   refreshMachines: () => Promise<void>;
   refreshMachinesData: (status: string) => Promise<void>;
@@ -271,7 +272,7 @@ const useMachines = (): UseMachinesResult => {
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, refreshMachinesData, machineTasks, fetchTasks, currentMachineId]);
+  }, [socket, isWebSocketConnected, room, currentMachineId]);
 
   // Функция для назначения упаковки на станок
   const assignPackageToMachine = useCallback(async (packageId: number, machineId: number): Promise<{success: boolean, error?: {message: string}}> => {
@@ -312,7 +313,7 @@ const useMachines = (): UseMachinesResult => {
       return true;
     } catch (err) {
       console.error(`Ошибка при запуске задания упаковки ${taskId}:`, err);
-      return false;
+      throw err; // Пробрасываем исключение
     }
   }, []);
 
@@ -323,7 +324,7 @@ const useMachines = (): UseMachinesResult => {
       return true;
     } catch (err) {
       console.error(`Ошибка при завершении задания упаковки ${taskId}:`, err);
-      return false;
+      throw err; // Пробрасываем исключение
     }
   }, []);
 
@@ -332,13 +333,17 @@ const useMachines = (): UseMachinesResult => {
   // Загрузка данных о станках при первом рендере
   useEffect(() => {
     fetchMachines();
-  }, [fetchMachines]);
+  }, []);
 
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      fetchMachines();
-      fetchAvailableMachines();
+      const stage = event.detail;
+      // Загружаем данные только если это финальный этап
+      if (stage?.finalStage) {
+        fetchMachines();
+        fetchAvailableMachines();
+      }
     };
 
     window.addEventListener('stageChanged', handleStageChange as EventListener);
@@ -346,7 +351,7 @@ const useMachines = (): UseMachinesResult => {
     return () => {
       window.removeEventListener('stageChanged', handleStageChange as EventListener);
     };
-  }, [fetchMachines, fetchAvailableMachines]);
+  }, []);
   
   return {
     machines,
@@ -354,6 +359,7 @@ const useMachines = (): UseMachinesResult => {
     error,
     isWebSocketConnected,
     webSocketError,
+    socket,
     fetchMachines,
     refreshMachines,
     refreshMachinesData,

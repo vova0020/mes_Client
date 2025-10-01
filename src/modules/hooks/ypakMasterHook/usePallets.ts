@@ -23,6 +23,7 @@ const usePallets = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [currentPartId, setCurrentPartId] = useState<string | number | null>(null);
+  const [currentParams, setCurrentParams] = useState<PalletsQueryParams | undefined>(undefined);
   
   // debounce refs
   const refreshTimeoutRef = useRef<number | null>(null);
@@ -92,6 +93,7 @@ const usePallets = () => {
     setLoading(true);
     setError(null);
     setCurrentPartId(partId);
+    setCurrentParams(params);
 
     try {
       const response = await palletsApi.getPalletsByPartId(partId, params);
@@ -156,7 +158,7 @@ const usePallets = () => {
 
       refreshTimeoutRef.current = window.setTimeout(async () => {
         try {
-          const data = await palletsApi.getPalletsByPartId(currentPartId);
+          const data = await palletsApi.getPalletsByPartId(currentPartId, currentParams);
           updatePalletsSmartly(data);
           console.log(`Данные поддонов обновлены (debounced).`);
         } catch (err) {
@@ -166,7 +168,7 @@ const usePallets = () => {
     } catch (err) {
       console.error('Ошибка в refreshPalletsData:', err);
     }
-  }, [currentPartId, updatePalletsSmartly]);
+  }, [currentPartId, currentParams, updatePalletsSmartly]);
 
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
@@ -200,6 +202,7 @@ const usePallets = () => {
     setError(null);
     setLoading(false);
     setCurrentPartId(null);
+    setCurrentParams(undefined);
   }, []);
 
   return {

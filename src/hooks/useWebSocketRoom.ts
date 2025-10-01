@@ -14,7 +14,14 @@ export const useWebSocketRoom = ({ room, autoJoin = true }: UseWebSocketRoomOpti
       console.log('[useWebSocketRoom] joining room:', room);
       joinRoom(room);
     }
-  }, [room, isConnected, autoJoin, joinRoom]);
+
+    return () => {
+      if (isConnected && autoJoin) {
+        console.log('[useWebSocketRoom] leaving room:', room);
+        leaveRoom(room);
+      }
+    };
+  }, [room, isConnected, autoJoin, joinRoom, leaveRoom]);
 
   return {
     socket,

@@ -31,8 +31,12 @@ const MasterYpakPage: React.FC = () => {
       console.log('Этап изменен в MasterYpakPage:', currentStage);
       // Сбрасываем выбранный заказ
       setSelectedOrderId(null);
+      // Закрываем модальное окно упаковок если оно открыто
+      if (isPackagingModalOpen) {
+        handleClosePackagingModal();
+      }
     }
-  }, [currentStage]);
+  }, [currentStage, isPackagingModalOpen]);
 
   // Обработчик выбора заказа
   const handleOrderSelect = (orderId: number | null) => {

@@ -200,7 +200,10 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
         return;
       }
 
-      if (currentOrderId === null) return;
+      if (currentOrderId === null) {
+        console.log('Пропускаем обновление: нет активного заказа');
+        return;
+      }
 
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
@@ -219,7 +222,7 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
     } catch (err) {
       console.error('Ошибка в refreshPackagingData:', err);
     }
-  }, [currentOrderId, updatePackagingSmartly]);
+  }, [updatePackagingSmartly]);
 
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
@@ -241,12 +244,12 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, refreshPackagingData]);
+  }, [socket, isWebSocketConnected, room, currentOrderId]);
 
  // Реагируем на любые изменения initialOrderId — если он null, fetchPackagingItems очистит список
 useEffect(() => {
   fetchPackagingItems(initialOrderId);
-}, [initialOrderId, fetchPackagingItems]);
+}, [initialOrderId]);
 
   
   return {

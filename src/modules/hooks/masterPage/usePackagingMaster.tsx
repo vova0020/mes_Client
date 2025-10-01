@@ -123,9 +123,9 @@ const usePackaging = () => {
         return;
       }
 
-      // Проверяем, что есть текущий заказ и данные упаковок уже загружены
-      if (currentOrderId === null || packagingData.length === 0) {
-        console.log('Пропускаем обновление: нет активного заказа или данных упаковок');
+      // Проверяем, что есть текущий заказ
+      if (currentOrderId === null) {
+        console.log('Пропускаем обновление: нет активного заказа');
         return;
       }
 
@@ -146,7 +146,7 @@ const usePackaging = () => {
     } catch (err) {
       console.error('Ошибка в refreshPackagingData:', err);
     }
-  }, [currentOrderId, packagingData.length, updatePackagingSmartly]);
+  }, [updatePackagingSmartly]);
 
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
@@ -156,9 +156,11 @@ const usePackaging = () => {
 
     const handlePackagingEvent = async (data: { status: string }) => {
       console.log('Получено WebSocket событие для упаковок - status:', data.status, 'currentOrderId:', currentOrderId);
-      // Обновляем данные только если модальное окно открыто и есть активный заказ
-      if (currentOrderId !== null && packagingData.length > 0) {
+      // Обновляем данные только если есть активный заказ
+      if (currentOrderId !== null) {
         await refreshPackagingData(data.status);
+      } else {
+        console.log('Пропускаем WebSocket событие: нет активного заказа');
       }
     };
 
@@ -171,14 +173,20 @@ const usePackaging = () => {
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, refreshPackagingData]);
+  }, [socket, isWebSocketConnected, room, refreshPackagingData, currentOrderId, packagingData.length]);
 
   // Функция для очистки данных
   const clearPackaging = useCallback(() => {
+    console.log('Закрываем модальное окно, очищаем данные упаковок');
     setPackagingData([]);
     setError(null);
     setLoading(false);
     setCurrentOrderId(null);
+    // Очищаем таймер если он есть
+    if (refreshTimeoutRef.current) {
+      window.clearTimeout(refreshTimeoutRef.current);
+      refreshTimeoutRef.current = null;
+    }
   }, []);
 
   return {

@@ -417,9 +417,13 @@ const useMachines = (): UseMachinesResult => {
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      setTimeout(() => {
-        fetchMachines();
-      }, 150);
+      const stage = event.detail;
+      // Загружаем данные только если это НЕ финальный этап
+      if (!stage?.finalStage) {
+        setTimeout(() => {
+          fetchMachines();
+        }, 150);
+      }
     };
 
     window.addEventListener('stageChanged', handleStageChange as EventListener);

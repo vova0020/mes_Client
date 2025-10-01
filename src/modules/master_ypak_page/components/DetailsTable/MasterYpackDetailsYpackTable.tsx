@@ -47,7 +47,9 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     availableMachinesLoading,
     fetchAvailableMachines,
     assignPackageToMachine,
-    assignPackageToMachineWithQuantity
+    assignPackageToMachineWithQuantity,
+    isWebSocketConnected,
+    socket
   } = useMachines();
 
   // Ref для отслеживания предыдущего ID заказа
@@ -105,6 +107,25 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
+  // Подписка на WebSocket события для обновления данных упаковок при изменении заданий станков
+  useEffect(() => {
+    if (!socket || !isWebSocketConnected || !selectedOrderId) return;
+
+    const handleTaskEvent = async (data: { status: string }) => {
+      console.log('Получено WebSocket событие task:event в таблице упаковок - status:', data.status);
+      if (data.status === 'updated') {
+        // Обновляем данные упаковок при изменении заданий
+        fetchPackagesByOrderId(selectedOrderId);
+      }
+    };
+
+    socket.on('task:event', handleTaskEvent);
+
+    return () => {
+      socket.off('task:event', handleTaskEvent);
+    };
+  }, [socket, isWebSocketConnected, selectedOrderId, fetchPackagesByOrderId]);
 
   // // Обработчик кликов за пределами боковой панели
   // useEffect(() => {

@@ -90,8 +90,12 @@ const Header: React.FC = () => {
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
-      console.log('Получено событие изменения этапа:', event.detail);
-      loadStageData();
+      const stage = event.detail;
+      // Обновляем заголовок только если это НЕ финальный этап
+      if (!stage?.finalStage) {
+        console.log('Получено событие изменения этапа:', event.detail);
+        loadStageData();
+      }
     };
 
     window.addEventListener('stageChanged', handleStageChange as EventListener);

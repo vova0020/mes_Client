@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './TaskSidebar.module.css';
 import useMachines from '../../../../../hooks/ypakMasterHook/useMachinesMaster';
 import { MachineTask, updatePackingTaskStatus } from '../../../../../api/ypakMasterApi/machineMasterService';
@@ -280,6 +281,9 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
   const [selectedTaskForPriority, setSelectedTaskForPriority] = useState<MachineTask | null>(null);
   
+  // Состояние для уведомлений
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  
   // Загрузка данных сменного задания при открытии
   useEffect(() => {
     if (isOpen && machineId) {
@@ -290,6 +294,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       fetchAvailableMachines();
     }
   }, [isOpen, machineId, fetchTasks, fetchAvailableMachines]);
+  
+  // Автоматически скрываем уведомление через 5 секунд
+  // useEffect(() => {
+  //   if (notification) {
+  //     const timer = setTimeout(() => {
+  //       setNotification(null);
+  //     }, 5000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [notification]);
   
   // Обработчик частичной обработки
   const handlePartialProcessing = (taskId: number) => {
@@ -305,9 +319,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     try {
       await updatePackingTaskStatus(taskId, 'IN_PROGRESS', quantity);
       await fetchTasks(machineId);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при частичной обработке:', error);
-      alert('Ошибка при частичной обработке');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при частичной обработке';
+      setNotification({ message: errorMessage, type: 'error' });
     }
   };
   
@@ -394,16 +409,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   // Обработчик кнопки "В работу"
   const handleStartWork = async (taskId: number) => {
     try {
-      const success = await startPackingWork(taskId, machineId);
-      if (success) {
-        // Перезагружаем задания для обновления статуса
-        await fetchTasks(machineId);
-      } else {
-        alert('Ошибка при начале работы');
-      }
-    } catch (error) {
+      await startPackingWork(taskId, machineId);
+      // Перезагружаем задания для обновления статуса
+      await fetchTasks(machineId);
+    } catch (error: any) {
       console.error('Ошибка при начале работы:', error);
-      alert('Ошибка при начале работы');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при начале работы';
+      setNotification({ message: errorMessage, type: 'error' });
     }
   };
 
@@ -414,9 +426,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       const completedQuantity = task?.assignedQuantity || 0;
       await updatePackingTaskStatus(taskId, 'COMPLETED', completedQuantity);
       await fetchTasks(machineId);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при завершении работы:', error);
-      alert('Ошибка при завершении работы');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при завершении работы';
+      setNotification({ message: errorMessage, type: 'error' });
     }
   };
 
@@ -705,6 +718,56 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
         taskItem={selectedTaskForPriority}
         onConfirm={handlePriorityChange}
       />
+      
+      {/* Уведомления через портал */}
+      {notification && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            minWidth: '300px',
+            maxWidth: '500px',
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            zIndex: 10001,
+            background: notification.type === 'error' 
+              ? 'linear-gradient(135deg, #e74c3c, #c0392b)' 
+              : 'linear-gradient(135deg, #2ecc71, #27ae60)',
+            borderLeft: notification.type === 'error' 
+              ? '4px solid #a93226' 
+              : '4px solid #219653'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            color: 'white',
+            fontSize: '14px',
+            lineHeight: '1.4'
+          }}>
+            <span>{notification.message}</span>
+            <button
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '0',
+                marginLeft: '12px',
+                opacity: '0.8'
+              }}
+              onClick={() => setNotification(null)}
+            >
+              ×
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 };
