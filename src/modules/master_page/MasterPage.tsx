@@ -31,13 +31,10 @@ const MasterPage: React.FC = () => {
       console.log('Этап изменен в MasterPage:', currentStage);
       // Сбрасываем выбранный заказ
       setSelectedOrderId(null);
-      // Закрываем модальное окно упаковок если оно открыто
-      if (isPackagingModalOpen) {
-        handleClosePackagingModal();
-      }
+      // НЕ закрываем модальное окно автоматически при смене этапа
       // НЕ вызываем fetchOrders здесь, так как хук useOrders уже делает это
     }
-  }, [currentStage, isPackagingModalOpen]);
+  }, [currentStage]);
 
   // Обработчик выбора заказа
   const handleOrderSelect = (orderId: number | null) => {
@@ -91,6 +88,10 @@ const MasterPage: React.FC = () => {
                 fetchOrders={fetchOrders}
                 onOrderSelect={handleOrderSelect}
                 onViewOrderComposition={handleViewOrderComposition}
+                onViewOrderConsumption={(orderId) => {
+                  console.log('Просмотр расхода для заказа:', orderId);
+                  // Здесь можно добавить логику для просмотра расхода
+                }}
               />
             </div>
             

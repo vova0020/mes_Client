@@ -31,12 +31,9 @@ const MasterYpakPage: React.FC = () => {
       console.log('Этап изменен в MasterYpakPage:', currentStage);
       // Сбрасываем выбранный заказ
       setSelectedOrderId(null);
-      // Закрываем модальное окно упаковок если оно открыто
-      if (isPackagingModalOpen) {
-        handleClosePackagingModal();
-      }
+      // НЕ закрываем модальное окно автоматически при смене этапа
     }
-  }, [currentStage, isPackagingModalOpen]);
+  }, [currentStage]);
 
   // Обработчик выбора заказа
   const handleOrderSelect = (orderId: number | null) => {
@@ -86,6 +83,10 @@ const MasterYpakPage: React.FC = () => {
                 selectedOrderId={selectedOrderId}
                 onOrderSelect={handleOrderSelect}
                 onViewOrderComposition={handleViewOrderComposition}
+                onViewOrderConsumption={(orderId) => {
+                  console.log('Просмотр расхода для заказа:', orderId);
+                  // Здесь можно добавить логику для просмотра расхода
+                }}
               />
             </div>
 

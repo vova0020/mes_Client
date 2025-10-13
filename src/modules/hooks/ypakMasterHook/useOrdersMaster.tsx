@@ -96,72 +96,87 @@ const useOrders = () => {
 
   // Функция для обновления данных заказов
   const refreshOrdersData = useCallback(async (status: string) => {
+    const timestamp = new Date().toISOString();
     try {
-      if (status !== 'updated') {
-        console.warn('Игнорируем неожиданный status from socket:', status);
-        return;
+      console.log(`[${timestamp}] Получен запрос на обновление данных заказов, status:`, status);
+      console.log(`[${timestamp}] Текущее состояние:`, {
+        ordersCount: orders.length,
+        loading,
+        isWebSocketConnected,
+        hasTimeout: !!refreshTimeoutRef.current
+      });
+      
+      if (!['updated', 'refresh', 'change', 'modify'].includes(status)) {
+        console.warn('Неизвестный status от socket:', status, '- продолжаем обновление');
       }
 
       if (refreshTimeoutRef.current) {
+        console.log(`[${timestamp}] Отменяем предыдущий timeout`);
         window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
       }
 
       refreshTimeoutRef.current = window.setTimeout(async () => {
         try {
+          console.log(`[${new Date().toISOString()}] Выполняем обновление данных заказов (debounced)`);
           const data = await orderService.getAllOrders();
           updateOrdersSmartly(data);
-          console.log(`Данные заказов обновлены (debounced).`);
+          console.log(`[${new Date().toISOString()}] Данные заказов обновлены, получено ${data.length} элементов`);
         } catch (err) {
           console.error('Ошибка обновления данных заказов:', err);
+          setError(err instanceof Error ? err : new Error('Ошибка обновления данных заказов'));
+        } finally {
+          refreshTimeoutRef.current = null;
         }
       }, REFRESH_DEBOUNCE_MS);
+      
+      console.log(`[${timestamp}] Установлен timeout на ${REFRESH_DEBOUNCE_MS}ms`);
     } catch (err) {
       console.error('Ошибка в refreshOrdersData:', err);
+      setError(err instanceof Error ? err : new Error('Ошибка обработки WebSocket события'));
     }
-  }, [updateOrdersSmartly]);
+  }, [updateOrdersSmartly, orders.length, loading, isWebSocketConnected]);
 
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
     if (!socket || !isWebSocketConnected) return;
 
-    console.log('Настройка WebSocket обработчиков для заказов в комнате:', room);
+    console.log('🔌 Подписываемся на order:event, socket.id:', socket.id);
 
     const handleOrderEvent = async (data: { status: string }) => {
-      console.log('Получено WebSocket событие для заказов - status:', data.status);
+      console.log('🎯 ПОЛУЧЕНО order:event:', data);
+      await refreshOrdersData(data.status);
+    };
+
+    const handlePackageEvent = async (data: { status: string }) => {
+      console.log('📦 ПОЛУЧЕНО package:event в useOrdersMaster:', data);
       await refreshOrdersData(data.status);
     };
 
     socket.on('order:event', handleOrderEvent);
+    socket.on('package:event', handlePackageEvent);
+    
+    console.log('✅ Активных слушателей order:event:', socket.listeners('order:event').length);
+    console.log('✅ Активных слушателей package:event:', socket.listeners('package:event').length);
 
     return () => {
       socket.off('order:event', handleOrderEvent);
-      if (refreshTimeoutRef.current) {
-        window.clearTimeout(refreshTimeoutRef.current);
-        refreshTimeoutRef.current = null;
-      }
+      socket.off('package:event', handlePackageEvent);
     };
-  }, [socket, isWebSocketConnected, room]);
+  }, [socket, isWebSocketConnected, refreshOrdersData]);
 
   // Загрузка заказов при монтировании компонента
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
   // Подписка на изменения выбранного этапа
   useEffect(() => {
     const handleStageChange = (event: CustomEvent) => {
       const stage = event.detail;
-      if (stage?.finalStage) {
-        // Загружаем данные для финального этапа
-        setTimeout(() => {
-          fetchOrders();
-        }, 100);
-      } else {
-        // Очищаем данные при переходе на обычный этап
-        setOrders([]);
-        setError(null);
-        setLoading(false);
-      }
+      console.log('Stage changed:', stage);
+      // Загружаем данные для любого этапа
+      fetchOrders();
     };
 
     window.addEventListener('stageChanged', handleStageChange as EventListener);
@@ -169,7 +184,7 @@ const useOrders = () => {
     return () => {
       window.removeEventListener('stageChanged', handleStageChange as EventListener);
     };
-  }, []);
+  }, [fetchOrders]);
 
   return {
     orders,

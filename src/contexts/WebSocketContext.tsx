@@ -62,16 +62,43 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       setIsConnected(false);
     });
 
+    // Обработчики для комнат
+    newSocket.on('room_joined', (data: any) => {
+      console.log('[WebSocketContext] successfully joined room:', data);
+    });
+
+    newSocket.on('room_left', (data: any) => {
+      console.log('[WebSocketContext] successfully left room:', data);
+    });
+
+    newSocket.on('room_error', (data: any) => {
+      console.error('[WebSocketContext] room error:', data);
+    });
+
+    // Общие обработчики событий
+    newSocket.onAny((eventName, ...args) => {
+      console.log('[WebSocketContext] received event:', eventName, args);
+    });
+
     socketRef.current = newSocket;
     newSocket.connect();
   }, [serverUrl]);
 
   const joinRoom = useCallback((room: string) => {
     if (socketRef.current?.connected) {
-      console.log('[WebSocketContext] joining room:', room);
+      console.log('[WebSocketContext] joining room:', room, 'socket.id:', socketRef.current.id);
       socketRef.current.emit('join_room', { room });
+      
+      // Подтверждение присоединения к комнате
+      socketRef.current.emit('join_room', { room }, (response: any) => {
+        console.log('[WebSocketContext] join room response:', response);
+      });
     } else {
-      console.warn('[WebSocketContext] cannot join room - not connected:', room);
+      console.warn('[WebSocketContext] cannot join room - not connected:', room, 'socket state:', {
+        exists: !!socketRef.current,
+        connected: socketRef.current?.connected,
+        id: socketRef.current?.id
+      });
     }
   }, []);
 

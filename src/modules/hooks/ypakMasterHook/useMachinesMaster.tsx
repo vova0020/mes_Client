@@ -100,11 +100,82 @@ const useMachines = (): UseMachinesResult => {
     autoJoin: true 
   });
 
-  // Функция для обновления массива станков (временно без умного сравнения)
+  // Функция для умного обновления массива станков
   const updateMachinesSmartly = useCallback((newMachines: Machine[]) => {
-    console.log('updateMachinesSmartly вызвана с данными:', newMachines);
-    console.log('Принудительно обновляем данные станков');
-    setMachines(newMachines);
+    setMachines(currentMachines => {
+      if (currentMachines.length === 0) {
+        return newMachines;
+      }
+
+      const currentMachinesMap = new Map(currentMachines.map(m => [m.id, m]));
+      const updatedMachines: Machine[] = [];
+      let hasChanges = false;
+
+      newMachines.forEach(newMachine => {
+        const currentMachine = currentMachinesMap.get(newMachine.id);
+        
+        if (!currentMachine) {
+          updatedMachines.push(newMachine);
+          hasChanges = true;
+        } else {
+          const machineChanged = JSON.stringify(currentMachine) !== JSON.stringify(newMachine);
+
+          if (machineChanged) {
+            updatedMachines.push(newMachine);
+            hasChanges = true;
+          } else {
+            updatedMachines.push(currentMachine);
+          }
+        }
+      });
+
+      const newMachineIds = new Set(newMachines.map(m => m.id));
+      const removedMachines = currentMachines.filter(m => !newMachineIds.has(m.id));
+      if (removedMachines.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedMachines : currentMachines;
+    });
+  }, []);
+
+  // Функция для умного обновления заданий станков
+  const updateMachineTasksSmartly = useCallback((newTasks: MachineTask[]) => {
+    setMachineTasks(currentTasks => {
+      if (currentTasks.length === 0) {
+        return newTasks;
+      }
+
+      const currentTasksMap = new Map(currentTasks.map(t => [t.taskId, t]));
+      const updatedTasks: MachineTask[] = [];
+      let hasChanges = false;
+
+      newTasks.forEach(newTask => {
+        const currentTask = currentTasksMap.get(newTask.taskId);
+        
+        if (!currentTask) {
+          updatedTasks.push(newTask);
+          hasChanges = true;
+        } else {
+          const taskChanged = JSON.stringify(currentTask) !== JSON.stringify(newTask);
+
+          if (taskChanged) {
+            updatedTasks.push(newTask);
+            hasChanges = true;
+          } else {
+            updatedTasks.push(currentTask);
+          }
+        }
+      });
+
+      const newTaskIds = new Set(newTasks.map(t => t.taskId));
+      const removedTasks = currentTasks.filter(t => !newTaskIds.has(t.taskId));
+      if (removedTasks.length > 0) {
+        hasChanges = true;
+      }
+
+      return hasChanges ? updatedTasks : currentTasks;
+    });
   }, []);
 
   // Функция для получения данных о станках
@@ -147,8 +218,8 @@ const useMachines = (): UseMachinesResult => {
 
       refreshTimeoutRef.current = window.setTimeout(async () => {
         try {
-          const data = await fetchMachinesBySegment();
-          updateMachinesSmartly(data);
+          const fetchedMachines = await fetchMachinesBySegment();
+          updateMachinesSmartly(fetchedMachines);
           console.log(`Данные станков обновлены (debounced).`);
         } catch (err) {
           console.error('Ошибка обновления данных станков:', err);
@@ -159,6 +230,42 @@ const useMachines = (): UseMachinesResult => {
     }
   }, [updateMachinesSmartly]);
 
+  // Функция для обновления заданий станков
+  const refreshMachineTasksData = useCallback(async (status: string, machineId?: number) => {
+    try {
+      if (status !== 'updated') {
+        console.warn('Игнорируем неожиданный status from socket для заданий:', status);
+        return;
+      }
+
+      // Обновляем задания только если есть активный станок и событие касается именно этого станка
+      if (!currentMachineId) {
+        return;
+      }
+
+      // Если указан machineId в событии, обновляем только если это текущий активный станок
+      if (machineId && machineId !== currentMachineId) {
+        return;
+      }
+
+      if (refreshTimeoutRef.current) {
+        window.clearTimeout(refreshTimeoutRef.current);
+      }
+
+      refreshTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const fetchedTasks = await fetchMachineTasks(currentMachineId);
+          updateMachineTasksSmartly(fetchedTasks);
+          console.log(`Задания станка ${currentMachineId} обновлены (debounced).`);
+        } catch (err) {
+          console.error('Ошибка обновления заданий станков:', err);
+        }
+      }, REFRESH_DEBOUNCE_MS);
+    } catch (err) {
+      console.error('Ошибка в refreshMachineTasksData:', err);
+    }
+  }, [currentMachineId, updateMachineTasksSmartly]);
+
   // Функция для получения заданий для станка
   const fetchTasks = useCallback(async (machineId: number) => {
     setTasksLoading(true);
@@ -167,18 +274,19 @@ const useMachines = (): UseMachinesResult => {
     
     try {
       const tasks = await fetchMachineTasks(machineId);
-      setMachineTasks(tasks);
+      updateMachineTasksSmartly(tasks);
     } catch (err) {
       console.error(`Ошибка при получении заданий для станка ${machineId}:`, err);
       setTasksError(err instanceof Error ? err : new Error(`Ошибка при получении заданий для станка ${machineId}`));
     } finally {
       setTasksLoading(false);
     }
-  }, []);
+  }, [updateMachineTasksSmartly]);
   
   // Функция для очистки списка заданий
   const clearTasks = useCallback(() => {
     setMachineTasks([]);
+    setCurrentMachineId(null);
   }, []);
   
   // Функция для удаления задания
@@ -238,41 +346,65 @@ const useMachines = (): UseMachinesResult => {
 
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
-    if (!socket || !isWebSocketConnected) return;
+    if (!socket || !isWebSocketConnected) {
+      console.log('WebSocket не подключен:', { socket: !!socket, isConnected: isWebSocketConnected });
+      return;
+    }
 
     console.log('Настройка WebSocket обработчиков для станков упаковки в комнате:', room);
+    console.log('WebSocket подключен:', isWebSocketConnected);
 
+    // Обработчик события изменения станков
     const handleMachineEvent = async (data: { status: string }) => {
-      console.log('Получено WebSocket событие machine:event - status:', data.status);
+      console.log('🔄 [УПАКОВКА] Получено WebSocket событие machine:event - status:', data.status);
+      await refreshMachinesData(data.status);
+    };
+
+    // Обработчик события изменения заданий станков
+    const handleMachineTaskEvent = async (data: { status: string; machineId?: number }) => {
+      console.log('📋 [УПАКОВКА] Получено WebSocket событие machine_task:event - status:', data.status, 'machineId:', data.machineId);
+      await refreshMachineTasksData(data.status, data.machineId);
+    };
+
+    // Универсальный обработчик для отладки всех событий
+    const handleAnyEvent = (eventName: string, data: any) => {
+      console.log('🔍 [УПАКОВКА] Получено любое WebSocket событие:', eventName, data);
+    };
+
+    // Обработчик для package:event (так как именно эти события приходят)
+    const handlePackageEvent = async (data: { status: string }) => {
+      console.log('📦 [УПАКОВКА] Получено WebSocket событие package:event - status:', data.status);
+      // Обновляем станки, так как package:event может влиять на состояние станков
       await refreshMachinesData(data.status);
       
-      // Если открыт TaskSidebar для какого-то станка, обновляем его задания
-      if (currentMachineId !== null) {
-        console.log('Обновляем задания для станка:', currentMachineId);
-        await fetchTasks(currentMachineId);
+      // Если есть активный станок, обновляем его задания
+      if (currentMachineId) {
+        await refreshMachineTasksData(data.status);
       }
     };
 
-    const handleTaskEvent = async (data: { status: string, machineId?: number }) => {
-      console.log('Получено WebSocket событие task:event - status:', data.status, 'machineId:', data.machineId);
-      // Если есть конкретный станок в состоянии заданий, обновляем его
-      if (machineTasks.length > 0 && data.machineId) {
-        await fetchTasks(data.machineId);
-      }
-    };
-
+    // Регистрируем обработчики событий
     socket.on('machine:event', handleMachineEvent);
-    socket.on('task:event', handleTaskEvent);
+    socket.on('machine_task:event', handleMachineTaskEvent);
+    socket.on('package:event', handlePackageEvent);
+    
+    // Добавляем универсальный обработчик для отладки
+    socket.onAny(handleAnyEvent);
 
+    // Cleanup функция
     return () => {
       socket.off('machine:event', handleMachineEvent);
-      socket.off('task:event', handleTaskEvent);
+      socket.off('machine_task:event', handleMachineTaskEvent);
+      socket.off('package:event', handlePackageEvent);
+      socket.offAny(handleAnyEvent);
+
+      // очистка debounce таймера при unmount/переподключении
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, currentMachineId]);
+  }, [socket, isWebSocketConnected, room, refreshMachinesData, refreshMachineTasksData]);
 
   // Функция для назначения упаковки на станок
   const assignPackageToMachine = useCallback(async (packageId: number, machineId: number): Promise<{success: boolean, error?: {message: string}}> => {
@@ -333,7 +465,7 @@ const useMachines = (): UseMachinesResult => {
   // Загрузка данных о станках при первом рендере
   useEffect(() => {
     fetchMachines();
-  }, []);
+  }, [fetchMachines]);
 
   // Подписка на изменения выбранного этапа
   useEffect(() => {
@@ -341,8 +473,9 @@ const useMachines = (): UseMachinesResult => {
       const stage = event.detail;
       // Загружаем данные только если это финальный этап
       if (stage?.finalStage) {
-        fetchMachines();
-        fetchAvailableMachines();
+        setTimeout(() => {
+          fetchMachines();
+        }, 150);
       }
     };
 
@@ -351,7 +484,7 @@ const useMachines = (): UseMachinesResult => {
     return () => {
       window.removeEventListener('stageChanged', handleStageChange as EventListener);
     };
-  }, []);
+  }, [fetchMachines]);
   
   return {
     machines,

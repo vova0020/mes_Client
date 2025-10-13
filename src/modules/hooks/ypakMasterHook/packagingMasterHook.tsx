@@ -195,9 +195,11 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
   // Функция для обновления данных упаковок
   const refreshPackagingData = useCallback(async (status: string) => {
     try {
-      if (status !== 'updated') {
-        console.warn('Игнорируем неожиданный status from socket:', status);
-        return;
+      console.log('Получен запрос на обновление данных упаковок, status:', status, 'currentOrderId:', currentOrderId);
+      
+      // Принимаем различные статусы обновления
+      if (!['updated', 'refresh', 'change', 'modify'].includes(status)) {
+        console.warn('Неизвестный status от socket:', status, '- продолжаем обновление');
       }
 
       if (currentOrderId === null) {
@@ -205,46 +207,77 @@ const usePackagingDetails = (initialOrderId: number | null = null): UsePackaging
         return;
       }
 
+      // Очищаем предыдущий таймер
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
       }
 
       refreshTimeoutRef.current = window.setTimeout(async () => {
         try {
+          console.log('Выполняем обновление данных упаковок для заказа:', currentOrderId);
           const data = await fetchPackagingByOrderId(currentOrderId);
           const sortedData = data.sort((a, b) => a.id - b.id);
           updatePackagingSmartly(sortedData);
-          console.log(`Данные упаковок обновлены (debounced).`);
+          console.log(`Данные упаковок обновлены (debounced), получено ${data.length} элементов`);
         } catch (err) {
           console.error('Ошибка обновления данных упаковок:', err);
+          setError(err instanceof Error ? err : new Error('Ошибка обновления данных'));
+        } finally {
+          refreshTimeoutRef.current = null;
         }
       }, REFRESH_DEBOUNCE_MS);
     } catch (err) {
       console.error('Ошибка в refreshPackagingData:', err);
+      setError(err instanceof Error ? err : new Error('Ошибка обработки WebSocket события'));
     }
-  }, [updatePackagingSmartly]);
+  }, [currentOrderId, updatePackagingSmartly]);
+
+  // Загрузка работников при инициализации
+  useEffect(() => {
+    const loadWorkers = async () => {
+      try {
+        const workersData = await fetchPackagingWorkers();
+        setWorkers(workersData);
+      } catch (err) {
+        console.error('Ошибка загрузки работников:', err);
+      }
+    };
+    
+    loadWorkers();
+  }, []);
 
   // Настройка WebSocket обработчиков событий
   useEffect(() => {
-    if (!socket || !isWebSocketConnected) return;
+    if (!socket || !isWebSocketConnected) {
+      console.log('WebSocket не подключен, пропускаем настройку обработчиков');
+      return;
+    }
 
-    console.log('Настройка WebSocket обработчиков для упаковок в комнате:', room);
+    console.log('Настройка WebSocket обработчиков для упаковок в комнате:', room, 'currentOrderId:', currentOrderId);
 
     const handlePackagingEvent = async (data: { status: string }) => {
-      console.log('Получено WebSocket событие для упаковок - status:', data.status);
+      console.log('Получено WebSocket событие для упаковок - status:', data.status, 'currentOrderId:', currentOrderId);
       await refreshPackagingData(data.status);
     };
 
+    // Подписываемся на события упаковок
     socket.on('package:event', handlePackagingEvent);
+    
+    // Также подписываемся на общие события обновления
+    socket.on('packaging:updated', handlePackagingEvent);
 
     return () => {
+      console.log('Отписываемся от WebSocket событий упаковок');
       socket.off('package:event', handlePackagingEvent);
+      socket.off('packaging:updated', handlePackagingEvent);
+      
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, currentOrderId]);
+  }, [socket, isWebSocketConnected, room, currentOrderId, refreshPackagingData]);
 
  // Реагируем на любые изменения initialOrderId — если он null, fetchPackagingItems очистит список
 useEffect(() => {

@@ -42,6 +42,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [bufferCellsLoading, setBufferCellsLoading] = useState<boolean>(false);
   const [machinesLoading, setMachinesLoading] = useState<boolean>(false);
+  const [bufferCellsError, setBufferCellsError] = useState<boolean>(false);
+  const [machinesError, setMachinesError] = useState<boolean>(false);
   const [processingPalletId, setProcessingPalletId] = useState<number | null>(null);
   const [processStepIdError, setProcessStepIdError] = useState<string | null>(null);
   
@@ -133,16 +135,34 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       setErrorMessage(null);
       setBufferCellsLoading(true);
       setMachinesLoading(true);
+      setBufferCellsError(false);
+      setMachinesError(false);
 
-      // Сначала загружаем ресурсы сегмента (включая ячейки буфера и станки)
-      loadSegmentResources()
-        .then(() => {
+      // Загружаем ресурсы сегмента и данные о поддонах параллельно
+      Promise.allSettled([
+        loadSegmentResources(),
+        fetchPallets(detailId)
+      ])
+        .then((results) => {
+          const [resourcesResult, palletsResult] = results;
+          
+          // Обрабатываем результат загрузки ресурсов
+          if (resourcesResult.status === 'rejected') {
+            console.warn('Не удалось загрузить некоторые ресурсы сегмента:', resourcesResult.reason);
+            // Ошибки будут обработаны в хуке loadSegmentResources
+            setBufferCellsError(true);
+            setMachinesError(true);
+          }
+          
+          // Обрабатываем результат загрузки поддонов
+          if (palletsResult.status === 'rejected') {
+            setErrorMessage('Не удалось загрузить данные о поддонах');
+            console.error('Ошибка загрузки поддонов:', palletsResult.reason);
+          }
+          
           setBufferCellsLoading(false);
           setMachinesLoading(false);
-          // Затем загружаем данные о поддонах
-          return fetchPallets(detailId);
-        })
-        .then(() => {
+          
           // Показываем детали с небольшой задержкой для анимации
           setTimeout(() => {
             setShowDetails(true);
@@ -151,8 +171,10 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
         .catch((err) => {
           setBufferCellsLoading(false);
           setMachinesLoading(false);
-          setErrorMessage('Не удалось загрузить данные о поддонах');
-          console.error('Ошибка загрузки данных:', err);
+          setBufferCellsError(true);
+          setMachinesError(true);
+          setErrorMessage('Не удалось загрузить данные');
+          console.error('Критическая ошибка загрузки данных:', err);
         });
     }
   }, [detailId, isOpen, fetchPallets, loadSegmentResources]);
@@ -242,15 +264,12 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   const handleRetryLoadResources = () => {
     setBufferCellsLoading(true);
     setMachinesLoading(true);
+    setBufferCellsError(false);
+    setMachinesError(false);
     loadSegmentResources()
-      .then(() => {
+      .finally(() => {
         setBufferCellsLoading(false);
         setMachinesLoading(false);
-      })
-      .catch((err) => {
-        setBufferCellsLoading(false);
-        setMachinesLoading(false);
-        console.error('Ошибка загрузки ресурсов:', err);
       });
   };
 
@@ -501,10 +520,10 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       return <ResourceLoading loading={bufferCellsLoading} type="ячеек" />;
     }
 
-    if (!bufferCells || bufferCells.length === 0) {
+    if (bufferCellsError || (!bufferCells || bufferCells.length === 0)) {
       return (
         <div className={styles.bufferCellError}>
-          <span>Нет доступных ячеек</span>
+          <span>{bufferCellsError ? 'Ошибка загрузки ячеек' : 'Нет доступных ячеек'}</span>
           <button
             className={styles.miniRetryButton}
             onClick={handleRetryLoadResources}
@@ -584,10 +603,10 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       return <ResourceLoading loading={machinesLoading} type="станков" />;
     }
 
-    if (!machines || machines.length === 0) {
+    if (machinesError || (!machines || machines.length === 0)) {
       return (
         <div className={styles.bufferCellError}>
-          <span>Нет доступных станков</span>
+          <span>{machinesError ? 'Ошибка загрузки станков' : 'Нет доступных станков'}</span>
           <button
             className={styles.miniRetryButton}
             onClick={handleRetryLoadResources}

@@ -392,13 +392,34 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     setError(null);
 
     try {
-      const bufferCellsData = await fetchBufferCellsBySegmentId();
-      setBufferCells(bufferCellsData);
-      
-      const machinesData = await fetchMachinBySegmentId();
-      setMachines(machinesData);
+      // Загружаем ресурсы параллельно и независимо друг от друга
+      const [bufferCellsResult, machinesResult] = await Promise.allSettled([
+        fetchBufferCellsBySegmentId(),
+        fetchMachinBySegmentId()
+      ]);
+
+      // Обрабатываем результат загрузки ячеек буфера
+      if (bufferCellsResult.status === 'fulfilled') {
+        setBufferCells(bufferCellsResult.value);
+      } else {
+        console.warn('Не удалось загрузить ячейки буфера:', bufferCellsResult.reason);
+        setBufferCells([]);
+      }
+
+      // Обрабатываем результат загрузки станков
+      if (machinesResult.status === 'fulfilled') {
+        setMachines(machinesResult.value);
+      } else {
+        console.warn('Не удалось загрузить станки:', machinesResult.reason);
+        setMachines([]);
+      }
+
+      // Устанавливаем ошибку только если оба запроса завершились неудачно
+      if (bufferCellsResult.status === 'rejected' && machinesResult.status === 'rejected') {
+        setError(new Error('Не удалось загрузить ресурсы сегмента'));
+      }
     } catch (err) {
-      console.error('Ошибка при загрузке ресурсов сегмента:', err);
+      console.error('Критическая ошибка при загрузке ресурсов сегмента:', err);
       setError(err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке ресурсов'));
     } finally {
       setLoading(false);
