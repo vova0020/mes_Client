@@ -8,6 +8,7 @@ import {UserSettings} from './components/blocks/UserSettings/UserSettings';
 import MachineSettings from './components/blocks/MachineSettings/MachineSettings';
 import RouteSettings from './components/blocks/RouteSettings/RouteSettings';
 import OperationsSettings from './components/blocks/OperationsSettings/OperationsSettings';
+import settingsFon from '../../assets/settings/settingsFon.png';
 import StreamsSettings from './components/blocks/StreamsSettings/StreamsSettings';
 import { MaterialSettingsPage } from './components/blocks/MaterialSettings/MaterialSettingsPage';
 import { DetailsReferenceContainer } from './components/blocks/DetailsReference/components/DetailsReferenceContainer';
@@ -45,6 +46,7 @@ const SettingsPage: React.FC = () => {
       default:
         return (
           <div className={styles.welcomeContent}>
+            <img src={settingsFon} alt="Заглушка" className={styles.fullWidthImage} />
             <h2>Добро пожаловать в настройки MES системы</h2>
             <p>Выберите раздел настроек в боковом меню</p>
           </div>

@@ -67,6 +67,15 @@
 }
 
 /* Стили для приветственного экрана */
+/* Изображение цеха */
+.fullWidthImage {
+  display: block;   /* убирает лишние пробелы под изображением */
+  width: 100%;
+  height: auto;     /* сохраняет соотношение сторон */
+  object-fit: cover;/* если задать фикс. высоту — обеспечит обрезку без искажения */
+}
+
+
 .welcomeContent {
   display: flex;
   flex-direction: column;
