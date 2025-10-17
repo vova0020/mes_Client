@@ -109,7 +109,7 @@ const BuffersList: React.FC<BuffersListProps> = ({
     return (
       <div className={styles.emptyState}>
         <div className={styles.emptyStateIcon}>📦</div>
-        <div className={styles.emptyStateTitle}>Б��феры не найдены</div>
+        <div className={styles.emptyStateTitle}>Буферы не найдены</div>
         <div className={styles.emptyStateDescription}>
           Создайте первый буфер для начала работы
         </div>

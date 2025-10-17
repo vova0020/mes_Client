@@ -22,6 +22,7 @@ export type SettingSection =
   | 'technological_route'
   | 'technological_operations'
   | 'streams'
+  | 'streams_management'
   | 'materials'
   | 'details_reference_container'
   | null;
@@ -52,6 +53,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
         <Tooltip title="Управление потоками" placement="right">
           <Button onClick={() => onSectionChange('streams')}>
             <Settings_1 className={getButtonClass('streams')} />
+          </Button>
+        </Tooltip>
+
+        <Tooltip title="Мониторинг потоков" placement="right">
+          <Button onClick={() => onSectionChange('streams_management')}>
+            <Settings_1 className={getButtonClass('streams_management')} />
           </Button>
         </Tooltip>
 

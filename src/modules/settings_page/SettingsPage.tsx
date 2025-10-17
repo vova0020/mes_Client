@@ -12,6 +12,8 @@ import settingsFon from '../../assets/settings/settingsFon.png';
 import StreamsSettings from './components/blocks/StreamsSettings/StreamsSettings';
 import { MaterialSettingsPage } from './components/blocks/MaterialSettings/MaterialSettingsPage';
 import { DetailsReferenceContainer } from './components/blocks/DetailsReference/components/DetailsReferenceContainer';
+import StreamsManagement from './components/blocks/StreamsManagement/StreamsManagement';
+
 
 const SettingsPage: React.FC = () => {
   // Состояние для отслеживания текущего активного раздела
@@ -41,6 +43,8 @@ const SettingsPage: React.FC = () => {
         return <OperationsSettings/>;
       case 'streams':
         return <StreamsSettings/>; 
+      case 'streams_management':
+        return <StreamsManagement/>;
       case 'materials':
         return <MaterialSettingsPage/>;
       default:
