@@ -423,8 +423,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const handleCompleteWork = async (taskId: number) => {
     try {
       const task = machineTasks.find(t => t.taskId === taskId);
-      const completedQuantity = task?.assignedQuantity || 0;
-      await updatePackingTaskStatus(taskId, 'COMPLETED', completedQuantity);
+      const remainingQuantity = (task?.assignedQuantity || 0) - (task?.completedQuantity || 0);
+      await updatePackingTaskStatus(taskId, 'COMPLETED', remainingQuantity);
       await fetchTasks(machineId);
     } catch (error: any) {
       console.error('Ошибка при завершении работы:', error);

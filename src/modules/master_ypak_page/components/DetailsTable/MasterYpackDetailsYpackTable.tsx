@@ -213,7 +213,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   const getRemainingQuantity = (packaging: any) => {
     const assignedMachines = getAssignedMachines(packaging);
     const totalAssigned = assignedMachines.reduce((sum: number, machine: any) => sum + machine.quantity, 0);
-    return packaging.readyForPackaging - totalAssigned;
+    return packaging.totalQuantity - totalAssigned;
   };
 
   // Функция для получения назначенного станка для упаковки (для обратной совместимости)
@@ -510,27 +510,25 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                             ))}
                           </div>
                         )}
-                        {remainingQuantity > 0 && (
-                          <select
-                            className={styles.workerSelect}
-                            value=""
-                            onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            disabled={availableMachinesLoading}
-                          >
-                            <option value="">
-                              {availableMachinesLoading ? 'Загрузка...' : `Довыдать ${remainingQuantity} шт.`}
+                        <select
+                          className={styles.workerSelect}
+                          value=""
+                          onChange={(e) => handleAssignPackagerChange(e, packaging.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          disabled={availableMachinesLoading}
+                        >
+                          <option value="">
+                            {availableMachinesLoading ? 'Загрузка...' : remainingQuantity > 0 ? `Довыдать ${remainingQuantity} шт.` : 'Назначить станок'}
+                          </option>
+                          {availableMachines.map((machine) => (
+                            <option
+                              key={machine.id}
+                              value={machine.id}
+                            >
+                              {machine.name}
                             </option>
-                            {availableMachines.map((machine) => (
-                              <option
-                                key={machine.id}
-                                value={machine.id}
-                              >
-                                {machine.name}
-                              </option>
-                            ))}
-                          </select>
-                        )}
+                          ))}
+                        </select>
                       </div>
                     );
                   })()}
