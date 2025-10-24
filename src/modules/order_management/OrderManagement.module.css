@@ -66,6 +66,39 @@
   overflow-y: auto;
 }
 
+/* Навигация с вкладками */
+.tabNavigation {
+  display: flex;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.tabButton {
+  flex: 1;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tabButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.activeTab {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* Стили для приветственного экрана */
 .welcomeContent {
   display: flex;
@@ -182,6 +215,11 @@
   .settingsContent {
     padding: 12px;
   }
+  
+  .tabButton {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
 }
 
 /* Мобильные телефоны (до 575px) */
@@ -213,6 +251,15 @@
   
   .settingsContent {
     padding: 10px;
+  }
+  
+  .tabNavigation {
+    margin-bottom: 15px;
+  }
+  
+  .tabButton {
+    padding: 8px 12px;
+    font-size: 12px;
   }
   
   .welcomeContent h2 {
