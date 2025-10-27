@@ -42,7 +42,7 @@ const RoutingTable: React.FC<RoutingTableProps> = ({ routeStages }) => {
             <tr>
               <th>Операции</th>
               <th>Дата</th>
-              <th>Оператор</th>
+              <th>Станок</th>
               <th>Статус</th>
             </tr>
           </thead>
@@ -51,7 +51,7 @@ const RoutingTable: React.FC<RoutingTableProps> = ({ routeStages }) => {
               <tr key={index}>
                 <td className={styles.operationCell}>{stage.stageName}</td>
                 <td>{stage.completedAt ? new Date(stage.completedAt).toLocaleDateString() : '-'}</td>
-                <td>-</td>
+                <td>{stage.machineName || '-'}</td>
                 <td>
                   <span 
                     className={styles.statusBadge}

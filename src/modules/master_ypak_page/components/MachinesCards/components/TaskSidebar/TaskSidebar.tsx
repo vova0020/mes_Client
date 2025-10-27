@@ -38,28 +38,30 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   taskItem,
   onConfirm
 }) => {
-  const [quantity, setQuantity] = useState<number>(0);
+  const [quantity, setQuantity] = useState<string>('');
   const maxQuantity = (taskItem?.assignedQuantity || 0) - (taskItem?.completedQuantity || 0);
   
   // Сбрасываем количество при открытии модального окна
   useEffect(() => {
     if (isOpen && taskItem) {
-      setQuantity(Math.min(10, maxQuantity)); // По умолчанию 10 или меньше, если доступно меньше
+      setQuantity(Math.min(10, maxQuantity).toString()); // По умолчанию 10 или меньше, если доступно меньше
     }
   }, [isOpen, taskItem, maxQuantity]);
   
   // Обработчик изменения количества
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (!isNaN(value) && value > 0 && value <= maxQuantity) {
+    const value = e.target.value;
+    // Разрешаем пустое поле или числа в допустимом диапазоне
+    if (value === '' || (/^\d+$/.test(value) && parseInt(value, 10) <= maxQuantity)) {
       setQuantity(value);
     }
   };
   
   // Обработчик подтверждения
   const handleConfirm = () => {
-    if (taskItem && quantity > 0 && quantity <= maxQuantity) {
-      onConfirm(taskItem.taskId, quantity);
+    const numQuantity = parseInt(quantity, 10);
+    if (taskItem && !isNaN(numQuantity) && numQuantity > 0 && numQuantity <= maxQuantity) {
+      onConfirm(taskItem.taskId, numQuantity);
       onClose();
     }
   };
@@ -107,24 +109,29 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
             <div className={styles.quantityInputWrapper}>
               <button 
                 className={styles.quantityButton}
-                onClick={() => quantity > 1 && setQuantity(quantity - 1)}
-                disabled={quantity <= 1}
+                onClick={() => {
+                  const num = parseInt(quantity, 10) || 0;
+                  if (num > 1) setQuantity((num - 1).toString());
+                }}
+                disabled={parseInt(quantity, 10) <= 1}
               >
                 -
               </button>
               <input
                 id="partial-quantity"
-                type="number"
+                type="text"
                 className={styles.quantityInput}
                 value={quantity}
                 onChange={handleQuantityChange}
-                min={1}
-                max={maxQuantity}
+                placeholder="Введите количество"
               />
               <button 
                 className={styles.quantityButton}
-                onClick={() => quantity < maxQuantity && setQuantity(quantity + 1)}
-                disabled={quantity >= maxQuantity}
+                onClick={() => {
+                  const num = parseInt(quantity, 10) || 0;
+                  if (num < maxQuantity) setQuantity((num + 1).toString());
+                }}
+                disabled={parseInt(quantity, 10) >= maxQuantity}
               >
                 +
               </button>
@@ -139,7 +146,7 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
           <button 
             className={styles.modalConfirmButton} 
             onClick={handleConfirm}
-            disabled={quantity <= 0 || quantity > maxQuantity}
+            disabled={quantity === '' || parseInt(quantity, 10) <= 0 || parseInt(quantity, 10) > maxQuantity}
           >
             Подтвердить
           </button>

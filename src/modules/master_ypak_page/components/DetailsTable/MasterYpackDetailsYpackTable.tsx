@@ -211,9 +211,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
 
   // Функция для получения оставшегося количества для выдачи
   const getRemainingQuantity = (packaging: any) => {
-    const assignedMachines = getAssignedMachines(packaging);
-    const totalAssigned = assignedMachines.reduce((sum: number, machine: any) => sum + machine.quantity, 0);
-    return packaging.totalQuantity - totalAssigned;
+    return packaging.totalQuantity - packaging.distributed - packaging.completed;
   };
 
   // Функция для получения назначенного станка для упаковки (для обратной совместимости)
@@ -518,7 +516,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
                           disabled={availableMachinesLoading}
                         >
                           <option value="">
-                            {availableMachinesLoading ? 'Загрузка...' : remainingQuantity > 0 ? `Довыдать ${remainingQuantity} шт.` : 'Назначить станок'}
+                            {availableMachinesLoading ? 'Загрузка...' : remainingQuantity > 0 ? `Распределить ${remainingQuantity} шт.` : 'Назначить станок'}
                           </option>
                           {availableMachines.map((machine) => (
                             <option

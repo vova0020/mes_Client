@@ -181,7 +181,7 @@ const DetailForm: React.FC<PalletsSidebarProps> = ({ isOpen, onClose, palletId }
             <label>Название и номер заказа:</label>
             <span className={styles.fieldValue}>{data ? `${data.orderName} - ${data.orderNumber}` : '-'}</span>
           </div>
-          <button className={styles.modernBtn}>Открыть чертеж</button>
+          {/* <button disabled className={styles.modernBtn}>Открыть чертеж</button> */}
         </div>
       </div>
     </div>

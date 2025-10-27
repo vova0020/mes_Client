@@ -5,6 +5,7 @@ export interface RouteStage {
   stageName: string;
   completedAt: string | null;
   status: 'NOT_PROCESSED' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'AWAITING_PACKAGING';
+  machineName: string | null;
 }
 
 export interface RouteListData {
