@@ -160,22 +160,179 @@
   transform: translateY(1px);
 }
 
-/* Медиа-запросы для адаптивного дизайна */
-
-/* Планшеты (от 768px до 991px) */
-@media screen and (min-width: 768px) and (max-width: 991px) {
+/* Планшеты и телефоны в горизонтальной ориентации */
+@media screen and (max-width: 1366px) and (orientation: landscape) {
   .header {
-    height: 90px;
-    padding: 0 15px;
+    height: 100px;
+    padding: 0 12px;
   }
   
   .techStage {
-    font-size: 20px;
+    font-size: 16px;
+  }
+  
+  .navButtons {
+    margin-top: 4px;
   }
   
   .navButton {
-    padding: 6px 30px;
+    padding: 6px 20px;
+    font-size: 13px;
+    margin-right: 12px;
+  }
+  
+  .logo {
+    width: 100px;
+  }
+  
+  .brandName {
+    font-size: 13px;
+  }
+  
+  .exitButton {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .exitButton svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .rightContainer {
+    gap: 6px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (max-height: 768px) and (orientation: landscape) {
+  .header {
+    height: 80px;
+    padding: 0 10px;
+  }
+  
+  .techStage {
     font-size: 14px;
+  }
+  
+  .navButtons {
+    margin-top: 3px;
+  }
+  
+  .navButton {
+    padding: 5px 16px;
+    font-size: 12px;
+    margin-right: 10px;
+  }
+  
+  .logo {
+    width: 80px;
+  }
+  
+  .brandName {
+    font-size: 12px;
+  }
+  
+  .exitButton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .exitButton svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .rightContainer {
+    gap: 4px;
+  }
+}
+
+@media screen and (max-width: 900px) and (max-height: 450px) and (orientation: landscape) {
+  .header {
+    height: 70px;
+    padding: 0 8px;
+  }
+  
+  .techStage {
+    font-size: 13px;
+  }
+  
+  .navButtons {
+    margin-top: 2px;
+  }
+  
+  .navButton {
+    padding: 4px 14px;
+    font-size: 11px;
+    margin-right: 8px;
+  }
+  
+  .logo {
+    width: 70px;
+  }
+  
+  .brandName {
+    font-size: 11px;
+  }
+  
+  .exitButton {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .exitButton svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .rightContainer {
+    gap: 3px;
+  }
+}
+
+/* Вертикальная ориентация планшетов */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .header {
+    height: auto;
+    min-height: 80px;
+    padding: 10px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .leftContainer {
+    width: 100%;
+    align-items: center;
+  }
+  
+  .techStage {
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  .navButtons {
+    margin-top: 6px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .navButton {
+    padding: 8px 24px;
+    font-size: 13px;
+    margin-right: 10px;
+  }
+  
+  .logo {
+    width: 90px;
+  }
+  
+  .brandName {
+    font-size: 13px;
+  }
+  
+  .rightContainer {
+    width: 100%;
+    gap: 6px;
   }
   
   .exitButton {
@@ -189,89 +346,35 @@
   }
 }
 
-/* Малые планшеты и большие телефоны (от 576px до 767px) */
-@media screen and (min-width: 576px) and (max-width: 767px) {
-  .header {
-    height: 80px;
-    padding: 0 12px;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  .leftContainer, .rightContainer {
-    width: 100%;
-    align-items: center;
-  }
-  
-  .techStage {
-    font-size: 18px;
-    text-align: center;
-  }
-  
-  .navButtons {
-    margin-top: 5px;
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .navButton {
-    padding: 5px 20px;
-    font-size: 13px;
-    margin-right: 10px;
-  }
-  
-  .rightContainer {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: auto;
-  }
-  
-  .brandName {
-    font-size: 14px;
-  }
-  
-  .exitButton {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .exitButton svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-/* Мобильные телефоны (до 575px) */
-@media screen and (max-width: 575px) {
+/* Мобильные устройства */
+@media screen and (max-width: 576px) {
   .header {
     height: auto;
-    padding: 10px;
+    padding: 8px;
     flex-direction: column;
   }
   
   .leftContainer {
     width: 100%;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   
   .techStage {
-    font-size: 16px;
+    font-size: 14px;
     text-align: center;
   }
   
   .navButtons {
-    margin-top: 5px;
+    margin-top: 6px;
     width: 100%;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
   }
   
   .navButton {
-    padding: 5px 15px;
-    font-size: 12px;
+    padding: 8px 16px;
+    font-size: 13px;
     margin-right: 0;
     width: 100%;
     text-align: center;
@@ -283,17 +386,21 @@
     justify-content: space-between;
   }
   
+  .logo {
+    width: 80px;
+  }
+  
   .brandName {
     font-size: 12px;
   }
   
   .exitButton {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
   }
   
   .exitButton svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
 }

@@ -1,28 +1,20 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Центрирование содержимого по горизонтали */
-  height: 100%; /* Занимает всю доступную высоту */
-  width: 100%; /* Занимает всю доступную ширину */
-  max-width: 100%; /* Не превышает ширину родителя */
-  background: linear-gradient(to bottom, #374051, #2d3441); /* Градиент для объемности */
+  align-items: center;
+  min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  background: linear-gradient(to bottom, #374051, #2d3441);
   color: white;
-  padding: 15px; /* Уменьшенный padding для компенсации padding родителя */
+  padding: 15px;
   box-sizing: border-box;
-  
-  /* Закругленные углы */
   border-radius: 12px;
-  
-  /* Эффект выпуклости с помощью теней */
   box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.3), /* Внешняя тень для объема */
-    inset 0 1px 0 rgba(255, 255, 255, 0.1), /* Внутренняя светлая тень сверху */
-    inset 0 -2px 0 rgba(0, 0, 0, 0.2); /* Внутренняя темная тень снизу */
-  
-  /* Тонкая граница для усиления эффекта */
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
   border: 1px solid #243342;
-  
-  /* Добавляем overflow для предотвращения выхода за границы при маленьких размерах */
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -259,11 +251,34 @@
   }
 }
 
-/* Планшеты (от 768px до 991px) */
-@media screen and (min-width: 768px) and (max-width: 991px) {
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .sidebar {
     padding: 10px;
-    border-radius: 10px;
+  }
+  
+  .sidebarContent {
+    gap: 12px;
+  }
+  
+  .startButton {
+    width: clamp(70px, 70%, 90px);
+  }
+  
+  .icon {
+    width: 65px;
+    height: 52px;
+  }
+  
+  .footerIcon {
+    gap: 12px;
+  }
+}
+
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .sidebar {
+    padding: 8px;
   }
   
   .sidebarContent {
@@ -271,48 +286,23 @@
   }
   
   .startButton {
-    padding: 6px 8px;
-    font-size: 12px;
-    min-width: 50px;
-  }
-  
-  .startButton {
-    width: clamp(60px, 70%, 90px);
-  }
-  
-  .iconGroup {
-    padding: 6px 0;
-    gap: 6px;
+    width: clamp(60px, 70%, 80px);
   }
   
   .icon {
-    width: 55px;
-    height: 44px;
-  }
-  
-  .progressContainer {
-    padding: 6px;
-  }
-  
-  .progressLabel {
-    font-size: 12px;
-    margin-bottom: 5px;
-  }
-  
-  .progressBar {
-    height: 5px;
+    width: 58px;
+    height: 46px;
   }
   
   .footerIcon {
-    padding: 6px 0;
+    gap: 10px;
   }
 }
 
-/* Малые планшеты и большие телефоны (от 576px до 767px) */
-@media screen and (min-width: 576px) and (max-width: 767px) {
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
   .sidebar {
-    padding: 8px;
-    border-radius: 8px;
+    padding: 6px;
   }
   
   .sidebarContent {
@@ -320,171 +310,39 @@
   }
   
   .startButton {
-    padding: 5px 7px;
-    font-size: 11px;
-    min-width: 40px;
-    border-radius: 6px;
-  }
-  
-  .startButton {
-    width: clamp(30px, 70%, 80px);
-    padding: 0;
-    border-radius: 0;
-  }
-  
-  .iconGroup {
-    padding: 5px 0;
-    gap: 5px;
-    border-radius: 6px;
+    width: clamp(50px, 70%, 70px);
   }
   
   .icon {
-    width: 45px;
-    height: 36px;
-  }
-  
-  .progressContainer {
-    padding: 5px;
-    border-radius: 6px;
-  }
-  
-  .progressLabel {
-    font-size: 11px;
-    margin-bottom: 4px;
-  }
-  
-  .progressBar {
-    height: 4px;
+    width: 52px;
+    height: 42px;
   }
   
   .footerIcon {
-    padding: 5px 0;
-    border-radius: 6px;
+    gap: 8px;
   }
 }
 
-/* Мобильные телефоны (до 575px) */
-@media screen and (max-width: 575px) {
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
   .sidebar {
-    padding: 6px;
-    border-radius: 6px;
+    padding: 10px;
   }
   
   .sidebarContent {
-    gap: 6px;
+    gap: 12px;
   }
   
   .startButton {
-    padding: 4px 6px;
-    font-size: 10px;
-    min-width: 30px;
-    border-radius: 5px;
-  }
-  
-  .startButton {
-    width: clamp(20px, 15%, 70px);
-    padding: 0;
-    border-radius: 0;
-  }
-  
-  .iconGroup {
-    padding: 4px 0;
-    gap: 4px;
-    border-radius: 5px;
+    width: clamp(70px, 70%, 90px);
   }
   
   .icon {
-    width: 35px;
-    height: 28px;
-  }
-  
-  .progressContainer {
-    padding: 4px;
-    border-radius: 5px;
-  }
-  
-  .progressLabel {
-    font-size: 10px;
-    margin-bottom: 3px;
-  }
-  
-  .progressBar {
-    height: 3px;
+    width: 65px;
+    height: 52px;
   }
   
   .footerIcon {
-    padding: 4px 0;
-    border-radius: 5px;
-  }
-}
-
-/* Медиа-запрос для очень маленьких экранов */
-@media (max-height: 500px) {
-  .sidebar {
-    padding: 5px;
-  }
-  
-  .sidebarContent {
-    gap: 5px;
-  }
-  
-  .startButton {
-    padding: 3px 5px;
-    font-size: 9px;
-  }
-  
-  .startButton {
-    width: clamp(35px, 12%, 60px);
-    padding: 0;
-  }
-  
-  .iconGroup {
-    padding: 3px 0;
-    gap: 3px;
-  }
-  
-  .icon {
-    width: 30px;
-    height: 24px;
-  }
-  
-  .progressContainer {
-    padding: 3px;
-  }
-  
-  .progressLabel {
-    margin-bottom: 2px;
-    font-size: 9px;
-  }
-  
-  .progressBar {
-    height: 3px;
-  }
-  
-  .footerIcon {
-    padding: 3px 0;
-  }
-}
-
-/* Медиа-запрос для узких экранов */
-@media (max-width: 300px) {
-  .sidebar {
-    padding: 4px;
-  }
-  
-  .startButton {
-    padding: 3px 4px;
-    font-size: 9px;
-    min-width: 25px;
-  }
-  
-  .startButton {
-    width: clamp(20px, 80%, 50px);
-    padding: 0;
-  }
-  
-  .icon {
-    width: 25px;
-    height: 20px;
+    gap: 12px;
   }
 }

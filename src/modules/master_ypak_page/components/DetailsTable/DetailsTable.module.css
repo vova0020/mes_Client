@@ -596,7 +596,140 @@
     height: 7px;
   }
 }
-/* Медиа-запросы для адаптивного дизайна */
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 10px;
+  }
+  
+  .title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .detailsTable {
+    font-size: 12px;
+  }
+  
+  .detailsTable th {
+    padding: 7px 10px;
+  }
+  
+  .detailsTable td {
+    padding: 5px 10px;
+  }
+  
+  .drawingButton,
+  .schemeButton {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  .arrowButton {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+}
+
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 8px;
+  }
+  
+  .title {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .detailsTable {
+    font-size: 11px;
+  }
+  
+  .detailsTable th {
+    padding: 6px 8px;
+  }
+  
+  .detailsTable td {
+    padding: 4px 8px;
+  }
+  
+  .drawingButton,
+  .schemeButton {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  
+  .arrowButton {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  .workerSelect {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+}
+
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 6px;
+  }
+  
+  .title {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .tableContainer {
+    overflow-x: auto;
+  }
+  
+  .detailsTable {
+    font-size: 10px;
+    min-width: 600px;
+  }
+  
+  .detailsTable th {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+  
+  .detailsTable td {
+    padding: 4px 6px;
+    white-space: nowrap;
+  }
+  
+  .drawingButton,
+  .schemeButton {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .arrowButton {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+  
+  .workerSelect {
+    font-size: 8px;
+    padding: 2px 4px;
+  }
+  
+  .assignAllButton {
+    padding: 2px 4px;
+    font-size: 7px;
+  }
+  
+  .statusBadge {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+}
 
 /* Большие настольные экраны (более 1200px) */
 @media screen and (min-width: 1201px) {
@@ -779,158 +912,47 @@
   }
 }
 
-/* Малые планшеты и большие телефоны (от 576px до 767px) */
-@media screen and (min-width: 576px) and (max-width: 767px) {
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
   .detailsContainer {
     padding: 10px;
   }
   
   .title {
-    font-size: 15px;
+    font-size: 16px;
     margin-bottom: 10px;
   }
   
-  .tableContainer {
-    max-height: calc(100% - 45px);
-    width: 100%;
-  }
-  
-  .detailsTable {
-    font-size: 11px;
-  }
-  
-  .detailsTable th {
-    padding: 6px 8px;
-    font-size: 11px;
-  }
-  
-  .detailsTable td {
-    padding: 5px 8px;
-  }
-  
-  /* Создаем горизонтальную прокрутку для таблицы на маленьких экранах */
   .tableContainer {
     overflow-x: auto;
   }
   
   .detailsTable {
-    min-width: 500px; /* Минимальная ширина таблицы, чтобы контент не сжимался слишком сильно */
-  }
-  
-  .drawingButton {
-    padding: 3px 6px;
-    font-size: 9px;
-  }
-  
-  .arrowButton {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
-  }
-  
-  .loadingSpinner {
-    width: 35px;
-    height: 35px;
-    border-width: 3px;
-  }
-  
-  .loadingMessage h3,
-  .errorMessage h3,
-  .emptyMessage h3 {
-    font-size: 13px;
-    margin-bottom: 4px;
-  }
-  
-  .loadingMessage p,
-  .errorMessage p,
-  .emptyMessage p {
-    font-size: 11px;
-  }
-  
-  .retryButton {
-    padding: 7px 14px;
-    font-size: 11px;
-  }
-}
-
-/* Мобильные телефоны (до 575px) */
-@media screen and (max-width: 575px) {
-  .detailsContainer {
-    padding: 8px;
-  }
-  
-  .title {
-    font-size: 14px;
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-  }
-  
-  .tableContainer {
-    max-height: calc(100% - 40px);
-    width: 100%;
-  }
-  
-  .detailsTable {
-    font-size: 10px;
-  }
-  
-  .detailsTable th {
-    padding: 5px 6px;
-    font-size: 10px;
-  }
-  
-  .detailsTable td {
-    padding: 4px 6px;
-  }
-  
-  /* Создаем горизонтальную прокрутку для таблицы на маленьких экранах */
-  .tableContainer {
-    overflow-x: auto;
-  }
-  
-  .detailsTable {
-    min-width: 450px; /* Минимальная ширина таблицы, чтобы контент не сжимался слишком сильно */
-  }
-  
-  .drawingButton {
-    padding: 2px 5px;
-    font-size: 8px;
-  }
-  
-  .arrowButton {
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
-  }
-  
-  /* Уменьшаем отступы в ячейках для экономии места */
-  .detailsTable td, .detailsTable th {
-    white-space: nowrap; /* Предотвращаем перенос текста */
-  }
-  
-  .loadingSpinner {
-    width: 30px;
-    height: 30px;
-    border-width: 2px;
-    margin-bottom: 10px;
-  }
-  
-  .loadingMessage h3,
-  .errorMessage h3,
-  .emptyMessage h3 {
     font-size: 12px;
-    margin-bottom: 3px;
+    min-width: 600px;
   }
   
-  .loadingMessage p,
-  .errorMessage p,
-  .emptyMessage p {
-    font-size: 10px;
+  .detailsTable th {
+    padding: 7px 10px;
   }
   
-  .retryButton {
-    padding: 6px 12px;
-    font-size: 10px;
+  .detailsTable td {
+    padding: 6px 10px;
+  }
+  
+  .drawingButton,
+  .schemeButton {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .arrowButton {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .workerSelect {
+    font-size: 11px;
   }
 }
 

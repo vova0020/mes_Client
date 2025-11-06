@@ -1,25 +1,24 @@
 .mesPage {
   display: flex;
   flex-direction: row;
-  height: 100vh; /* Высота на весь экран */
+  min-height: 100vh;
   width: 100%;
   font-family: sans-serif;
   background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
-  overflow: hidden; /* Предотвращает прокрутку на уровне всей страницы */
-  
+  overflow: hidden;
 }
 
 .Sidebar_Block {
-  width: 120px; /* Уменьшенная фиксированная ширина для сайдбара */
-  height: 100%; /* Высота на весь экран */
-  background-color: transparent; /* Прозрачный фон, чтобы был виден сайдбар */
-  padding: 10px 10px; /* Уменьшенные отступы для сайдбара */
-  box-sizing: border-box; /* Учитываем padding в общей ширине */
-  display: flex; /* Используем flex для центрирования */
-  align-items: center; /* Центрирование по вертикали */
-  justify-content: center; /* Центрирование по горизонтали */
-  overflow: hidden; /* Предотвращаем выход содержимого за границы */
-  transition: width 0.3s ease; /* Плавный переход при изменении ширины */
+  width: 120px;
+  min-height: 100%;
+  background-color: transparent;
+  padding: 10px 10px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: visible;
+  transition: width 0.3s ease;
 }
 
 .Content_Block {
@@ -100,77 +99,178 @@
   flex-direction: column;
 }
 
-/* Адаптивные стили для разных размеров экрана */
-@media screen and (max-width: 1200px) {
-  .topRow {
-    height: 45%; /* Увеличиваем высоту верхнего ряда */
+/* Адаптивные стили для планшетов и телефонов в горизонтальной ориентации */
+@media screen and (max-width: 1366px) and (orientation: landscape) {
+  .mesPage {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
   }
-}
-
-@media screen and (max-width: 992px) {
-  .Sidebar_Block {
-    width: 100px; /* Уменьшаем ширину боковой панели */
+  
+  .Content_Block {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .mainContainer {
+    height: auto;
+    min-height: auto;
+    padding: 10px;
+    gap: 12px;
   }
   
   .topRow {
-    height: 50%; /* Увеличиваем высоту верхнего ряда */
+    height: auto;
+    min-height: 350px;
+  }
+  
+  .bottomRow {
+    height: auto;
+    min-height: 300px;
+  }
+  
+  .headerBlock {
+    margin-bottom: 12px;
   }
 }
 
-/* Для планшетов */
-@media screen and (max-width: 768px) {
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .Sidebar_Block {
+    width: 100px;
+    padding: 8px;
+  }
+  
   .topRow {
-    flex-direction: column; /* Меняем направление на вертикальное */
-    height: 60%; /* Увеличиваем высоту верхнего ряда */
+    min-height: 320px;
+    gap: 12px;
   }
   
   .ordersSection,
   .machinesSection {
-    width: 100%; /* Блоки занимают всю ширину */
-    height: 50%; /* Каждый блок занимает половину высоты верхнего ряда */
+    min-height: 320px;
+  }
+  
+  .bottomRow {
+    min-height: 280px;
   }
 }
 
-/* Для мобильных устройств */
-@media screen and (max-width: 576px) {
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .Sidebar_Block {
+    width: 80px;
+    padding: 6px;
+  }
+  
+  .Content_Block {
+    padding: 8px 12px 8px 4px;
+  }
+  
+  .mainContainer {
+    padding: 8px;
+    gap: 10px;
+  }
+  
+  .topRow {
+    min-height: 300px;
+    gap: 10px;
+  }
+  
+  .ordersSection,
+  .machinesSection {
+    min-height: 300px;
+  }
+  
+  .bottomRow {
+    min-height: 260px;
+  }
+}
+
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
   .mesPage {
-    flex-direction: column; /* Меняем направление на вертикальное */
+    flex-direction: row;
+  }
+  
+  .Sidebar_Block {
+    width: 70px;
+    padding: 5px;
+  }
+  
+  .Content_Block {
+    padding: 6px 10px 6px 3px;
+  }
+  
+  .mainContainer {
+    padding: 6px;
+    gap: 8px;
+  }
+  
+  .headerBlock {
+    margin-bottom: 8px;
+  }
+  
+  .topRow {
+    flex-direction: row;
+    min-height: 280px;
+    gap: 8px;
+  }
+  
+  .ordersSection {
+    width: 35%;
+    min-height: 280px;
+  }
+  
+  .machinesSection {
+    width: 65%;
+    min-height: 280px;
+  }
+  
+  .bottomRow {
+    min-height: 240px;
+  }
+}
+
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .mesPage {
+    flex-direction: column;
+    height: auto;
+    overflow-y: auto;
   }
   
   .Sidebar_Block {
     width: 100%;
     height: auto;
-    min-height: 50px;
+    min-height: 60px;
+    padding: 8px;
+  }
+  
+  .Content_Block {
+    height: auto;
+    padding: 10px;
   }
   
   .mainContainer {
-    padding: 8px;
-    gap: 8px;
+    height: auto;
+    gap: 12px;
   }
   
   .topRow {
-    gap: 8px;
-  }
-}
-
-/* Для очень маленьких экранов */
-@media screen and (max-height: 600px) {
-  .headerBlock {
-    height: 40px; /* Уменьшаем высоту шапки */
-    min-height: 40px;
+    flex-direction: column;
+    height: auto;
+    gap: 12px;
   }
   
-  .mainContainer {
-    height: calc(100% - 40px); /* Пересчитываем высоту */
-    padding: 8px;
-    gap: 8px;
-  }
-  
-  .topRow {
-    min-height: 150px; /* Уменьшаем минимальную высоту */
+  .ordersSection,
+  .machinesSection {
+    width: 100%;
+    min-height: 300px;
   }
   
   .bottomRow {
-    min-height: 150px; /* Уменьшаем минимальную высоту */
+    min-height: 300px;
   }
 }

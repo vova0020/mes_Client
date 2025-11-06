@@ -426,14 +426,17 @@
   background: linear-gradient(to bottom, #c82333, #bd2130);
 }
 
-/* Медиа-запросы для адаптивности */
-@media screen and (max-width: 1200px) {
-  .cardsWrapper {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 10px;
   }
-}
-
-@media screen and (max-width: 992px) {
+  
+  .title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
   .cardsWrapper {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
@@ -441,11 +444,44 @@
   }
   
   .machineCard {
-    height: 260px;
+    height: 200px;
+  }
+  
+  .cardHeader {
+    padding: 10px;
+  }
+  
+  .machineName {
+    font-size: 13px;
+  }
+  
+  .infoRow {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .statusIndicator {
+    font-size: 11px;
+    padding: 3px 7px;
+  }
+  
+  .openTaskButton {
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }
 
-@media screen and (max-width: 768px) {
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 8px;
+  }
+  
+  .title {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
   .cardsWrapper {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 10px;
@@ -453,7 +489,111 @@
   }
   
   .machineCard {
-    height: 250px;
+    height: 190px;
+  }
+  
+  .cardHeader {
+    padding: 8px;
+  }
+  
+  .machineName {
+    font-size: 12px;
+  }
+  
+  .infoRow {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+  
+  .statusIndicator {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .resetButton {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .openTaskButton {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 6px;
+  }
+  
+  .title {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .cardsWrapper {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .machineCard {
+    height: 180px;
+  }
+  
+  .cardHeader {
+    padding: 6px;
+  }
+  
+  .machineName {
+    font-size: 11px;
+  }
+  
+  .infoRow {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  
+  .statusIndicator {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+  
+  .resetButton {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+  
+  .openTaskButton {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  .inactiveIcon,
+  .maintenanceIcon,
+  .brokenIcon {
+    font-size: 24px;
+  }
+  
+  .inactiveMessage,
+  .maintenanceMessage,
+  .brokenMessage {
+    font-size: 11px;
+  }
+}
+
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .cardsWrapper {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .machineCard {
+    height: 220px;
   }
   
   .cardHeader {
@@ -466,43 +606,11 @@
   
   .statusIndicator {
     font-size: 11px;
-    padding: 3px 6px;
+    padding: 3px 7px;
   }
   
-  .resetButton {
-    width: 24px;
-    height: 24px;
+  .openTaskButton {
+    padding: 7px 14px;
     font-size: 12px;
-  }
-}
-
-@media screen and (max-width: 576px) {
-  .cardsWrapper {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 8px;
-  }
-  
-  .machineCard {
-    height: 240px;
-  }
-  
-  .cardHeader {
-    padding: 8px;
-  }
-  
-  .machineName {
-    font-size: 12px;
-  }
-  
-  .statusIndicator {
-    font-size: 10px;
-    padding: 2px 5px;
-  }
-  
-  .resetButton {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
   }
 }

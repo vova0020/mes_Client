@@ -63,7 +63,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  height: 220px; /* Фиксированная высота */
+  height: 190px; /* Уменьшенная высота для ПК */
   padding-bottom: 10px;
   position: relative;
   overflow: hidden;
@@ -426,14 +426,17 @@
   background: linear-gradient(to bottom, #c82333, #bd2130);
 }
 
-/* Медиа-запросы для адаптивности */
-@media screen and (max-width: 1200px) {
-  .cardsWrapper {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 1366px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 10px;
   }
-}
-
-@media screen and (max-width: 992px) {
+  
+  .title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
   .cardsWrapper {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
@@ -441,11 +444,36 @@
   }
   
   .machineCard {
-    height: 260px;
+    height: 200px;
+  }
+  
+  .cardHeader {
+    padding: 8px;
+  }
+  
+  .machineName {
+    font-size: 12px;
+  }
+  
+  .infoRow {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+  
+  .openTaskButton {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 38px;
+  }
+  
+  .resetButton {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
   }
 }
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) and (max-height: 768px) and (orientation: landscape) {
   .cardsWrapper {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 10px;
@@ -453,56 +481,150 @@
   }
   
   .machineCard {
-    height: 250px;
-  }
-  
-  .cardHeader {
-    padding: 10px;
+    height: 195px;
   }
   
   .machineName {
-    font-size: 13px;
+    font-size: 11px;
   }
   
   .statusIndicator {
-    font-size: 11px;
+    font-size: 10px;
     padding: 3px 6px;
   }
   
+  .infoRow {
+    font-size: 10px;
+  }
+  
+  .openTaskButton {
+    padding: 7px 10px;
+    font-size: 11px;
+    min-height: 36px;
+  }
+  
   .resetButton {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     font-size: 12px;
   }
 }
 
-@media screen and (max-width: 576px) {
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 900px) and (max-height: 450px) and (orientation: landscape) {
+  .detailsContainer {
+    padding: 8px;
+  }
+  
+  .title {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  
   .cardsWrapper {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 8px;
     padding: 8px;
   }
   
   .machineCard {
-    height: 240px;
+    height: 185px;
   }
   
   .cardHeader {
-    padding: 8px;
+    padding: 7px;
   }
   
   .machineName {
-    font-size: 12px;
+    font-size: 10px;
   }
   
   .statusIndicator {
-    font-size: 10px;
+    font-size: 9px;
     padding: 2px 5px;
   }
   
+  .infoRow {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+  
+  .openTaskButton {
+    padding: 6px 10px;
+    font-size: 10px;
+    min-height: 32px;
+  }
+  
   .resetButton {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     font-size: 11px;
+  }
+}
+
+/* Вертикальная ориентация планшетов */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .cardsWrapper {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .machineCard {
+    height: 260px;
+  }
+  
+  .openTaskButton {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+  
+  .resetButton {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Мобильные устройства */
+@media screen and (max-width: 576px) {
+  .cardsWrapper {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .machineCard {
+    height: 280px;
+  }
+  
+  .cardHeader {
+    padding: 12px;
+  }
+  
+  .machineName {
+    font-size: 14px;
+  }
+  
+  .statusIndicator {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .infoRow {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  
+  .openTaskButton {
+    padding: 14px 24px;
+    font-size: 15px;
+    min-height: 52px;
+  }
+  
+  .resetButton {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
   }
 }

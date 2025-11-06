@@ -370,7 +370,116 @@
   margin: 0;
 }
 
-/* Медиа-запросы для адаптивного дизайна */
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .ordersContainer {
+    padding: 10px;
+  }
+  
+  .title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .orderItem {
+    padding: 7px 10px;
+  }
+  
+  .orderTitle {
+    font-size: 12px;
+  }
+  
+  .orderProgress,
+  .orderAvailability {
+    font-size: 10px;
+  }
+  
+  .actionButton {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .actionButton svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .ordersContainer {
+    padding: 8px;
+  }
+  
+  .title {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .orderItem {
+    padding: 6px 8px;
+  }
+  
+  .orderTitle {
+    font-size: 11px;
+  }
+  
+  .orderProgress,
+  .orderAvailability {
+    font-size: 9px;
+  }
+  
+  .actionButton {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .actionButton svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .ordersContainer {
+    padding: 6px;
+  }
+  
+  .title {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .orderItem {
+    padding: 5px 6px;
+  }
+  
+  .orderTitle {
+    font-size: 10px;
+  }
+  
+  .orderProgress,
+  .orderAvailability {
+    font-size: 8px;
+  }
+  
+  .orderInfo {
+    gap: 8px;
+  }
+  
+  .actionButton {
+    width: 22px;
+    height: 22px;
+    padding: 3px;
+  }
+  
+  .actionButton svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
 /* Большие настольные экраны (более 1200px) */
 @media screen and (min-width: 1201px) {
   .ordersContainer {
@@ -581,164 +690,38 @@
   }
 }
 
-/* Малые планшеты и большие телефоны (от 576px до 767px) */
-@media screen and (min-width: 576px) and (max-width: 767px) {
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
   .ordersContainer {
     padding: 10px;
-    max-height: 100vh;
   }
   
   .title {
-    font-size: 15px;
+    font-size: 16px;
     margin-bottom: 10px;
   }
   
-  .listContainer {
-    max-height: calc(100% - 40px);
-  }
-  
   .orderItem {
-    padding: 7px 10px;
+    padding: 8px 10px;
   }
   
   .orderTitle {
-    font-size: 11px;
-    margin-bottom: 2px;
-  }
-  
-  .orderProgress,
-  .orderAvailability {
-    font-size: 9px;
-  }
-  
-  .orderInfo {
-    margin-bottom: 5px;
-  }
-  
-  .actionButton {
-    width: 22px;
-    height: 22px;
-    padding: 3px;
-  }
-  
-  .actionButton svg {
-    width: 14px;
-    height: 14px;
-  }
-  
-  .activeItem {
-    padding-left: 7px;
-  }
-  
-  .loadingSpinner {
-    width: 35px;
-    height: 35px;
-    border-width: 3px;
-  }
-  
-  .loadingMessage h3,
-  .errorMessage h3,
-  .emptyMessage h3 {
     font-size: 13px;
-    margin-bottom: 4px;
-  }
-  
-  .loadingMessage p,
-  .errorMessage p,
-  .emptyMessage p {
-    font-size: 11px;
-  }
-  
-  .retryButton {
-    padding: 7px 14px;
-    font-size: 11px;
-  }
-}
-
-/* Мобильные телефоны (до 575px) */
-@media screen and (max-width: 575px) {
-  .ordersContainer {
-    padding: 8px;
-    max-height: 30vh;
-  }
-  
-  .title {
-    font-size: 14px;
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-  }
-  
-  .listContainer {
-    max-height: calc(100% - 30px);
-  }
-  
-  .orderItem {
-    padding: 6px 8px;
-  }
-  
-  .orderTitle {
-    font-size: 10px;
-    margin-bottom: 2px;
   }
   
   .orderProgress,
   .orderAvailability {
-    font-size: 8px;
-  }
-  
-  .orderInfo {
-    margin-bottom: 4px;
+    font-size: 11px;
   }
   
   .actionButton {
-    width: 20px;
-    height: 20px;
-    padding: 2px;
+    width: 28px;
+    height: 28px;
   }
   
   .actionButton svg {
-    width: 12px;
-    height: 12px;
-  }
-  
-  .activeItem {
-    padding-left: 5px;
-  }
-  
-  .loadingSpinner {
-    width: 30px;
-    height: 30px;
-    border-width: 2px;
-    margin-bottom: 10px;
-  }
-  
-  .loadingMessage h3,
-  .errorMessage h3,
-  .emptyMessage h3 {
-    font-size: 12px;
-    margin-bottom: 3px;
-  }
-  
-  .loadingMessage p,
-  .errorMessage p,
-  .emptyMessage p {
-    font-size: 10px;
-  }
-  
-  .retryButton {
-    padding: 6px 12px;
-    font-size: 10px;
-  }
-  
-  /* Для очень маленьких экранов переносим иконки на новую строку */
-  .orderInfo {
-    flex-wrap: wrap;
-  }
-  
-  .orderActions {
-    margin-top: 4px;
-    width: 100%;
-    justify-content: flex-end;
+    width: 16px;
+    height: 16px;
   }
 }
 
