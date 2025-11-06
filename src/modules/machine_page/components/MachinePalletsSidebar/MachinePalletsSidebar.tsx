@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import styles from './PalletsSidebar.module.css';
+import styles from './MachinePalletsSidebar.module.css';
 import useProductionPallets from '../../../hooks/machinhook/machinProductionPallets';
 import { useMachine } from '../../../hooks/machinhook/useMachine';
 import DefectModal from './DefectModal';

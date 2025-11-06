@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import styles from './DetailsTable.module.css';
+import styles from './MasterDetailsTable.module.css';
 import useDetails from '../../../hooks/masterPage/useDetailsMaster';
-import PalletsSidebar from '../PalletsSidebar/MasterPalletsSidebar';
+import PalletsSidebar from '../MasterPalletsSidebar/MasterPalletsSidebar';
 import DetailForm from '../../../detail-form/DetailForm';
 import { Detail } from '../../../api/masterPage/detailServiceMaster';
 

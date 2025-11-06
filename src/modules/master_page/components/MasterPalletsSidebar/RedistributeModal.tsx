@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from './PalletsSidebar.module.css';
+import styles from './MasterPalletsSidebar.module.css';
 import { ProductionPallet, PartDistribution } from '../../../api/masterPage/productionPalletsServiceMaster';
 
 interface RedistributeModalProps {

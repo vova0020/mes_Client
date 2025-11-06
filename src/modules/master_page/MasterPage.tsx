@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
-import DetailsTable from './components/DetailsTable/MasterDetailsTable';
+import DetailsTable from './components/MasterDetailsTable/MasterDetailsTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
 import PackagingModal from './components/PackagingModal/PackagingModal';
 import RotateScreen from '../../componentsGlobal/RotateScreen/RotateScreen';

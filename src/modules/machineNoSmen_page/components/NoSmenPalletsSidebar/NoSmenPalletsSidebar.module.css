@@ -1,4 +1,4 @@
-
+  
 /* Основной контейнер боковой панели с градиентным фоном и тенями */
 .sidebar {
   position: fixed;
@@ -23,7 +23,7 @@
 .sidebar.open {
   right: 20px; /* Отступ справа */
   top: 20px; /* Отступ сверху */
-  width: calc(60% - 40px); /* Половина экрана минус отступы с обеих сторон */
+  width: calc(65% - 40px); /* Половина экрана минус отступы с обеих сторон */
   height: calc(100vh - 40px); /* Отступ снизу */
   border-radius: 12px; /* Закругленные углы */
   opacity: 1;
@@ -61,29 +61,6 @@
   text-transform: uppercase;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   letter-spacing: 1.2px;
-}
-
-.closeButton {
-  background: none;
-  border: none;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  cursor: pointer;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  transition: all 0.2s ease;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.closeButton:hover {
-  color: #3498db;
-  transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.15);
 }
 
 .detailInfo {
@@ -153,6 +130,48 @@
 .detailProperty svg {
   margin-right: 6px;
   opacity: 0.7;
+}
+
+/* Стиль для отображения нераспределенных деталей в заг��ловке */
+.unallocatedQuantity {
+  color: #e67e22 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    color: #e67e22;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  50% { 
+    color: #f39c12;
+    text-shadow: 0 0 8px rgba(243, 156, 18, 0.6);
+  }
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.closeButton:hover {
+  color: #3498db;
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* Основное содержимое панели */
@@ -233,7 +252,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Стили для заголовков таблицы */
@@ -242,7 +261,7 @@
   color: #333;
   font-weight: 600;
   text-align: center;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid #ddd;
   position: sticky;
   top: 0;
@@ -252,7 +271,7 @@
 
 /* Стили для ячеек таблицы */
 .palletsTable td {
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid rgba(224, 224, 224, 0.5);
   color: #333;
   vertical-align: middle;
@@ -308,19 +327,19 @@
 /* Стили для кнопок действий */
 .actionsCell {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: nowrap;
   justify-content: flex-start;
   padding: 6px 0;
 }
 
 .actionButton {
-  min-width: 32px;
-  height: 30px;
-  padding: 0 10px;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 12px;
   border: none;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -359,11 +378,13 @@
     inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Стили для задисейбленной кнопки */
+/* Стили для задисейбленной кнопки - общие для всех */
 .actionButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   box-shadow: none;
+  /* Убираем сброс фона и цвета */
+  background-image: none;
 }
 
 .actionButton:disabled:hover::before {
@@ -393,6 +414,14 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* Специальные стили для кнопки МЛ в состоянии disabled */
+.mlButton:disabled {
+  /* Сохраняем фон кнопки, но делаем его немного темнее */
+  background: linear-gradient(to bottom, #2980b9, #2573a7);
+  color: white; /* Сохраняем белый цвет текста */
+  border-left: 3px solid #1c6ea4;
+}
+
 /* Стили для кнопки обновления данных поддона */
 .refreshButton {
   background: linear-gradient(to bottom, #7f8c8d, #636e72);
@@ -410,6 +439,13 @@
 .refreshButton:active {
   background: linear-gradient(to bottom, #636e72, #7f8c8d);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Специальные стили для кнопки обновления в состоянии disabled */
+.refreshButton:disabled {
+  background: linear-gradient(to bottom, #636e72, #535c5f);
+  color: white;
+  border-left: 3px solid #535c5f;
 }
 
 /* Стили для кнопки В работе */
@@ -431,6 +467,14 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* Специальные стили для кнопки В работе в состоянии disabled */
+.inProgressButton:disabled {
+  /* Сохраняем фон кнопки, но делаем его немного темнее */
+  background: linear-gradient(to bottom, #e67e22, #d35400);
+  color: white; /* Сохраняем белый цвет текста */
+  border-left: 3px solid #d35400;
+}
+
 /* Стили для кнопки Готово */
 .completedButton {
   background: linear-gradient(to bottom, #2ecc71, #27ae60);
@@ -450,6 +494,14 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* Специальные стили для кнопки Готово в состоянии disabled */
+.completedButton:disabled {
+  /* Сохраняем фон кнопки, но делаем его немного темнее */
+  background: linear-gradient(to bottom, #27ae60, #219653);
+  color: white; /* Сохраняем белый цвет текста */
+  border-left: 3px solid #219653;
+}
+
 /* Стили для кнопки Частично */
 .partialButton {
   background: linear-gradient(to bottom, #9b59b6, #8e44ad);
@@ -467,6 +519,14 @@
 .partialButton:active {
   background: linear-gradient(to bottom, #8e44ad, #9b59b6);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Специальные стили для кнопки Частично в состоянии disabled */
+.partialButton:disabled {
+  /* Сохраняем фон кнопки, но делаем его немного темнее */
+  background: linear-gradient(to bottom, #8e44ad, #7d3c98);
+  color: white; /* Сохраняем белый цвет текста */
+  border-left: 3px solid #7d3c98;
 }
 
 /* Стили для выпадающего списка станков */
@@ -680,14 +740,34 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 30px;
+  padding: 40px 30px;
   height: 100%;
-  min-height: 200px;
-  background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  border-radius: 10px;
+  min-height: 300px;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-radius: 16px;
   box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.stateContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #74b9ff, #0984e3, #00cec9, #00b894);
+  background-size: 200% 100%;
+  animation: gradientShift 3s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* Стили для состояния загрузки */
@@ -784,28 +864,61 @@
 
 /* Стили для пустого списка */
 .emptyIcon {
-  color: #bdc3c7;
-  font-size: 40px;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.1));
+  color: #74b9ff;
+  font-size: 64px;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 4px 12px rgba(116, 185, 255, 0.3));
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { 
+    transform: translateY(0px);
+  }
+  50% { 
+    transform: translateY(-8px);
+  }
 }
 
 .emptyMessage {
   text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .emptyMessage h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 8px 0;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d3436;
+  margin: 0 0 16px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
 }
 
 .emptyMessage p {
-  font-size: 13px;
-  color: #666;
-  margin: 0;
+  font-size: 16px;
+  color: #636e72;
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.emptyMessage p:last-child {
+  margin-bottom: 0;
+}
+
+.emptyMessage strong {
+  color: #e17055;
+  font-weight: 700;
+  background: linear-gradient(135deg, #e17055, #d63031);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Стили для компонента статуса операции */
@@ -819,8 +932,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 8px;
-  font-size: 11px;
+  padding: 4px 10px;
+  font-size: 12px;
   font-weight: 600;
   border-radius: 12px;
   text-transform: uppercase;
@@ -829,13 +942,13 @@
 }
 
 .processStep {
-  font-size: 10px;
+  font-size: 11px;
   color: #666;
   font-style: italic;
 }
 
 .noOperation {
-  font-size: 11px;
+  font-size: 12px;
   color: #999;
   font-style: italic;
   display: block;
@@ -852,6 +965,7 @@
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   border-left: 2px solid #9fa41c;
 }
+
 /* Статус 'Задание на станке но еще не обрабатывалось' */
 .statusOnMachine {
   background: linear-gradient(to bottom, #3498db, #2980b9);
@@ -1291,8 +1405,6 @@
   }
 }
 
-
-
 /* Мобильные устройства */
 @media screen and (max-width: 576px) {
   .sidebar.open {
@@ -1398,8 +1510,7 @@
   50% { opacity: 1; }
 }
 
-/* Стили для отключенных элементов управления */
-.actionButton:disabled, 
+/* Стили для отключенных элементов управления - уточнение */
 .machineSelect:disabled, 
 .bufferCellSelect:disabled {
   opacity: 0.5;
@@ -1559,43 +1670,50 @@
   border-width: 0;
 }
 
-/* ===== СТИЛИ ДЛЯ СОЗДАНИЯ ПОДДОНОВ ===== */
-
-/* Стиль для отображения нераспределенных деталей в заголовке */
-.unallocatedQuantity {
-  color: #e67e22 !important;
-  font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  animation: pulseGlow 2s ease-in-out infinite;
+/* Стили для информации о нераспределенных деталях */
+.unallocatedInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
 }
 
-@keyframes pulseGlow {
-  0%, 100% { 
-    color: #e67e22;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
-  50% { 
-    color: #f39c12;
-    text-shadow: 0 0 8px rgba(243, 156, 18, 0.6);
-  }
+.unallocatedInfo span {
+  color: #856404;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-/* Кнопка создания поддона в пустом состоянии */
+.unallocatedInfo strong {
+  color: #d68910;
+  font-weight: 700;
+}
+
+/* Стили для кнопки создания поддона */
 .createPalletButton {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  background: linear-gradient(135deg, #00b894, #00a085);
   color: white;
   border: none;
-  padding: 14px 28px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow: 
-    0 6px 20px rgba(46, 204, 113, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    0 6px 20px rgba(0, 184, 148, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
   text-transform: uppercase;
@@ -1609,16 +1727,16 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
 }
 
 .createPalletButton:hover {
-  background: linear-gradient(135deg, #58d68d, #2ecc71);
-  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, #00cec9, #00b894);
+  transform: translateY(-3px) scale(1.02);
   box-shadow: 
-    0 10px 30px rgba(46, 204, 113, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 10px 30px rgba(0, 184, 148, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .createPalletButton:hover::before {
@@ -1626,143 +1744,33 @@
 }
 
 .createPalletButton:active {
-  transform: translateY(-1px) scale(1.02);
+  transform: translateY(-1px) scale(1.01);
   box-shadow: 
-    0 4px 15px rgba(46, 204, 113, 0.3),
-    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    0 4px 15px rgba(0, 184, 148, 0.4),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .createPalletButton:disabled {
-  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  opacity: 0.6;
   cursor: not-allowed;
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
   transform: none;
   box-shadow: 
     0 2px 8px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: pulse 1.5s ease-in-out infinite;
+  animation: disabledPulse 2s ease-in-out infinite;
 }
 
-/* Секция создания поддона над таблицей */
-.createPalletSection {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  margin-bottom: 16px;
-  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-  border: 1px solid #f1c40f;
-  border-radius: 10px;
-  box-shadow: 
-    0 4px 12px rgba(241, 196, 15, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  animation: slideInDown 0.5s ease-out;
-}
-
-@keyframes slideInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
+@keyframes disabledPulse {
+  0%, 100% { 
+    opacity: 0.6;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% { 
+    opacity: 0.8;
   }
 }
 
-.unallocatedInfo {
-  font-size: 14px;
-  color: #8b6914;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.unallocatedInfo::before {
-  content: '⚠️';
-  font-size: 16px;
-  animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-5px);
-  }
-  60% {
-    transform: translateY(-3px);
-  }
-}
-
-.unallocatedInfo strong {
-  color: #d68910;
-  font-size: 16px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Маленькая кнопка создания поддона */
-.createPalletButtonSmall {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 3px 10px rgba(52, 152, 219, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-.createPalletButtonSmall::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.4s;
-}
-
-.createPalletButtonSmall:hover {
-  background: linear-gradient(135deg, #5dade2, #3498db);
-  transform: translateY(-2px);
-  box-shadow: 
-    0 5px 15px rgba(52, 152, 219, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.createPalletButtonSmall:hover::before {
-  left: 100%;
-}
-
-.createPalletButtonSmall:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 2px 8px rgba(52, 152, 219, 0.3),
-    inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.createPalletButtonSmall:disabled {
-  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* ===== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ПОДДОНА ===== */
-
+/* Стили для модал��ного окна */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -1799,8 +1807,6 @@
   max-height: 90vh;
   overflow: hidden;
   animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  display: flex;
-  flex-direction: column;
 }
 
 @keyframes slideInModal {
@@ -1822,7 +1828,6 @@
   background: linear-gradient(135deg, #374051, #2a303c);
   color: white;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
 }
 
 .modalHeader h3 {
@@ -1868,8 +1873,6 @@
 .modalBody {
   padding: 28px;
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  overflow-y: auto;
-  flex: 1;
 }
 
 .formGroup {
@@ -1926,7 +1929,15 @@
   font-style: italic;
 }
 
-/* Стили для сообщения об ошибке �� модальном окне */
+.formGroup small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Стили для сообщения об ошибке в модальном окне */
 .modalBody .errorMessage {
   background: linear-gradient(135deg, #ffebee, #ffcdd2);
   color: #c62828;
@@ -1955,7 +1966,6 @@
   background: linear-gradient(145deg, #f8f9fa, #e9ecef);
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   justify-content: flex-end;
-  flex-shrink: 0;
 }
 
 .cancelButton {
@@ -2056,8 +2066,998 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ===== */
+/* Стили для уведомлений об успехе */
+.successNotification {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  border: 1px solid #c3e6cb;
+  border-left: 4px solid #28a745;
+  border-radius: 8px;
+  color: #155724;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+  animation: slideInFromTop 0.4s ease-out;
+}
 
+.successNotification svg {
+  color: #28a745;
+  flex-shrink: 0;
+}
+
+/* Стили для уведомлений об ошибке */
+.errorNotification {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  border: 1px solid #f5c6cb;
+  border-left: 4px solid #dc3545;
+  border-radius: 8px;
+  color: #721c24;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
+  animation: slideInFromTop 0.4s ease-out;
+}
+
+.errorNotification svg {
+  color: #dc3545;
+  flex-shrink: 0;
+}
+
+/* Анимация появления уведомлений */
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nextStepInfo {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+  border: 1px solid #bee5eb;
+  border-left: 4px solid #17a2b8;
+  border-radius: 8px;
+  color: #0c5460;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.15);
+  animation: slideInFromTop 0.4s ease-out;
+}
+
+/* Анимации для модального окна */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптивные стили для модального окна */
+@media screen and (max-width: 768px) {
+  .modalContent {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .modalForm {
+    padding: 16px;
+  }
+  
+  .modalActions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .submitButton {
+    width: 100%;
+    padding: 12px 20px;
+  }
+  
+  .unallocatedInfo {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .createPalletButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Стили для компонента завершенной детали */
+.completedForDetail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Стили для следующего этапа */
+.nextStep {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  margin-top: 2px;
+  padding: 2px 6px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+/* Стили для секции создания поддона в таблице */
+.createPalletSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #e8f5e8, #d4edda);
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+}
+
+.createPalletSection .unallocatedInfo {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  color: #155724;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.createPalletButtonSmall {
+  background: linear-gradient(to bottom, #28a745, #218838);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #1e7e34;
+}
+
+.createPalletButtonSmall:hover {
+  background: linear-gradient(to bottom, #34ce57, #28a745);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.createPalletButtonSmall:active {
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.createPalletButtonSmall:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  color: white;
+  border-left: 3px solid #1e7e34;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Стили для модального окна - дополнительные элементы */
+.modalBody {
+  padding: 20px;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(224, 224, 224, 0.8);
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+}
+
+.formInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  font-size: 14px;
+  color: #333;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.formInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+}
+
+.createButton {
+  background: linear-gradient(to bottom, #28a745, #218838);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #1e7e34;
+}
+
+.createButton:hover {
+  background: linear-gradient(to bottom, #34ce57, #28a745);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.createButton:active {
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.createButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(to bottom, #218838, #1e7e34);
+  color: white;
+  border-left: 3px solid #1e7e34;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Дополнительные статусы для мастера */
+.statusPassedPreviousStage {
+  background: linear-gradient(to bottom, #17a2b8, #138496);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #0c5460;
+}
+
+/* ===== СТИЛИ ДЛЯ ФУНКЦИОНАЛА ОТБРАКОВКИ И ПЕРЕРАСПРЕДЕЛЕНИЯ ===== */
+
+/* Стили для кнопки количества */
+.quantityCell {
+  padding: 6px 16px;
+}
+
+.quantityButton {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  text-align: center;
+}
+
+.quantityButton:hover {
+  background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+  color: #1976d2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.quantityButton:active {
+  transform: scale(0.95);
+}
+
+/* Стили для меню действий с количеством */
+.quantityMenuContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 12px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(224, 224, 224, 0.8);
+  width: 280px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideInModal 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.quantityMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #374051, #2a303c);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quantityMenuHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.quantityMenuCloseButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.quantityMenuCloseButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.quantityMenuBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quantityMenuButton {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  color: #333;
+  border: 1px solid #dee2e6;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.quantityMenuButton:hover {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  color: #1976d2;
+  border-color: #2196f3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.quantityMenuButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.quantityMenuButton:disabled,
+.disabledButton {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #f5f5f5, #e0e0e0) !important;
+  color: #999 !important;
+  transform: none;
+  box-shadow: none;
+  border-color: #ccc !important;
+}
+
+.disabledButton:hover {
+  background: linear-gradient(135deg, #f5f5f5, #e0e0e0) !important;
+  color: #999 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Стили для информации о поддоне в модальных окнах */
+.palletInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #e8f5e8, #d4edda);
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+}
+
+.palletInfo span {
+  color: #155724;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.palletInfo strong {
+  color: #0d4017;
+  font-weight: 700;
+}
+
+/* Стили для textarea */
+.formTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  font-size: 14px;
+  color: #333;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.formTextarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.formTextarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+}
+
+/* Стили для модального окна перераспределения */
+.redistributeModalContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.distributionsContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.distributionRow {
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.distributionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #e1e8ed;
+  font-weight: 600;
+  color: #333;
+}
+
+.removeDistributionButton {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.removeDistributionButton:hover {
+  background: linear-gradient(135deg, #e74c3c, #dc3545);
+  transform: scale(1.1);
+}
+
+.removeDistributionButton:active {
+  transform: scale(0.95);
+}
+
+.distributionFields {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.distributionFields .formGroup {
+  margin-bottom: 0;
+}
+
+.distributionFields label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.distributionFields input[type="radio"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.addDistributionButton {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  align-self: flex-start;
+}
+
+.addDistributionButton:hover {
+  background: linear-gradient(135deg, #20c997, #17a2b8);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.addDistributionButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.addDistributionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #6c757d, #5a6268);
+  transform: none;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Адаптивные стили для новых элементов */
+@media screen and (max-width: 768px) {
+  .quantityMenuContent {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .redistributeModalContent {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .distributionFields {
+    padding: 12px;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .quantityMenuContent {
+    width: 98%;
+    margin: 10px;
+  }
+  
+  .redistributeModalContent {
+    width: 98%;
+    margin: 10px;
+  }
+  
+  .quantityMenuButton {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .distributionFields {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .formTextarea {
+    min-height: 60px;
+  }
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ПОДДОНА (КАК У МАСТЕРА) ===== */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeInOverlay 0.3s ease-out;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #374051, #2a303c);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.modalCloseButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.modalCloseButton:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modalCloseButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modalBody {
+  padding: 28px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+}
+
+.formGroup {
+  margin-bottom: 24px;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.formInput {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2c3e50;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+}
+
+.formInput:disabled {
+  background: linear-gradient(145deg, #f5f6fa, #e9ecef);
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: #dee2e6;
+}
+
+.formInput::placeholder {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+/* Стили для сообщения об ошибке в модальном окне */
+.modalBody .errorMessage {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #e53935;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 16px;
+  box-shadow: 
+    0 2px 8px rgba(229, 57, 53, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: shakeError 0.5s ease-in-out;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px;
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 10px rgba(127, 140, 141, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.cancelButton:hover {
+  background: linear-gradient(135deg, #a6b5b6, #95a5a6);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(127, 140, 141, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(127, 140, 141, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.createButton {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 10px rgba(46, 204, 113, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.createButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.createButton:hover {
+  background: linear-gradient(135deg, #58d68d, #2ecc71);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(46, 204, 113, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.createButton:hover::before {
+  left: 100%;
+}
+
+.createButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(46, 204, 113, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createButton:disabled {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ МОДАЛЬНЫХ ОКОН ===== */
+
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
 @media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .modalContent {
     max-width: 500px;
@@ -2082,6 +3082,7 @@
   }
 }
 
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
 @media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .modalContent {
     width: 85%;
@@ -2119,6 +3120,7 @@
   }
 }
 
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
 @media screen and (max-width: 767px) and (orientation: landscape) {
   .modalContent {
     width: 90%;
@@ -2188,6 +3190,7 @@
   }
 }
 
+/* Вертикальная ориентация для планшетов */
 @media screen and (max-width: 1024px) and (orientation: portrait) {
   .modalContent {
     width: 90%;
@@ -2214,6 +3217,7 @@
   }
 }
 
+/* Вертикальная ориентация для телефонов */
 @media screen and (max-width: 768px) and (orientation: portrait) {
   .modalContent {
     width: 95%;
@@ -2266,6 +3270,7 @@
   }
 }
 
+/* Мобильные устройства */
 @media screen and (max-width: 576px) {
   .modalContent {
     width: 98%;
@@ -2334,6 +3339,19 @@
     width: 100%;
   }
   
+  .createPalletSection {
+    padding: 8px 12px;
+  }
+  
+  .createPalletSection .unallocatedInfo {
+    font-size: 12px;
+  }
+  
+  .createPalletButtonSmall {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
   .cancelButton,
   .createButton {
     min-height: 44px;
@@ -2342,327 +3360,8 @@
   }
 }
 
-/* ===== УЛУЧШЕННЫЕ СТИЛИ ДЛЯ ПУСТОГО СОСТОЯНИЯ ===== */
+/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ МЕНЮ КОЛИЧЕСТВА ===== */
 
-.emptyMessage {
-  text-align: center;
-  padding: 20px;
-}
-
-.emptyMessage h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 12px 0;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.emptyMessage p {
-  font-size: 14px;
-  color: #7f8c8d;
-  margin: 0 0 16px 0;
-  line-height: 1.5;
-}
-
-.emptyMessage p:last-of-type {
-  margin-bottom: 0;
-}
-
-.emptyMessage strong {
-  color: #e67e22;
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* ===== АНИМАЦИИ ДЛЯ УЛУЧШЕНИЯ UX ===== */
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Анимация для новых элементов */
-.createPalletSection,
-.createPalletButton,
-.createPalletButtonSmall {
-  animation: fadeInUp 0.5s ease-out;
-}
-
-/* ===== СТИЛИ ДЛЯ ТЕМНОЙ ТЕМЫ (если потребуется) ===== */
-
-@media (prefers-color-scheme: dark) {
-  .modalContent {
-    background: linear-gradient(145deg, #2c3e50, #34495e);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .modalBody {
-    background: linear-gradient(145deg, #2c3e50, #34495e);
-  }
-  
-  .modalFooter {
-    background: linear-gradient(145deg, #34495e, #2c3e50);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .formGroup label {
-    color: #ecf0f1;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-  }
-  
-  .formInput {
-    background: linear-gradient(145deg, #34495e, #2c3e50);
-    border-color: #4a5f7a;
-    color: #ecf0f1;
-    box-shadow: 
-      inset 0 2px 4px rgba(0, 0, 0, 0.3),
-      0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-  
-  .formInput:focus {
-    border-color: #3498db;
-    background: #34495e;
-    box-shadow: 
-      inset 0 2px 4px rgba(0, 0, 0, 0.3),
-      0 0 0 3px rgba(52, 152, 219, 0.3),
-      0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-  
-  .formInput::placeholder {
-    color: #7f8c8d;
-  }
-}
-
-/* ===== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ===== */
-
-/* Плавное появление модального окна */
-.modalOverlay.entering {
-  animation: fadeInOverlay 0.3s ease-out;
-}
-
-.modalOverlay.exiting {
-  animation: fadeOutOverlay 0.3s ease-in;
-}
-
-@keyframes fadeOutOverlay {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-/* Улучшенные стили для валидации формы */
-.formInput.error {
-  border-color: #e74c3c;
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.06),
-    0 0 0 3px rgba(231, 76, 60, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.formInput.success {
-  border-color: #27ae60;
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.06),
-    0 0 0 3px rgba(39, 174, 96, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-/* Стили для индикатора загрузки в кнопке */
-.createButton.loading::after {
-  content: '';
-  width: 16px;
-  height: 16px;
-  margin-left: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-}
-
-/* Улучшенная анимация для успешного создания */
-@keyframes successPulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
-  }
-  70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
-  }
-}
-
-.createButton.success {
-  animation: successPulse 0.6s ease-out;
-}
-/* ===== СТИЛИ ДЛЯ РЕДАКТИРОВАНИЯ КОЛИЧЕСТВА ===== */
-
-/* Ячейка с количеством */
-.quantityCell {
-  position: relative;
-}
-
-/* Кнопка количества */
-.quantityButton {
-  background: none;
-  border: none;
-  color: #333;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.quantityButton:hover {
-  background: rgba(52, 152, 219, 0.1);
-  color: #3498db;
-}
-
-.quantityButton:active {
-  background: rgba(52, 152, 219, 0.2);
-}
-
-/* Меню действий с количеством */
-.quantityMenu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  animation: fadeInOverlay 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Контент меню количества */
-.quantityMenuContent {
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  border-radius: 16px;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  width: 90%;
-  max-width: 400px;
-  overflow: hidden;
-  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.quantityMenuHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, #374051, #2a303c);
-  color: white;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.quantityMenuHeader h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.quantityMenuCloseButton {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.quantityMenuCloseButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
-}
-
-.quantityMenuBody {
-  padding: 24px;
-}
-
-/* Кнопки в меню количества */
-.quantityMenuButton {
-  width: 100%;
-  padding: 16px 20px;
-  border: none;
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  color: #333;
-  font-size: 16px;
-  font-weight: 500;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.quantityMenuButton:last-child {
-  margin-bottom: 0;
-}
-
-.quantityMenuButton:hover {
-  background: linear-gradient(145deg, #e3f2fd, #bbdefb);
-  color: #1976d2;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.quantityMenuButton:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Адаптивные стили для меню количества */
 @media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .quantityMenuContent {
     max-width: 420px;
@@ -2793,233 +3492,8 @@
   }
 }
 
-/* Информация о поддоне в модальных окнах */
-.palletInfo {
-  display: flex;
-  gap: 20px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #e8f4fd, #d1ecf1);
-  border: 1px solid #bee5eb;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 14px;
-  color: #0c5460;
-}
+/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ПЕРЕРАСПРЕДЕЛЕНИЯ ===== */
 
-.palletInfo strong {
-  color: #0a4c57;
-  font-weight: 600;
-}
-
-/* Textarea для описания брака */
-.formTextarea {
-  width: 100%;
-  padding: 14px 16px;
-  border: 2px solid #e1e8ed;
-  border-radius: 8px;
-  font-size: 15px;
-  color: #2c3e50;
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.06),
-    0 1px 0 rgba(255, 255, 255, 0.8);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-  resize: vertical;
-  font-family: inherit;
-}
-
-.formTextarea:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.06),
-    0 0 0 3px rgba(52, 152, 219, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.8);
-  background: #ffffff;
-}
-
-.formTextarea:disabled {
-  background: linear-gradient(145deg, #f5f6fa, #e9ecef);
-  color: #6c757d;
-  cursor: not-allowed;
-  border-color: #dee2e6;
-}
-
-.formTextarea::placeholder {
-  color: #95a5a6;
-  font-style: italic;
-}
-/* ===== СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ПЕРЕРАСПРЕДЕЛЕНИЯ ===== */
-
-.redistributeModalContent {
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  border-radius: 16px;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Контейнер для распределений */
-.distributionsContainer {
-  max-height: 300px;
-  overflow-y: auto;
-  margin-bottom: 16px;
-  flex-shrink: 0;
-}
-
-.distributionsContainer::-webkit-scrollbar {
-  width: 6px;
-}
-
-.distributionsContainer::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.distributionsContainer::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 3px;
-}
-
-.distributionsContainer::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
-}
-
-/* Строка распределения */
-.distributionRow {
-  border: 1px solid #e1e8ed;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.distributionRow:last-child {
-  margin-bottom: 0;
-}
-
-/* Заголовок распределения */
-.distributionHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-bottom: 1px solid #e1e8ed;
-  font-weight: 600;
-  color: #495057;
-}
-
-/* Кнопка удаления распределения */
-.removeDistributionButton {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: white;
-  border: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
-}
-
-.removeDistributionButton:hover {
-  background: linear-gradient(135deg, #ec7063, #e74c3c);
-  transform: scale(1.1);
-  box-shadow: 0 3px 6px rgba(231, 76, 60, 0.4);
-}
-
-.removeDistributionButton:active {
-  transform: scale(0.95);
-  box-shadow: 0 1px 2px rgba(231, 76, 60, 0.3);
-}
-
-.removeDistributionButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Поля распределения */
-.distributionFields {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Кнопка добавления распределения */
-.addDistributionButton {
-  background: linear-gradient(135deg, #17a2b8, #138496);
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 3px 8px rgba(23, 162, 184, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  align-self: flex-start;
-}
-
-.addDistributionButton:hover {
-  background: linear-gradient(135deg, #20c0db, #17a2b8);
-  transform: translateY(-2px);
-  box-shadow: 
-    0 5px 12px rgba(23, 162, 184, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.addDistributionButton:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 2px 6px rgba(23, 162, 184, 0.3),
-    inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.addDistributionButton:disabled {
-  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* Стили для радио кнопок */
-.formGroup label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.formGroup input[type="radio"] {
-  margin: 0;
-  cursor: pointer;
-}
-/* Адаптивные стили для модального окна перераспределения */
 @media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .redistributeModalContent {
     max-width: 620px;
@@ -3359,15 +3833,14 @@
   }
 }
 
-
 /* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ ПЛАНШЕТОВ И ТЕЛЕФОНОВ ===== */
 
 @media screen and (max-width: 1024px) {
   .bufferCellSelect, .machineSelect {
-    font-size: 14px;
-    padding: 12px 10px;
-    padding-right: 32px;
-    min-height: 44px;
+    font-size: 13px;
+    padding: 10px 8px;
+    padding-right: 28px;
+    min-height: 40px;
   }
   
   .bufferCellLoading,
@@ -3385,10 +3858,10 @@
 
 @media screen and (max-width: 768px) {
   .bufferCellSelect, .machineSelect {
-    font-size: 16px;
-    padding: 14px 10px;
-    padding-right: 36px;
-    min-height: 48px;
+    font-size: 14px;
+    padding: 12px 8px;
+    padding-right: 32px;
+    min-height: 44px;
     border: 2px solid rgba(221, 221, 221, 0.8);
   }
   
@@ -3454,10 +3927,10 @@
 
 @media screen and (max-width: 576px) {
   .bufferCellSelect, .machineSelect {
-    font-size: 16px;
-    padding: 14px 10px;
-    padding-right: 36px;
-    min-height: 48px;
+    font-size: 13px;
+    padding: 10px 8px;
+    padding-right: 30px;
+    min-height: 42px;
   }
   
   .bufferCellLoading,
@@ -3534,5 +4007,514 @@
     width: 28px;
     height: 28px;
     font-size: 18px;
+  }
+}
+/* ===== СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ПЕРЕРАСПРЕДЕЛЕНИЯ ===== */
+
+.redistributeModalContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Контейнер для распределений */
+.distributionsContainer {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.distributionsContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.distributionsContainer::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.distributionsContainer::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.distributionsContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Строка распределения */
+.distributionRow {
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.distributionRow:last-child {
+  margin-bottom: 0;
+}
+
+/* Заголовок распределения */
+.distributionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #e1e8ed;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Кнопка удаления распределения */
+.removeDistributionButton {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+}
+
+.removeDistributionButton:hover {
+  background: linear-gradient(135deg, #ec7063, #e74c3c);
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(231, 76, 60, 0.4);
+}
+
+.removeDistributionButton:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px rgba(231, 76, 60, 0.3);
+}
+
+.removeDistributionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Поля распределения */
+.distributionFields {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Кнопка добавления распределения */
+.addDistributionButton {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 8px rgba(23, 162, 184, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  align-self: flex-start;
+}
+
+.addDistributionButton:hover {
+  background: linear-gradient(135deg, #20c0db, #17a2b8);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 12px rgba(23, 162, 184, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.addDistributionButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 6px rgba(23, 162, 184, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.addDistributionButton:disabled {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для радио кнопок */
+.formGroup label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.formGroup input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Адаптивные стили для модального окна перераспределения */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .redistributeModalContent {
+    max-width: 620px;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+  }
+  
+  .distributionsContainer {
+    max-height: 280px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .redistributeModalContent {
+    width: 85%;
+    max-width: 560px;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 14px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 14px;
+  }
+  
+  .distributionFields {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .distributionsContainer {
+    max-height: 240px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 13px;
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+  
+  .addDistributionButton {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .redistributeModalContent {
+    width: 90%;
+    max-width: 520px;
+    max-height: 95vh;
+  }
+  
+  .modalHeader {
+    padding: 10px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 13px;
+  }
+  
+  .modalCloseButton {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+  
+  .modalBody {
+    padding: 10px;
+  }
+  
+  .distributionHeader {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .distributionFields {
+    padding: 6px;
+    gap: 6px;
+  }
+  
+  .distributionsContainer {
+    max-height: 180px;
+  }
+  
+  .formGroup {
+    margin-bottom: 8px;
+  }
+  
+  .formGroup label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 13px;
+    padding: 6px 8px;
+    min-height: 34px;
+  }
+  
+  .palletInfo {
+    padding: 6px 8px;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  
+  .removeDistributionButton {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+  }
+  
+  .addDistributionButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+  
+  .modalFooter {
+    padding: 8px 14px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .redistributeModalContent {
+    width: 90%;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+  }
+  
+  .distributionsContainer {
+    max-height: 260px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .redistributeModalContent {
+    width: 95%;
+    max-width: none;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 16px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+    overflow-y: auto;
+  }
+  
+  .distributionFields {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .distributionsContainer {
+    max-height: 230px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 15px;
+    padding: 12px;
+    min-height: 44px;
+  }
+  
+  .modalFooter {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  
+  .addDistributionButton {
+    width: 100%;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .redistributeModalContent {
+    width: 98%;
+    margin: 5px;
+    max-height: 95vh;
+  }
+  
+  .modalHeader {
+    padding: 12px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 14px;
+  }
+  
+  .modalCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .modalBody {
+    padding: 12px;
+  }
+  
+  .distributionHeader {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  .distributionFields {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .distributionsContainer {
+    max-height: 180px;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+  }
+  
+  .formGroup {
+    margin-bottom: 10px;
+  }
+  
+  .formGroup label {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 15px;
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+  
+  .removeDistributionButton {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+  
+  .modalFooter {
+    padding: 12px 14px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+  
+  .addDistributionButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
   }
 }

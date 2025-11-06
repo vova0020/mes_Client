@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import styles from './PalletsSidebar.module.css';
-import { ProductionPallet, PartDistribution } from '../../../api/machinNoSmenApi/productionPalletsService';
+import styles from './MachinePalletsSidebar.module.css';
+import { ProductionPallet } from '../../../api/machineApi/machinProductionPalletsService';
+import { PartDistribution } from '../../../api/machineApi/machineApi';
 
 interface RedistributeModalProps {
   isOpen: boolean;
   onClose: () => void;
   pallet: ProductionPallet;
   existingPallets: ProductionPallet[];
-  onRedistribute: (distributions: PartDistribution[]) => Promise<void>;
+  onRedistribute: (distributions: PartDistribution[], machineId?: number) => Promise<void>;
   isProcessing: boolean;
 }
 
@@ -93,6 +94,20 @@ const RedistributeModal: React.FC<RedistributeModalProps> = ({
     return null;
   };
 
+  // Получаем machineId из localStorage
+  const getMachineIdFromStorage = (): number | undefined => {
+    try {
+      const assignmentsData = localStorage.getItem('assignments');
+      if (!assignmentsData) return undefined;
+      
+      const data = JSON.parse(assignmentsData);
+      return data.machines?.[0]?.id;
+    } catch (error) {
+      console.error('Ошибка при получении machineId из localStorage:', error);
+      return undefined;
+    }
+  };
+
   // Обработка отправки
   const handleSubmit = async () => {
     const validationError = validate();
@@ -110,7 +125,7 @@ const RedistributeModal: React.FC<RedistributeModalProps> = ({
         palletName: d.isNewPallet ? d.palletName : undefined
       }));
 
-      await onRedistribute(apiDistributions);
+      await onRedistribute(apiDistributions, getMachineIdFromStorage());
       onClose();
     } catch (error) {
       setErrorMessage('Ошибка при перераспределении деталей');

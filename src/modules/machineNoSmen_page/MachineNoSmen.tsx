@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
-import DetailsTable from './components/DetailsTable/NoSmenDetailsTable';
+import DetailsTable from './components/NoSmenDetailsTable/NoSmenDetailsTable';
 import { 
   LoadingSpinner, 
   ErrorStatus, 

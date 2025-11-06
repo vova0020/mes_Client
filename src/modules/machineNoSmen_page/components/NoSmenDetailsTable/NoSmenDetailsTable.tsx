@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styles from './DetailsTable.module.css';
+import styles from './NoSmenDetailsTable.module.css';
 import useDetails from '../../../hooks/machinNoSmenHook/useDetails';
-import PalletsSidebar from '../PalletsSidebar/NoSmenPalletsSidebar';
+import PalletsSidebar from '../NoSmenPalletsSidebar/NoSmenPalletsSidebar';
 import DetailForm from '../../../detail-form/DetailForm';
 
 interface DetailsTableProps {

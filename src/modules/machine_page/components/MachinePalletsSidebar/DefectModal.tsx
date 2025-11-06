@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import styles from './PalletsSidebar.module.css';
+import styles from './MachinePalletsSidebar.module.css';
 import { DefectPalletPartsDto } from '../../../api/machineApi/machineApi';
 
 interface DefectModalProps {

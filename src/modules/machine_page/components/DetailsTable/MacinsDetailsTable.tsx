@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import styles from './MacinsDetailsTable.module.css';
 import { useDetails } from '../../../hooks/machinhook/useDetails';
-import PalletsSidebar from '../PalletsSidebar/MacinsPalletsSidebar';
+import PalletsSidebar from '../MachinePalletsSidebar/MachinePalletsSidebar';
 import DetailForm from '../../../detail-form/DetailForm';
 
 const DetailsTable: React.FC = () => {

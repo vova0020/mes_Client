@@ -1,0 +1,3857 @@
+
+/* Основной контейнер боковой панели с градиентным фоном и тенями */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -50%; /* Начальное положение за пределами экрана (50% ширины) */
+  width: 50%; /* Ровно половина экрана */
+  height: 100vh;
+  background: linear-gradient(135deg, #374051, #2a303c); /* Более глубокий градиент */
+  box-shadow: 
+    -8px 0 30px rgba(0, 0, 0, 0.5), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-left: 1px solid #1e2a3a;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); /* Плавная анимация с эффектом */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0; /* Начинаем с прозрачности */
+  transform: translateX(20px); /* Небольшой сдвиг для анимации */
+}
+
+.sidebar.open {
+  right: 20px; /* Отступ справа */
+  top: 20px; /* Отступ сверху */
+  width: calc(60% - 40px); /* Половина экрана минус отступы с обеих сторон */
+  height: calc(100vh - 40px); /* Отступ снизу */
+  border-radius: 12px; /* Закругленные углы */
+  opacity: 1;
+  transform: translateX(0);
+  box-shadow: 
+    -8px 0 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1000px rgba(0, 0, 0, 0.5); /* Затемнение фона */
+}
+
+/* Заголовок панели - обновленный стиль */
+.sidebarHeader {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #374051, #2a303c);
+  border-radius: 12px 12px 0 0; /* Закругление только верхних углов */
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.headerTop h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1.2px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.closeButton:hover {
+  color: #3498db;
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.detailInfo {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.detailProperty {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(52, 152, 219, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-left: 2px solid #3498db;
+  animation: fadeIn 0.3s forwards;
+}
+
+.propertyLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 6px;
+}
+
+.propertyValue {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  background: rgba(52, 152, 219, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Анимация появления для элементов заголовка */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detailProperty:nth-child(1) { animation-delay: 0.05s; }
+.detailProperty:nth-child(2) { animation-delay: 0.1s; }
+.detailProperty:nth-child(3) { animation-delay: 0.15s; }
+.detailProperty:nth-child(4) { animation-delay: 0.2s; }
+
+/* Добавляем иконки для свойств */
+.detailProperty svg {
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+/* Основное содержимое панели */
+.sidebarContent {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2); /* Слегка затемненный фон */
+  
+  /* Стилизация полосы прокрутки для WebKit */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  
+  /* Для Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.1);
+}
+
+/* Контейнер для таблицы поддонов - светлый выпуклый блок */
+.tableContainer {
+  width: 100%;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
+  border-radius: 10px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(224, 224, 224, 0.8);
+  overflow: hidden; /* Скрываем переполнение */
+  margin-bottom: 20px; /* Добавляем отступ снизу */
+  
+  /* Стилизация полосы прокрутки */
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
+  
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.05);
+}
+
+/* Обертка для горизонтальной прокрутки */
+.tableScrollContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Стили для таблицы */
+.palletsTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+
+/* Стили для заголовков таблицы */
+.palletsTable th {
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  color: #333;
+  font-weight: 600;
+  text-align: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Стили для ячеек таблицы */
+.palletsTable td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+  color: #333;
+  vertical-align: middle;
+}
+
+/* Специальные стили для ячейки с действиями */
+.palletsTable td.actionsCell {
+  padding: 6px 16px;
+}
+
+/* Стили для строк таблицы */
+.palletsTable tr {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  transition: all 0.2s ease;
+}
+
+/* Эффект при наведении на строку таблицы */
+.palletsTable tr:hover {
+  background: linear-gradient(to bottom, #f0f7ff, #e5f1ff);
+  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.1);
+}
+
+/* Выделение обрабатываемого поддона */
+.processingRow {
+  background: linear-gradient(to bottom, #e8f7ff, #d9f0ff) !important;
+  position: relative;
+  box-shadow: 
+    0 0 0 1px rgba(52, 152, 219, 0.3),
+    inset 0 0 8px rgba(52, 152, 219, 0.1);
+}
+
+.processingRow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #3498db;
+  animation: pulseHighlight 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseHighlight {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Последняя строка таблицы без нижней границы */
+.palletsTable tr:last-child td {
+  border-bottom: none;
+}
+
+/* Стили для кнопок действий */
+.actionsCell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  padding: 6px 0;
+}
+
+.actionButton {
+  min-width: 32px;
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.actionButton:hover::before {
+  opacity: 1;
+}
+
+.actionButton:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Стили для задисейбленной кнопки */
+.actionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.actionButton:disabled:hover::before {
+  opacity: 0;
+}
+
+.actionButton:disabled:active {
+  transform: none;
+}
+
+/* Стили для кнопки МЛ */
+.mlButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border-left: 3px solid #1c6ea4;
+}
+
+.mlButton:hover {
+  background: linear-gradient(to bottom, #3caae8, #3498db);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.mlButton:active {
+  background: linear-gradient(to bottom, #2980b9, #3498db);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для кнопки обновления данных поддона */
+.refreshButton {
+  background: linear-gradient(to bottom, #7f8c8d, #636e72);
+  color: white;
+  border-left: 3px solid #535c5f;
+}
+
+.refreshButton:hover {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.refreshButton:active {
+  background: linear-gradient(to bottom, #636e72, #7f8c8d);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для кнопки В работе */
+.inProgressButton {
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+  color: white;
+  border-left: 3px solid #d35400;
+}
+
+.inProgressButton:hover {
+  background: linear-gradient(to bottom, #f5b041, #f39c12);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.inProgressButton:active {
+  background: linear-gradient(to bottom, #e67e22, #f39c12);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для кнопки Готово */
+.completedButton {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: white;
+  border-left: 3px solid #219653;
+}
+
+.completedButton:hover {
+  background: linear-gradient(to bottom, #40d47e, #2ecc71);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.completedButton:active {
+  background: linear-gradient(to bottom, #27ae60, #2ecc71);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для кнопки Частично */
+.partialButton {
+  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+  color: white;
+  border-left: 3px solid #7d3c98;
+}
+
+.partialButton:hover {
+  background: linear-gradient(to bottom, #a66bbe, #9b59b6);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.partialButton:active {
+  background: linear-gradient(to bottom, #8e44ad, #9b59b6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для выпадающего списка станков */
+.machineSelect {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  appearance: none; /* Убираем стандартный вид */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+}
+
+.machineSelect:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.machineSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+  background-image: none;
+}
+
+/* Стили для выпадающего списка ячеек буфера */
+.bufferCellSelect {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  appearance: none; /* Убираем стандартный вид */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+}
+
+.bufferCellSelect:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.bufferCellSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+  background-image: none;
+}
+
+/* Стили для состояний загрузки и ошибки ячеек буфера */
+.bufferCellLoading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #f8f8f8, #f0f0f0);
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  color: #666;
+  font-size: 13px;
+  min-height: 40px;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.bufferCellError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #fff0f0, #ffebeb);
+  border: 1px solid #ffcdd2;
+  color: #d32f2f;
+  font-size: 13px;
+  min-height: 40px;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.miniSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.miniRetryButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #d32f2f;
+  padding: 4px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.miniRetryButton:hover {
+  background-color: rgba(211, 47, 47, 0.1);
+  transform: scale(1.1);
+}
+
+.miniRetryButton:active {
+  transform: scale(0.95);
+}
+
+.bufferCellEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #f5f5f5, #ebebeb);
+  border: 1px dashed #ccc;
+  color: #999;
+  font-size: 13px;
+  font-style: italic;
+  min-height: 40px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Анимация появления строк */
+.animatedRow {
+  opacity: 0;
+  transform: translateY(10px);
+  animation-duration: 0.4s;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.showDetails .animatedRow {
+  animation-name: fadeInUp;
+}
+
+.hideDetails .animatedRow {
+  animation-name: fadeOutDown;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+}
+
+/* Анимация перехода для отображения всей таблицы */
+.showDetails {
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.hideDetails {
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Общий контейнер для состояний загрузки, ошибки и пустого списка */
+.stateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+  height: 100%;
+  min-height: 200px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 10px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Стили для состояния загрузки */
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(52, 152, 219, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingMessage {
+  text-align: center;
+}
+
+.loadingMessage h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.loadingMessage p {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+/* Стили для состояния ошибки */
+.errorIcon {
+  color: #e74c3c;
+  font-size: 40px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.15));
+}
+
+.errorMessage {
+  text-align: center;
+}
+
+.errorMessage h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.errorMessage p {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 20px 0;
+}
+
+.retryButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.retryButton:hover {
+  background: linear-gradient(to bottom, #3ea2e5, #3498db);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.retryButton:active {
+  background: linear-gradient(to bottom, #2980b9, #2573a7);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+/* Стили для пустого списка */
+.emptyIcon {
+  color: #bdc3c7;
+  font-size: 40px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.1));
+}
+
+.emptyMessage {
+  text-align: center;
+}
+
+.emptyMessage h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.emptyMessage p {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+/* Стили для компонента статуса операции */
+.operationStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.processStep {
+  font-size: 10px;
+  color: #666;
+  font-style: italic;
+}
+
+.noOperation {
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+  display: block;
+  padding: 4px 0;
+}
+
+
+/* Стили для различных статусов операций */
+
+/* Статус 'Задание прошло предыдущий этап но еще не обрабатывалось' */
+.statusPassedPreviousStage {
+  background: linear-gradient(to bottom, #e1b035, #b9b629);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #9fa41c;
+}
+/* Статус 'Задание на станке но еще не обрабатывалось' */
+.statusOnMachine {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #1c6ea4;
+}
+
+/* Статус 'Станок приступил к обработке' */
+.statusInProgress {
+  background: linear-gradient(to bottom, #f1c40f, #f39c12);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #d35400;
+  animation: pulse 1.5s infinite;
+}
+
+/* Статус 'Задание выполнено' */
+.statusCompleted {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #219653;
+}
+
+/* Статус 'частично выполнено' */
+.statusPartiallyCompleted {
+  background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #7d3c98;
+}
+
+/* Статус 'Поддон перемещен в буфер' */
+.statusBuffered {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #5d6d7e;
+}
+
+/* Статус 'Ошибка' */
+.statusFailed {
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #922b21;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+
+/* Кнопка обновления данных поддона */
+.refreshButton {
+  background: linear-gradient(to bottom, #7f8c8d, #636e72);
+  color: white;
+  border-left: 3px solid #535c5f;
+}
+
+.refreshButton:hover {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.refreshButton:active {
+  background: linear-gradient(to bottom, #636e72, #7f8c8d);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Пульсирующая анимация для индикаторов статуса */
+@keyframes statusPulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+.statusInProgress {
+  animation: statusPulse 2s infinite;
+}
+
+/* Дополнительные стили для статуса операции */
+.operationStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.processStep {
+  font-size: 11px;
+  color: #555;
+  padding: 2px 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Улучшенный стиль для пустой операции */
+.noOperation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  border-radius: 12px;
+  border-left: 2px solid #ccc;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Медиа-запросы для адаптивного дизайна */
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
+  .sidebar.open {
+    width: calc(60% - 40px);
+  }
+  
+  .palletsTable {
+    font-size: 13px;
+  }
+  
+  .palletsTable th {
+    padding: 12px 16px;
+  }
+  
+  .palletsTable td {
+    padding: 10px 16px;
+  }
+  
+  .actionButton {
+    min-width: 36px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  
+  .statusBadge {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  
+  .processStep {
+    font-size: 11px;
+  }
+  
+  .noOperation {
+    font-size: 12px;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .sidebar.open {
+    width: calc(60% - 40px);
+  }
+  
+  .palletsTable {
+    font-size: 12px;
+  }
+  
+  .palletsTable th {
+    padding: 10px 14px;
+  }
+  
+  .palletsTable td {
+    padding: 8px 14px;
+  }
+  
+  .actionButton {
+    padding: 0 10px;
+    min-width: 32px;
+    height: 30px;
+    font-size: 11px;
+  }
+  
+  .statusBadge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .processStep {
+    font-size: 10px;
+  }
+  
+  .noOperation {
+    font-size: 11px;
+  }
+}
+
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .sidebar.open {
+    width: calc(65% - 30px);
+    right: 15px;
+    top: 15px;
+    height: calc(100vh - 30px);
+  }
+  
+  .palletsTable {
+    font-size: 11px;
+  }
+  
+  .palletsTable th {
+    padding: 9px 12px;
+  }
+  
+  .palletsTable td {
+    padding: 7px 12px;
+  }
+  
+  .actionButton {
+    padding: 0 9px;
+    min-width: 30px;
+    height: 28px;
+    font-size: 10px;
+  }
+  
+  .statusBadge {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  
+  .processStep {
+    font-size: 9px;
+  }
+  
+  .noOperation {
+    font-size: 10px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .sidebar.open {
+    width: calc(70% - 30px);
+    right: 15px;
+    top: 15px;
+    height: calc(100vh - 30px);
+  }
+  
+  /* Стили для модального окна на планшетах */
+  .modalContent {
+    width: 85%;
+    max-width: 520px;
+    max-height: 80vh;
+  }
+  
+  .modalHeader {
+    padding: 12px 16px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 14px;
+  }
+  
+  .modalBody {
+    padding: 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .formGroup {
+    margin-bottom: 12px;
+  }
+  
+  .formGroup label {
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 13px;
+    padding: 8px 10px;
+    min-height: 36px;
+  }
+  
+  .formTextarea {
+    min-height: 60px;
+  }
+  
+  .palletInfo {
+    padding: 8px 10px;
+    font-size: 11px;
+    margin-bottom: 12px;
+  }
+  
+  .modalFooter {
+    padding: 10px 16px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 8px 14px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+  
+  .palletsTable {
+    font-size: 10px;
+  }
+  
+  .palletsTable th {
+    padding: 8px 10px;
+  }
+  
+  .palletsTable td {
+    padding: 6px 10px;
+  }
+  
+  .actionsCell {
+    gap: 5px;
+  }
+  
+  .actionButton {
+    padding: 0 8px;
+    min-width: 28px;
+    height: 26px;
+    font-size: 9px;
+  }
+  
+  .statusBadge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+  
+  .processStep {
+    font-size: 8px;
+  }
+  
+  .noOperation {
+    font-size: 9px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+  
+  .sidebarContent {
+    padding: 12px;
+  }
+  
+  .detailInfo {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+}
+
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .sidebar.open {
+    width: calc(75% - 20px);
+    right: 10px;
+    top: 10px;
+    height: calc(100vh - 20px);
+  }
+  
+  /* Стили для модального окна на телефонах в горизонтальной ориентации */
+  .modalContent {
+    width: 90%;
+    max-width: 480px;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 10px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 13px;
+  }
+  
+  .modalCloseButton {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+  
+  .modalBody {
+    padding: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .formGroup {
+    margin-bottom: 10px;
+  }
+  
+  .formGroup label {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 12px;
+    padding: 7px 9px;
+    min-height: 32px;
+  }
+  
+  .formTextarea {
+    min-height: 50px;
+  }
+  
+  .palletInfo {
+    padding: 6px 8px;
+    font-size: 10px;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+  
+  .modalFooter {
+    padding: 8px 14px;
+    gap: 6px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 7px 12px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+  
+  .palletsTable {
+    font-size: 9px;
+  }
+  
+  .palletsTable th {
+    padding: 6px 8px;
+  }
+  
+  .palletsTable td {
+    padding: 5px 8px;
+  }
+  
+  .actionsCell {
+    gap: 4px;
+  }
+  
+  .actionButton {
+    padding: 0 6px;
+    min-width: 26px;
+    height: 24px;
+    font-size: 8px;
+  }
+  
+  .statusBadge {
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+  
+  .processStep {
+    font-size: 7px;
+  }
+  
+  .noOperation {
+    font-size: 8px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+  
+  .sidebarContent {
+    padding: 10px;
+  }
+  
+  .detailInfo {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  
+  .detailProperty {
+    padding: 3px 8px;
+  }
+  
+  .propertyLabel {
+    font-size: 9px;
+  }
+  
+  .propertyValue {
+    font-size: 10px;
+  }
+}
+
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .sidebar.open {
+    width: calc(85% - 20px);
+    right: 10px;
+    top: 10px;
+    height: calc(100vh - 20px);
+  }
+  
+  /* Стили для модального окна на планшетах в вертикальной ориентации */
+  .modalContent {
+    width: 90%;
+    max-height: 80vh;
+  }
+  
+  .modalHeader {
+    padding: 14px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .formGroup {
+    margin-bottom: 14px;
+  }
+  
+  .formGroup label {
+    font-size: 13px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 14px;
+    padding: 10px 12px;
+    min-height: 42px;
+  }
+  
+  .formTextarea {
+    min-height: 70px;
+  }
+  
+  .palletInfo {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .modalFooter {
+    padding: 14px 18px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 10px 18px;
+    font-size: 14px;
+    min-height: 42px;
+  }
+  
+  .palletsTable {
+    font-size: 11px;
+  }
+  
+  .palletsTable th {
+    padding: 9px 12px;
+  }
+  
+  .palletsTable td {
+    padding: 7px 12px;
+  }
+  
+  .actionButton {
+    padding: 0 10px;
+    min-width: 32px;
+    height: 30px;
+    font-size: 11px;
+  }
+  
+  .statusBadge {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  
+  .processStep {
+    font-size: 9px;
+  }
+  
+  .noOperation {
+    font-size: 10px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  
+  .sidebarContent {
+    padding: 12px;
+  }
+  
+  .detailInfo {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+}
+
+
+
+/* Мобильные устройства */
+@media screen and (max-width: 576px) {
+  .sidebar.open {
+    width: calc(95% - 10px);
+    right: 5px;
+    top: 5px;
+    height: calc(100vh - 10px);
+  }
+  
+  /* Стили для модального окна на телефонах */
+  .modalContent {
+    width: 96%;
+    max-height: 90vh;
+  }
+  
+  .modalHeader {
+    padding: 12px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 14px;
+  }
+  
+  .modalCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .modalBody {
+    padding: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .formGroup {
+    margin-bottom: 12px;
+  }
+  
+  .formGroup label {
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 15px;
+    padding: 11px 13px;
+    min-height: 44px;
+  }
+  
+  .formTextarea {
+    min-height: 70px;
+  }
+  
+  .palletInfo {
+    padding: 9px 11px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .modalFooter {
+    padding: 12px 14px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 18px;
+  }
+  
+  .palletsTable {
+    font-size: 10px;
+  }
+  
+  .palletsTable th {
+    padding: 7px 6px;
+    font-size: 9px;
+  }
+  
+  .palletsTable td {
+    padding: 5px 6px;
+  }
+  
+  .actionsCell {
+    gap: 3px;
+    flex-wrap: wrap;
+  }
+  
+  .actionButton {
+    flex: 1 0 calc(50% - 3px);
+    padding: 0 5px;
+    height: 26px;
+    font-size: 9px;
+    min-width: 0;
+  }
+  
+  .statusBadge {
+    padding: 2px 5px;
+    font-size: 8px;
+    letter-spacing: 0.2px;
+  }
+  
+  .processStep {
+    font-size: 7px;
+    padding: 1px 4px;
+  }
+  
+  .noOperation {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 6px 8px;
+    font-size: 10px;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+  
+  .sidebarContent {
+    padding: 8px;
+  }
+  
+  .detailInfo {
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .detailProperty {
+    padding: 3px 6px;
+  }
+  
+  .propertyLabel {
+    font-size: 9px;
+  }
+  
+  .propertyValue {
+    font-size: 10px;
+  }
+}
+
+/* Стили для дизайна процесса обработки */
+.processingRow {
+  background: linear-gradient(to bottom, #e8f7ff, #d9f0ff) !important;
+  position: relative;
+  box-shadow: 
+    0 0 0 1px rgba(52, 152, 219, 0.3),
+    inset 0 0 8px rgba(52, 152, 219, 0.1);
+}
+
+.processingRow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #3498db;
+  animation: pulseHighlight 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseHighlight {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Стили для отключенных элементов управления */
+.actionButton:disabled, 
+.machineSelect:disabled, 
+.bufferCellSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  background-image: none;
+}
+
+/* Дополнительные подсказки для пользователя */
+.machineSelect:disabled::after,
+.bufferCellSelect:disabled::after {
+  display: block;
+  content: attr(title);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.machineSelect:disabled:hover::after,
+.bufferCellSelect:disabled:hover::after {
+  opacity: 1;
+}
+
+/* Стили для тултипов с пояснениями */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+  pointer-events: none;
+}
+
+/* Добавляем специальные стили для таблицы при пустых данных */
+.emptyContainer {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #f8f8f8, #eeeeee);
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  margin-top: 20px;
+}
+
+.emptyMessage {
+  text-align: center;
+  color: #888;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.emptyText {
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 400px;
+}
+
+/* Анимация подсветки обновленной строки */
+@keyframes highlightUpdate {
+  0%, 100% { background: linear-gradient(to bottom, #ffffff, #f9f9f9); }
+  50% { background: linear-gradient(to bottom, #ebf5fb, #d6eaf8); }
+}
+
+.updateHighlight {
+  animation: highlightUpdate 1.5s ease;
+}
+
+/* Стили для текстов состояний */
+.stateText {
+  color: #555;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.stateTitle {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+/* Дополнительные улучшения для доступности */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+  
+  .animatedRow {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+  
+  .processingRow::before {
+    animation: none;
+  }
+  
+  .statusInProgress {
+    animation: none;
+  }
+}
+
+/* Улучшенные стили для фокуса для доступности */
+.actionButton:focus, 
+.machineSelect:focus, 
+.bufferCellSelect:focus {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Хелперы для доступности */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ===== СТИЛИ ДЛЯ СОЗДАНИЯ ПОДДОНОВ ===== */
+
+/* Стиль для отображения нераспределенных деталей в заголовке */
+.unallocatedQuantity {
+  color: #e67e22 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    color: #e67e22;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  50% { 
+    color: #f39c12;
+    text-shadow: 0 0 8px rgba(243, 156, 18, 0.6);
+  }
+}
+
+/* Кнопка создания поддона в пустом состоянии */
+.createPalletButton {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 6px 20px rgba(46, 204, 113, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.createPalletButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.createPalletButton:hover {
+  background: linear-gradient(135deg, #58d68d, #2ecc71);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(46, 204, 113, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.createPalletButton:hover::before {
+  left: 100%;
+}
+
+.createPalletButton:active {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 
+    0 4px 15px rgba(46, 204, 113, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createPalletButton:disabled {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Секция создания поддона над таблицей */
+.createPalletSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #f1c40f;
+  border-radius: 10px;
+  box-shadow: 
+    0 4px 12px rgba(241, 196, 15, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.unallocatedInfo {
+  font-size: 14px;
+  color: #8b6914;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unallocatedInfo::before {
+  content: '⚠️';
+  font-size: 16px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+.unallocatedInfo strong {
+  color: #d68910;
+  font-size: 16px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Маленькая кнопка создания поддона */
+.createPalletButtonSmall {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 10px rgba(52, 152, 219, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.createPalletButtonSmall::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.4s;
+}
+
+.createPalletButtonSmall:hover {
+  background: linear-gradient(135deg, #5dade2, #3498db);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(52, 152, 219, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.createPalletButtonSmall:hover::before {
+  left: 100%;
+}
+
+.createPalletButtonSmall:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(52, 152, 219, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createPalletButtonSmall:disabled {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ПОДДОНА ===== */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeInOverlay 0.3s ease-out;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  max-height: 80dvh;
+  overflow: hidden;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  margin: 10px auto;
+  position: relative;
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #374051, #2a303c);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.modalCloseButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.modalCloseButton:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modalCloseButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modalBody {
+  padding: 28px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Стилизация полосы прокрутки для модального окна */
+.modalBody::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modalBody::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.modalBody::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.modalBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Для Firefox */
+.modalBody {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+}
+
+.formGroup {
+  margin-bottom: 24px;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.formInput {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2c3e50;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+}
+
+.formInput:disabled {
+  background: linear-gradient(145deg, #f5f6fa, #e9ecef);
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: #dee2e6;
+}
+
+.formInput::placeholder {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+/* Стили для сообщения об ошибке �� модальном окне */
+.modalBody .errorMessage {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #e53935;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 16px;
+  box-shadow: 
+    0 2px 8px rgba(229, 57, 53, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: shakeError 0.5s ease-in-out;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px;
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.cancelButton {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 10px rgba(127, 140, 141, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.cancelButton:hover {
+  background: linear-gradient(135deg, #a6b5b6, #95a5a6);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(127, 140, 141, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(127, 140, 141, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.createButton {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 10px rgba(46, 204, 113, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.createButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.createButton:hover {
+  background: linear-gradient(135deg, #58d68d, #2ecc71);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(46, 204, 113, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.createButton:hover::before {
+  left: 100%;
+}
+
+.createButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(46, 204, 113, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createButton:disabled {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ===== */
+
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .modalContent {
+    max-width: 500px;
+  }
+  
+  .modalHeader {
+    padding: 18px 22px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 18px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .modalContent {
+    width: 85%;
+    max-width: 460px;
+  }
+  
+  .modalHeader {
+    padding: 14px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+  }
+  
+  .modalFooter {
+    padding: 12px 18px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 14px;
+    padding: 10px 12px;
+    min-height: 40px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 10px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .modalContent {
+    width: 90%;
+    max-width: 440px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modalHeader {
+    padding: 10px 14px;
+    flex-shrink: 0;
+  }
+  
+  .modalHeader h3 {
+    font-size: 13px;
+  }
+  
+  .modalCloseButton {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+  
+  .modalBody {
+    padding: 12px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .modalFooter {
+    padding: 10px 14px;
+    gap: 6px;
+  }
+  
+  .formGroup {
+    margin-bottom: 12px;
+  }
+  
+  .formGroup label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 13px;
+    padding: 8px 10px;
+    min-height: 36px;
+  }
+  
+  .formTextarea {
+    min-height: 60px;
+  }
+  
+  .palletInfo {
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .modalContent {
+    width: 90%;
+    max-width: 480px;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 18px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 15px;
+    padding: 12px;
+    min-height: 44px;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .modalOverlay {
+    padding: 5px;
+  }
+  
+  .modalContent {
+    width: 100%;
+    margin: 5px auto;
+    border-radius: 12px;
+    max-height: 85vh;
+    max-height: 85dvh;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 18px;
+  }
+  
+  .modalFooter {
+    padding: 14px 20px;
+    flex-direction: column-reverse;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 15px;
+    min-height: 44px;
+  }
+  
+  .createPalletSection {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .createPalletButtonSmall {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 15px;
+    padding: 12px;
+    min-height: 44px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .modalOverlay {
+    padding: 2px;
+  }
+  
+  .modalContent {
+    width: 100%;
+    margin: 2px auto;
+    border-radius: 8px;
+    max-height: 90vh;
+    max-height: 90dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modalHeader {
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  
+  .modalHeader h3 {
+    font-size: 14px;
+  }
+  
+  .modalCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .modalBody {
+    padding: 14px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .modalFooter {
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  
+  .formGroup {
+    margin-bottom: 14px;
+  }
+  
+  .formGroup label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    padding: 12px 14px;
+    font-size: 15px;
+    min-height: 44px;
+  }
+  
+  .formTextarea {
+    min-height: 80px;
+  }
+  
+  .palletInfo {
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  
+  .createPalletButton {
+    padding: 14px 28px;
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  .cancelButton,
+  .createButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+}
+
+/* ===== УЛУЧШЕННЫЕ СТИЛИ ДЛЯ ПУСТОГО СОСТОЯНИЯ ===== */
+
+.emptyMessage {
+  text-align: center;
+  padding: 20px;
+}
+
+.emptyMessage h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.emptyMessage p {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.emptyMessage p:last-of-type {
+  margin-bottom: 0;
+}
+
+.emptyMessage strong {
+  color: #e67e22;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== АНИМАЦИИ ДЛЯ УЛУЧШЕНИЯ UX ===== */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Анимация для новых элементов */
+.createPalletSection,
+.createPalletButton,
+.createPalletButtonSmall {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* ===== СТИЛИ ДЛЯ ТЕМНОЙ ТЕМЫ (если потребуется) ===== */
+
+@media (prefers-color-scheme: dark) {
+  .modalContent {
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .modalBody {
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+  }
+  
+  .modalFooter {
+    background: linear-gradient(145deg, #34495e, #2c3e50);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .formGroup label {
+    color: #ecf0f1;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  }
+  
+  .formInput {
+    background: linear-gradient(145deg, #34495e, #2c3e50);
+    border-color: #4a5f7a;
+    color: #ecf0f1;
+    box-shadow: 
+      inset 0 2px 4px rgba(0, 0, 0, 0.3),
+      0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .formInput:focus {
+    border-color: #3498db;
+    background: #34495e;
+    box-shadow: 
+      inset 0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 0 3px rgba(52, 152, 219, 0.3),
+      0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .formInput::placeholder {
+    color: #7f8c8d;
+  }
+}
+
+/* ===== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ===== */
+
+/* Плавное появление модального окна */
+.modalOverlay.entering {
+  animation: fadeInOverlay 0.3s ease-out;
+}
+
+.modalOverlay.exiting {
+  animation: fadeOutOverlay 0.3s ease-in;
+}
+
+@keyframes fadeOutOverlay {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Улучшенные стили для валидации формы */
+.formInput.error {
+  border-color: #e74c3c;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 3px rgba(231, 76, 60, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.formInput.success {
+  border-color: #27ae60;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 3px rgba(39, 174, 96, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Стили для индикатора загрузки в кнопке */
+.createButton.loading::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+/* Улучшенная анимация для успешного создания */
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+  }
+}
+
+.createButton.success {
+  animation: successPulse 0.6s ease-out;
+}
+/* ===== СТИЛИ ДЛЯ РЕДАКТИРОВАНИЯ КОЛИЧЕСТВА ===== */
+
+/* Ячейка с количеством */
+.quantityCell {
+  position: relative;
+}
+
+/* Кнопка количества */
+.quantityButton {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.quantityButton:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.quantityButton:active {
+  background: rgba(52, 152, 219, 0.2);
+}
+
+/* Меню действий с количеством */
+.quantityMenu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeInOverlay 0.3s ease-out;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Контент меню количества */
+.quantityMenuContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  max-height: 80dvh;
+  overflow: hidden;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: 10px auto;
+  position: relative;
+}
+
+.quantityMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #374051, #2a303c);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quantityMenuHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.quantityMenuCloseButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.quantityMenuCloseButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.quantityMenuBody {
+  padding: 24px;
+}
+
+/* Кнопки в меню количества */
+.quantityMenuButton {
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.quantityMenuButton:last-child {
+  margin-bottom: 0;
+}
+
+.quantityMenuButton:hover {
+  background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+  color: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.quantityMenuButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптивные стили для меню количества */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .quantityMenuContent {
+    max-width: 420px;
+  }
+  
+  .quantityMenuButton {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .quantityMenuContent {
+    width: 85%;
+    max-width: 380px;
+  }
+  
+  .quantityMenuHeader {
+    padding: 14px 18px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 15px;
+  }
+  
+  .quantityMenuBody {
+    padding: 16px;
+  }
+  
+  .quantityMenuButton {
+    padding: 14px 16px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+}
+
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .quantityMenuContent {
+    width: 90%;
+    max-width: 360px;
+  }
+  
+  .quantityMenuHeader {
+    padding: 12px 16px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 14px;
+  }
+  
+  .quantityMenuBody {
+    padding: 14px;
+  }
+  
+  .quantityMenuButton {
+    padding: 12px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .quantityMenuContent {
+    width: 90%;
+    max-width: 400px;
+  }
+  
+  .quantityMenuButton {
+    padding: 16px 18px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .quantityMenu {
+    padding: 5px;
+  }
+  
+  .quantityMenuContent {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100vh - 10px);
+  }
+  
+  .quantityMenuHeader {
+    padding: 16px 18px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 15px;
+  }
+  
+  .quantityMenuBody {
+    padding: 16px;
+  }
+  
+  .quantityMenuButton {
+    padding: 16px 18px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .quantityMenu {
+    padding: 2px;
+  }
+  
+  .quantityMenuContent {
+    width: 100%;
+    margin: 0;
+    max-height: calc(100vh - 4px);
+  }
+  
+  .quantityMenuHeader {
+    padding: 14px 16px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 14px;
+  }
+  
+  .quantityMenuCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .quantityMenuBody {
+    padding: 14px;
+  }
+  
+  .quantityMenuButton {
+    padding: 16px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+}
+
+/* Информация о поддоне в модальных окнах */
+.palletInfo {
+  display: flex;
+  gap: 20px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #e8f4fd, #d1ecf1);
+  border: 1px solid #bee5eb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #0c5460;
+}
+
+.palletInfo strong {
+  color: #0a4c57;
+  font-weight: 600;
+}
+
+/* Textarea для описания брака */
+.formTextarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2c3e50;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.formTextarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+}
+
+.formTextarea:disabled {
+  background: linear-gradient(145deg, #f5f6fa, #e9ecef);
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: #dee2e6;
+}
+
+.formTextarea::placeholder {
+  color: #95a5a6;
+  font-style: italic;
+}
+/* ===== СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ПЕРЕРАСПРЕДЕЛЕНИЯ ===== */
+
+.redistributeModalContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  max-height: 80dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: 10px auto;
+  position: relative;
+}
+
+/* Контейнер для распределений */
+.distributionsContainer {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.distributionsContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.distributionsContainer::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.distributionsContainer::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.distributionsContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Строка распределения */
+.distributionRow {
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.distributionRow:last-child {
+  margin-bottom: 0;
+}
+
+/* Заголовок распределения */
+.distributionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #e1e8ed;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Кнопка удаления распределения */
+.removeDistributionButton {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+}
+
+.removeDistributionButton:hover {
+  background: linear-gradient(135deg, #ec7063, #e74c3c);
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(231, 76, 60, 0.4);
+}
+
+.removeDistributionButton:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px rgba(231, 76, 60, 0.3);
+}
+
+.removeDistributionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Поля распределения */
+.distributionFields {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Кнопка добавления распределения */
+.addDistributionButton {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 3px 8px rgba(23, 162, 184, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  align-self: flex-start;
+}
+
+.addDistributionButton:hover {
+  background: linear-gradient(135deg, #20c0db, #17a2b8);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 12px rgba(23, 162, 184, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.addDistributionButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 6px rgba(23, 162, 184, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.addDistributionButton:disabled {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для радио кнопок */
+.formGroup label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.formGroup input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+/* Адаптивные стили для модального окна перераспределения */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .redistributeModalContent {
+    max-width: 620px;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+  }
+  
+  .distributionsContainer {
+    max-height: 280px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .redistributeModalContent {
+    width: 85%;
+    max-width: 560px;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 14px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 14px;
+  }
+  
+  .distributionFields {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .distributionsContainer {
+    max-height: 240px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 13px;
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+  
+  .addDistributionButton {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .redistributeModalContent {
+    width: 90%;
+    max-width: 520px;
+    max-height: 95vh;
+  }
+  
+  .modalHeader {
+    padding: 10px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 13px;
+  }
+  
+  .modalCloseButton {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+  
+  .modalBody {
+    padding: 10px;
+  }
+  
+  .distributionHeader {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .distributionFields {
+    padding: 6px;
+    gap: 6px;
+  }
+  
+  .distributionsContainer {
+    max-height: 180px;
+  }
+  
+  .formGroup {
+    margin-bottom: 8px;
+  }
+  
+  .formGroup label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 13px;
+    padding: 6px 8px;
+    min-height: 34px;
+  }
+  
+  .palletInfo {
+    padding: 6px 8px;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  
+  .removeDistributionButton {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+  }
+  
+  .addDistributionButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+  
+  .modalFooter {
+    padding: 8px 14px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .redistributeModalContent {
+    width: 90%;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+  }
+  
+  .distributionsContainer {
+    max-height: 260px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .modalOverlay {
+    padding: 5px;
+  }
+  
+  .redistributeModalContent {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100vh - 10px);
+  }
+  
+  .modalHeader {
+    padding: 16px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+    overflow-y: auto;
+  }
+  
+  .distributionFields {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .distributionsContainer {
+    max-height: 230px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 15px;
+    padding: 12px;
+    min-height: 44px;
+  }
+  
+  .modalFooter {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  
+  .addDistributionButton {
+    width: 100%;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .modalOverlay {
+    padding: 2px;
+  }
+  
+  .redistributeModalContent {
+    width: 100%;
+    margin: 0;
+    max-height: calc(100vh - 4px);
+  }
+  
+  .modalHeader {
+    padding: 12px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 14px;
+  }
+  
+  .modalCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .modalBody {
+    padding: 12px;
+  }
+  
+  .distributionHeader {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  .distributionFields {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .distributionsContainer {
+    max-height: 180px;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+  }
+  
+  .formGroup {
+    margin-bottom: 10px;
+  }
+  
+  .formGroup label {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 15px;
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+  
+  .removeDistributionButton {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+  
+  .modalFooter {
+    padding: 12px 14px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+  
+  .addDistributionButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+}
+
+
+/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ ПЛАНШЕТОВ И ТЕЛЕФОНОВ ===== */
+
+@media screen and (max-width: 1024px) {
+  .bufferCellSelect, .machineSelect {
+    font-size: 14px;
+    padding: 12px 10px;
+    padding-right: 32px;
+    min-height: 44px;
+  }
+  
+  .bufferCellLoading,
+  .bufferCellError {
+    font-size: 12px;
+    padding: 8px;
+    min-height: 36px;
+  }
+  
+  .bufferCellLoading span,
+  .bufferCellError span {
+    font-size: 11px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .bufferCellSelect, .machineSelect {
+    font-size: 16px;
+    padding: 14px 10px;
+    padding-right: 36px;
+    min-height: 48px;
+    border: 2px solid rgba(221, 221, 221, 0.8);
+  }
+  
+  .bufferCellLoading,
+  .bufferCellError {
+    font-size: 13px;
+    padding: 10px;
+    min-height: 40px;
+  }
+  
+  .modalContent,
+  .quantityMenuContent {
+    width: 95%;
+    max-width: none;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  .modalHeader h3,
+  .quantityMenuHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody,
+  .quantityMenuBody {
+    padding: 20px;
+  }
+  
+  .formInput,
+  .formTextarea,
+  select.formInput {
+    font-size: 16px;
+    padding: 14px;
+    min-height: 48px;
+    border: 2px solid #e1e8ed;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .modalFooter {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  .quantityMenuButton {
+    padding: 18px 20px;
+    font-size: 17px;
+    min-height: 52px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .bufferCellSelect, .machineSelect {
+    font-size: 16px;
+    padding: 14px 10px;
+    padding-right: 36px;
+    min-height: 48px;
+  }
+  
+  .bufferCellLoading,
+  .bufferCellError {
+    font-size: 14px;
+    padding: 12px;
+    min-height: 44px;
+  }
+  
+  .modalContent,
+  .quantityMenuContent {
+    width: 98%;
+    max-width: none;
+    margin: 5px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modalHeader,
+  .quantityMenuHeader {
+    padding: 14px 16px;
+    flex-shrink: 0;
+  }
+  
+  .modalCloseButton,
+  .quantityMenuCloseButton {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+  }
+  
+  .modalBody,
+  .quantityMenuBody {
+    padding: 16px;
+    overflow-y: auto;
+  }
+  
+  .modalFooter {
+    padding: 16px;
+    flex-shrink: 0;
+  }
+  
+  .formGroup {
+    margin-bottom: 16px;
+  }
+  
+  .formGroup label {
+    font-size: 15px;
+  }
+  
+  .formInput,
+  .formTextarea,
+  select.formInput {
+    font-size: 16px;
+    padding: 14px 16px;
+    min-height: 48px;
+  }
+  
+  .distributionRow {
+    margin-bottom: 12px;
+  }
+  
+  .distributionHeader {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .distributionFields {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .removeDistributionButton {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+}

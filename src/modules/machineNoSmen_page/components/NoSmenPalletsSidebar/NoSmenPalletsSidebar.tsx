@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styles from './PalletsSidebar.module.css';
+import styles from './NoSmenPalletsSidebar.module.css';
 import useProductionPallets from '../../../hooks/machinNoSmenHook/productionPallets';
 import { 
   ProductionPallet, 
@@ -478,8 +478,22 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     }
   };
 
+  // Получаем machineId из localStorage (как у мастера)
+  const getMachineIdFromStorage = (): number | undefined => {
+    try {
+      const assignmentsData = localStorage.getItem('assignments');
+      if (!assignmentsData) return undefined;
+      
+      const data = JSON.parse(assignmentsData);
+      return data.machines?.[0]?.id;
+    } catch (error) {
+      console.error('Ошибка при получении machineId из localStorage:', error);
+      return undefined;
+    }
+  };
+
   // Обработчик перераспределения деталей
-  const handleRedistributeParts = async (distributions: PartDistribution[]) => {
+  const handleRedistributeParts = async (distributions: PartDistribution[], machineId?: number) => {
     if (!redistributePalletId) return;
 
     try {
