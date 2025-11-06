@@ -5,6 +5,7 @@ import OrdersTable from './components/OrdersTable/OrdersTable';
 import DetailsTable from './components/DetailsTable/MasterDetailsTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
 import PackagingModal from './components/PackagingModal/PackagingModal';
+import RotateScreen from '../../componentsGlobal/RotateScreen/RotateScreen';
 import useOrders from '../hooks/masterPage/useOrdersMaster';
 import { useStageListener } from '../../componentsGlobal/Navbar/useStageListener';
 
@@ -13,7 +14,7 @@ import styles from './MasterPage.module.css';
 const MasterPage: React.FC = () => {
   // Состояние для отслеживания выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  
+
   // Состояние для модального окна с упаковками
   const [isPackagingModalOpen, setIsPackagingModalOpen] = useState(false);
   const [packagingOrderId, setPackagingOrderId] = useState<number | null>(null);
@@ -45,10 +46,10 @@ const MasterPage: React.FC = () => {
   const handleViewOrderComposition = (orderId: number) => {
     // Находим заказ по ID для получения его названия
     const order = orders.find(o => o.id === orderId);
-    const orderDisplayName = order 
+    const orderDisplayName = order
       ? `${order.batchNumber} - ${order.orderName || 'Без названия'}`
       : `Заказ ${orderId}`;
-    
+
     setPackagingOrderId(orderId);
     setPackagingOrderName(orderDisplayName);
     setIsPackagingModalOpen(true);
@@ -62,65 +63,68 @@ const MasterPage: React.FC = () => {
   };
 
   return (
-    <div className={styles.mesPage}>
-      {/* Боковая панель */}
-      <div className={styles.Sidebar_Block}>
-        <Sidebar />
-      </div>
-      
-      {/* Основной блок контента (прижат к правому краю) */}
-      <div className={styles.Content_Block}>
-        {/* Шапка */}
-        <div className={styles.headerBlock}>
-          <Header />
+    <>
+      <RotateScreen />
+      <div className={styles.mesPage}>
+        {/* Боковая панель */}
+        <div className={styles.Sidebar_Block}>
+          <Sidebar />
         </div>
 
-        {/* Основной контейнер с контентом */}
-        <div className={styles.mainContainer}>
-          {/* Верхний ряд с двумя секциями */}
-          <div className={styles.topRow}>
-            {/* Секция с таблицей заказов */}
-            <div className={styles.ordersSection}>
-              <OrdersTable 
-                orders={orders}
-                loading={loading}
-                error={error}
-                fetchOrders={fetchOrders}
-                onOrderSelect={handleOrderSelect}
-                onViewOrderComposition={handleViewOrderComposition}
-                onViewOrderConsumption={(orderId) => {
-                  console.log('Просмотр расхода для заказа:', orderId);
-                  // Здесь можно добавить логику для просмотра расхода
-                }}
-              />
-            </div>
-            
-            {/* Секция с карточками станков */}
-            <div className={styles.machinesSection}>
-              <MachinesCards onDataUpdate={fetchOrders} />
-            </div>
+        {/* Основной блок контента (прижат к правому краю) */}
+        <div className={styles.Content_Block}>
+          {/* Шапка */}
+          <div className={styles.headerBlock}>
+            <Header />
           </div>
-          
-          {/* Нижний ряд с таблицей деталей на всю ширину */}
-          <div className={styles.bottomRow}>
-            <div className={styles.detailsSection}>
-              <DetailsTable 
-                selectedOrderId={selectedOrderId} 
-                onDataUpdate={fetchOrders}
-              />
+
+          {/* Основной контейнер с контентом */}
+          <div className={styles.mainContainer}>
+            {/* Верхний ряд с двумя секциями */}
+            <div className={styles.topRow}>
+              {/* Секция с таблицей заказов */}
+              <div className={styles.ordersSection}>
+                <OrdersTable
+                  orders={orders}
+                  loading={loading}
+                  error={error}
+                  fetchOrders={fetchOrders}
+                  onOrderSelect={handleOrderSelect}
+                  onViewOrderComposition={handleViewOrderComposition}
+                  onViewOrderConsumption={(orderId) => {
+                    console.log('Просмотр расхода для заказа:', orderId);
+                    // Здесь можно добавить логику для просмотра расхода
+                  }}
+                />
+              </div>
+
+              {/* Секция с карточками станков */}
+              <div className={styles.machinesSection}>
+                <MachinesCards onDataUpdate={fetchOrders} />
+              </div>
+            </div>
+
+            {/* Нижний ряд с таблицей деталей на всю ширину */}
+            <div className={styles.bottomRow}>
+              <div className={styles.detailsSection}>
+                <DetailsTable
+                  selectedOrderId={selectedOrderId}
+                  onDataUpdate={fetchOrders}
+                />
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Модальное окно с упаковками */}
+        <PackagingModal
+          isOpen={isPackagingModalOpen}
+          onClose={handleClosePackagingModal}
+          orderId={packagingOrderId}
+          orderName={packagingOrderName}
+        />
       </div>
-      
-      {/* Модальное окно с упаковками */}
-      <PackagingModal
-        isOpen={isPackagingModalOpen}
-        onClose={handleClosePackagingModal}
-        orderId={packagingOrderId}
-        orderName={packagingOrderName}
-      />
-    </div>
+    </>
   );
 };
 

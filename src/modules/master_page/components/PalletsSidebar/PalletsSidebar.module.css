@@ -233,7 +233,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* Стили для заголовков таблицы */
@@ -242,7 +242,7 @@
   color: #333;
   font-weight: 600;
   text-align: center;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid #ddd;
   position: sticky;
   top: 0;
@@ -252,7 +252,7 @@
 
 /* Стили для ячеек таблицы */
 .palletsTable td {
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-bottom: 1px solid rgba(224, 224, 224, 0.5);
   color: #333;
   vertical-align: middle;
@@ -308,19 +308,19 @@
 /* Стили для кнопок действий */
 .actionsCell {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: nowrap;
   justify-content: flex-start;
   padding: 6px 0;
 }
 
 .actionButton {
-  min-width: 36px;
-  height: 32px;
-  padding: 0 12px;
+  min-width: 32px;
+  height: 30px;
+  padding: 0 10px;
   border: none;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -819,8 +819,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 3px 8px;
+  font-size: 11px;
   font-weight: 600;
   border-radius: 12px;
   text-transform: uppercase;
@@ -829,13 +829,13 @@
 }
 
 .processStep {
-  font-size: 11px;
+  font-size: 10px;
   color: #666;
   font-style: italic;
 }
 
 .noOperation {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
   font-style: italic;
   display: block;
@@ -977,15 +977,69 @@
 }
 
 /* Медиа-запросы для адаптивного дизайна */
-@media screen and (max-width: 1200px) {
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
   .sidebar.open {
-    width: calc(60% - 40px); /* Немного шире для средних экранов */
+    width: calc(60% - 40px);
+  }
+  
+  .palletsTable {
+    font-size: 13px;
+  }
+  
+  .palletsTable th {
+    padding: 12px 16px;
+  }
+  
+  .palletsTable td {
+    padding: 10px 16px;
+  }
+  
+  .actionButton {
+    min-width: 36px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  
+  .statusBadge {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  
+  .processStep {
+    font-size: 11px;
+  }
+  
+  .noOperation {
+    font-size: 12px;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .sidebar.open {
+    width: calc(60% - 40px);
+  }
+  
+  .palletsTable {
+    font-size: 12px;
+  }
+  
+  .palletsTable th {
+    padding: 10px 14px;
+  }
+  
+  .palletsTable td {
+    padding: 8px 14px;
   }
   
   .actionButton {
     padding: 0 10px;
     min-width: 32px;
     height: 30px;
+    font-size: 11px;
   }
   
   .statusBadge {
@@ -996,9 +1050,61 @@
   .processStep {
     font-size: 10px;
   }
+  
+  .noOperation {
+    font-size: 11px;
+  }
 }
 
-@media screen and (max-width: 992px) {
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .sidebar.open {
+    width: calc(65% - 30px);
+    right: 15px;
+    top: 15px;
+    height: calc(100vh - 30px);
+  }
+  
+  .palletsTable {
+    font-size: 11px;
+  }
+  
+  .palletsTable th {
+    padding: 9px 12px;
+  }
+  
+  .palletsTable td {
+    padding: 7px 12px;
+  }
+  
+  .actionButton {
+    padding: 0 9px;
+    min-width: 30px;
+    height: 28px;
+    font-size: 10px;
+  }
+  
+  .statusBadge {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  
+  .processStep {
+    font-size: 9px;
+  }
+  
+  .noOperation {
+    font-size: 10px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .sidebar.open {
     width: calc(70% - 30px);
     right: 15px;
@@ -1006,122 +1112,188 @@
     height: calc(100vh - 30px);
   }
   
+  .palletsTable {
+    font-size: 10px;
+  }
+  
+  .palletsTable th {
+    padding: 8px 10px;
+  }
+  
+  .palletsTable td {
+    padding: 6px 10px;
+  }
+  
   .actionsCell {
-    flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
   }
   
   .actionButton {
-    flex: 1 0 calc(50% - 6px);
     padding: 0 8px;
-    min-width: 0;
-    height: 28px;
-    font-size: 11px;
+    min-width: 28px;
+    height: 26px;
+    font-size: 9px;
   }
   
-  .sidebarContent {
-    padding: 15px;
+  .statusBadge {
+    font-size: 9px;
+    padding: 2px 6px;
   }
   
-  .detailInfo {
-    padding: 12px 15px;
-    gap: 10px;
+  .processStep {
+    font-size: 8px;
   }
   
-  .detailProperty {
-    padding: 5px 10px;
+  .noOperation {
+    font-size: 9px;
   }
   
   .bufferCellSelect, .machineSelect {
-    padding: 8px 10px;
-    font-size: 12px;
-    background-position: right 10px center;
-    padding-right: 28px;
+    padding: 7px 9px;
+    font-size: 10px;
   }
   
-  .palletsTable th, .palletsTable td {
+  .sidebarContent {
+    padding: 12px;
+  }
+  
+  .detailInfo {
     padding: 10px 12px;
-  }
-  
-  .operationStatus {
-    gap: 2px;
+    gap: 8px;
   }
 }
 
-@media screen and (max-width: 768px) {
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
   .sidebar.open {
-    width: calc(80% - 20px);
+    width: calc(75% - 20px);
     right: 10px;
     top: 10px;
     height: calc(100vh - 20px);
   }
   
-  .actionButton {
-    flex: 1 0 calc(50% - 4px);
-    padding: 0 6px;
-    height: 26px;
-    font-size: 10px;
+  .palletsTable {
+    font-size: 9px;
+  }
+  
+  .palletsTable th {
+    padding: 6px 8px;
+  }
+  
+  .palletsTable td {
+    padding: 5px 8px;
   }
   
   .actionsCell {
     gap: 4px;
   }
   
+  .actionButton {
+    padding: 0 6px;
+    min-width: 26px;
+    height: 24px;
+    font-size: 8px;
+  }
+  
+  .statusBadge {
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+  
+  .processStep {
+    font-size: 7px;
+  }
+  
+  .noOperation {
+    font-size: 8px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+  
+  .sidebarContent {
+    padding: 10px;
+  }
+  
+  .detailInfo {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  
+  .detailProperty {
+    padding: 3px 8px;
+  }
+  
+  .propertyLabel {
+    font-size: 9px;
+  }
+  
+  .propertyValue {
+    font-size: 10px;
+  }
+}
+
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .sidebar.open {
+    width: calc(85% - 20px);
+    right: 10px;
+    top: 10px;
+    height: calc(100vh - 20px);
+  }
+  
+  .palletsTable {
+    font-size: 11px;
+  }
+  
+  .palletsTable th {
+    padding: 9px 12px;
+  }
+  
+  .palletsTable td {
+    padding: 7px 12px;
+  }
+  
+  .actionButton {
+    padding: 0 10px;
+    min-width: 32px;
+    height: 30px;
+    font-size: 11px;
+  }
+  
+  .statusBadge {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  
+  .processStep {
+    font-size: 9px;
+  }
+  
+  .noOperation {
+    font-size: 10px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  
   .sidebarContent {
     padding: 12px;
   }
   
   .detailInfo {
-    padding: 12px;
+    padding: 10px 12px;
     gap: 8px;
-  }
-  
-  .detailProperty {
-    padding: 4px 10px;
-    border-radius: 16px;
-  }
-  
-  .propertyLabel {
-    font-size: 11px;
-  }
-  
-  .propertyValue {
-    font-size: 12px;
-  }
-  
-  .badge {
-    font-size: 10px;
-    padding: 1px 6px;
-  }
-  
-  .palletsTable {
-    font-size: 12px;
-  }
-  
-  .palletsTable th {
-    padding: 10px 8px;
-  }
-  
-  .palletsTable td {
-    padding: 8px;
-  }
-  
-  .statusBadge {
-    font-size: 10px;
-    padding: 2px 6px;
-  }
-  
-  .processStep {
-    font-size: 9px;
-    padding: 1px 6px;
-  }
-  
-  .noOperation {
-    padding: 2px 8px;
-    font-size: 10px;
   }
 }
 
+
+
+/* Мобильные устройства */
 @media screen and (max-width: 576px) {
   .sidebar.open {
     width: calc(95% - 10px);
@@ -1131,77 +1303,73 @@
   }
   
   .palletsTable {
-    font-size: 11px;
-  }
-  
-  .palletsTable th {
-    padding: 8px 6px;
     font-size: 10px;
   }
   
-  .palletsTable td {
-    padding: 6px;
+  .palletsTable th {
+    padding: 7px 6px;
+    font-size: 9px;
   }
   
-  .actionButton {
-    flex: 1 0 calc(50% - 2px);
-    padding: 0 4px;
-    height: 24px;
-    font-size: 9px;
+  .palletsTable td {
+    padding: 5px 6px;
   }
   
   .actionsCell {
-    gap: 2px;
+    gap: 3px;
+    flex-wrap: wrap;
   }
   
-  .sidebarContent {
-    padding: 10px;
-  }
-  
-  .bufferCellSelect, .machineSelect {
-    padding: 6px 8px;
-    font-size: 11px;
-    background-position: right 8px center;
-    padding-right: 24px;
+  .actionButton {
+    flex: 1 0 calc(50% - 3px);
+    padding: 0 5px;
+    height: 26px;
+    font-size: 9px;
+    min-width: 0;
   }
   
   .statusBadge {
-    padding: 2px 4px;
-    font-size: 9px;
+    padding: 2px 5px;
+    font-size: 8px;
     letter-spacing: 0.2px;
   }
   
   .processStep {
-    font-size: 8px;
+    font-size: 7px;
     padding: 1px 4px;
   }
   
   .noOperation {
-    padding: 2px 6px;
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 6px 8px;
+    font-size: 10px;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+  
+  .sidebarContent {
+    padding: 8px;
+  }
+  
+  .detailInfo {
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .detailProperty {
+    padding: 3px 6px;
+  }
+  
+  .propertyLabel {
     font-size: 9px;
   }
   
-  /* Оптимизация для маленьких экранов - скрываем некоторые колонки */
-  .palletsTable th:nth-child(5),
-  .palletsTable td:nth-child(5) {
-    display: none; /* Скрываем колонку со статусом на маленьких экранах */
-  }
-  
-  /* Добавляем индикатор статуса к имени поддона */
-  .palletsTable tr[data-status="IN_PROGRESS"] td:first-child::after {
-    content: ' 🔄';
-  }
-  
-  .palletsTable tr[data-status="BUFFERED"] td:first-child::after {
-    content: ' 🔵';
-  }
-  
-  .palletsTable tr[data-status="COMPLETED"] td:first-child::after {
-    content: ' ✅';
-  }
-  
-  .palletsTable tr[data-status="FAILED"] td:first-child::after {
-    content: ' ❌';
+  .propertyValue {
+    font-size: 10px;
   }
 }
 
@@ -1631,6 +1799,8 @@
   max-height: 90vh;
   overflow: hidden;
   animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideInModal {
@@ -1649,9 +1819,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 24px 28px;
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: linear-gradient(135deg, #374051, #2a303c);
   color: white;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 .modalHeader h3 {
@@ -1697,6 +1868,8 @@
 .modalBody {
   padding: 28px;
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  overflow-y: auto;
+  flex: 1;
 }
 
 .formGroup {
@@ -1782,6 +1955,7 @@
   background: linear-gradient(145deg, #f8f9fa, #e9ecef);
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .cancelButton {
@@ -1884,7 +2058,163 @@
 
 /* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ===== */
 
-@media screen and (max-width: 768px) {
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .modalContent {
+    max-width: 500px;
+  }
+  
+  .modalHeader {
+    padding: 18px 22px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 18px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .modalContent {
+    width: 85%;
+    max-width: 460px;
+  }
+  
+  .modalHeader {
+    padding: 14px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+  }
+  
+  .modalFooter {
+    padding: 12px 18px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 14px;
+    padding: 10px 12px;
+    min-height: 40px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 10px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .modalContent {
+    width: 90%;
+    max-width: 440px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modalHeader {
+    padding: 10px 14px;
+    flex-shrink: 0;
+  }
+  
+  .modalHeader h3 {
+    font-size: 13px;
+  }
+  
+  .modalCloseButton {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+  
+  .modalBody {
+    padding: 12px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .modalFooter {
+    padding: 10px 14px;
+    gap: 6px;
+  }
+  
+  .formGroup {
+    margin-bottom: 12px;
+  }
+  
+  .formGroup label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 13px;
+    padding: 8px 10px;
+    min-height: 36px;
+  }
+  
+  .formTextarea {
+    min-height: 60px;
+  }
+  
+  .palletInfo {
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .modalContent {
+    width: 90%;
+    max-width: 480px;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 18px;
+  }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 15px;
+    padding: 12px;
+    min-height: 44px;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
   .modalContent {
     width: 95%;
     margin: 20px;
@@ -1892,27 +2222,28 @@
   }
   
   .modalHeader {
-    padding: 20px 24px;
+    padding: 16px 20px;
   }
   
   .modalHeader h3 {
-    font-size: 18px;
+    font-size: 16px;
   }
   
   .modalBody {
-    padding: 24px;
+    padding: 18px;
   }
   
   .modalFooter {
-    padding: 16px 24px;
+    padding: 14px 20px;
     flex-direction: column-reverse;
   }
   
   .cancelButton,
   .createButton {
     width: 100%;
-    padding: 14px 24px;
-    font-size: 16px;
+    padding: 12px 20px;
+    font-size: 15px;
+    min-height: 44px;
   }
   
   .createPalletSection {
@@ -1926,40 +2257,88 @@
     padding: 12px 16px;
     font-size: 14px;
   }
+  
+  .formInput,
+  .formTextarea {
+    font-size: 15px;
+    padding: 12px;
+    min-height: 44px;
+  }
 }
 
 @media screen and (max-width: 576px) {
   .modalContent {
     width: 98%;
-    margin: 10px;
+    margin: 5px;
     border-radius: 8px;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
   }
   
   .modalHeader {
-    padding: 16px 20px;
+    padding: 12px 16px;
+    flex-shrink: 0;
   }
   
   .modalHeader h3 {
-    font-size: 16px;
+    font-size: 14px;
+  }
+  
+  .modalCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
   }
   
   .modalBody {
-    padding: 20px;
+    padding: 14px;
+    overflow-y: auto;
+    flex: 1;
   }
   
   .modalFooter {
-    padding: 16px 20px;
+    padding: 12px 16px;
+    flex-shrink: 0;
   }
   
-  .formInput {
+  .formGroup {
+    margin-bottom: 14px;
+  }
+  
+  .formGroup label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  
+  .formInput,
+  .formTextarea {
     padding: 12px 14px;
-    font-size: 16px; /* Предотвращает зум на iOS */
+    font-size: 15px;
+    min-height: 44px;
+  }
+  
+  .formTextarea {
+    min-height: 80px;
+  }
+  
+  .palletInfo {
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
   }
   
   .createPalletButton {
-    padding: 16px 32px;
-    font-size: 18px;
+    padding: 14px 28px;
+    font-size: 16px;
     width: 100%;
+  }
+  
+  .cancelButton,
+  .createButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
   }
 }
 
@@ -2209,14 +2588,12 @@
   animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-
-
 .quantityMenuHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: linear-gradient(135deg, #374051, #2a303c);
   color: white;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -2283,6 +2660,137 @@
 .quantityMenuButton:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптивные стили для меню количества */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .quantityMenuContent {
+    max-width: 420px;
+  }
+  
+  .quantityMenuButton {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .quantityMenuContent {
+    width: 85%;
+    max-width: 380px;
+  }
+  
+  .quantityMenuHeader {
+    padding: 14px 18px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 15px;
+  }
+  
+  .quantityMenuBody {
+    padding: 16px;
+  }
+  
+  .quantityMenuButton {
+    padding: 14px 16px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+}
+
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .quantityMenuContent {
+    width: 90%;
+    max-width: 360px;
+  }
+  
+  .quantityMenuHeader {
+    padding: 12px 16px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 14px;
+  }
+  
+  .quantityMenuBody {
+    padding: 14px;
+  }
+  
+  .quantityMenuButton {
+    padding: 12px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .quantityMenuContent {
+    width: 90%;
+    max-width: 400px;
+  }
+  
+  .quantityMenuButton {
+    padding: 16px 18px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .quantityMenuContent {
+    width: 95%;
+    max-width: none;
+  }
+  
+  .quantityMenuHeader {
+    padding: 16px 18px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 15px;
+  }
+  
+  .quantityMenuBody {
+    padding: 16px;
+  }
+  
+  .quantityMenuButton {
+    padding: 16px 18px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .quantityMenuContent {
+    width: 98%;
+    margin: 5px;
+  }
+  
+  .quantityMenuHeader {
+    padding: 14px 16px;
+  }
+  
+  .quantityMenuHeader h3 {
+    font-size: 14px;
+  }
+  
+  .quantityMenuCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .quantityMenuBody {
+    padding: 14px;
+  }
+  
+  .quantityMenuButton {
+    padding: 16px;
+    font-size: 15px;
+    min-height: 48px;
+  }
 }
 
 /* Информация о поддоне в модальных окнах */
@@ -2354,15 +2862,18 @@
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
-  overflow: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Контейнер для распределений */
 .distributionsContainer {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
   margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .distributionsContainer::-webkit-scrollbar {
@@ -2509,26 +3020,504 @@
   cursor: pointer;
 }
 /* Адаптивные стили для модального окна перераспределения */
-@media screen and (max-width: 768px) {
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .redistributeModalContent {
-    width: 95%;
-    max-width: none;
+    max-width: 620px;
+    max-height: 85vh;
   }
   
-  .distributionFields {
-    padding: 12px;
-    gap: 12px;
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 16px;
   }
   
   .distributionsContainer {
-    max-height: 300px;
+    max-height: 280px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .redistributeModalContent {
+    width: 85%;
+    max-width: 560px;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 14px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 14px;
+  }
+  
+  .distributionFields {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .distributionsContainer {
+    max-height: 240px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 13px;
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+  
+  .addDistributionButton {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .redistributeModalContent {
+    width: 90%;
+    max-width: 520px;
+    max-height: 95vh;
+  }
+  
+  .modalHeader {
+    padding: 10px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 13px;
+  }
+  
+  .modalCloseButton {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+  
+  .modalBody {
+    padding: 10px;
+  }
+  
+  .distributionHeader {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .distributionFields {
+    padding: 6px;
+    gap: 6px;
+  }
+  
+  .distributionsContainer {
+    max-height: 180px;
+  }
+  
+  .formGroup {
+    margin-bottom: 8px;
+  }
+  
+  .formGroup label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 13px;
+    padding: 6px 8px;
+    min-height: 34px;
+  }
+  
+  .palletInfo {
+    padding: 6px 8px;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  
+  .removeDistributionButton {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+  }
+  
+  .addDistributionButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+  
+  .modalFooter {
+    padding: 8px 14px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .redistributeModalContent {
+    width: 90%;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+  }
+  
+  .distributionsContainer {
+    max-height: 260px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .redistributeModalContent {
+    width: 95%;
+    max-width: none;
+    max-height: 85vh;
+  }
+  
+  .modalHeader {
+    padding: 16px 18px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 15px;
+  }
+  
+  .modalBody {
+    padding: 16px;
+    overflow-y: auto;
+  }
+  
+  .distributionFields {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .distributionsContainer {
+    max-height: 230px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 15px;
+    padding: 12px;
+    min-height: 44px;
+  }
+  
+  .modalFooter {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  
+  .addDistributionButton {
+    width: 100%;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 
 @media screen and (max-width: 576px) {
   .redistributeModalContent {
     width: 98%;
-    margin: 10px;
+    margin: 5px;
+    max-height: 95vh;
+  }
+  
+  .modalHeader {
+    padding: 12px 14px;
+  }
+  
+  .modalHeader h3 {
+    font-size: 14px;
+  }
+  
+  .modalCloseButton {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .modalBody {
+    padding: 12px;
+  }
+  
+  .distributionHeader {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  .distributionFields {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .distributionsContainer {
+    max-height: 180px;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+  }
+  
+  .formGroup {
+    margin-bottom: 10px;
+  }
+  
+  .formGroup label {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  
+  .formInput,
+  select.formInput {
+    font-size: 15px;
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+  
+  .removeDistributionButton {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+  
+  .modalFooter {
+    padding: 12px 14px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+  
+  .addDistributionButton {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+}
+
+
+/* ===== АДАПТИВНЫЕ СТИЛИ ДЛЯ ПЛАНШЕТОВ И ТЕЛЕФОНОВ ===== */
+
+@media screen and (max-width: 1024px) {
+  .bufferCellSelect, .machineSelect {
+    font-size: 14px;
+    padding: 12px 10px;
+    padding-right: 32px;
+    min-height: 44px;
+  }
+  
+  .bufferCellLoading,
+  .bufferCellError {
+    font-size: 12px;
+    padding: 8px;
+    min-height: 36px;
+  }
+  
+  .bufferCellLoading span,
+  .bufferCellError span {
+    font-size: 11px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .bufferCellSelect, .machineSelect {
+    font-size: 16px;
+    padding: 14px 10px;
+    padding-right: 36px;
+    min-height: 48px;
+    border: 2px solid rgba(221, 221, 221, 0.8);
+  }
+  
+  .bufferCellLoading,
+  .bufferCellError {
+    font-size: 13px;
+    padding: 10px;
+    min-height: 40px;
+  }
+  
+  .modalContent,
+  .quantityMenuContent {
+    width: 95%;
+    max-width: none;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  .modalHeader h3,
+  .quantityMenuHeader h3 {
+    font-size: 16px;
+  }
+  
+  .modalBody,
+  .quantityMenuBody {
+    padding: 20px;
+  }
+  
+  .formInput,
+  .formTextarea,
+  select.formInput {
+    font-size: 16px;
+    padding: 14px;
+    min-height: 48px;
+    border: 2px solid #e1e8ed;
+  }
+  
+  .palletInfo {
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .modalFooter {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .cancelButton,
+  .createButton {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  .quantityMenuButton {
+    padding: 18px 20px;
+    font-size: 17px;
+    min-height: 52px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .bufferCellSelect, .machineSelect {
+    font-size: 16px;
+    padding: 14px 10px;
+    padding-right: 36px;
+    min-height: 48px;
+  }
+  
+  .bufferCellLoading,
+  .bufferCellError {
+    font-size: 14px;
+    padding: 12px;
+    min-height: 44px;
+  }
+  
+  .modalContent,
+  .quantityMenuContent {
+    width: 98%;
+    max-width: none;
+    margin: 5px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modalHeader,
+  .quantityMenuHeader {
+    padding: 14px 16px;
+    flex-shrink: 0;
+  }
+  
+  .modalCloseButton,
+  .quantityMenuCloseButton {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+  }
+  
+  .modalBody,
+  .quantityMenuBody {
+    padding: 16px;
+    overflow-y: auto;
+  }
+  
+  .modalFooter {
+    padding: 16px;
+    flex-shrink: 0;
+  }
+  
+  .formGroup {
+    margin-bottom: 16px;
+  }
+  
+  .formGroup label {
+    font-size: 15px;
+  }
+  
+  .formInput,
+  .formTextarea,
+  select.formInput {
+    font-size: 16px;
+    padding: 14px 16px;
+    min-height: 48px;
+  }
+  
+  .distributionRow {
+    margin-bottom: 12px;
   }
   
   .distributionHeader {
@@ -2537,13 +3526,13 @@
   }
   
   .distributionFields {
-    padding: 10px;
-    gap: 10px;
+    padding: 12px;
+    gap: 12px;
   }
   
-  .palletInfo {
-    flex-direction: column;
-    gap: 8px;
-    font-size: 13px;
+  .removeDistributionButton {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
   }
 }

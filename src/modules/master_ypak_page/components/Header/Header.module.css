@@ -163,7 +163,7 @@
 /* Планшеты 10-11 дюймов в горизонтальной ориентации */
 @media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .header {
-    height: 80px;
+    height: 100px;
     padding: 0 12px;
   }
   
@@ -195,7 +195,7 @@
 /* Планшеты меньше 10 дюймов в горизонтальной ориентации */
 @media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .header {
-    height: 70px;
+    height: 90px;
     padding: 0 10px;
   }
   
@@ -231,7 +231,7 @@
 /* Телефоны 6-7 дюймов в горизонтальной ориентации */
 @media screen and (max-width: 767px) and (orientation: landscape) {
   .header {
-    height: 60px;
+    height: 70px;
     padding: 0 8px;
   }
   

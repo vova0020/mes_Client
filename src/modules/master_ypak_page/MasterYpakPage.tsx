@@ -9,6 +9,7 @@ import useOrders from '../hooks/ypakMasterHook/useOrdersMaster';
 
 import styles from './MasterYpakPage.module.css';
 import PackagingModal from './PackagingModal';
+import RotateScreen from '../../componentsGlobal/RotateScreen/RotateScreen';
 
 const MasterYpakPage: React.FC = () => {
   // Состояние для отслеживания выбранного заказа
@@ -60,59 +61,63 @@ const MasterYpakPage: React.FC = () => {
   };
 
   return (
-    <div className={styles.mesPage}>
-      {/* Боковая панель */}
-      <div className={styles.Sidebar_Block}>
-        <Sidebar />
-      </div>
 
-      {/* Основной блок контента (прижат к правому краю) */}
-      <div className={styles.Content_Block}>
-        {/* Шапка */}
-        <div className={styles.headerBlock}>
-          <Header />
+    <>
+      <RotateScreen />
+      <div className={styles.mesPage}>
+        {/* Боковая панель */}
+        <div className={styles.Sidebar_Block}>
+          <Sidebar />
         </div>
 
-        {/* Основной контейнер с контентом */}
-        <div className={styles.mainContainer}>
-          {/* Верхний ряд с двумя секциями */}
-          <div className={styles.topRow}>
-            {/* Секция с таблицей заказов */}
-            <div className={styles.ordersSection}>
-              <OrdersTable
-                selectedOrderId={selectedOrderId}
-                onOrderSelect={handleOrderSelect}
-                onViewOrderComposition={handleViewOrderComposition}
-                onViewOrderConsumption={(orderId) => {
-                  console.log('Просмотр расхода для заказа:', orderId);
-                  // Здесь можно добавить логику для просмотра расхода
-                }}
-              />
-            </div>
-
-            {/* Секция с карточками станков */}
-            <div className={styles.machinesSection}>
-              <MachinesCards />
-            </div>
+        {/* Основной блок контента (прижат к правому краю) */}
+        <div className={styles.Content_Block}>
+          {/* Шапка */}
+          <div className={styles.headerBlock}>
+            <Header />
           </div>
 
-          {/* Нижний ряд с таблицей деталей на всю ширину */}
-          <div className={styles.bottomRow}>
-            <div className={styles.detailsSection}>
-              <DetailsYpakTable selectedOrderId={selectedOrderId} />
+          {/* Основной контейнер с контентом */}
+          <div className={styles.mainContainer}>
+            {/* Верхний ряд с двумя секциями */}
+            <div className={styles.topRow}>
+              {/* Секция с таблицей заказов */}
+              <div className={styles.ordersSection}>
+                <OrdersTable
+                  selectedOrderId={selectedOrderId}
+                  onOrderSelect={handleOrderSelect}
+                  onViewOrderComposition={handleViewOrderComposition}
+                  onViewOrderConsumption={(orderId) => {
+                    console.log('Просмотр расхода для заказа:', orderId);
+                    // Здесь можно добавить логику для просмотра расхода
+                  }}
+                />
+              </div>
+
+              {/* Секция с карточками станков */}
+              <div className={styles.machinesSection}>
+                <MachinesCards />
+              </div>
+            </div>
+
+            {/* Нижний ряд с таблицей деталей на всю ширину */}
+            <div className={styles.bottomRow}>
+              <div className={styles.detailsSection}>
+                <DetailsYpakTable selectedOrderId={selectedOrderId} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Модальное окно с упаковками */}
-      <PackagingModal
-        isOpen={isPackagingModalOpen}
-        onClose={handleClosePackagingModal}
-        orderId={packagingOrderId}
-        orderName={packagingOrderName}
-      />
-    </div>
+        {/* Модальное окно с упаковками */}
+        <PackagingModal
+          isOpen={isPackagingModalOpen}
+          onClose={handleClosePackagingModal}
+          orderId={packagingOrderId}
+          orderName={packagingOrderName}
+        />
+      </div>
+    </>
   );
 };
 

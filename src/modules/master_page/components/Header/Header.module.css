@@ -160,33 +160,25 @@
   transform: translateY(1px);
 }
 
-/* Планшеты и телефоны в горизонтальной ориентации */
-@media screen and (max-width: 1366px) and (orientation: landscape) {
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .header {
     height: 100px;
     padding: 0 12px;
   }
   
   .techStage {
-    font-size: 16px;
-  }
-  
-  .navButtons {
-    margin-top: 4px;
+    font-size: 18px;
   }
   
   .navButton {
-    padding: 6px 20px;
-    font-size: 13px;
+    padding: 6px 24px;
+    font-size: 14px;
     margin-right: 12px;
   }
   
   .logo {
-    width: 100px;
-  }
-  
-  .brandName {
-    font-size: 13px;
+    width: 120px;
   }
   
   .exitButton {
@@ -198,38 +190,31 @@
     width: 18px;
     height: 18px;
   }
-  
-  .rightContainer {
-    gap: 6px;
-  }
 }
 
-@media screen and (max-width: 1024px) and (max-height: 768px) and (orientation: landscape) {
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .header {
-    height: 80px;
+    height: 90px;
     padding: 0 10px;
   }
   
   .techStage {
-    font-size: 14px;
-  }
-  
-  .navButtons {
-    margin-top: 3px;
+    font-size: 16px;
   }
   
   .navButton {
-    padding: 5px 16px;
-    font-size: 12px;
+    padding: 5px 20px;
+    font-size: 13px;
     margin-right: 10px;
   }
   
   .logo {
-    width: 80px;
+    width: 100px;
   }
   
   .brandName {
-    font-size: 12px;
+    font-size: 14px;
   }
   
   .exitButton {
@@ -241,149 +226,27 @@
     width: 16px;
     height: 16px;
   }
-  
-  .rightContainer {
-    gap: 4px;
-  }
 }
 
-@media screen and (max-width: 900px) and (max-height: 450px) and (orientation: landscape) {
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
   .header {
     height: 70px;
     padding: 0 8px;
   }
   
   .techStage {
-    font-size: 13px;
-  }
-  
-  .navButtons {
-    margin-top: 2px;
-  }
-  
-  .navButton {
-    padding: 4px 14px;
-    font-size: 11px;
-    margin-right: 8px;
-  }
-  
-  .logo {
-    width: 70px;
-  }
-  
-  .brandName {
-    font-size: 11px;
-  }
-  
-  .exitButton {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .exitButton svg {
-    width: 14px;
-    height: 14px;
-  }
-  
-  .rightContainer {
-    gap: 3px;
-  }
-}
-
-/* Вертикальная ориентация планшетов */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  .header {
-    height: auto;
-    min-height: 80px;
-    padding: 10px;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .leftContainer {
-    width: 100%;
-    align-items: center;
-  }
-  
-  .techStage {
-    font-size: 16px;
-    text-align: center;
-  }
-  
-  .navButtons {
-    margin-top: 6px;
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .navButton {
-    padding: 8px 24px;
-    font-size: 13px;
-    margin-right: 10px;
-  }
-  
-  .logo {
-    width: 90px;
-  }
-  
-  .brandName {
-    font-size: 13px;
-  }
-  
-  .rightContainer {
-    width: 100%;
-    gap: 6px;
-  }
-  
-  .exitButton {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .exitButton svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-/* Мобильные устройства */
-@media screen and (max-width: 576px) {
-  .header {
-    height: auto;
-    padding: 8px;
-    flex-direction: column;
-  }
-  
-  .leftContainer {
-    width: 100%;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  
-  .techStage {
     font-size: 14px;
-    text-align: center;
   }
   
   .navButtons {
-    margin-top: 6px;
-    width: 100%;
-    flex-direction: column;
-    gap: 6px;
+    margin-top: 4px;
   }
   
   .navButton {
-    padding: 8px 16px;
-    font-size: 13px;
-    margin-right: 0;
-    width: 100%;
-    text-align: center;
-  }
-  
-  .rightContainer {
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
+    padding: 4px 16px;
+    font-size: 12px;
+    margin-right: 8px;
   }
   
   .logo {
@@ -395,12 +258,59 @@
   }
   
   .exitButton {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
   }
   
   .exitButton svg {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .header {
+    height: auto;
+    min-height: 70px;
+    padding: 10px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .leftContainer {
+    width: 100%;
+    align-items: center;
+  }
+  
+  .techStage {
+    font-size: 18px;
+    text-align: center;
+  }
+  
+  .navButtons {
+    margin-top: 6px;
+    justify-content: center;
+  }
+  
+  .navButton {
+    padding: 6px 24px;
+    font-size: 14px;
+    margin-right: 12px;
+  }
+  
+  .rightContainer {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .brandName {
+    font-size: 14px;
+  }
+  
+  .exitButton {
+    width: 36px;
+    height: 36px;
   }
 }
