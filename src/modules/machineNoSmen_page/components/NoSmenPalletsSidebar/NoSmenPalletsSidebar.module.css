@@ -1770,7 +1770,7 @@
   }
 }
 
-/* Стили для модал��ного окна */
+/* Стили для модального окна */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -1784,6 +1784,11 @@
   justify-content: center;
   z-index: 2000;
   animation: fadeInOverlay 0.3s ease-out;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px;
+  height: 100vh;
+  height: 100dvh;
 }
 
 @keyframes fadeInOverlay {
@@ -1805,8 +1810,13 @@
   width: 90%;
   max-width: 480px;
   max-height: 90vh;
+  max-height: 90dvh;
   overflow: hidden;
   animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  position: relative;
 }
 
 @keyframes slideInModal {
@@ -2420,22 +2430,22 @@
   transform: scale(0.95);
 }
 
-/* Стили для меню действий с количеством */
+/* Контент меню количества */
 .quantityMenuContent {
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.3),
+    0 20px 60px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(224, 224, 224, 0.8);
-  width: 280px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 400px;
   max-height: 90vh;
+  max-height: 90dvh;
   overflow: hidden;
-  animation: slideInModal 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: auto;
+  position: relative;
 }
 
 .quantityMenuHeader {
@@ -2595,8 +2605,13 @@
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
-  overflow: hidden;
+  max-height: 90dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: auto;
+  position: relative;
 }
 
 .distributionsContainer {
@@ -3219,10 +3234,17 @@
 
 /* Вертикальная ориентация для телефонов */
 @media screen and (max-width: 768px) and (orientation: portrait) {
+  .modalOverlay {
+    padding: 8px;
+    align-items: center;
+  }
+  
   .modalContent {
-    width: 95%;
-    margin: 20px;
+    width: calc(100% - 16px);
+    margin: auto;
     border-radius: 12px;
+    max-height: 92vh;
+    max-height: 92dvh;
   }
   
   .modalHeader {
@@ -3272,11 +3294,17 @@
 
 /* Мобильные устройства */
 @media screen and (max-width: 576px) {
+  .modalOverlay {
+    padding: 4px;
+    align-items: center;
+  }
+  
   .modalContent {
-    width: 98%;
-    margin: 5px;
+    width: calc(100% - 8px);
+    margin: auto;
     border-radius: 8px;
-    max-height: 95vh;
+    max-height: 94vh;
+    max-height: 94dvh;
     display: flex;
     flex-direction: column;
   }
@@ -3438,8 +3466,10 @@
 
 @media screen and (max-width: 768px) and (orientation: portrait) {
   .quantityMenuContent {
-    width: 95%;
+    width: calc(100% - 16px);
     max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
   }
   
   .quantityMenuHeader {
@@ -3463,8 +3493,10 @@
 
 @media screen and (max-width: 576px) {
   .quantityMenuContent {
-    width: 98%;
-    margin: 5px;
+    width: calc(100% - 8px);
+    margin: auto;
+    max-height: 94vh;
+    max-height: 94dvh;
   }
   
   .quantityMenuHeader {
