@@ -83,11 +83,11 @@ const StreamsSettingsContent: React.FC = () => {
           </h1>
           <p className={styles.pageSubtitle}>
             {tabs.find(tab => tab.id === activeTab)?.description}
-            {isWebSocketConnected && (
+            {/* {isWebSocketConnected && (
               <span className={styles.realtimeIndicator}>
                 • Обновления в реальном времени
               </span>
-            )}
+            )} */}
           </p>
         </div>
         <div className={styles.pageHeaderActions}>

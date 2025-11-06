@@ -14,7 +14,7 @@
 .pageHeader {
   background: white;
   border-bottom: 1px solid #e5e7eb;
-  padding: 2rem;
+  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -112,7 +112,7 @@
 }
 
 .buttonPrimary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2563eb;
   color: white;
 }
 

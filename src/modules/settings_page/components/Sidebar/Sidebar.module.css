@@ -1,247 +1,195 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Центрирование содержимого по горизонтали */
-  height: 100%; /* Занимает всю доступную высоту */
-  width: 100%; /* Занимает всю доступную ширину */
-  max-width: 100%; /* Не превышает ширину родителя */
-  background: linear-gradient(to bottom, #374051, #2d3441); /* Градиент для объемности */
-  color: white;
-  padding: 15px; /* Уменьшенный padding для компенсации padding родителя */
-  box-sizing: border-box;
-  
-  /* Закругленные углы */
-  border-radius: 12px;
-  
-  /* Эффект выпуклости с помощью теней */
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.3), /* Внешняя тень для объема */
-    inset 0 1px 0 rgba(255, 255, 255, 0.1), /* Внутренняя светлая тень сверху */
-    inset 0 -2px 0 rgba(0, 0, 0, 0.2); /* Внутренняя темная тень снизу */
-  
-  /* Тонкая граница для усиления эффекта */
-  border: 1px solid #243342;
-  
-  /* Добавляем overflow для предотвращения выхода за границы при маленьких размерах */
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Контейнер для содержимого сайдбара */
-.sidebarContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Центрирование содержимого по горизонтали */
-  flex: 1;
+  height: 100%;
   width: 100%;
-  max-width: 100%; /* Ограничиваем максимальную ширину */
-  min-height: min-content;
-  /* Добавляем отступы между элементами */
-  gap: 15px;
+  background: linear-gradient(to bottom, #374051, #2d3441);
+  color: white;
+  padding: 15px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid #243342;
+  overflow-y: auto;
+  overflow-x: visible;
 }
 
-.iconGroup {
+.menuContainer {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Центрирование содержимого по горизонтали */
-  /* Убираем margin, так как используем gap в родителе */
-  margin: 0;
-  width: 100%; /* Занимает всю доступную ширину */
-  max-width: 100%; /* Ограничиваем максимальную ширину */
-  padding: 8px 0; /* Уменьшенный padding */
-  /* Добавляем gap между иконками */
-  gap: 8px;
-  
-  /* Предотвращаем переполнение */
-  overflow: hidden;
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.iconButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(82, 186, 255, 0.5);
+  transform: translateX(3px);
+}
+
+.iconButton.active {
+  background: rgba(82, 186, 255, 0.2);
+  border-color: rgba(82, 186, 255, 0.8);
+  box-shadow: 0 0 15px rgba(82, 186, 255, 0.4);
 }
 
 .icon {
-  width: 74px; /* Фиксированный размер для больших экранов */
-  height: 60px;
-  cursor: pointer;
-  transition: transform 0.2s ease, filter 0.3s ease;
-  /* Убираем margin, так как используем gap в родителе */
-  margin: 0;
-  /* Предотвращаем переполнение */
-  max-width: 100%;
-  opacity: 0.7;
-}
-
-/* Стиль для активной иконки */
-.activeIcon {
-  transform: scale(1.1);
-  opacity: 1;
-  filter: drop-shadow(0 0 5px rgba(82, 186, 255, 0.8));
-}
-
-.icon:hover {
-  transform: scale(1.05); /* Небольшое увеличение при наведении */
-  opacity: 0.9;
-}
-
-.footerIcon {
-  margin-top: auto; /* Прижать к низу */
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Центрирование содержимого по горизонтали */
   width: 100%;
-  max-width: 100%; /* Ограничиваем максимальную ширину */
-  /* Добавляем gap между иконками */
-  gap: 18px;
-  /* Предотвращаем переполнение */
-  overflow: hidden;
+  height: 100%;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
 }
 
-/* Медиа-запросы для адапти��ного дизайна */
+.iconButton:hover .icon,
+.iconButton.active .icon {
+  opacity: 1;
+}
 
-/* Большие настольные экраны (более 1200px) */
+.tooltip {
+  position: fixed;
+  background: rgba(30, 30, 30, 0.95);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(82, 186, 255, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Медиа-запросы */
 @media screen and (min-width: 1201px) {
-  .sidebar {
-    padding: 15px;
-  }
-  
-  .sidebarContent {
-    gap: 15px;
-  }
-  
-  .icon {
-    width: 74px;
-    height: 60px;
+  .iconButton {
+    height: 70px;
   }
 }
 
-/* Средние настольные экраны (от 992px до 1200px) */
 @media screen and (min-width: 992px) and (max-width: 1200px) {
   .sidebar {
     padding: 12px;
   }
   
-  .sidebarContent {
-    gap: 12px;
+  .menuContainer {
+    gap: 10px;
   }
   
-  .icon {
-    width: 65px;
-    height: 52px;
+  .iconButton {
+    height: 60px;
   }
 }
 
-/* Планшеты (от 768px до 991px) */
 @media screen and (min-width: 768px) and (max-width: 991px) {
   .sidebar {
     padding: 10px;
     border-radius: 10px;
   }
   
-  .sidebarContent {
-    gap: 10px;
+  .menuContainer {
+    gap: 8px;
   }
   
-  .iconGroup {
-    padding: 6px 0;
-    gap: 6px;
+  .iconButton {
+    height: 55px;
   }
   
-  .icon {
-    width: 55px;
-    height: 44px;
-  }
-  
-  .footerIcon {
-    padding: 6px 0;
+  .tooltip {
+    font-size: 13px;
+    padding: 6px 10px;
   }
 }
 
-/* Малые планшеты и большие телефоны (от 576px до 767px) */
 @media screen and (min-width: 576px) and (max-width: 767px) {
   .sidebar {
     padding: 8px;
     border-radius: 8px;
   }
   
-  .sidebarContent {
-    gap: 8px;
+  .menuContainer {
+    gap: 6px;
   }
   
-  .iconGroup {
-    padding: 5px 0;
-    gap: 5px;
-    border-radius: 6px;
+  .iconButton {
+    height: 50px;
+    padding: 8px;
   }
   
-  .icon {
-    width: 45px;
-    height: 36px;
-  }
-  
-  .footerIcon {
-    padding: 5px 0;
-    border-radius: 6px;
+  .tooltip {
+    font-size: 12px;
+    padding: 5px 8px;
+    left: calc(100% + 10px);
   }
 }
 
-/* Мобильные телефоны (до 575px) */
 @media screen and (max-width: 575px) {
   .sidebar {
     padding: 6px;
     border-radius: 6px;
   }
   
-  .sidebarContent {
-    gap: 6px;
+  .menuContainer {
+    gap: 5px;
   }
   
-  .iconGroup {
-    padding: 4px 0;
-    gap: 4px;
-    border-radius: 5px;
+  .iconButton {
+    height: 45px;
+    padding: 6px;
   }
   
-  .icon {
-    width: 35px;
-    height: 28px;
-  }
-  
-  .footerIcon {
-    padding: 4px 0;
-    border-radius: 5px;
+  .tooltip {
+    font-size: 11px;
+    padding: 4px 6px;
+    left: calc(100% + 8px);
   }
 }
 
-/* Медиа-запрос для очень маленьких экранов */
 @media (max-height: 500px) {
   .sidebar {
     padding: 5px;
   }
   
-  .sidebarContent {
-    gap: 5px;
+  .menuContainer {
+    gap: 4px;
   }
   
-  .iconGroup {
-    padding: 3px 0;
-    gap: 3px;
+  .iconButton {
+    height: 40px;
+    padding: 5px;
   }
   
-  .icon {
-    width: 30px;
-    height: 24px;
-  }
-  
-  .footerIcon {
-    padding: 3px 0;
-  }
-}
-
-/* Медиа-запрос для узких экранов */
-@media (max-width: 300px) {
-  .sidebar {
-    padding: 4px;
-  }
-  
-  .icon {
-    width: 25px;
-    height: 20px;
+  .tooltip {
+    display: none;
   }
 }

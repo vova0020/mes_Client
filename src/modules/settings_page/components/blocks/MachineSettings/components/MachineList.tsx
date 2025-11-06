@@ -108,53 +108,29 @@ export const MachineList: React.FC<MachineListProps> = ({
 
   return (
     <div className={styles.machineListContainer}>
-      <div className={styles.listHeader}>
-        <div className={styles.searchContainer}>
+      <div className={styles.leftPanelHeader}>
+        <div className={styles.compactSearch}>
           <span className={styles.searchIcon}>🔍</span>
           <input
             type="text"
-            placeholder="Поиск по названию..."
+            placeholder="Поиск..."
             value={filter.search || ''}
             onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
-            className={styles.searchInput}
           />
         </div>
         
-        <div className={styles.resultsCount}>
-          Найдено: {filteredMachines.length} из {machines.length}
+        <div className={styles.compactStats}>
+          <span>🏭 {filteredMachines.length}/{machines.length}</span>
+          <span>🔗 {statistics?.machineStageConnections || 0}</span>
         </div>
         
-        {statistics && (
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>🏭</div>
-              <div className={styles.statInfo}>
-                <div className={styles.statValue}>{statistics.machines}</div>
-                <div className={styles.statLabel}>всего станков</div>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>🔗</div>
-              <div className={styles.statInfo}>
-                <div className={styles.statValue}>{statistics.machineStageConnections}</div>
-                <div className={styles.statLabel}>связей этапов</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Фильтры */}
-      <div className={styles.filtersContainer}>
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Фильтр по статусу:</label>
+        <div className={styles.compactFilter}>
           <select
             value={filter.status || ''}
             onChange={(e) => setFilter(prev => ({ 
               ...prev, 
               status: e.target.value as MachineStatus || undefined 
             }))}
-            className={styles.filterSelect}
           >
             <option value="">Все статусы</option>
             <option value={MachineStatus.ACTIVE}>Активен</option>

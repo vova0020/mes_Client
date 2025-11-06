@@ -260,15 +260,15 @@
 /* Machine Card */
 .machineCard {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin-bottom: 0.375rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -313,34 +313,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.375rem;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .machineName {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1f2937;
   margin: 0;
   word-break: break-word;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .machineStatus {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .statusDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: currentColor;
 }
@@ -366,8 +366,8 @@
 
 .machineDetails {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+  margin-bottom: 0.375rem;
   flex-wrap: wrap;
 }
 
@@ -375,68 +375,68 @@
 .stagesInfo {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.25rem;
   background: #f1f5f9;
-  padding: 0.375rem 0.75rem;
-  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
   border: 1px solid #e2e8f0;
 }
 
 .loadLabel,
 .stagesLabel {
   color: #64748b;
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   font-weight: 500;
 }
 
 .loadValue {
   font-weight: 700;
   color: #1f2937;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.1875rem;
 }
 
 .loadUnit {
   color: #6b7280;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 400;
 }
 
 .stagesCount {
   font-weight: 700;
   color: #1f2937;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 /* Stages Preview */
 .stagesPreview {
-  margin-top: 0.75rem;
+  margin-top: 0.375rem;
 }
 
 .previewLabel {
   display: block;
   color: #64748b;
-  font-size: 0.8rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.65rem;
+  margin-bottom: 0.25rem;
   font-weight: 500;
 }
 
 .stagesTags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
-  max-height: 3rem;
+  gap: 0.25rem;
+  max-height: 2.5rem;
   overflow: hidden;
 }
 
 .stageTag {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   color: #475569;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  padding: 0.1875rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
   font-weight: 500;
   border: 1px solid #e2e8f0;
   white-space: nowrap;
@@ -447,29 +447,29 @@
 
 /* Machine Features */
 .machineFeatures {
-  margin-top: 0.75rem;
+  margin-top: 0.375rem;
 }
 
 .featuresLabel {
   display: block;
   color: #64748b;
-  font-size: 0.8rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.65rem;
+  margin-bottom: 0.25rem;
   font-weight: 500;
 }
 
 .featuresTags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: 0.25rem;
 }
 
 .featureTag {
   background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
   color: #374151;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  padding: 0.1875rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
   font-weight: 500;
   border: 1px solid #d1d5db;
   white-space: nowrap;
@@ -484,27 +484,27 @@
 /* Actions */
 .machineActions {
   display: flex;
-  gap: 0.375rem;
+  gap: 0.25rem;
   align-items: center;
   justify-content: flex-end;
-  margin-top: 0.5rem;
-  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  padding-top: 0.375rem;
   border-top: 1px solid #f1f5f9;
 }
 
 .actionButton {
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.125rem;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .editButton {
@@ -533,100 +533,239 @@
   transform: none;
 }
 
+/* Header Styles */
+.leftPanelHeader {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.compactSearch {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.compactSearch input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: #f8fafc;
+}
+
+.compactSearch .searchIcon {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.compactStats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.compactFilter select {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  background: #f8fafc;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-  .listHeader {
-    padding: 1rem;
+  .leftPanelHeader {
+    padding: 0.375rem;
   }
   
   .machinesList {
-    padding: 0.75rem;
+    padding: 0.25rem;
   }
   
   .machineCard {
-    padding: 1rem;
-    margin-bottom: 0.5rem;
+    padding: 0.375rem;
+    margin-bottom: 0.25rem;
+    border-radius: 4px;
+    gap: 0.375rem;
   }
   
   .machineHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    gap: 0.25rem;
   }
   
   .machineName {
-    font-size: 1rem;
+    font-size: 0.85rem;
+    line-height: 1.1;
+  }
+  
+  .machineStatus {
+    font-size: 0.6rem;
+    padding: 0.125rem 0.375rem;
   }
   
   .machineDetails {
-    gap: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
   }
   
   .loadInfo,
   .stagesInfo {
-    padding: 0.25rem 0.5rem;
+    padding: 0.1875rem 0.375rem;
   }
   
-  .stagesTags {
-    max-height: 2.5rem;
+  .loadLabel,
+  .stagesLabel {
+    font-size: 0.6rem;
   }
   
-  .stageTag {
+  .loadValue,
+  .stagesCount {
     font-size: 0.7rem;
-    padding: 0.2rem 0.4rem;
   }
   
-  .actionButton {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .listHeader {
-    padding: 0.75rem;
-  }
-  
-  .machinesList {
-    padding: 0.5rem;
-  }
-  
-  .machineCard {
-    padding: 0.875rem;
-  }
-  
-  .machineName {
-    font-size: 0.95rem;
-    line-height: 1.2;
-  }
-  
-  .machineDetails {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .loadInfo,
-  .stagesInfo {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-  }
-  
-  .previewLabel,
-  .featuresLabel {
-    font-size: 0.75rem;
+  .loadUnit {
+    font-size: 0.6rem;
   }
   
   .stagesTags {
     max-height: 2rem;
+    gap: 0.1875rem;
+  }
+  
+  .stageTag {
+    font-size: 0.6rem;
+    padding: 0.125rem 0.3125rem;
+  }
+  
+  .previewLabel,
+  .featuresLabel {
+    font-size: 0.6rem;
+    margin-bottom: 0.1875rem;
+  }
+  
+  .featuresTags {
+    gap: 0.1875rem;
+  }
+  
+  .featureTag {
+    font-size: 0.6rem;
+    padding: 0.125rem 0.3125rem;
   }
   
   .actionButton {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    gap: 0.25rem;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.375rem;
   }
   
   .machineActions {
-    gap: 0.25rem;
+    gap: 0.1875rem;
+    margin-top: 0.1875rem;
+    padding-top: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .leftPanelHeader {
+    padding: 0.25rem;
+  }
+  
+  .compactStats {
+    flex-direction: row;
+    gap: 0.5rem;
+    justify-content: space-around;
+  }
+  
+  .machinesList {
+    padding: 0.1875rem;
+  }
+  
+  .machineCard {
+    padding: 0.3125rem;
+    gap: 0.3125rem;
+    margin-bottom: 0.1875rem;
+  }
+  
+  .machineHeader {
+    margin-bottom: 0.1875rem;
+    gap: 0.1875rem;
+  }
+  
+  .machineName {
+    font-size: 0.8rem;
+    line-height: 1.1;
+  }
+  
+  .machineStatus {
+    font-size: 0.55rem;
+    padding: 0.125rem 0.3125rem;
+  }
+  
+  .statusDot {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .machineDetails {
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-bottom: 0.1875rem;
+  }
+  
+  .loadInfo,
+  .stagesInfo {
+    padding: 0.1875rem 0.3125rem;
+  }
+  
+  .loadLabel,
+  .stagesLabel {
+    font-size: 0.55rem;
+  }
+  
+  .loadValue,
+  .stagesCount {
+    font-size: 0.65rem;
+  }
+  
+  .loadUnit {
+    font-size: 0.55rem;
+  }
+  
+  .stagesTags {
+    max-height: 1.75rem;
+  }
+  
+  .stageTag {
+    font-size: 0.55rem;
+    padding: 0.125rem 0.25rem;
+  }
+  
+  .previewLabel,
+  .featuresLabel {
+    font-size: 0.55rem;
+  }
+  
+  .featureTag {
+    font-size: 0.55rem;
+    padding: 0.125rem 0.25rem;
+  }
+  
+  .actionButton {
+    font-size: 0.6rem;
+    padding: 0.1875rem 0.3125rem;
+  }
+  
+  .machineActions {
+    gap: 0.1875rem;
+    margin-top: 0.1875rem;
+    padding-top: 0.1875rem;
   }
 }

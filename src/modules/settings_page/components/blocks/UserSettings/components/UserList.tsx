@@ -145,51 +145,29 @@ export const UserList: React.FC<UserListProps> = ({
 
   return (
     <div className={styles.userListContainer}>
-      <div className={styles.listHeader}>
-        <div className={styles.searchContainer}>
+      <div className={styles.leftPanelHeader}>
+        <div className={styles.compactSearch}>
           <span className={styles.searchIcon}>🔍</span>
           <input
             type="text"
-            placeholder="Поиск по имени, логину, должности, телефону или ID..."
+            placeholder="Поиск..."
             value={filter.search || ''}
             onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
-            className={styles.searchInput}
           />
         </div>
         
-        <div className={styles.resultsCount}>
-          Найдено: {filteredUsers.length} из {users.length}
+        <div className={styles.compactStats}>
+          <span>👥 {filteredUsers.length}/{users.length}</span>
+          <span>💼 {uniquePositions.length}</span>
         </div>
         
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}>👥</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{users.length}</div>
-              <div className={styles.statLabel}>всего пользователей</div>
-            </div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}>💼</div>
-            <div className={styles.statInfo}>
-              <div className={styles.statValue}>{uniquePositions.length}</div>
-              <div className={styles.statLabel}>должностей</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Фильтры */}
-      <div className={styles.filtersContainer}>
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Фильтр по должности:</label>
+        <div className={styles.compactFilter}>
           <select
             value={filter.position || ''}
             onChange={(e) => setFilter(prev => ({ 
               ...prev, 
               position: e.target.value || undefined 
             }))}
-            className={styles.filterSelect}
           >
             <option value="">Все должности</option>
             {uniquePositions.map(position => (

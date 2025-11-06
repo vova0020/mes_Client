@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
 
 import { ReactComponent as Settings_buffer } from '../../../../assets/settingsSidebar/Settings_buffer.svg';
@@ -10,8 +10,6 @@ import { ReactComponent as Settings_2 } from '../../../../assets/settingsSidebar
 import { ReactComponent as Settings_1 } from '../../../../assets/settingsSidebar/Settings_streams.svg';
 import { ReactComponent as Settings_materials } from '../../../../assets/settingsSidebar/Settings_materials.svg';
 import { ReactComponent as Sprav_details } from '../../../../assets/settingsSidebar/Sprav_details.svg';
-
-import { Button, Tooltip } from '@mui/material';
 
 // Определяем все доступные раазделы настроек
 export type SettingSection =
@@ -31,65 +29,72 @@ interface SidebarProps {
   onSectionChange: (section: SettingSection) => void;
 }
 
+interface MenuItem {
+  id: SettingSection;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  title: string;
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => {
-  // Функция для определения класса активной кнопки
-  const getButtonClass = (section: SettingSection) => {
-    return activeSection === section ? `${styles.icon} ${styles.activeIcon}` : styles.icon;
+  const [hoveredItem, setHoveredItem] = useState<SettingSection>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+
+  const menuItems: MenuItem[] = [
+    { id: 'materials', icon: Settings_materials, title: 'Материалы' },
+    { id: 'streams', icon: Settings_1, title: 'Управление потоками' },
+    { id: 'technological_route', icon: Settings_3, title: 'Технологические маршруты' },
+    { id: 'machin', icon: Settings_4, title: 'Настройки станков' },
+    { id: 'details_reference_container', icon: Sprav_details, title: 'Справочник деталей' },
+    { id: 'users', icon: Settings_users, title: 'Управление пользователями' },
+    { id: 'buffer', icon: Settings_buffer, title: 'Настройки буфера' },
+  ];
+
+  const getIconClass = (section: SettingSection) => {
+    if (activeSection === section) return `${styles.iconButton} ${styles.active}`;
+    return styles.iconButton;
+  };
+
+  const handleMouseEnter = (item: SettingSection, e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      top: rect.top + rect.height / 2,
+      left: rect.right + 15
+    });
+    setHoveredItem(item);
   };
 
   return (
     <div className={styles.sidebar}>
-      {/* Нижние иконки */}
-      <div className={styles.footerIcon}>
+      <div className={styles.menuContainer}>
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeSection === item.id;
 
-
-        <Tooltip title="Материалы" placement="right">
-          <Button onClick={() => onSectionChange('materials')}>
-            <Settings_materials className={getButtonClass('materials')} />
-          </Button>
-        </Tooltip>
-
-        <Tooltip title="Управление потоками" placement="right">
-          <Button onClick={() => onSectionChange('streams')}>
-            <Settings_1 className={getButtonClass('streams')} />
-          </Button>
-        </Tooltip>
-
-        <Tooltip title="Технологические маршруты" placement="right">
-          <Button onClick={() => onSectionChange('technological_route')}>
-            <Settings_2 className={getButtonClass('technological_route')} />
-          </Button>
-        </Tooltip>
-
-        <Tooltip title="Настройки станков" placement="right">
-          <Button onClick={() => onSectionChange('machin')}>
-            <Settings_3 className={getButtonClass('machin')} />
-          </Button>
-        </Tooltip>
-
-           {/* <Tooltip title="Настройки рабочих мест УПАК" placement="right">
-          <Button onClick={() => onSectionChange('workplace_ypak')}>
-            <Settings_5 className={getButtonClass('workplace_ypak')} />
-          </Button>
-        </Tooltip> */}
-        <Tooltip title="Справочник деталей" placement="right">
-          <Button onClick={() => onSectionChange('details_reference_container')}>
-            <Sprav_details className={getButtonClass('details_reference_container')} />
-          </Button>
-        </Tooltip>
-
-        <Tooltip title="Управление пользователями" placement="right">
-          <Button onClick={() => onSectionChange('users')}>
-            <Settings_users className={getButtonClass('users')} />
-          </Button>
-        </Tooltip>
-
-        <Tooltip title="Настройки буфера" placement="right">
-          <Button onClick={() => onSectionChange('buffer')}>
-            <Settings_buffer className={getButtonClass('buffer')} />
-          </Button>
-        </Tooltip>
+          return (
+            <div
+              key={item.id}
+              className={getIconClass(item.id)}
+              onClick={() => onSectionChange(item.id)}
+              onMouseEnter={(e) => handleMouseEnter(item.id, e)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <Icon className={styles.icon} />
+            </div>
+          );
+        })}
       </div>
+      {hoveredItem && (
+        <div 
+          className={styles.tooltip} 
+          style={{ 
+            top: `${tooltipPosition.top}px`, 
+            left: `${tooltipPosition.left}px`,
+            transform: 'translateY(-50%)'
+          }}
+        >
+          {menuItems.find(item => item.id === hoveredItem)?.title}
+        </div>
+      )}
     </div>
   );
 };

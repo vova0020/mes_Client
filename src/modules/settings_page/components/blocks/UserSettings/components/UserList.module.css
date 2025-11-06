@@ -10,13 +10,50 @@
 }
 
 /* Header Styles */
-.listHeader {
-  padding: 1.5rem;
-  border-bottom: 2px solid #e2e8f0;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+.leftPanelHeader {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.compactSearch {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.compactSearch input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: #f8fafc;
+}
+
+.compactSearch .searchIcon {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.compactStats {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.compactFilter select {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  background: #f8fafc;
 }
 
 .searchContainer {
@@ -235,18 +272,17 @@
   margin: 0;
 }
 
-/* User Card */
 .userCard {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin-bottom: 0.375rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -290,12 +326,12 @@
 .userHeader {
   display: flex;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.375rem;
 }
 
 .userAvatar {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
@@ -303,9 +339,9 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1.1rem;
-  margin-right: 0.75rem;
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);
   flex-shrink: 0;
 }
 
@@ -315,37 +351,37 @@
 }
 
 .userName {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1f2937;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.125rem 0;
   word-break: break-word;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .userLogin {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #10b981;
   font-weight: 500;
 }
 
 .userId {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #64748b;
   font-weight: 500;
   font-family: 'Courier New', monospace;
   background: #f1f5f9;
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
+  padding: 0.0625rem 0.25rem;
+  border-radius: 3px;
   display: inline-block;
-  margin-top: 0.25rem;
+  margin-top: 0.125rem;
 }
 
 .userDetails {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
 }
 
 .userPosition,
@@ -354,7 +390,7 @@
 .userCreated {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
 }
 
 .positionLabel,
@@ -362,7 +398,7 @@
 .salaryLabel,
 .createdLabel {
   color: #64748b;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 500;
 }
 
@@ -372,32 +408,32 @@
 .createdValue {
   font-weight: 600;
   color: #1f2937;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 /* Actions */
 .userActions {
   display: flex;
-  gap: 0.375rem;
+  gap: 0.25rem;
   align-items: center;
   justify-content: flex-end;
-  margin-top: 0.5rem;
-  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  padding-top: 0.375rem;
   border-top: 1px solid #f1f5f9;
 }
 
 .actionButton {
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  gap: 0.125rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .editButton {
@@ -461,38 +497,160 @@
   }
 }
 
-@media (max-width: 480px) {
-  .listHeader {
-    padding: 0.75rem;
+.usersList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+@media (max-width: 768px) {
+  .leftPanelHeader {
+    padding: 0.375rem;
   }
   
   .usersList {
-    padding: 0.5rem;
+    padding: 0.25rem;
   }
   
   .userCard {
-    padding: 0.875rem;
-  }
-  
-  .userName {
-    font-size: 0.95rem;
-    line-height: 1.2;
-  }
-  
-  .userDetails {
+    padding: 0.375rem;
+    margin-bottom: 0.25rem;
+    border-radius: 4px;
     gap: 0.375rem;
   }
   
+  .userHeader {
+    margin-bottom: 0.25rem;
+  }
+  
+  .userAvatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+    margin-right: 0.375rem;
+  }
+  
+  .userName {
+    font-size: 0.85rem;
+    line-height: 1.1;
+  }
+  
+  .userLogin {
+    font-size: 0.7rem;
+  }
+  
+  .userId {
+    font-size: 0.6rem;
+    padding: 0.0625rem 0.1875rem;
+  }
+  
+  .userDetails {
+    grid-template-columns: 1fr;
+    gap: 0.1875rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .positionLabel,
+  .phoneLabel,
+  .salaryLabel,
+  .createdLabel {
+    font-size: 0.6rem;
+  }
+  
+  .positionValue,
+  .phoneValue,
+  .salaryValue,
+  .createdValue {
+    font-size: 0.7rem;
+  }
+  
   .actionButton {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.375rem;
   }
   
   .userActions {
-    gap: 0.25rem;
+    gap: 0.1875rem;
+    margin-top: 0.1875rem;
+    padding-top: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .leftPanelHeader {
+    padding: 0.25rem;
   }
   
-  .statsGrid {
-    grid-template-columns: 1fr;
+  .compactStats {
+    flex-direction: row;
+    gap: 0.5rem;
+    justify-content: space-around;
+  }
+  
+  .usersList {
+    padding: 0.1875rem;
+  }
+  
+  .userCard {
+    padding: 0.3125rem;
+    gap: 0.3125rem;
+    margin-bottom: 0.1875rem;
+  }
+  
+  .userHeader {
+    margin-bottom: 0.1875rem;
+  }
+  
+  .userAvatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+    margin-right: 0.3125rem;
+  }
+  
+  .userName {
+    font-size: 0.8rem;
+    line-height: 1.1;
+  }
+  
+  .userLogin {
+    font-size: 0.65rem;
+  }
+  
+  .userId {
+    font-size: 0.55rem;
+    padding: 0.0625rem 0.1875rem;
+  }
+  
+  .userDetails {
+    gap: 0.1875rem;
+    margin-bottom: 0.1875rem;
+  }
+  
+  .positionValue,
+  .phoneValue,
+  .salaryValue,
+  .createdValue {
+    font-size: 0.65rem;
+  }
+  
+  .positionLabel,
+  .phoneLabel,
+  .salaryLabel,
+  .createdLabel {
+    font-size: 0.55rem;
+  }
+  
+  .actionButton {
+    font-size: 0.6rem;
+    padding: 0.1875rem 0.3125rem;
+  }
+  
+  .userActions {
+    gap: 0.1875rem;
+    margin-top: 0.1875rem;
+    padding-top: 0.1875rem;
   }
 }
