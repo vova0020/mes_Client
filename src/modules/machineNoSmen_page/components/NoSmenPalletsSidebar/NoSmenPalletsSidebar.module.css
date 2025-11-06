@@ -1809,8 +1809,9 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   width: 90%;
   max-width: 480px;
-  max-height: 90vh;
+   max-height: 90vh;
   max-height: 90dvh;
+  /* max-height: calc(100vh - 40px); */
   overflow: hidden;
   animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
@@ -4549,4 +4550,16 @@
     font-size: 15px;
     padding: 12px 20px;
   }
+}
+
+/* Вертикальная прокрутка для модального окна отбраковки */
+.modalOverlay .modalContent .modalBody {
+  overflow-y: auto !important;
+  flex: 1 !important;
+}
+
+.modalOverlay .modalContent {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: calc(100vh - 40px) !important;
 }
