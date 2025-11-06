@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './DetailsTable.module.css';
 import { useYpakMachine } from '../../../hooks/ypakMachine/useYpakMachine';
-import { usePackingTasks } from '../../../hooks/ypakMachine/usePackingTasks';
 import { YpakTask } from '../../../api/ypakMachine/ypakMachineApi';
+import { updatePackingTaskStatus } from '../../../api/ypakMasterApi/machineMasterService';
 import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
 
 const DetailsTable: React.FC = () => {
@@ -35,8 +35,8 @@ const DetailsTable: React.FC = () => {
     getPackingScheme
   } = useYpakMachine();
   
-  // Используем хук для работы с заданиями упаковки
-  const { startPackingWork, completePackingWork } = usePackingTasks();
+  // Состояние для уведомлений
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   
   // Ref для контейнера таблицы
   const containerRef = useRef<HTMLDivElement>(null);
@@ -145,22 +145,13 @@ const DetailsTable: React.FC = () => {
       setProcessingTaskId(taskId);
       setActionError(null);
       
-      // Получаем ID станка из данных о станке
-      const machineId = machineDetails?.machineId;
-      if (!machineId) {
-        throw new Error('ID станка не найден');
-      }
-      
-      const success = await startPackingWork(taskId, machineId);
-      if (success) {
-        setSuccessMessage('Задача успешно переведена в работу');
-        // Перезагружаем данные для обновления статуса
-        refetch();
-      } else {
-        throw new Error('Не удалось перевести задачу в работу');
-      }
-    } catch (error) {
-      setActionError(`Ошибка при переводе в работу: ${(error as Error).message}`);
+      await updatePackingTaskStatus(taskId, 'IN_PROGRESS');
+      setSuccessMessage('Задача успешно переведена в работу');
+      // Перезагружаем данные для обновления статуса
+      refetch();
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при переводе в работу';
+      setActionError(errorMessage);
     } finally {
       setProcessingTaskId(null);
     }
@@ -174,22 +165,16 @@ const DetailsTable: React.FC = () => {
       setProcessingTaskId(taskId);
       setActionError(null);
       
-      // Получаем ID станка из данных о станке
-      const machineId = machineDetails?.machineId;
-      if (!machineId) {
-        throw new Error('ID станка не найден');
-      }
+      const task = tasks.find(t => t.taskId === taskId);
+      const remainingQuantity = task?.remainingQuantity || 0;
       
-      const success = await completePackingWork(taskId, machineId);
-      if (success) {
-        setSuccessMessage('Задача успешно завершена');
-        // Перезагружаем данные для обновления статуса
-        refetch();
-      } else {
-        throw new Error('Не удалось завершить задачу');
-      }
-    } catch (error) {
-      setActionError(`Ошибка при завершении задачи: ${(error as Error).message}`);
+      await updatePackingTaskStatus(taskId, 'COMPLETED', remainingQuantity);
+      setSuccessMessage('Задача успешно завершена');
+      // Перезагружаем данные для обновления статуса
+      refetch();
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при завершении задачи';
+      setActionError(errorMessage);
     } finally {
       setProcessingTaskId(null);
     }
@@ -200,7 +185,8 @@ const DetailsTable: React.FC = () => {
     e.stopPropagation(); // Предотвращаем всплытие события
     
     setPartialCompleteTaskId(task.taskId);
-    setPackagedCount(0); // Начинаем с 0
+    const maxQuantity = task.remainingQuantity || 0;
+    setPackagedCount(Math.min(10, maxQuantity)); // По умолчанию 10 или меньше, если доступно меньше
     setShowPartialModal(true);
   };
 
@@ -211,6 +197,17 @@ const DetailsTable: React.FC = () => {
     setPackagedCount(0);
   };
 
+  // Эффект для установки начального значения при открытии модального окна
+  useEffect(() => {
+    if (showPartialModal && partialCompleteTaskId) {
+      const task = tasks.find(t => t.taskId === partialCompleteTaskId);
+      if (task) {
+        const maxQuantity = task.remainingQuantity || 0;
+        setPackagedCount(Math.min(10, maxQuantity));
+      }
+    }
+  }, [showPartialModal, partialCompleteTaskId, tasks]);
+
   // Обработчик для подтверждения частичного завершения
   const handleConfirmPartialComplete = async () => {
     if (partialCompleteTaskId === null) return;
@@ -219,11 +216,14 @@ const DetailsTable: React.FC = () => {
       setProcessingTaskId(partialCompleteTaskId);
       setActionError(null);
       
-      await partiallyCompleteOperation(partialCompleteTaskId, packagedCount);
+      await updatePackingTaskStatus(partialCompleteTaskId, 'IN_PROGRESS', packagedCount);
       setSuccessMessage('Задача частично завершена');
       handleClosePartialModal();
-    } catch (error) {
-      setActionError(`Ошибка при частичном завершении: ${(error as Error).message}`);
+      // Перезагружаем данные для обновления статуса
+      refetch();
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при частичном завершении';
+      setActionError(errorMessage);
     } finally {
       setProcessingTaskId(null);
     }
@@ -365,7 +365,7 @@ const DetailsTable: React.FC = () => {
               <th>Код упаковки</th>
               <th>Название упаковки</th>
               <th>Тех. информация</th>
-              <th>Количество</th>
+              <th>Назначено / Выполнено</th>
               <th>Статус</th>
               <th>Действия</th>
               <th></th> {/* Колонка для кнопки-стрелки */}
@@ -397,7 +397,16 @@ const DetailsTable: React.FC = () => {
                     Схема укладки
                   </button>
                 </td>
-                <td>{task.productionPackage.quantity}</td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                      {task.assignedQuantity} / {task.completedQuantity}
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#666' }}>
+                      ост.: {task.remainingQuantity}
+                    </span>
+                  </div>
+                </td>
                 <td>
                   <span className={`${styles.statusBadge} ${getStatusClass(task.status)}`}>
                     {getStatusText(task.status)}
@@ -433,8 +442,7 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={`${styles.actionButton} ${styles.partialButton}`}
                     onClick={(e) => handleOpenPartialModal(e, task)}
-                    // disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
-                    disabled= {true}
+                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
                     title="Частично завершить задачу"
                   >
                     Частично
@@ -459,81 +467,91 @@ const DetailsTable: React.FC = () => {
         <div className={styles.modalOverlay} onClick={handleClosePartialModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3>Частичное завершение задачи</h3>
+              <h3>Частичная обработка детали</h3>
               <button className={styles.modalCloseBtn} onClick={handleClosePartialModal}>×</button>
             </div>
             <div className={styles.modalBody}>
-              <p>Укажите количество упакованных деталей:</p>
-              
               {/* Находим текущую задачу */}
-              {partialCompleteTaskId && (
-                <div className={styles.taskInfo}>
-                  {(() => {
-                    const task = tasks.find(t => t.taskId === partialCompleteTaskId);
-                    if (task) {
-                      return (
-                        <>
-                          <div className={styles.taskInfoItem}>
-                            <span>Упаковка:</span>
-                            <span>{task.productionPackage.packageName}</span>
-                          </div>
-                          <div className={styles.taskInfoItem}>
-                            <span>Всего к упаковке:</span>
-                            <span>{task.productionPackage.quantity}</span>
-                          </div>
-                          <div className={styles.taskInfoItem}>
-                            <span>Статус:</span>
-                            <span>{getStatusText(task.status)}</span>
-                          </div>
-                        </>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
-              )}
-              
-              <div className={styles.inputGroup}>
-                <label htmlFor="packagedCount">Количество:</label>
-                <input 
-                  type="number" 
-                  id="packagedCount"
-                  className={styles.numberInput}
-                  value={packagedCount}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value >= 0) {
-                      // Находим максимально допустимое значение из текущей задачи
-                      const task = tasks.find(t => t.taskId === partialCompleteTaskId);
-                      const maxValue = task ? task.productionPackage.quantity : 0;
-                      
-                      // Ограничиваем ввод максимальным значением
-                      setPackagedCount(Math.min(value, maxValue));
-                    }
-                  }}
-                  min="0"
-                  max={(() => {
-                    const task = tasks.find(t => t.taskId === partialCompleteTaskId);
-                    return task ? task.productionPackage.quantity : 0;
-                  })()}
-                />
-              </div>
-              
-              {/* Индикатор прогресса */}
-              {(() => {
+              {partialCompleteTaskId && (() => {
                 const task = tasks.find(t => t.taskId === partialCompleteTaskId);
                 if (task) {
-                  const percentage = (packagedCount / task.productionPackage.quantity) * 100;
+                  const maxQuantity = task.remainingQuantity || 0;
                   return (
-                    <div className={styles.progressWrapper}>
-                      <div className={styles.progressBar}>
-                        <div 
-                          className={styles.progressFill} 
-                          style={{ width: `${percentage}%` }}
-                        ></div>
+                    <>
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Заказ:</span>
+                        <span className={styles.modalValue}>{task.productionPackage.order.orderName}</span>
                       </div>
-                      <div className={styles.progressValue}>{percentage.toFixed(1)}%</div>
-                    </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Номер партии:</span>
+                        <span className={styles.modalValue}>{task.productionPackage.order.batchNumber}</span>
+                      </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Артикул упаковки:</span>
+                        <span className={styles.modalValue}>{task.productionPackage.packageCode}</span>
+                      </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Наименование упаковки:</span>
+                        <span className={styles.modalValue}>{task.productionPackage.packageName}</span>
+                      </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Назначено станку:</span>
+                        <span className={styles.modalValue}>{task.assignedQuantity} шт.</span>
+                      </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Выполнено:</span>
+                        <span className={styles.modalValue}>{task.completedQuantity} шт.</span>
+                      </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Осталось выполнить:</span>
+                        <span className={styles.modalValue}>{maxQuantity} шт.</span>
+                      </div>
+                      
+                      <div className={styles.quantityInputContainer}>
+                        <label className={styles.quantityLabel} htmlFor="partial-quantity">
+                          Количество для обработки:
+                        </label>
+                        <div className={styles.quantityInputWrapper}>
+                          <button 
+                            className={styles.quantityButton}
+                            onClick={() => {
+                              if (packagedCount > 1) setPackagedCount(packagedCount - 1);
+                            }}
+                            disabled={packagedCount <= 1}
+                          >
+                            -
+                          </button>
+                          <input
+                            id="partial-quantity"
+                            type="text"
+                            className={styles.quantityInput}
+                            value={packagedCount.toString()}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '' || (/^\d+$/.test(value) && parseInt(value, 10) <= maxQuantity)) {
+                                setPackagedCount(value === '' ? 0 : parseInt(value, 10));
+                              }
+                            }}
+                            placeholder="Введите количество"
+                          />
+                          <button 
+                            className={styles.quantityButton}
+                            onClick={() => {
+                              if (packagedCount < maxQuantity) setPackagedCount(packagedCount + 1);
+                            }}
+                            disabled={packagedCount >= maxQuantity}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   );
                 }
                 return null;
@@ -549,7 +567,7 @@ const DetailsTable: React.FC = () => {
               <button 
                 className={styles.modalConfirmBtn}
                 onClick={handleConfirmPartialComplete}
-                disabled={processingTaskId !== null}
+                disabled={processingTaskId !== null || packagedCount <= 0}
               >
                 {processingTaskId !== null ? (
                   <>

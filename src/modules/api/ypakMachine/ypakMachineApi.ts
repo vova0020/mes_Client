@@ -41,6 +41,9 @@ export interface YpakTask {
   priority: number;
   assignedAt: string;
   completedAt: string | null;
+  assignedQuantity: number;
+  completedQuantity: number;
+  remainingQuantity: number;
   machine: YpakMachine;
   package: YpakPackage;
   productionPackage: YpakProductionPackage;
