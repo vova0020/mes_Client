@@ -1,55 +1,14 @@
 import React from 'react';
 import styles from './StreamMachinesCards.module.css';
+import { useWorkplaces } from '../../../../../../hooks/workMonitorHook';
 
-interface Machine {
-  id: number;
-  name: string;
-  status: 'active' | 'inactive' | 'maintenance' | 'broken';
-  recommendedLoad: number;
-  plannedQuantity: number;
-  completedQuantity: number;
-  load_unit: string;
+interface StreamMachinesCardsProps {
+  streamId: number;
+  stageId: number;
 }
 
-const StreamMachinesCards: React.FC = () => {
-  const machines: Machine[] = [
-    {
-      id: 1,
-      name: 'Станок №1',
-      status: 'active',
-      recommendedLoad: 1000,
-      plannedQuantity: 800,
-      completedQuantity: 600,
-      load_unit: 'м²'
-    },
-    {
-      id: 2,
-      name: 'Станок №2',
-      status: 'inactive',
-      recommendedLoad: 1200,
-      plannedQuantity: 0,
-      completedQuantity: 0,
-      load_unit: 'м²'
-    },
-    {
-      id: 3,
-      name: 'Станок №3',
-      status: 'active',
-      recommendedLoad: 900,
-      plannedQuantity: 900,
-      completedQuantity: 750,
-      load_unit: 'м²'
-    },
-    {
-      id: 4,
-      name: 'Станок №4',
-      status: 'maintenance',
-      recommendedLoad: 1100,
-      plannedQuantity: 0,
-      completedQuantity: 0,
-      load_unit: 'м²'
-    }
-  ];
+const StreamMachinesCards: React.FC<StreamMachinesCardsProps> = ({ streamId, stageId }) => {
+  const { workplaces, loading, error } = useWorkplaces(streamId, stageId);
 
   const getStatusClass = (status: string): string => {
     switch (status.toLowerCase()) {
@@ -97,19 +56,52 @@ const StreamMachinesCards: React.FC = () => {
     </div>
   );
 
-  const renderMaintenanceOverlay = () => (
-    <div className={styles.maintenanceOverlay}>
-      <div className={styles.maintenanceIcon}>🔧</div>
-      <div className={styles.maintenanceMessage}>Техническое обслуживание</div>
-    </div>
-  );
 
-  const renderBrokenOverlay = () => (
-    <div className={styles.brokenOverlay}>
-      <div className={styles.brokenIcon}>⚠️</div>
-      <div className={styles.brokenMessage}>Станок неисправен</div>
-    </div>
-  );
+
+  if (loading) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.loadingSpinner} />
+          <div className={styles.loadingMessage}>
+            <h3>Загрузка...</h3>
+            <p>Пожалуйста, подождите</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorMessage}>
+            <h3>Ошибка</h3>
+            <p>{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (workplaces.length === 0) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.emptyIcon}>📦</div>
+          <div className={styles.emptyMessage}>
+            <h3>Нет данных</h3>
+            <p>Рабочие места не найдены</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.detailsContainer}>
@@ -117,64 +109,65 @@ const StreamMachinesCards: React.FC = () => {
       
       <div className={styles.tableContainer}>
         <div className={styles.cardsWrapper}>
-          {machines.map(machine => (
-            <div 
-              key={machine.id} 
-              className={styles.machineCard}
-              data-status={machine.status.toLowerCase()}
-            >
-              <div className={styles.cardHeader}>
-                <h3 className={styles.machineName}>{machine.name}</h3>
-                <div className={styles.headerRight}>
-                  {machine.status.toLowerCase() === 'active' && (
-                    <button 
-                      className={styles.resetButton}
-                      onClick={() => handleResetCounter(machine.id)}
-                      title="Сбросить счетчик выполнено"
-                    >
-                      ↻
-                    </button>
-                  )}
-                  <div className={`${styles.statusIndicator} ${getStatusClass(machine.status)}`}>
-                    {getStatusText(machine.status)}
+          {workplaces.map((machine: any) => {
+            const status = machine.completed > 0 ? 'active' : 'inactive';
+            return (
+              <div 
+                key={machine.machineId} 
+                className={styles.machineCard}
+                data-status={status}
+              >
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.machineName}>{machine.machineName}</h3>
+                  <div className={styles.headerRight}>
+                    {status === 'active' && (
+                      <button 
+                        className={styles.resetButton}
+                        onClick={() => handleResetCounter(machine.machineId)}
+                        title="Сбросить счетчик выполнено"
+                      >
+                        ↻
+                      </button>
+                    )}
+                    <div className={`${styles.statusIndicator} ${getStatusClass(status)}`}>
+                      {getStatusText(status)}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className={styles.cardBody}>
-                {machine.status.toLowerCase() === 'active' && (
-                  <>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Норма выработки:</span>
-                      <span className={styles.infoValue}>{machine.recommendedLoad} {machine.load_unit}.</span>
-                    </div>
-                    
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Запланировано:</span>
-                      <span className={styles.infoValue}>{machine.plannedQuantity} {machine.load_unit}.</span>
-                    </div>
-                    
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Выполнено:</span>
-                      <span className={styles.infoValue}>
-                        {machine.completedQuantity} {machine.load_unit}. ({calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%)
-                        <div className={styles.progressBar}>
-                          <div 
-                            className={styles.progressFill}  
-                            style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%` }}
-                          />
-                        </div>
-                      </span>
-                    </div>
-                  </>
-                )}
                 
-                {machine.status.toLowerCase() === 'inactive' && renderInactiveOverlay()}
-                {machine.status.toLowerCase() === 'maintenance' && renderMaintenanceOverlay()}
-                {machine.status.toLowerCase() === 'broken' && renderBrokenOverlay()}
+                <div className={styles.cardBody}>
+                  {status === 'active' ? (
+                    <>
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Норма выработки:</span>
+                        <span className={styles.infoValue}>{machine.norm} м²</span>
+                      </div>
+                      
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Запланировано:</span>
+                        <span className={styles.infoValue}>{machine.planned} м²</span>
+                      </div>
+                      
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Выполнено:</span>
+                        <span className={styles.infoValue}>
+                          {machine.completed} м² ({calculateCompletionPercentage(machine.completed, machine.norm)}%)
+                          <div className={styles.progressBar}>
+                            <div 
+                              className={styles.progressFill}  
+                              style={{ width: `${calculateCompletionPercentage(machine.completed, machine.norm)}%` }}
+                            />
+                          </div>
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    renderInactiveOverlay()
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
