@@ -48,9 +48,9 @@ const SettingsPage: React.FC = () => {
       default:
         return (
           <div className={styles.welcomeContent}>
-            <img src={settingsFon} alt="Заглушка" className={styles.fullWidthImage} />
-            {/* <h2>Добро пожаловать в настройки MES системы</h2>
-            <p>Выберите раздел настроек в боковом меню</p> */}
+            {/* <img src={settingsFon} alt="Заглушка" className={styles.fullWidthImage} /> */}
+            <h2>Добро пожаловать в настройки MES системы</h2>
+            <p>Выберите раздел настроек в боковом меню</p>
           </div>
         );
     }
