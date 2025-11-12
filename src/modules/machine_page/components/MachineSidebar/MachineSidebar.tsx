@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from './Sidebar.module.css';
+import styles from './MachineSidebar.module.css';
 
 import { ReactComponent as StatisticIcon } from '../../../../assets/sidebar/statistic.svg';
 import { ReactComponent as HistoriIcon } from '../../../../assets/sidebar/historiButton.svg';
@@ -16,7 +16,7 @@ import { Button, Tooltip } from '@mui/material';
 import { Machine, MachineStatus } from '../../../api/machinNoSmenApi/machineApi';
 
 interface SidebarProps {
-  machine?: Machine | null;
+  machine?: Machine | null; 
   isLoading?: boolean;
   onStatusChange?: (status: MachineStatus) => Promise<void>;
   isSocketConnected?: boolean;
@@ -190,12 +190,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <ReclamaciIcon className={styles.icon} />
           </Button>
           
-          {/* Индикатор подключения к сокету */}
-          <Tooltip title={isSocketConnected ? "Подключен к серверу обновлений" : "Отключен от сервера обновлений"}>
-            <div className={`${styles.socketIndicator} ${isSocketConnected ? styles.socketConnected : styles.socketDisconnected}`}>
-              <WifiIcon className={styles.wifiIcon} />
-            </div>
-          </Tooltip>
+      
         </div>
       </div>
     </div>

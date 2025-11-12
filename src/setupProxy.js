@@ -2,23 +2,29 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
-  // Проксируем API‑запросы на ваш NestJS
+  const apiTarget = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+  // Проксируем API-запросы на ваш NestJS backend
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'http://85.198.83.197:5000',
+      target: apiTarget,
       changeOrigin: true,
-      ws: true,            // <— включаем поддержку WebSocket для /api, если там нужны WS
+      ws: true, // Для WebSocket, если используете
     })
   );
 
-  // Проксируем HMR‑сокеты CRA DevServer
+  // Проксируем Socket.IO (если используете)
   app.use(
-    '/sockjs-node',       // CRA по умолчанию использует SockJS для HMR
+    '/socket.io',
     createProxyMiddleware({
-      target: 'http://85.198.83.197:3000',
+      target: apiTarget,
       changeOrigin: true,
-      ws: true,            // <— обязательно, чтобы проксировать Upgrade/Connection
+      ws: true, // ОБЯЗАТЕЛЬНО для Socket.IO
     })
   );
+
+  // ⚠️ УДАЛИТЕ этот блок - /sockjs-node должен оставаться локальным!
+  // Это внутренний механизм React для hot reload
+  // НЕ проксируйте его на внешний сервер!
 };

@@ -14,7 +14,7 @@
   width: 120px; /* Уменьшенная фиксированная ширина для сайдбара */
   height: 100%; /* Высота на весь экран */
   background-color: transparent; /* Прозрачный фон, чтобы был виден сайдбар */
-  padding: 10px 10px; /* Уменьшенные отступы для сайдбара */
+  padding: 10px 5px; /* Уменьшенные отступы для сайдбара */
   box-sizing: border-box; /* Учитываем padding в общей ширине */
   display: flex; /* Используем flex для центрирования */
   align-items: center; /* Центрирование по вертикали */
@@ -121,82 +121,156 @@
   min-height: 0; /* Важно для корректной работы flex в Firefox */
 }
 
-/* Медиа-запросы для адаптивного дизайна */
-
-/* Большие настольные экраны (более 1200px) */
-@media screen and (min-width: 1201px) {
-  /* Стили для fullWidthSection уже настроены на 100% */
+/* Адаптивные стили для планшетов и телефонов в горизонтальной ориентации */
+@media screen and (max-width: 1366px) and (orientation: landscape) {
+  .mesPage {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .Content_Block {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .mainContainer {
+    height: auto;
+    min-height: auto;
+    /* padding: 10px; */
+  }
+  
+  .content {
+    min-height: 350px;
+  }
+  
+  .headerBlock {
+    margin-bottom: 12px;
+  }
 }
 
-/* Средние настольные экраны (от 992px до 1200px) */
-@media screen and (min-width: 992px) and (max-width: 1200px) {
-  /* Стили для fullWidthSection уже настроены на 100% */
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .Sidebar_Block {
+    width: 100px;
+    padding: 8px;
+  }
+  
+  .content {
+    gap: 12px;
+    min-height: 280px;
+  }
+  
+  .fullWidthSection {
+    min-height: 280px;
+  }
 }
 
-/* Планшеты (от 768px до 991px) */
-@media screen and (min-width: 768px) and (max-width: 991px) {
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .Sidebar_Block {
     width: 80px;
-    padding: 8px;
+    padding: 6px;
   }
   
   .Content_Block {
     padding: 8px 12px 8px 4px;
   }
+  
+  .mainContainer {
+    /* padding: 8px; */
+  }
+  
+  .content {
+    gap: 10px;
+    min-height: 260px;
+  }
+  
+  .fullWidthSection {
+    min-height: 260px;
+  }
 }
 
-/* Малые планшеты и большие телефоны (от 576px до 767px) */
-@media screen and (min-width: 576px) and (max-width: 767px) {
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
   .mesPage {
-    flex-direction: row; /* Сохраняем горизонтальную структуру */
-    height: 100vh;
-    overflow: hidden;
+    flex-direction: row;
   }
   
   .Sidebar_Block {
-    width: 60px; /* Уменьшаем ширину сайдбара */
+    width: 70px;
     padding: 5px;
   }
   
   .Content_Block {
-    padding: 8px;
-    flex: 1;
+    padding: 6px 10px 6px 3px;
   }
   
-  .headerBlock {
-    margin-bottom: 10px;
-  }
-  
-  /* Уменьшаем размер шрифта для лучшей читаемости на маленьких экранах */
-  .mesPage {
-    font-size: 14px;
-  }
-}
-
-/* Мобильные телефоны (до 575px) */
-@media screen and (max-width: 575px) {
-  .mesPage {
-    flex-direction: row; /* Сохраняем горизонтальную структуру */
-    height: 100vh;
-    overflow: hidden;
-  }
-  
-  .Sidebar_Block {
-    width: 45px; /* Минимальная ширина сайдбара */
-    padding: 3px;
-  }
-  
-  .Content_Block {
-    padding: 5px;
-    flex: 1;
+  .mainContainer {
+    /* padding: 6px; */
   }
   
   .headerBlock {
     margin-bottom: 8px;
   }
   
-  /* Уменьшаем размер шрифта для лучшей читаемости на маленьких экранах */
+  .content {
+    gap: 8px;
+    min-height: 240px;
+  }
+  
+  .fullWidthSection {
+    min-height: 240px;
+  }
+}
+
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
   .mesPage {
-    font-size: 12px;
+    flex-direction: column;
+    height: auto;
+    overflow-y: auto;
+  }
+  
+  .Sidebar_Block {
+    width: 100%;
+    height: auto;
+    min-height: 60px;
+    padding: 8px;
+  }
+  
+  .Content_Block {
+    height: auto;
+    padding: 10px;
+  }
+  
+  .mainContainer {
+    height: auto;
+  }
+  
+  .content {
+    flex-direction: column;
+    height: auto;
+    gap: 12px;
+  }
+  
+  .fullWidthSection {
+    width: 100%;
+    min-height: 260px;
+  }
+}
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
+  .fullWidthSection {
+    width: 100%;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .fullWidthSection {
+    width: 100%;
   }
 }

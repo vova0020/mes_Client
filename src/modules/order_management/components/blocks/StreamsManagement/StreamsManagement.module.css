@@ -2,15 +2,18 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f5f5f5;
+  background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
 }
 
 .header {
   display: flex;
   background: linear-gradient(to bottom, #374051, #2d3441);
   color: white;
-  padding: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  padding: 16px 20px;
+  box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid #243342;
 }
 
 .header h1 {
@@ -27,7 +30,8 @@
 .content {
   display: flex;
   flex: 1;
-  gap: 2px;
+  gap: 0;
+  padding: 10px 15px 10px 5px;
 }
 
 /* Левая панель - потоки */
@@ -37,15 +41,20 @@
   background: linear-gradient(to bottom, #374051, #2d3441);
   padding: 16px;
   overflow-y: auto;
-  border-right: 2px solid #243342;
+  border-radius: 8px;
+  box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid #243342;
+  margin-right: 16px;
 }
 
 .streamCard {
   background: linear-gradient(145deg, #ffffff, #f0f0f0);
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -58,29 +67,25 @@
 }
 
 .streamCard.selected {
-  border-color: #007bff;
-  background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+  background: linear-gradient(to bottom, #007bff, #0056b3);
+  color: white;
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  border: 1px solid #0056b3;
   border-left: 4px solid #007bff;
 }
 
 .streamCard h3 {
-  margin: 0 0 8px 0;
+  margin: 0;
   color: #495057;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
 }
 
-.streamCard p {
-  margin: 0;
-  color: #6c757d;
-  font-size: 13px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.streamCard.selected h3 {
+  color: white;
 }
+
+
 
 /* Правая панель - этапы */
 .stagesPanel {
@@ -90,8 +95,7 @@
   padding: 12px;
   box-shadow: 
       0 4px 8px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid #243342;
   display: flex;
   flex-direction: column;
@@ -112,7 +116,7 @@
 }
 
 .streamInfo h2 {
-  margin: 0 0 8px 0;
+  margin: 0;
   color: #495057;
   font-size: 16px;
   font-weight: bold;
@@ -134,12 +138,10 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.7);
   border: 1px solid #e0e0e0;
   flex-grow: 1;
-  height: calc(100% - 80px);
+  height: calc(100% - 60px);
   overflow-y: auto;
-  scroll-snap-type: y mandatory;
-  scroll-padding-top: 8px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 12px;
   padding: 12px;
   box-sizing: border-box;
@@ -153,7 +155,7 @@
   display: flex;
   flex-direction: column;
   height: 280px;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
   position: relative;
   overflow: hidden;
   transition: all 0.2s ease;
@@ -179,7 +181,7 @@
 
 .stageHeader {
   background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-  padding: 10px;
+  padding: 12px;
   border-bottom: 1px solid #dee2e6;
   display: flex;
   justify-content: space-between;
@@ -188,8 +190,8 @@
 
 .stageHeader h3 {
   margin: 0;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   color: #495057;
 }
 
@@ -234,8 +236,8 @@
   flex-direction: column;
   gap: 6px;
   background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-  padding: 8px;
-  border-radius: 4px;
+  padding: 10px;
+  border-radius: 6px;
   border: 1px solid #dee2e6;
 }
 
@@ -260,17 +262,7 @@
   text-align: right;
 }
 
-.value.ready {
-  color: #28a745;
-}
 
-.value.full {
-  color: #28a745;
-}
-
-.value.partial {
-  color: #ffc107;
-}
 
 .unit {
   color: #6c757d;
@@ -281,8 +273,8 @@
 
 .progressSection {
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  padding: 8px;
-  border-radius: 4px;
+  padding: 10px;
+  border-radius: 6px;
   border: 1px solid #e0e0e0;
 }
 
@@ -379,17 +371,17 @@
 
 .showWorkplacesButton {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   color: white;
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(to bottom, #007bff, #0056b3);
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
   box-shadow: 
@@ -416,11 +408,9 @@
 }
 
 .showWorkplacesButton:hover {
-  background: linear-gradient(135deg, #0056b3, #004085);
-  transform: translateY(-2px);
-  box-shadow: 
-      0 5px 10px rgba(0, 123, 255, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(to bottom, #0056b3, #004085);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.4);
 }
 
 .showWorkplacesButton:hover:before {
@@ -449,7 +439,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f5f5f5;
+  background: linear-gradient(to right, #c1bfbcb2, #ebe9e7);
 }
 
 .machinesHeader {
@@ -458,60 +448,147 @@
   gap: 16px;
   background: linear-gradient(to bottom, #374051, #2d3441);
   color: white;
-  padding: 12px 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  padding: 16px 20px;
+  box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid #243342;
+  margin: 10px 15px 10px 5px;
+  border-radius: 8px;
 }
 
 .backButton {
-  background: linear-gradient(to bottom, #6c757d, #5a6268);
+  background: linear-gradient(to bottom, #007bff, #0056b3);
   border: none;
   border-radius: 6px;
-  padding: 8px 16px;
+  padding: 10px 20px;
   color: white;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .backButton:hover {
-  background: linear-gradient(to bottom, #5a6268, #495057);
+  background: linear-gradient(to bottom, #0056b3, #004085);
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.4);
 }
 
 .machinesHeader h2 {
   margin: 0;
   font-size: 18px;
   font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  color: white;
 }
 
-/* Адаптивность */
-@media screen and (max-width: 768px) {
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 1366px) and (orientation: landscape) {
   .content {
-    flex-direction: column;
+    padding: 8px 12px 8px 4px;
   }
   
   .streamsPanel {
-    flex: none;
-    height: 200px;
-    border-right: none;
-    border-bottom: 2px solid #dee2e6;
+    width: 250px;
+    min-width: 250px;
+    padding: 12px;
   }
   
-  .stagesPanel {
-    flex: 1;
+  .stagesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
   }
   
-  .percentageSection {
-    flex-direction: column;
+  .stageCard {
+    height: 280px;
+  }
+}
+
+@media screen and (max-width: 1024px) and (max-height: 768px) and (orientation: landscape) {
+  .streamsPanel {
+    width: 220px;
+    min-width: 220px;
+    padding: 10px;
+  }
+  
+  .stagesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  
+  .stageCard {
+    height: 260px;
+  }
+}
+
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 900px) and (max-height: 450px) and (orientation: landscape) {
+  .content {
+    padding: 6px 10px 6px 3px;
+  }
+  
+  .streamsPanel {
+    width: 180px;
+    min-width: 180px;
+    padding: 8px;
+  }
+  
+  .stagesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 8px;
   }
   
-  .percentageValue {
+  .stageCard {
+    height: 240px;
+  }
+}
+
+/* Вертикальная ориентация планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .container {
+    height: auto;
+    overflow-y: auto;
+  }
+  
+  .content {
+    flex-direction: column;
+    padding: 10px;
+    height: auto;
+  }
+  
+  .streamsPanel {
+    width: 100%;
     min-width: auto;
+    height: auto;
+    min-height: 200px;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+  
+  .stagesPanel {
+    height: auto;
+    min-height: 400px;
+  }
+  
+  .stagesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+}
+
+/* Мобильные устройства */
+@media screen and (max-width: 576px) {
+  .content {
+    padding: 8px;
+  }
+  
+  .stagesGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .stageCard {
+    height: 320px;
   }
 }

@@ -13,6 +13,7 @@ import {
 import { useMachine } from '../hooks/machinNoSmenHook/useMachine';
 
 import styles from './YpakMachinePage.module.css';
+import RotateScreen from '../../componentsGlobal/RotateScreen/RotateScreen';
 
 const YpakMachinePage: React.FC = () => {
   // Использовать хук без передачи ID - он сам возьмет ID из localStorage
@@ -63,6 +64,8 @@ const YpakMachinePage: React.FC = () => {
   };
 
   return (
+     <>
+      <RotateScreen />
     <div className={styles.mesPage}>
       {/* Боковая панель всегда отображается, но с учетом статуса станка */}
       <div className={styles.Sidebar_Block}>
@@ -89,6 +92,7 @@ const YpakMachinePage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

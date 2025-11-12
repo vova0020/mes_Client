@@ -93,7 +93,7 @@ const StreamsManagement: React.FC = () => {
                             </div>
                             <div className={styles.volumeRow}>
                               <span className={styles.label}>Готово:</span>
-                              <span className={`${styles.value} ${styles.ready}`}>{stage.completed.toLocaleString()}</span>
+                              <span className={styles.value}>{stage.completed.toLocaleString()}</span>
                               <span className={styles.unit}>м²</span>
                             </div>
                             <div className={styles.volumeRow}>

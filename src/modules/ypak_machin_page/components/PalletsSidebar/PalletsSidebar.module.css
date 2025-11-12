@@ -918,15 +918,69 @@
 }
 
 /* Медиа-запросы для адаптивного дизайна */
-@media screen and (max-width: 1200px) {
+
+/* Большие настольные экраны (более 1200px) */
+@media screen and (min-width: 1201px) {
   .sidebar.open {
-    width: calc(85% - 40px); /* Увеличиваем до 85% */
+    width: calc(85% - 40px);
+  }
+  
+  .palletsTable {
+    font-size: 13px;
+  }
+  
+  .palletsTable th {
+    padding: 12px 16px;
+  }
+  
+  .palletsTable td {
+    padding: 10px 16px;
+  }
+  
+  .actionButton {
+    min-width: 36px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  
+  .statusBadge {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  
+  .processStep {
+    font-size: 11px;
+  }
+  
+  .noOperation {
+    font-size: 12px;
+  }
+}
+
+/* Средние настольные экраны (от 992px до 1200px) */
+@media screen and (min-width: 992px) and (max-width: 1200px) {
+  .sidebar.open {
+    width: calc(85% - 40px);
+  }
+  
+  .palletsTable {
+    font-size: 12px;
+  }
+  
+  .palletsTable th {
+    padding: 10px 14px;
+  }
+  
+  .palletsTable td {
+    padding: 8px 14px;
   }
   
   .actionButton {
     padding: 0 10px;
     min-width: 32px;
     height: 30px;
+    font-size: 11px;
   }
   
   .statusBadge {
@@ -937,100 +991,248 @@
   .processStep {
     font-size: 10px;
   }
+  
+  .noOperation {
+    font-size: 11px;
+  }
 }
 
-@media screen and (max-width: 992px) {
+/* Планшеты 10-11 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .sidebar.open {
-    width: calc(90% - 30px);
+    width: calc(85% - 30px);
     right: 15px;
     top: 15px;
     height: calc(100vh - 30px);
   }
   
-  .actionsCell {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  
-  .actionButton {
-    flex: 1 0 calc(50% - 6px);
-    padding: 0 8px;
-    min-width: 0;
-    height: 28px;
+  .palletsTable {
     font-size: 11px;
   }
   
-  .sidebarContent {
-    padding: 15px;
+  .palletsTable th {
+    padding: 9px 12px;
+  }
+  
+  .palletsTable td {
+    padding: 7px 12px;
+  }
+  
+  .actionButton {
+    padding: 0 9px;
+    min-width: 30px;
+    height: 28px;
+    font-size: 10px;
+  }
+  
+  .statusBadge {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  
+  .processStep {
+    font-size: 9px;
+  }
+  
+  .noOperation {
+    font-size: 10px;
   }
   
   .bufferCellSelect, .machineSelect {
     padding: 8px 10px;
-    font-size: 12px;
-    background-position: right 10px center;
-    padding-right: 28px;
-  }
-  
-  .palletsTable th, .palletsTable td {
-    padding: 10px 12px;
-  }
-  
-  .operationStatus {
-    gap: 2px;
+    font-size: 11px;
   }
 }
 
-@media screen and (max-width: 768px) {
+/* Планшеты меньше 10 дюймов в горизонтальной ориентации */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .sidebar.open {
-    width: calc(92% - 20px);
-    right: 10px;
-    top: 10px;
-    height: calc(100vh - 20px);
+    width: calc(70% - 30px);
+    right: 15px;
+    top: 15px;
+    height: calc(100vh - 30px);
   }
   
-  .actionButton {
-    flex: 1 0 calc(50% - 4px);
-    padding: 0 6px;
-    height: 26px;
+  .palletsTable {
     font-size: 10px;
   }
   
+  .palletsTable th {
+    padding: 8px 10px;
+  }
+  
+  .palletsTable td {
+    padding: 6px 10px;
+  }
+  
   .actionsCell {
-    gap: 4px;
+    gap: 5px;
+  }
+  
+  .actionButton {
+    padding: 0 8px;
+    min-width: 28px;
+    height: 26px;
+    font-size: 9px;
+  }
+  
+  .statusBadge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+  
+  .processStep {
+    font-size: 8px;
+  }
+  
+  .noOperation {
+    font-size: 9px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 7px 9px;
+    font-size: 10px;
   }
   
   .sidebarContent {
     padding: 12px;
   }
   
+  .detailInfo {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+}
+
+/* Телефоны 6-7 дюймов в горизонтальной ориентации */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .sidebar.open {
+    width: calc(75% - 20px);
+    right: 10px;
+    top: 10px;
+    height: calc(100vh - 20px);
+  }
+  
   .palletsTable {
-    font-size: 12px;
+    font-size: 9px;
   }
   
   .palletsTable th {
-    padding: 10px 8px;
+    padding: 6px 8px;
   }
   
   .palletsTable td {
-    padding: 8px;
+    padding: 5px 8px;
+  }
+  
+  .actionsCell {
+    gap: 4px;
+  }
+  
+  .actionButton {
+    padding: 0 6px;
+    min-width: 26px;
+    height: 24px;
+    font-size: 8px;
   }
   
   .statusBadge {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 8px;
+    padding: 2px 5px;
   }
   
   .processStep {
-    font-size: 9px;
-    padding: 1px 6px;
+    font-size: 7px;
   }
   
   .noOperation {
-    padding: 2px 8px;
+    font-size: 8px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+  
+  .sidebarContent {
+    padding: 10px;
+  }
+  
+  .detailInfo {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  
+  .detailProperty {
+    padding: 3px 8px;
+  }
+  
+  .propertyLabel {
+    font-size: 9px;
+  }
+  
+  .propertyValue {
     font-size: 10px;
   }
 }
 
+/* Вертикальная ориентация для планшетов */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+  .sidebar.open {
+    width: calc(85% - 20px);
+    right: 10px;
+    top: 10px;
+    height: calc(100vh - 20px);
+  }
+  
+  .palletsTable {
+    font-size: 11px;
+  }
+  
+  .palletsTable th {
+    padding: 9px 12px;
+  }
+  
+  .palletsTable td {
+    padding: 7px 12px;
+  }
+  
+  .actionButton {
+    padding: 0 10px;
+    min-width: 32px;
+    height: 30px;
+    font-size: 11px;
+  }
+  
+  .statusBadge {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  
+  .processStep {
+    font-size: 9px;
+  }
+  
+  .noOperation {
+    font-size: 10px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  
+  .sidebarContent {
+    padding: 12px;
+  }
+  
+  .detailInfo {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+}
+
+/* Мобильные устройства */
 @media screen and (max-width: 576px) {
   .sidebar.open {
     width: calc(95% - 10px);
@@ -1040,77 +1242,73 @@
   }
   
   .palletsTable {
-    font-size: 11px;
-  }
-  
-  .palletsTable th {
-    padding: 8px 6px;
     font-size: 10px;
   }
   
-  .palletsTable td {
-    padding: 6px;
+  .palletsTable th {
+    padding: 7px 6px;
+    font-size: 9px;
   }
   
-  .actionButton {
-    flex: 1 0 calc(50% - 2px);
-    padding: 0 4px;
-    height: 24px;
-    font-size: 9px;
+  .palletsTable td {
+    padding: 5px 6px;
   }
   
   .actionsCell {
-    gap: 2px;
+    gap: 3px;
+    flex-wrap: wrap;
   }
   
-  .sidebarContent {
-    padding: 10px;
-  }
-  
-  .bufferCellSelect, .machineSelect {
-    padding: 6px 8px;
-    font-size: 11px;
-    background-position: right 8px center;
-    padding-right: 24px;
+  .actionButton {
+    flex: 1 0 calc(50% - 3px);
+    padding: 0 5px;
+    height: 26px;
+    font-size: 9px;
+    min-width: 0;
   }
   
   .statusBadge {
-    padding: 2px 4px;
-    font-size: 9px;
+    padding: 2px 5px;
+    font-size: 8px;
     letter-spacing: 0.2px;
   }
   
   .processStep {
-    font-size: 8px;
+    font-size: 7px;
     padding: 1px 4px;
   }
   
   .noOperation {
-    padding: 2px 6px;
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .bufferCellSelect, .machineSelect {
+    padding: 6px 8px;
+    font-size: 10px;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+  
+  .sidebarContent {
+    padding: 8px;
+  }
+  
+  .detailInfo {
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .detailProperty {
+    padding: 3px 6px;
+  }
+  
+  .propertyLabel {
     font-size: 9px;
   }
   
-  /* Оптимизация для маленьких экранов - скрываем некоторые колонки */
-  .palletsTable th:nth-child(5),
-  .palletsTable td:nth-child(5) {
-    display: none; /* Скрываем колонку со статусом на маленьких экранах */
-  }
-  
-  /* Добавляем индикатор статуса к имени поддона */
-  .palletsTable tr[data-status="IN_PROGRESS"] td:first-child::after {
-    content: ' 🔄';
-  }
-  
-  .palletsTable tr[data-status="BUFFERED"] td:first-child::after {
-    content: ' 🔵';
-  }
-  
-  .palletsTable tr[data-status="COMPLETED"] td:first-child::after {
-    content: ' ✅';
-  }
-  
-  .palletsTable tr[data-status="FAILED"] td:first-child::after {
-    content: ' ❌';
+  .propertyValue {
+    font-size: 10px;
   }
 }
 
