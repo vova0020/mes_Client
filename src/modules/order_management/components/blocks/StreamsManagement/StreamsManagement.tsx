@@ -74,14 +74,16 @@ const StreamsManagement: React.FC = () => {
                   <div>Загрузка этапов...</div>
                 ) : (
                   stages.map((stage: any) => {
-                    const percentage = stage.shiftNorm > 0 ? Math.round((stage.completed / stage.shiftNorm) * 100) : 0;
+                    const completed = stage.completed || 0;
+                    const readyForProcessing = stage.readyForProcessing || 0;
+                    const percentage = stage.shiftNorm > 0 ? Math.round((completed / stage.shiftNorm) * 100) : 0;
                     return (
                       <div key={stage.stageId} className={`${styles.stageCard} ${percentage >= 80 ? styles.highProgress : percentage >= 50 ? styles.mediumProgress : styles.lowProgress}`}>
                         <div className={styles.stageHeader}>
                           <h3>{stage.stageName}</h3>
-                          <div className={`${styles.statusBadge} ${percentage >= 80 ? styles.statusHigh : percentage >= 50 ? styles.statusMedium : styles.statusLow}`}>
+                          {/* <div className={`${styles.statusBadge} ${percentage >= 80 ? styles.statusHigh : percentage >= 50 ? styles.statusMedium : styles.statusLow}`}>
                             {percentage >= 80 ? 'Отлично' : percentage >= 50 ? 'Норма' : 'Низкий'}
-                          </div>
+                          </div> */}
                         </div>
                         
                         <div className={styles.stageContent}>
@@ -93,13 +95,18 @@ const StreamsManagement: React.FC = () => {
                             </div>
                             <div className={styles.volumeRow}>
                               <span className={styles.label}>Готово:</span>
-                              <span className={styles.value}>{stage.completed.toLocaleString()}</span>
+                              <span className={styles.value}>{completed.toLocaleString()}</span>
+                              <span className={styles.unit}>м²</span>
+                            </div>
+                            <div className={styles.volumeRow}>
+                              <span className={styles.label}>Готово к обработке:</span>
+                              <span className={styles.value}>{readyForProcessing.toLocaleString()}</span>
                               <span className={styles.unit}>м²</span>
                             </div>
                             <div className={styles.volumeRow}>
                               <span className={styles.label}>Рабочие места:</span>
                               <span className={styles.value}>
-                                {stage.workplaceCount}
+                                {stage.activeWorkplaces || 0}/{stage.totalWorkplaces || 0}
                               </span>
                               <span className={styles.unit}>шт.</span>
                             </div>

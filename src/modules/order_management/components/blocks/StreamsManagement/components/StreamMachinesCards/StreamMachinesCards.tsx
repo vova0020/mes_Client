@@ -56,6 +56,20 @@ const StreamMachinesCards: React.FC<StreamMachinesCardsProps> = ({ streamId, sta
     </div>
   );
 
+  const renderMaintenanceOverlay = () => (
+    <div className={styles.maintenanceOverlay}>
+      <div className={styles.maintenanceIcon}>🔧</div>
+      <div className={styles.maintenanceMessage}>Техническое обслуживание</div>
+    </div>
+  );
+
+  const renderBrokenOverlay = () => (
+    <div className={styles.brokenOverlay}>
+      <div className={styles.brokenIcon}>⚠️</div>
+      <div className={styles.brokenMessage}>Станок сломан</div>
+    </div>
+  );
+
 
 
   if (loading) {
@@ -110,7 +124,7 @@ const StreamMachinesCards: React.FC<StreamMachinesCardsProps> = ({ streamId, sta
       <div className={styles.tableContainer}>
         <div className={styles.cardsWrapper}>
           {workplaces.map((machine: any) => {
-            const status = machine.completed > 0 ? 'active' : 'inactive';
+            const status = machine.status?.toLowerCase() || 'inactive';
             return (
               <div 
                 key={machine.machineId} 
@@ -161,6 +175,10 @@ const StreamMachinesCards: React.FC<StreamMachinesCardsProps> = ({ streamId, sta
                         </span>
                       </div>
                     </>
+                  ) : status === 'maintenance' ? (
+                    renderMaintenanceOverlay()
+                  ) : status === 'broken' ? (
+                    renderBrokenOverlay()
                   ) : (
                     renderInactiveOverlay()
                   )}
