@@ -6,6 +6,7 @@ import DetailRouteManagement from './components/blocks/DetailRouteManagement';
 import OrderPlanning from './components/blocks/OrderPlanning';
 import OrderDisplay from './components/blocks/orderDisplayBlok/OrderDisplay';
 import StreamsManagement from './components/blocks/StreamsManagement/StreamsManagement';
+import StatisticsDisplay from './components/blocks/StatisticsDisplay';
 
 import styles from './OrderManagement.module.css';
 
@@ -38,6 +39,8 @@ const OrderManagementBlok: React.FC = () => {
         return <DetailRouteManagement onBack={handleBackToMain} />;
       case 'orderManagement':
         return <OrderPlanning onBack={handleBackToMain} />;
+      case 'statistics':
+        return <StatisticsDisplay />;
       case 'orderDisplay':
       default:
         return (

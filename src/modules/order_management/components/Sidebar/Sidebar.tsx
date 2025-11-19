@@ -18,6 +18,7 @@ export type SettingSection =
   | 'detailRouteManagement'
   | 'orderManagement'
   | 'orderDisplay'
+  | 'statistics'
   | null;
 
 interface SidebarProps {
@@ -38,8 +39,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
 
 
         <Tooltip title="Статистика" placement="right">
-          <Button>
-            <Statistik />
+          <Button onClick={() => onSectionChange('statistics')}>
+            <Statistik className={getButtonClass('statistics')} />
           </Button>
         </Tooltip>
         <Tooltip title="Буфер деталей" placement="right">
