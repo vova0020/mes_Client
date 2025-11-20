@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { API_URL } from '../config';
+import { API_URLWS } from '../config';
 import { Machine } from '../machinNoSmenApi/machineApi';
 
 // Типы событий сокета в соответствии с документацией
@@ -68,7 +68,7 @@ class SocketService {
       this.socket = null;
     }
 
-    this.socket = io(API_URL, {
+    this.socket = io(API_URLWS, {
       transports: ['websocket'],
       autoConnect: true,
       reconnection: true,
