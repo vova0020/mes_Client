@@ -18,18 +18,15 @@ export enum SocketEvent {
   MACHINE_STATUS_UPDATED = 'machineStatusUpdated'
 }
 
-// Комнаты для подключения согласно новой документации
+// Комнаты для подключения
 export enum SocketRoom {
-  SETTINGS_MACHINES = 'settings-machines',
-  SETTINGS_MATERIALS = 'settings-materials',
-  SETTINGS_MATERIAL_GROUPS = 'settings-materialGroups',
-  SETTINGS_BUFFERS = 'settings-buffers',
-  SETTINGS_PRODUCTION_LINES = 'settings-production-lines',
-  SETTINGS_PRODUCTION_STAGES = 'settings-production-stages',
-  SETTINGS_USER = 'settings-user',
-  PRODUCT_MACHINES = 'product-machines',
-  ROUTES = 'settings-routes',
-  PALLETS = 'pallets'
+  MASTER_CEH = 'room:masterceh',
+  MASTER_YPACK = 'room:masterypack',
+  MACHINES_YPACK = 'room:machinesypack',
+  MACHINES = 'room:machines',
+  MACHINES_NO_SMEN = 'room:machinesnosmen',
+  TECHNOLOGIST = 'room:technologist',
+  DIRECTOR = 'room:director'
 }
 
 // Интерфейс обработчика событий сокета
@@ -195,43 +192,17 @@ class SocketService {
   }
 
   /**
-   * Присоединяемся к комнате для событий о станках
+   * Присоединяемся к комнате для событий о станках без смены
    */
   public joinMachinesRoom(): void {
-    if (!this.socket) {
-      // console.log('Соединение не инициализировано, инициализируем...');
-      this.initialize();
-    }
-
-    if (!this.socket) {
-      console.error('Не удалось инициализировать соединение Socket.IO');
-      return;
-    }
-
-    if (this.socket.connected) {
-      // console.log('Подключение к комнате станков через событие:', SocketRoom.PRODUCT_MACHINES);
-      this.socket.emit('joinRoom', { room: SocketRoom.PRODUCT_MACHINES });
-      this.rooms.add(SocketRoom.PRODUCT_MACHINES);
-
-      // console.log('Комната, к которой мы пытаемся присоединиться:', SocketRoom.PRODUCT_MACHINES);
-    } else {
-      // console.log('Socket.IO не подключен. Добавляем комнату в список для автоподключения после установления соединения');
-      this.rooms.add(SocketRoom.PRODUCT_MACHINES);
-
-      // Пытаемся подключиться, если соединение не установлено
-      if (!this.socket.connected) {
-        // console.log('Пытаемся установить соединение...');
-        this.socket.connect();
-      }
-    }
+    this.joinRoom(SocketRoom.MACHINES_NO_SMEN);
   }
 
   /**
-   * Присоединяемся к комнате согласно новой документации
+   * Присоединяемся к комнате
    */
-  public joinRoom(room: SocketRoom): void {
+  public joinRoom(room: SocketRoom | string): void {
     if (!this.socket) {
-      // console.log('Соединение не инициализировано, инициализируем...');
       this.initialize();
     }
 
@@ -241,31 +212,25 @@ class SocketService {
     }
 
     if (this.socket.connected) {
-      // console.log(`Подключение к комнате: ${room}`);
       this.socket.emit('joinRoom', { room });
       this.rooms.add(room);
     } else {
-      // console.log('Socket.IO не подключен. Добавляем комнату в список для автоподключения после установления соединения');
       this.rooms.add(room);
-
-      // Пытаемся подключиться, если соединение не установлено
       if (!this.socket.connected) {
-        // console.log('Пытаемся установить соединение...');
         this.socket.connect();
       }
     }
   }
 
   /**
-   * Покидаем комнату согласно новой документации
+   * Покидаем комнату
    */
-  public leaveRoom(room: SocketRoom): void {
+  public leaveRoom(room: SocketRoom | string): void {
     if (!this.socket || !this.socket.connected) {
       console.warn('Не удалось покинуть комнату: соединение не установлено');
       return;
     }
 
-    // console.log(`Покидаем комнату: ${room}`);
     this.socket.emit('leaveRoom', { room });
     this.rooms.delete(room);
   }

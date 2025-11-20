@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { machineApi, Machine, getLocalMachineIds, MachineStatus, DefectPalletPartsDto, DefectPartsResponse } from '../../api/machineApi/machineApi';
-import { socketService, SocketEvent } from '../../api/socket/socketService';
+import {
+  machineApi,
+  Machine,
+  getLocalMachineIds,
+  MachineStatus,
+  DefectPalletPartsDto,
+  DefectPartsResponse
+} from '../../api/machineApi/machineApi';
 import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
-// Типы состояний загрузки
 export type LoadingState = 'loading' | 'success' | 'error';
 
-// Тип для результата хука
 interface UseMachineResult {
   machine: Machine | null;
   loading: LoadingState;
@@ -27,99 +31,65 @@ interface UseMachineResult {
   defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
 }
 
-// Получение комнаты из localStorage
+// Используем единый ROOM_NAME по умолчанию
+const ROOM_NAME = 'room:machines';
+
 const getRoomFromStorage = (): string => {
-  // Временно закомментировано - используем фиксированную комнату
-  // try {
-  //   const userData = localStorage.getItem('user');
-  //   if (userData) {
-  //     const user = JSON.parse(userData);
-  //     if (user.department) {
-  //       return `room:${user.department}`;
-  //     }
-  //     if (user.role === 'master') {
-  //       return 'room:masterceh';
-  //     }
-  //   }
-  //   return 'room:masterceh';
-  // } catch (error) {
-  //   console.error('Ошибка при получении комнаты из localStorage:', error);
-  //   return 'room:masterceh';
-  // }
-  
-  // Фиксированная комната (может быть несколько: room1, room2, etc.)
-  return 'room:machines';
+  try {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      if (user.department) return `room:${user.department}`;
+      if (user.role === 'master') return 'room:masterceh';
+    }
+  } catch (e) {
+    // ignore
+  }
+  return ROOM_NAME;
 };
 
-/**
- * Хук для работы с данными о станке, с поддержкой Socket.IO
- * @param machineId - ID станка (если не указан, будет взят из localStorage)
- * @returns Объект с данными и состояниями станка
- */
 export const useMachine = (machineId?: number): UseMachineResult => {
   const [machine, setMachine] = useState<Machine | null>(null);
   const [loading, setLoading] = useState<LoadingState>('loading');
   const [error, setError] = useState<Error | null>(null);
   const [effectiveId, setEffectiveId] = useState<number | undefined>(machineId);
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
-  
-  // Используем ref для отслеживания актуального состояния в обработчиках событий
-  const machineRef = useRef<Machine | null>(null);
-  const loadingRef = useRef<LoadingState>('loading');
-  
-  // debounce refs
-  const refreshTimeoutRef = useRef<number | null>(null);
-  const REFRESH_DEBOUNCE_MS = 300;
-  
-  // Получаем комнату для WebSocket подключения
-  const room = useMemo(() => getRoomFromStorage(), []);
-  
-  // Инициализируем WebSocket подключение
-  const { 
-    socket, 
-    isConnected: isWebSocketConnected, 
-    error: webSocketError 
-  } = useWebSocketRoom({ 
-    room,
-    autoJoin: true 
-  });
-  
-  // При изменении machine обновляем ref
-  useEffect(() => {
-    machineRef.current = machine;
-  }, [machine]);
-  
-  // При изменении loading обновляем ref
-  useEffect(() => {
-    loadingRef.current = loading;
-  }, [loading]);
 
-  // Получаем ID станка из localStorage, если он не передан в параметрах
+  const machineRef = useRef<Machine | null>(null);
+  const loadingRef = useRef<LoadingState>(loading);
+  useEffect(() => { machineRef.current = machine; }, [machine]);
+  useEffect(() => { loadingRef.current = loading; }, [loading]);
+
+  const REFRESH_DEBOUNCE_MS = 300;
+  const refreshTimeoutRef = useRef<number | null>(null);
+
+  const room = useMemo(() => getRoomFromStorage(), []);
+  const {
+    socket,
+    isConnected: isWebSocketConnected,
+    error: webSocketError
+  } = useWebSocketRoom({ room, autoJoin: true });
+
+  // Получаем ID из localStorage если не передан
   useEffect(() => {
     if (machineId === undefined) {
       const localIds = getLocalMachineIds();
-      if (localIds) {
+      if (localIds && typeof localIds.machineId === 'number') {
         setEffectiveId(localIds.machineId);
       } else {
-        console.error('ID станка не найден в localStorage');
+        console.warn('ID станка не найден в localStorage и не передан в параметрах');
       }
     } else {
       setEffectiveId(machineId);
     }
   }, [machineId]);
 
-  // Функция для загрузки данных о станке через REST API
+  // fetchMachine: тихо выходим если нет effectiveId
   const fetchMachine = useCallback(async (): Promise<void> => {
-    if (!effectiveId) {
-      setLoading('error');
-      setError(new Error('ID станка не определен'));
-      return;
-    }
-
+    if (!effectiveId) return;
     try {
       setLoading('loading');
       setError(null);
-      
       const data = await machineApi.getMachineById(effectiveId);
       setMachine(data);
       setLoading('success');
@@ -130,15 +100,12 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     }
   }, [effectiveId]);
 
-  // Функция для обновления данных станка
+  // refreshMachineData: дебаунс и лог статусов
   const refreshMachineData = useCallback(async (status: string) => {
     try {
-      if (status !== 'updated') {
-        console.warn('Игнорируем неожиданный status from socket:', status);
-        return;
-      }
-
       if (!effectiveId) return;
+
+      console.log('[useMachine] refreshMachineData status:', status);
 
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
@@ -148,139 +115,191 @@ export const useMachine = (machineId?: number): UseMachineResult => {
         try {
           const data = await machineApi.getMachineById(effectiveId);
           setMachine(data);
-          
-          // Обновляем состояние загрузки
-          if (loadingRef.current === 'loading') {
-            setLoading('success');
-          }
-          
-          console.log(`Данные станка обновлены (debounced):`, data);
+          if (loadingRef.current === 'loading') setLoading('success');
+          console.log('[useMachine] machine data refreshed (debounced):', data);
         } catch (err) {
           console.error('Ошибка обновления данных станка:', err);
           setLoading('error');
           setError(err instanceof Error ? err : new Error('Ошибка обновления'));
+        } finally {
+          refreshTimeoutRef.current = null;
         }
-      }, REFRESH_DEBOUNCE_MS);
+      }, REFRESH_DEBOUNCE_MS) as unknown as number;
     } catch (err) {
       console.error('Ошибка в refreshMachineData:', err);
     }
   }, [effectiveId]);
 
-  // Функция для обработки событий обновления статуса станка от Socket.IO
-  const handleMachineStatusUpdate = useCallback((updatedMachine: Machine) => {
-    // Проверяем, что ID станка соответствует текущему
-    if (updatedMachine && updatedMachine.id === effectiveId) {
-      // Обновляем состояние machine
-      setMachine(updatedMachine);
-      
-      // Также обновляем состояние loading, если оно было в состоянии загрузки
-      if (loadingRef.current === 'loading') {
-        setLoading('success');
-      }
-    } else {
-      console.warn(
-        `ID станка не совпадает: получено=${updatedMachine?.id}, ожидается=${effectiveId}. ` +
-        'Обновление проигнорировано.'
-      );
-    }
-  }, [effectiveId]);
-
-  // Настройка WebSocket обработчиков событий
+  /**
+   * === DIAGNOSTIC EFFECT ===
+   * Логирует:
+   *  - socket info (handshake/auth/opts)
+   *  - все входящие события через onAny (если поддерживается)
+   *  - сырые WS фреймы (низкоуровневые) — для проверки реального трафика
+   *  - делает join с ack (если сервер ожидает join from client)
+   *
+   * Оставь этот эффект временно (несколько запусков), затем предоставь сюда вывод консоли.
+   */
   useEffect(() => {
-    if (!socket || !isWebSocketConnected || !effectiveId) return;
+    if (!socket) return;
 
-    console.log('Настройка WebSocket обработчиков для станка в комнате:', room);
+    try {
+      console.log('[SOCKET INFO]', {
+        id: (socket as any).id,
+        connected: (socket as any).connected,
+        nsp: (socket as any).nsp ? (socket as any).nsp.name : undefined,
+        auth: (socket as any).auth ?? (socket as any).io?.opts?.auth ?? (socket as any).io?.opts?.query,
+        opts: (socket as any).io?.opts
+      });
+    } catch (e) {
+      console.warn('[SOCKET INFO] error', e);
+    }
 
-    const handleMachineEvent = async (data: { status: string }) => {
-      console.log('Получено WebSocket событие для станка - status:', data.status);
-      await refreshMachineData(data.status);
+    // onAny: лог всех событий (если доступен)
+    const anyHandler = (event: string, ...args: any[]) => {
+      console.log('[SOCKET ANY]', event, args);
+    };
+    if ((socket as any).onAny) {
+      (socket as any).onAny(anyHandler);
+    }
+
+    // Лог конкретного события (на случай, если он совпадает с серверным emit)
+    const handleMachineEvent = (payload: any) => {
+      console.log('[SOCKET HANDLER] machine:event ->', payload);
+      // не делаем refresh здесь — это диагностический эффект; реальный refresh в основном эффекте
+    };
+    socket.on('machine:event', handleMachineEvent);
+
+    // Raw WS frames (attach to underlying websocket if доступно)
+    let rawListener: ((ev: MessageEvent) => void) | null = null;
+    try {
+      const engine = (socket as any).io?.engine;
+      // engine.ws (engine.socket) location may vary by client version
+      const ws = engine?.ws ?? engine?.transport?.ws;
+      if (ws && ws.addEventListener) {
+        rawListener = (ev: MessageEvent) => {
+          try {
+            console.log('[WS RAW]', String(ev.data).slice(0, 400));
+          } catch (e) { /* ignore */ }
+        };
+        ws.addEventListener('message', rawListener);
+        console.log('[WS RAW] attached to underlying websocket');
+      } else {
+        console.log('[WS RAW] underlying ws not available (engine.ws missing)');
+      }
+    } catch (e) {
+      console.warn('[WS RAW] attach error', e);
+    }
+
+    // Попытка join с разными именами (если сервер ожидает join event от клиента)
+    try {
+      socket.emit('join', room, (ack: any) => console.log('[SOCKET] join ack (join):', ack));
+    } catch (e) { /* ignore */ }
+    try {
+      socket.emit('joinRoom', room, (ack: any) => console.log('[SOCKET] join ack (joinRoom):', ack));
+    } catch (e) { /* ignore */ }
+    try {
+      socket.emit('subscribe', room, (ack: any) => console.log('[SOCKET] join ack (subscribe):', ack));
+    } catch (e) { /* ignore */ }
+
+    const onConnectDiag = () => console.log('[SOCKET] connect (diagnostic)');
+    const onDisconnectDiag = (reason: any) => console.log('[SOCKET] disconnect (diagnostic)', reason);
+    const onConnectErrorDiag = (err: any) => console.log('[SOCKET] connect_error (diagnostic)', err);
+
+    socket.on('connect', onConnectDiag);
+    socket.on('disconnect', onDisconnectDiag);
+    socket.on('connect_error', onConnectErrorDiag);
+
+    return () => {
+      if ((socket as any).offAny) (socket as any).offAny(anyHandler);
+      socket.off('machine:event', handleMachineEvent);
+      socket.off('connect', onConnectDiag);
+      socket.off('disconnect', onDisconnectDiag);
+      socket.off('connect_error', onConnectErrorDiag);
+      if (rawListener) {
+        try {
+          const engine = (socket as any).io?.engine;
+          const ws = engine?.ws ?? engine?.transport?.ws;
+          if (ws && ws.removeEventListener) ws.removeEventListener('message', rawListener);
+        } catch (e) {}
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, room]);
+
+  /**
+   * === Основная подписка/логика обработки событий ===
+   * Подписываемся на события, делаем join при connect, вызываем refreshMachineData.
+   */
+  useEffect(() => {
+    if (!socket || !effectiveId) return;
+
+    // debug onAny (optional, but left here for clarity)
+    const onAny = (event: string, ...args: any[]) => {
+      console.log('[SOCKET ANY main]', event, args);
+    };
+    if ((socket as any).onAny) {
+      (socket as any).onAny(onAny);
+    }
+
+    const handleMachineEvent = (payload: any) => {
+      console.log('[SOCKET main] machine:event payload:', payload);
+      void refreshMachineData(payload?.status ?? '');
     };
 
-    const handleDisconnect = () => {
-      console.log('WebSocket соединение потеряно для станка, перезагружаем данные');
-      fetchMachine();
+    const handleMachineUpdate = (payload: any) => {
+      console.log('[SOCKET main] alternative payload:', payload);
+      void refreshMachineData(payload?.status ?? '');
     };
 
-    const handleReconnect = () => {
-      console.log('WebSocket переподключение для станка, обновляем данные');
-      fetchMachine();
+    const connectHandler = () => {
+      console.log('[SOCKET main] connect - re-joining room:', room);
+      setIsSocketConnected(true);
+      try { socket.emit('join', room, (ack: any) => console.log('[SOCKET main] join ack:', ack)); } catch (e) {}
+      void fetchMachine();
+    };
+
+    const disconnectHandler = (reason: any) => {
+      console.log('[SOCKET main] disconnect', reason);
+      setIsSocketConnected(false);
+      void fetchMachine();
     };
 
     socket.on('machine:event', handleMachineEvent);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('reconnect', handleReconnect);
+    socket.on('machine:update', handleMachineUpdate);
+    socket.on('machines:update', handleMachineUpdate);
+    socket.on('machine:status', handleMachineUpdate);
+
+    socket.on('connect', connectHandler);
+    socket.on('disconnect', disconnectHandler);
+
+    // если уже подключён — выполнить сразу connectHandler (join + fetch)
+    if ((socket as any).connected) {
+      connectHandler();
+    }
 
     return () => {
+      if ((socket as any).offAny) (socket as any).offAny(onAny);
       socket.off('machine:event', handleMachineEvent);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('reconnect', handleReconnect);
+      socket.off('machine:update', handleMachineUpdate);
+      socket.off('machines:update', handleMachineUpdate);
+      socket.off('machine:status', handleMachineUpdate);
+      socket.off('connect', connectHandler);
+      socket.off('disconnect', disconnectHandler);
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
         refreshTimeoutRef.current = null;
       }
     };
-  }, [socket, isWebSocketConnected, room, refreshMachineData, effectiveId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, effectiveId, room, refreshMachineData, fetchMachine]);
 
-  // Инициализация Socket.IO и настройка обработчиков событий
+  // Инициалная загрузка только при наличии effectiveId
   useEffect(() => {
-    if (!effectiveId) {
-      console.warn('effectiveId не определен, не инициализируем сокет');
-      return;
-    }
-    
-    try {
-      // Инициализируем сокет
-      const socket = socketService.initialize();
-      
-      // Присоединяемся к комнате product-machines для получения обновлений статуса станков
-      socketService.joinMachinesRoom();
-      
-      // Устанавливаем обработчики событий
-      socketService.setHandlers({
-        onConnect: () => {
-          setIsSocketConnected(true);
-          // При подключении заново присоединяемся к комнате
-          socketService.joinMachinesRoom();
-        },
-        onDisconnect: () => {
-          setIsSocketConnected(false);
-        },
-        onError: (error) => {
-          console.error('Socket.IO ошибка для станка:', error);
-          setIsSocketConnected(false);
-          // Если возникла ошибка сокета, попробуем загрузить данные через REST API
-          fetchMachine();
-        },
-        onMachineStatusUpdate: handleMachineStatusUpdate,
-        onRoomJoined: (room) => {
-          if (room === 'product-machines') {
-            // Подключение к комнате product-machines подтверждено
-          }
-        },
-        onRoomLeft: (room) => {
-          // Покинули комнату
-        }
-      });
-      
-      // Проверяем текущее состояние соединения
-      setIsSocketConnected(socketService.isConnected());
-      
-      // Первоначальная загрузка данных через REST API
-      fetchMachine();
-      
-      // Очистка при размонтировании компонента
-      return () => {
-        socketService.clearHandlers();
-      };
-    } catch (error) {
-      console.error('Ошибка при инициализации Socket.IO для станка:', error);
-      setIsSocketConnected(false);
-      // В случае ошибки с сокетом, используем обычный REST API
-      fetchMachine();
-    }
-  }, [effectiveId, handleMachineStatusUpdate, fetchMachine]);
+    if (!effectiveId) return;
+    void fetchMachine();
+  }, [effectiveId, fetchMachine]);
 
-  // Функция для изменения статуса станка
   const changeStatus = useCallback(async (status: MachineStatus): Promise<void> => {
     if (!effectiveId) {
       setError(new Error('ID станка не определен'));
@@ -290,26 +309,19 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     try {
       setLoading('loading');
       setError(null);
-      
+
       const updatedMachine = await machineApi.changeMachineStatus(effectiveId, status);
-      
-      // Если соединение через Socket.IO неактивно, обновляем состояние напрямую
+
       if (!isSocketConnected) {
         setMachine(updatedMachine);
         setLoading('success');
       } else {
-        // Форсируем обновление через небольшую задержку для корректного рендеринга компонентов
         setTimeout(() => {
-          // Проверяем, пришло ли обновление через сокет
           if (machineRef.current?.status !== status) {
-            setMachine({
-              ...updatedMachine,
-              // Убедимся, что статус обновился
-              status: status
-            });
-            setLoading('success');
+            setMachine({ ...updatedMachine, status });
           }
-        }, 1000); // Уменьшаем таймаут до 1 секунды для более быстрой реакции UI
+          setLoading('success');
+        }, 800);
       }
     } catch (err) {
       setLoading('error');
@@ -318,7 +330,6 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     }
   }, [effectiveId, isSocketConnected]);
 
-  // Функция для отбраковки деталей с поддона
   const defectPalletParts = useCallback(async (defectData: DefectPalletPartsDto): Promise<DefectPartsResponse> => {
     try {
       const response = await machineApi.defectPalletParts(defectData);
@@ -329,7 +340,6 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     }
   }, []);
 
-  // Вычисляемые состояния станка на основе текущего статуса
   const isActive = machine?.status === 'ACTIVE';
   const isInactive = machine?.status === 'INACTIVE';
   const isBroken = machine?.status === 'BROKEN';
@@ -344,16 +354,13 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     isBroken,
     isOnMaintenance,
     refetch: fetchMachine,
-    forceRefresh: () => {
-      console.log('Принудительное обновление данных станка');
-      fetchMachine();
-    },
+    forceRefresh: () => { void fetchMachine(); },
     machineId: effectiveId,
     segmentId: machine?.segmentId,
     changeStatus,
     isSocketConnected,
-    isWebSocketConnected,
-    webSocketError,
+    isWebSocketConnected: !!isWebSocketConnected,
+    webSocketError: webSocketError ? String(webSocketError) : null,
     refreshMachineData,
     defectPalletParts
   };
