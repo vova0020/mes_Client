@@ -19,7 +19,7 @@ module.exports = function(app) {
   app.use(
     '/socket.io',
     createProxyMiddleware({
-      target: apiTargetWS,
+      target: apiTarget,
       changeOrigin: true,
       ws: true, // ОБЯЗАТЕЛЬНО для Socket.IO
     })
