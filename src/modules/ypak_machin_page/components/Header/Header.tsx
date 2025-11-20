@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import styles from './Header.module.css';
 // Если есть логотип/иконки, импортируйте их, например:
 import logo from '../../../../assets/logo-Photoroom.png';
-import LogoutIcon from '@mui/icons-material/Logout';
 import LogoutButton from '../../../../componentsGlobal/LogoutButton/LogoutButton';
 
 // Интерфейсы для типизации данных из localStorage

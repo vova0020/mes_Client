@@ -54,7 +54,7 @@ const StatisticsDisplay: React.FC = () => {
         >
           Статистика по выработке
         </button>
-        <button 
+        {/* <button 
           className={`${styles.tabButton} ${activeTab === 'time' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('time')}
         >
@@ -65,7 +65,7 @@ const StatisticsDisplay: React.FC = () => {
           onClick={() => setActiveTab('breakdowns')}
         >
           Статистика по поломкам
-        </button>
+        </button> */}
       </div>
       
       <div className={styles.tabContentContainer}>

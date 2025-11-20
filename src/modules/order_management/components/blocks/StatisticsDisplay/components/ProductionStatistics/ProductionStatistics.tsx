@@ -1,29 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-  PointElement,
-  LineElement,
 } from 'chart.js';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
+import { useProductionLines, useLineStats, useStageStats } from '../../../../../../hooks/statisticsHook';
+import { DateRangeType, UnitOfMeasurement } from '../../../../../../api/statisticsApi'
 import styles from './ProductionStatistics.module.css';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
-  ArcElement,
-  PointElement,
-  LineElement
+  Legend
 );
 
 interface ProductionData {
@@ -38,105 +38,157 @@ interface ProductionStatisticsProps {
   data: ProductionData;
 }
 
+type PeriodType = 'day' | 'week' | 'month' | 'year' | 'custom';
+
+const periodToDateRangeType = (period: PeriodType): DateRangeType => {
+  switch (period) {
+    case 'day': return DateRangeType.DAY;
+    case 'week': return DateRangeType.WEEK;
+    case 'month': return DateRangeType.MONTH;
+    case 'year': return DateRangeType.YEAR;
+    case 'custom': return DateRangeType.CUSTOM;
+  }
+};
+
+
+
 const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [viewType, setViewType] = useState<'streams' | 'stages' | 'workstations'>('streams');
-  const [currentData, setCurrentData] = useState(data.streams);
+  const { lines, loading: linesLoading } = useProductionLines();
+  
+  const [selectedLineId, setSelectedLineId] = useState<number | null>(null);
+  const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
+  const [unit, setUnit] = useState<UnitOfMeasurement>(UnitOfMeasurement.SQUARE_METERS);
+  const [period, setPeriod] = useState<PeriodType>('day');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showTotal, setShowTotal] = useState(false);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentData(prev => prev.map(item => ({
-        ...item,
-        actual: Math.max(0, item.planned * (0.7 + Math.random() * 0.4))
-      })));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handlePeriodChange = (period: string) => {
-    setSelectedPeriod(period);
-    const multiplier = period === 'today' ? 0.4 : period === 'week' ? 0.8 : period === 'month' ? 1 : 1.3;
-    setCurrentData(data.streams.map(item => ({
-      ...item,
-      actual: Math.round(item.actual * multiplier * (0.8 + Math.random() * 0.4))
-    })));
-  };
-
-  const handleViewTypeChange = (type: 'streams' | 'stages' | 'workstations') => {
-    setViewType(type);
-    let newData;
-    if (type === 'stages') {
-      newData = [
-        { name: 'Подготовка', planned: 800, actual: 750 },
-        { name: 'Обработка', planned: 1200, actual: 1100 },
-        { name: 'Сборка', planned: 900, actual: 850 },
-        { name: 'Контроль', planned: 600, actual: 580 }
-      ];
-    } else if (type === 'workstations') {
-      newData = [
-        { name: 'Станок 1', planned: 400, actual: 380 },
-        { name: 'Станок 2', planned: 450, actual: 420 },
-        { name: 'Станок 3', planned: 380, actual: 360 },
-        { name: 'Станок 4', planned: 420, actual: 400 },
-        { name: 'Станок 5', planned: 350, actual: 340 }
-      ];
-    } else {
-      newData = data.streams;
+  const currentDate = useMemo(() => new Date().toISOString().split('T')[0], []);
+  
+  const { stats: stageStats, loading: stageLoading } = useLineStats(
+    selectedLineId,
+    periodToDateRangeType(period),
+    currentDate,
+    dateFrom,
+    dateTo,
+    unit
+  );
+  
+  const { stats: machineStats, loading: machineLoading } = useStageStats(
+    selectedLineId,
+    selectedStageId,
+    periodToDateRangeType(period),
+    currentDate,
+    dateFrom,
+    dateTo,
+    unit
+  );
+  
+  const chartData = useMemo(() => {
+    const stats = selectedStageId ? machineStats : stageStats;
+    
+    if (!stats || stats.length === 0) {
+      return { labels: [], datasets: [] };
     }
-    setCurrentData(newData);
-  };
+    
+    if (showTotal) {
+      const allDataPoints = stats.flatMap((s: any) => s.dataPoints || []);
+      const dateMap = new Map<string, number>();
+      allDataPoints.forEach((dp: any) => {
+        dateMap.set(dp.date, (dateMap.get(dp.date) || 0) + dp.value);
+      });
+      const sortedDates = Array.from(dateMap.keys()).sort();
+      return {
+        labels: sortedDates,
+        datasets: [{
+          label: 'Суммарная выработка',
+          data: sortedDates.map(date => dateMap.get(date) || 0)
+        }]
+      };
+    }
+    
+    const allDates = new Set<string>();
+    stats.forEach((s: any) => {
+      (s.dataPoints || []).forEach((dp: any) => allDates.add(dp.date));
+    });
+    const sortedDates = Array.from(allDates).sort();
+    
+    return {
+      labels: sortedDates,
+      datasets: stats.map((s: any) => ({
+        label: selectedStageId ? s.machineName : s.stageName,
+        data: sortedDates.map(date => {
+          const point = (s.dataPoints || []).find((dp: any) => dp.date === date);
+          return point ? point.value : 0;
+        })
+      }))
+    };
+  }, [stageStats, machineStats, selectedStageId, showTotal]);
 
+  const selectedLine = lines.find((l: any) => l.lineId === selectedLineId);
+  const selectedStage = stageStats.find((s: any) => s.stageId === selectedStageId);
+  
+  const colors = [
+    { bg: 'rgba(78, 205, 196, 0.6)', border: 'rgb(78, 205, 196)' },
+    { bg: 'rgba(255, 107, 107, 0.6)', border: 'rgb(255, 107, 107)' },
+    { bg: 'rgba(52, 152, 219, 0.6)', border: 'rgb(52, 152, 219)' },
+    { bg: 'rgba(155, 89, 182, 0.6)', border: 'rgb(155, 89, 182)' },
+    { bg: 'rgba(241, 196, 15, 0.6)', border: 'rgb(241, 196, 15)' },
+    { bg: 'rgba(230, 126, 34, 0.6)', border: 'rgb(230, 126, 34)' },
+    { bg: 'rgba(46, 204, 113, 0.6)', border: 'rgb(46, 204, 113)' },
+    { bg: 'rgba(231, 76, 60, 0.6)', border: 'rgb(231, 76, 60)' },
+    { bg: 'rgba(149, 165, 166, 0.6)', border: 'rgb(149, 165, 166)' },
+    { bg: 'rgba(26, 188, 156, 0.6)', border: 'rgb(26, 188, 156)' }
+  ];
+  
   const barChartData = {
-    labels: currentData.map(item => item.name),
-    datasets: [
-      {
-        label: 'План',
-        data: currentData.map(item => item.planned),
-        backgroundColor: 'rgba(78, 205, 196, 0.6)',
-        borderColor: '#4ECDC4',
+    labels: chartData.labels,
+    datasets: (chartData.datasets || []).map((dataset, idx) => {
+      const color = colors[idx % colors.length];
+      return {
+        label: `${dataset.label} (${unit === UnitOfMeasurement.SQUARE_METERS ? 'м²' : 'шт'})`,
+        data: dataset.data,
+        backgroundColor: color.bg,
+        borderColor: color.border,
         borderWidth: 2,
         borderRadius: 4
-      },
-      {
-        label: 'Факт',
-        data: currentData.map(item => Math.round(item.actual)),
-        backgroundColor: 'rgba(255, 107, 107, 0.6)',
-        borderColor: '#FF6B6B',
-        borderWidth: 2,
-        borderRadius: 4
-      }
-    ]
+      };
+    })
   };
-
-  const efficiencyData = {
-    labels: currentData.map(item => item.name),
-    datasets: [{
-      data: currentData.map(item => Math.round((item.actual / item.planned) * 100)),
-      backgroundColor: [
-        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'
-      ],
-      borderWidth: 0,
-      hoverOffset: 4
-    }]
-  };
-
-  const trendData = {
-    labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
-    datasets: [
-      {
-        label: 'Выработка',
-        data: [85, 92, 78, 95, 88, 90],
-        borderColor: '#4ECDC4',
-        backgroundColor: 'rgba(78, 205, 196, 0.1)',
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#4ECDC4',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 6
-      }
-    ]
-  };
+  
+  if (linesLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingState}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Загрузка данных...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!selectedLineId && lines.length > 0) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.emptyState}>
+          <h2 className={styles.emptyTitle}>📊 Выберите производственный поток</h2>
+          <p className={styles.emptyText}>Для просмотра статистики выберите один из доступных потоков:</p>
+          <div className={styles.lineSelector}>
+            {lines.map((line: any) => (
+              <button
+                key={line.lineId}
+                className={styles.lineBtn}
+                onClick={() => setSelectedLineId(line.lineId)}
+              >
+                <span className={styles.lineName}>{line.lineName}</span>
+                <span className={styles.lineType}>{line.lineType}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const chartOptions = {
     responsive: true,
@@ -144,7 +196,7 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     plugins: {
       legend: {
         labels: {
-          color: 'rgba(255, 255, 255, 0.8)',
+          color: '#333',
           font: { size: 12 }
         }
       },
@@ -156,134 +208,169 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     },
     scales: {
       x: {
-        ticks: { color: 'rgba(255, 255, 255, 0.7)' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+        ticks: { color: '#666' },
+        grid: { color: 'rgba(0, 0, 0, 0.1)' }
       },
       y: {
-        ticks: { color: 'rgba(255, 255, 255, 0.7)' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+        ticks: { color: '#666' },
+        grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
     }
   };
-
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          color: 'rgba(255, 255, 255, 0.8)',
-          padding: 15,
-          font: { size: 11 }
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        callbacks: {
-          label: (context: any) => `${context.label}: ${context.parsed}%`
-        }
-      }
-    }
-  };
-
-  const totalPlanned = currentData.reduce((sum, item) => sum + item.planned, 0);
-  const totalActual = currentData.reduce((sum, item) => sum + item.actual, 0);
-  const efficiency = Math.round((totalActual / totalPlanned) * 100);
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>📊 Статистика производства</h2>
-        <div className={styles.periodSelector}>
-          <button 
-            className={`${styles.periodBtn} ${selectedPeriod === 'today' ? styles.active : ''}`}
-            onClick={() => handlePeriodChange('today')}
+      </div>
+
+      <div className={styles.controls}>
+        <div className={styles.controlGroup}>
+          <label className={styles.label}>Поток:</label>
+          <select 
+            className={styles.select}
+            value={selectedLineId || ''}
+            onChange={(e) => {
+              setSelectedLineId(Number(e.target.value));
+              setSelectedStageId(null);
+            }}
           >
-            Сегодня
+            {lines.map((line: any) => (
+              <option key={line.lineId} value={line.lineId}>{line.lineName}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.periodButtons}>
+          <button 
+            className={`${styles.periodBtn} ${period === 'day' ? styles.active : ''}`}
+            onClick={() => {
+              setPeriod('day');
+              setDateFrom('');
+              setDateTo('');
+            }}
+          >
+            День
           </button>
           <button 
-            className={`${styles.periodBtn} ${selectedPeriod === 'week' ? styles.active : ''}`}
-            onClick={() => handlePeriodChange('week')}
+            className={`${styles.periodBtn} ${period === 'week' ? styles.active : ''}`}
+            onClick={() => {
+              setPeriod('week');
+              setDateFrom('');
+              setDateTo('');
+            }}
           >
             Неделя
           </button>
           <button 
-            className={`${styles.periodBtn} ${selectedPeriod === 'month' ? styles.active : ''}`}
-            onClick={() => handlePeriodChange('month')}
+            className={`${styles.periodBtn} ${period === 'month' ? styles.active : ''}`}
+            onClick={() => {
+              setPeriod('month');
+              setDateFrom('');
+              setDateTo('');
+            }}
           >
             Месяц
           </button>
+          <button 
+            className={`${styles.periodBtn} ${period === 'year' ? styles.active : ''}`}
+            onClick={() => {
+              setPeriod('year');
+              setDateFrom('');
+              setDateTo('');
+            }}
+          >
+            Год
+          </button> 
+        </div>
+
+        <div className={styles.dateRange}>
+          <input 
+            type="date" 
+            className={styles.dateInput}
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            placeholder="От"
+          />
+          <span className={styles.dateSeparator}>—</span>
+          <input 
+            type="date" 
+            className={styles.dateInput}
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            placeholder="До"
+          />
         </div>
       </div>
 
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{Math.round(totalActual)}</div>
-          <div className={styles.statLabel}>Общая выработка (м²)</div>
-          <div className={styles.statTrend}>↑ +12%</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{efficiency}%</div>
-          <div className={styles.statLabel}>Эффективность</div>
-          <div className={styles.statTrend}>↑ +5%</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{currentData.length}</div>
-          <div className={styles.statLabel}>Активных потоков</div>
-          <div className={styles.statTrend}>→ 0%</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>₽2.1М</div>
-          <div className={styles.statLabel}>Выручка</div>
-          <div className={styles.statTrend}>↑ +18%</div>
-        </div>
-      </div>
+      <div className={styles.chartSection}>
+        <div className={styles.chartHeader}>
+          <h3 className={styles.chartTitle}>
+            {showTotal ? 'Суммарная выработка' : selectedStageId ? `Станки - ${selectedStage?.stageName}` : `Этапы - ${selectedLine?.lineName}`}
+          </h3>
+          
+          <div className={styles.chartControls}>
+            <div className={styles.unitToggle}>
+              <button
+                className={`${styles.unitBtn} ${unit === UnitOfMeasurement.SQUARE_METERS ? styles.active : ''}`}
+                onClick={() => setUnit(UnitOfMeasurement.SQUARE_METERS)}
+              >
+                м²
+              </button>
+              <button
+                className={`${styles.unitBtn} ${unit === UnitOfMeasurement.PIECES ? styles.active : ''}`}
+                onClick={() => setUnit(UnitOfMeasurement.PIECES)}
+              >
+                шт
+              </button>
+            </div>
 
-      <div className={styles.viewTypeButtons}>
-        <button 
-          className={`${styles.viewBtn} ${viewType === 'streams' ? styles.active : ''}`}
-          onClick={() => handleViewTypeChange('streams')}
-        >
-          Потоки
-        </button>
-        <button 
-          className={`${styles.viewBtn} ${viewType === 'stages' ? styles.active : ''}`}
-          onClick={() => handleViewTypeChange('stages')}
-        >
-          Этапы
-        </button>
-        <button 
-          className={`${styles.viewBtn} ${viewType === 'workstations' ? styles.active : ''}`}
-          onClick={() => handleViewTypeChange('workstations')}
-        >
-          Станки
-        </button>
-      </div>
+            <label className={styles.checkbox}>
+              <input 
+                type="checkbox"
+                checked={showTotal}
+                onChange={(e) => setShowTotal(e.target.checked)}
+              />
+              <span>Суммарная выработка</span>
+            </label>
+          </div>
+        </div>
 
-      <div className={styles.chartsGrid}>
-        <div className={styles.chartCard}>
-          <h3 className={styles.chartTitle}>План vs Факт</h3>
-          <div className={styles.chartContainer}>
+        <div className={styles.chartContainer}>
+          {(stageLoading || machineLoading) ? (
+            <div className={styles.chartLoading}>
+              <div className={styles.loadingSpinner}></div>
+            </div>
+          ) : (
             <Bar data={barChartData} options={chartOptions} />
-          </div>
+          )}
         </div>
 
-        <div className={styles.chartCard}>
-          <h3 className={styles.chartTitle}>Эффективность (%)</h3>
-          <div className={styles.chartContainer}>
-            <Doughnut data={efficiencyData} options={doughnutOptions} />
+        {!selectedStageId && stageStats.length > 0 && (
+          <div className={styles.stageSelector}>
+            <h4 className={styles.stageSelectorTitle}>Выберите этап для просмотра станков:</h4>
+            <div className={styles.stageButtons}>
+              {stageStats.map((stage: any) => (
+                <button
+                  key={stage.stageId}
+                  className={`${styles.stageBtn} ${selectedStageId === stage.stageId ? styles.active : ''}`}
+                  onClick={() => setSelectedStageId(stage.stageId)}
+                >
+                  {stage.stageName}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.chartCard}>
-          <h3 className={styles.chartTitle}>Тренд выработки</h3>
-          <div className={styles.chartContainer}>
-            <Line data={trendData} options={chartOptions} />
-          </div>
-        </div>
+        {selectedStageId && (
+          <button 
+            className={styles.backBtn}
+            onClick={() => setSelectedStageId(null)}
+          >
+            ← Вернуться к этапам
+          </button>
+        )}
       </div>
     </div>
   );
