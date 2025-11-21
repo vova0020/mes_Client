@@ -80,31 +80,76 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     periodToDateRangeType(period),
     currentDate,
     dateFrom,
-    dateTo,
-    unit
+    dateTo
   );
   
-  const chartData = useMemo(() => {
+  const chartDataByUnit = useMemo(() => {
     const stats = selectedStageId ? machineStats : stageStats;
     
     if (!stats || stats.length === 0) {
-      return { labels: [], datasets: [] };
+      return [];
+    }
+    
+    if (selectedStageId) {
+      const groupedByUnit = new Map<string, any[]>();
+      stats.forEach((s: any) => {
+        const unitKey = s.unit || 'unknown';
+        if (!groupedByUnit.has(unitKey)) {
+          groupedByUnit.set(unitKey, []);
+        }
+        groupedByUnit.get(unitKey)!.push(s);
+      });
+      
+      return Array.from(groupedByUnit.entries()).map(([unitKey, machines]) => {
+        const allDates = new Set<string>();
+        machines.forEach((m: any) => {
+          (m.dataPoints || []).forEach((dp: any) => allDates.add(dp.date));
+        });
+        const sortedDates = Array.from(allDates).sort();
+        
+        return {
+          unit: unitKey,
+          labels: sortedDates,
+          datasets: machines.map((m: any) => ({
+            label: m.machineName,
+            data: sortedDates.map(date => {
+              const point = (m.dataPoints || []).find((dp: any) => dp.date === date);
+              return point ? point.value : 0;
+            })
+          }))
+        };
+      });
     }
     
     if (showTotal) {
-      const allDataPoints = stats.flatMap((s: any) => s.dataPoints || []);
-      const dateMap = new Map<string, number>();
-      allDataPoints.forEach((dp: any) => {
-        dateMap.set(dp.date, (dateMap.get(dp.date) || 0) + dp.value);
-      });
-      const sortedDates = Array.from(dateMap.keys()).sort();
-      return {
-        labels: sortedDates,
+      if (selectedStageId) {
+        const groupedByUnit = new Map<string, any[]>();
+        stats.forEach((s: any) => {
+          const unitKey = s.unit || 'unknown';
+          if (!groupedByUnit.has(unitKey)) {
+            groupedByUnit.set(unitKey, []);
+          }
+          groupedByUnit.get(unitKey)!.push(s);
+        });
+        
+        return Array.from(groupedByUnit.entries()).map(([unitKey, machines]) => ({
+          unit: unitKey,
+          labels: machines.map((m: any) => m.machineName),
+          datasets: [{
+            label: '',
+            data: machines.map((m: any) => m.totalValue)
+          }]
+        }));
+      }
+      
+      return [{
+        unit: unit === UnitOfMeasurement.SQUARE_METERS ? 'м²' : 'шт',
+        labels: stats.map((s: any) => s.stageName),
         datasets: [{
-          label: 'Суммарная выработка',
-          data: sortedDates.map(date => dateMap.get(date) || 0)
+          label: '',
+          data: stats.map((s: any) => s.totalValue)
         }]
-      };
+      }];
     }
     
     const allDates = new Set<string>();
@@ -113,17 +158,18 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     });
     const sortedDates = Array.from(allDates).sort();
     
-    return {
+    return [{
+      unit: unit === UnitOfMeasurement.SQUARE_METERS ? 'м²' : 'шт',
       labels: sortedDates,
       datasets: stats.map((s: any) => ({
-        label: selectedStageId ? s.machineName : s.stageName,
+        label: s.stageName,
         data: sortedDates.map(date => {
           const point = (s.dataPoints || []).find((dp: any) => dp.date === date);
           return point ? point.value : 0;
         })
       }))
-    };
-  }, [stageStats, machineStats, selectedStageId, showTotal]);
+    }];
+  }, [stageStats, machineStats, selectedStageId, showTotal, unit]);
 
   const selectedLine = lines.find((l: any) => l.lineId === selectedLineId);
   const selectedStage = stageStats.find((s: any) => s.stageId === selectedStageId);
@@ -138,23 +184,15 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     { bg: 'rgba(46, 204, 113, 0.6)', border: 'rgb(46, 204, 113)' },
     { bg: 'rgba(231, 76, 60, 0.6)', border: 'rgb(231, 76, 60)' },
     { bg: 'rgba(149, 165, 166, 0.6)', border: 'rgb(149, 165, 166)' },
-    { bg: 'rgba(26, 188, 156, 0.6)', border: 'rgb(26, 188, 156)' }
+    { bg: 'rgba(26, 188, 156, 0.6)', border: 'rgb(26, 188, 156)' },
+    { bg: 'rgba(255, 159, 64, 0.6)', border: 'rgb(255, 159, 64)' },
+    { bg: 'rgba(153, 102, 255, 0.6)', border: 'rgb(153, 102, 255)' },
+    { bg: 'rgba(255, 205, 86, 0.6)', border: 'rgb(255, 205, 86)' },
+    { bg: 'rgba(75, 192, 192, 0.6)', border: 'rgb(75, 192, 192)' },
+    { bg: 'rgba(54, 162, 235, 0.6)', border: 'rgb(54, 162, 235)' }
   ];
   
-  const barChartData = {
-    labels: chartData.labels,
-    datasets: (chartData.datasets || []).map((dataset, idx) => {
-      const color = colors[idx % colors.length];
-      return {
-        label: `${dataset.label} (${unit === UnitOfMeasurement.SQUARE_METERS ? 'м²' : 'шт'})`,
-        data: dataset.data,
-        backgroundColor: color.bg,
-        borderColor: color.border,
-        borderWidth: 2,
-        borderRadius: 4
-      };
-    })
-  };
+
   
   if (linesLoading) {
     return (
@@ -310,20 +348,22 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
           </h3>
           
           <div className={styles.chartControls}>
-            <div className={styles.unitToggle}>
-              <button
-                className={`${styles.unitBtn} ${unit === UnitOfMeasurement.SQUARE_METERS ? styles.active : ''}`}
-                onClick={() => setUnit(UnitOfMeasurement.SQUARE_METERS)}
-              >
-                м²
-              </button>
-              <button
-                className={`${styles.unitBtn} ${unit === UnitOfMeasurement.PIECES ? styles.active : ''}`}
-                onClick={() => setUnit(UnitOfMeasurement.PIECES)}
-              >
-                шт
-              </button>
-            </div>
+            {!selectedStageId && (
+              <div className={styles.unitToggle}>
+                <button
+                  className={`${styles.unitBtn} ${unit === UnitOfMeasurement.SQUARE_METERS ? styles.active : ''}`}
+                  onClick={() => setUnit(UnitOfMeasurement.SQUARE_METERS)}
+                >
+                  м²
+                </button>
+                <button
+                  className={`${styles.unitBtn} ${unit === UnitOfMeasurement.PIECES ? styles.active : ''}`}
+                  onClick={() => setUnit(UnitOfMeasurement.PIECES)}
+                >
+                  шт
+                </button>
+              </div>
+            )}
 
             <label className={styles.checkbox}>
               <input 
@@ -336,15 +376,37 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
           </div>
         </div>
 
-        <div className={styles.chartContainer}>
-          {(stageLoading || machineLoading) ? (
+        {(stageLoading || machineLoading) ? (
+          <div className={styles.chartContainer}>
             <div className={styles.chartLoading}>
               <div className={styles.loadingSpinner}></div>
             </div>
-          ) : (
-            <Bar data={barChartData} options={chartOptions} />
-          )}
-        </div>
+          </div>
+        ) : (
+          chartDataByUnit.map((chartData, chartIdx) => {
+            const colorOffset = chartIdx * 3;
+            const barChartData = {
+              labels: chartData.labels,
+              datasets: (chartData.datasets || []).map((dataset, idx) => {
+                const color = colors[(idx + colorOffset) % colors.length];
+                return {
+                  label: `${dataset.label} (${chartData.unit})`,
+                  data: dataset.data,
+                  backgroundColor: showTotal ? chartData.labels.map((_, labelIdx) => colors[(labelIdx + colorOffset) % colors.length].bg) : color.bg,
+                  borderColor: showTotal ? chartData.labels.map((_, labelIdx) => colors[(labelIdx + colorOffset) % colors.length].border) : color.border,
+                  borderWidth: 2,
+                  borderRadius: 4
+                };
+              })
+            };
+            
+            return (
+              <div key={chartIdx} className={styles.chartContainer} style={{ marginBottom: chartIdx < chartDataByUnit.length - 1 ? '24px' : '0' }}>
+                <Bar data={barChartData} options={chartOptions} />
+              </div>
+            );
+          })
+        )}
 
         {!selectedStageId && stageStats.length > 0 && (
           <div className={styles.stageSelector}>

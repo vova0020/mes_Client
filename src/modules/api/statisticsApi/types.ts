@@ -34,7 +34,7 @@ export interface MachineStats {
   machineId: number;
   machineName: string;
   totalValue: number;
-  unit: UnitOfMeasurement;
+  unit: string;
   dataPoints: DataPoint[];
 }
 

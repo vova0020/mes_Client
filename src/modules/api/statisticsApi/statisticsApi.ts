@@ -42,8 +42,7 @@ export const statisticsApi = {
     const searchParams = new URLSearchParams({
       lineId: params.lineId.toString(),
       stageId: params.stageId.toString(),
-      dateRangeType: params.dateRangeType,
-      unit: params.unit || UnitOfMeasurement.PIECES
+      dateRangeType: params.dateRangeType
     });
 
     if (params.dateRangeType === DateRangeType.CUSTOM) {

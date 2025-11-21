@@ -80,8 +80,7 @@ export const useStageStats = (
   dateRangeType: DateRangeType,
   date: string,
   startDate: string,
-  endDate: string,
-  unit: UnitOfMeasurement
+  endDate: string
 ) => {
   const [stats, setStats] = useState<MachineStats[]>([]);
   const [loading, setLoading] = useState(false);
@@ -99,8 +98,7 @@ export const useStageStats = (
           dateRangeType,
           date: dateRangeType !== DateRangeType.CUSTOM ? date : undefined,
           startDate: dateRangeType === DateRangeType.CUSTOM ? startDate : undefined,
-          endDate: dateRangeType === DateRangeType.CUSTOM ? endDate : undefined,
-          unit
+          endDate: dateRangeType === DateRangeType.CUSTOM ? endDate : undefined
         });
         setStats(data);
         setError(null);
@@ -112,7 +110,7 @@ export const useStageStats = (
     };
 
     fetchStats();
-  }, [lineId, stageId, dateRangeType, date, startDate, endDate, unit]);
+  }, [lineId, stageId, dateRangeType, date, startDate, endDate]);
 
   return { stats, loading, error };
 };
