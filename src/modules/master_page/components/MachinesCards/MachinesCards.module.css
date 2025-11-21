@@ -437,6 +437,10 @@
     margin-bottom: 10px;
   }
   
+  .tableContainer {
+    max-height: calc(100% - 40px);
+  }
+  
   .cardsWrapper {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
