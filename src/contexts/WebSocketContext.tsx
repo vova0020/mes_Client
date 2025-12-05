@@ -27,7 +27,7 @@ interface WebSocketProviderProps {
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
-  serverUrl = process.env.REACT_APP_WS_URL ?? ''
+  serverUrl = import.meta.env.VITE_WS_URL ?? ''
 }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);

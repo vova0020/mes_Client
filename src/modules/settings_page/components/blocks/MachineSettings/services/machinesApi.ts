@@ -2,7 +2,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { Machine, CreateMachineDto, UpdateMachineDto, StageWithSubstages, MachineSubstage } from '../MachineSettings';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const MACHINES_URL = '/machines';
 
 // Создаем экземпляр axios с базовой конфигурацией
