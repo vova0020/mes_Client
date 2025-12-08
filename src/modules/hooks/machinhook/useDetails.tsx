@@ -86,6 +86,7 @@ export const useDetails = (): UseDetailsResult => {
   const [machineDetails, setMachineDetails] = useState<MachineDetails | null>(null);
   const [loading, setLoading] = useState<LoadingState>('loading');
   const [error, setError] = useState<Error | null>(null);
+  const [stageId, setStageId] = useState<number | null>(null);
   
   // debounce refs
   const refreshTimeoutRef = useRef<number | null>(null);
@@ -227,10 +228,29 @@ useEffect(() => {
 
 
 
-  // Загрузка данных при первом рендере
   useEffect(() => {
-    fetchDetails();
-  }, [fetchDetails]);
+    const savedStageId = localStorage.getItem('selectedMachineStageId');
+    if (savedStageId) {
+      setStageId(Number(savedStageId));
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleStageChange = (event: Event) => {
+      const customEvent = event as CustomEvent<number>;
+      console.log('Этап изменен в useDetails:', customEvent.detail);
+      setStageId(customEvent.detail);
+    };
+
+    window.addEventListener('machineStageChanged', handleStageChange);
+    return () => window.removeEventListener('machineStageChanged', handleStageChange);
+  }, []);
+
+  useEffect(() => {
+    if (stageId !== null) {
+      fetchDetails();
+    }
+  }, [stageId, fetchDetails]);
 
 
 

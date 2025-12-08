@@ -1,18 +1,21 @@
 
 import React, { useEffect, useState } from 'react';
 import styles from './Header.module.css';
-// Если есть логотип/иконки, импортируйте их, например:
 import logo from '../../../../assets/logo-Photoroom.png';
-import LogoutIcon from '@mui/icons-material/Logout';
 import LogoutButton from '../../../../componentsGlobal/LogoutButton/LogoutButton';
+import StageSelector from '../StageSelector/StageSelector';
 
-// Интерфейсы для типизации данных из localStorage
+interface Stage {
+  id: number;
+  name: string;
+  finalStage: boolean;
+}
+
 interface Machine {
   id: number;
   name: string;
-  status: string;
-  segmentId: number;
-  segmentName: string;
+  noSmenTask: boolean;
+  stages: Stage[];
 }
 
 interface Assignments {
@@ -27,27 +30,23 @@ interface User {
 }
 
 const Header: React.FC = () => {
-  // Состояния для хранения данных из localStorage
-  const [techStage, setTechStage] = useState<string>("НАЗВАНИЕ ТЕХНОЛОГИЧЕСКОГО ЭТАПА");
   const [machineName, setMachineName] = useState<string>("СТАНОК");
   const [operatorName, setOperatorName] = useState<string>("ОПЕРАТОР");
+  const [stages, setStages] = useState<Stage[]>([]);
 
   useEffect(() => {
-    // Получение данных из localStorage при монтировании компонента
     try {
-      // Получение данных о назначениях (этап и станок)
       const assignmentsData = localStorage.getItem('assignments');
       if (assignmentsData) {
         const assignments: Assignments = JSON.parse(assignmentsData);
         if (assignments.machines && assignments.machines.length > 0) {
-          // Берем первую машину из списка для примера
           const machine = assignments.machines[0];
           setMachineName(machine.name);
-          setTechStage(machine.segmentName);
+          setStages(machine.stages || []);
+          console.log('Этапы станка:', machine.stages);
         }
       }
 
-      // Получение данных об операторе
       const userData = localStorage.getItem('user');
       if (userData) {
         const user: User = JSON.parse(userData);
@@ -58,21 +57,22 @@ const Header: React.FC = () => {
     }
   }, []);
 
+  const handleStageSelect = (stageId: number) => {
+    console.log('Выбран этап:', stageId);
+    window.dispatchEvent(new CustomEvent('machineStageChanged', { detail: stageId }));
+  };
+
   return (
     <header className={styles.header}>
-      {/* Левый блок: название этапа и кнопки */}
       <div className={styles.leftContainer}>
-        <div className={styles.techStage}>
-          {techStage}
-        </div>
         <div className={styles.navButtons}>
+          <StageSelector stages={stages} onStageSelect={handleStageSelect} />
           <button className={styles.navButton}>{machineName}</button>
           <button className={styles.navButton}>{operatorName}</button>
         </div>
       </div>
 
-      {/* Правый блок: логотип с текстом и кнопка питания (теперь в колонку) */}
-       <div className={styles.rightContainer}>
+      <div className={styles.rightContainer}>
         <div className={styles.brandContainer}>
           {/* Если есть логотип, раскомментируйте и подставьте нужный импорт */}
           <img src={logo} alt="Logo" className={styles.logo} />

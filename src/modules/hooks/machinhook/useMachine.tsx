@@ -29,6 +29,7 @@ interface UseMachineResult {
   webSocketError: string | null;
   refreshMachineData: (status: string) => Promise<void>;
   defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
+  selectedStageId: number | null;
 }
 
 // Используем единый ROOM_NAME по умолчанию
@@ -54,6 +55,7 @@ export const useMachine = (machineId?: number): UseMachineResult => {
   const [error, setError] = useState<Error | null>(null);
   const [effectiveId, setEffectiveId] = useState<number | undefined>(machineId);
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
+  const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
 
   const machineRef = useRef<Machine | null>(null);
   const loadingRef = useRef<LoadingState>(loading);
@@ -70,7 +72,6 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     error: webSocketError
   } = useWebSocketRoom({ room, autoJoin: true });
 
-  // Получаем ID из localStorage если не передан
   useEffect(() => {
     if (machineId === undefined) {
       const localIds = getLocalMachineIds();
@@ -82,7 +83,26 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     } else {
       setEffectiveId(machineId);
     }
+
+    const savedStageId = localStorage.getItem('selectedMachineStageId');
+    if (savedStageId) {
+      setSelectedStageId(Number(savedStageId));
+    }
   }, [machineId]);
+
+  useEffect(() => {
+    const handleStageChange = (event: Event) => {
+      const customEvent = event as CustomEvent<number>;
+      setSelectedStageId(customEvent.detail);
+      console.log('Этап изменен в useMachine:', customEvent.detail);
+      if (effectiveId) {
+        void fetchMachine();
+      }
+    };
+
+    window.addEventListener('machineStageChanged', handleStageChange);
+    return () => window.removeEventListener('machineStageChanged', handleStageChange);
+  }, [effectiveId]);
 
   // fetchMachine: тихо выходим если нет effectiveId
   const fetchMachine = useCallback(async (): Promise<void> => {
@@ -362,6 +382,7 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     isWebSocketConnected: !!isWebSocketConnected,
     webSocketError: webSocketError ? String(webSocketError) : null,
     refreshMachineData,
-    defectPalletParts
+    defectPalletParts,
+    selectedStageId
   };
 };

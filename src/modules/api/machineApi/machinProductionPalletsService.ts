@@ -218,12 +218,13 @@ export const getAssignmentsData = (): AssignmentsData | null => {
   }
 };
 
-/**
- * Получает ID сегмента из localStorage
- * @returns ID сегмента или null, если не удалось получить
- */
 const getSegmentIdFromStorage = (): number | null => {
   try {
+    const stageId = localStorage.getItem('selectedMachineStageId');
+    if (stageId) {
+      return Number(stageId);
+    }
+
     const assignmentsData = localStorage.getItem('assignments');
     if (!assignmentsData) {
       console.error('Отсутствуют данные assignments в localStorage');
@@ -236,7 +237,7 @@ const getSegmentIdFromStorage = (): number | null => {
       return null;
     }
     
-    return parsedData.machines[0].stages[0].id;
+    return parsedData.machines[0].stages?.[0]?.id || null;
   } catch (error) {
     console.error('Ошибка при получении segmentId из localStorage:', error);
     return null;
