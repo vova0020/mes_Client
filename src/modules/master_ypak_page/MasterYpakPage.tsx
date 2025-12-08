@@ -25,7 +25,7 @@ const MasterYpakPage: React.FC = () => {
 
   // Отслеживаем изменения выбранного этапа
   const currentStage = useStageListener();
-
+ 
   // Перезагружаем данные при смене этапа
   useEffect(() => {
     if (currentStage) {
