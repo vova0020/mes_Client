@@ -32,6 +32,7 @@ const useOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [stageId, setStageId] = useState<number | null>(null);
   
   // debounce refs
   const refreshTimeoutRef = useRef<number | null>(null);
@@ -122,10 +123,29 @@ const useOrders = () => {
     };
   }, [socket, isWebSocketConnected, room, refreshOrdersData]);
 
-  // Загрузка заказов при монтировании компонента
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    const savedStageId = localStorage.getItem('selectedMachineStageId');
+    if (savedStageId) {
+      setStageId(Number(savedStageId));
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleStageChange = (event: Event) => {
+      const customEvent = event as CustomEvent<number>;
+      console.log('Этап изменен в useOrders:', customEvent.detail);
+      setStageId(customEvent.detail);
+    };
+
+    window.addEventListener('machineStageChanged', handleStageChange);
+    return () => window.removeEventListener('machineStageChanged', handleStageChange);
+  }, []);
+
+  useEffect(() => {
+    if (stageId !== null) {
+      fetchOrders();
+    }
+  }, [stageId, fetchOrders]);
 
   return {
     orders,

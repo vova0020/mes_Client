@@ -29,7 +29,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [isStartActive, setIsStartActive] = useState(false);
   const [isPolomkaActive, setIsPolomkaActive] = useState(false);
   const [isCleiActive, setIsCleiActive] = useState(false);
-  const progressValue = 100; // Это значение можно получать из пропсов или состояния
+  
+  // Вычисляем процент выполнения на основе данных машины
+  const progressValue = machine?.completionPercentage || 0;
   
   // Обновляем состояние кнопок в зависимости от статуса станка
   useEffect(() => {

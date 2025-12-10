@@ -100,6 +100,8 @@ const useDetails = (initialOrderId: number | null = null): UseDetailsResult => {
     });
   }, []);
   
+  const [stageId, setStageId] = useState<number | null>(null);
+
   // Функция для получения деталей для конкретного заказа
   const fetchDetails = useCallback(async (orderId: number | null) => {
     if (orderId === null) {
@@ -172,6 +174,30 @@ const useDetails = (initialOrderId: number | null = null): UseDetailsResult => {
     };
   }, [socket, isWebSocketConnected, room, refreshDetailsData]);
   
+  useEffect(() => {
+    const savedStageId = localStorage.getItem('selectedMachineStageId');
+    if (savedStageId) {
+      setStageId(Number(savedStageId));
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleStageChange = (event: Event) => {
+      const customEvent = event as CustomEvent<number>;
+      console.log('Этап изменен в useDetails:', customEvent.detail);
+      setStageId(customEvent.detail);
+    };
+
+    window.addEventListener('machineStageChanged', handleStageChange);
+    return () => window.removeEventListener('machineStageChanged', handleStageChange);
+  }, []);
+
+  useEffect(() => {
+    if (stageId !== null && currentOrderId !== null) {
+      fetchDetails(currentOrderId);
+    }
+  }, [stageId, currentOrderId, fetchDetails]);
+
   // Инициализация с начальным ID заказа
   useEffect(() => {
     if (initialOrderId !== null && initialOrderId !== currentOrderId) {

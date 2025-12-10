@@ -285,19 +285,12 @@ export const getAssignmentsData = (): AssignmentsData | null => {
  */
 const getSegmentIdFromStorage = (): number | null => {
   try {
-    const selectedStageData = localStorage.getItem('selectedStage');
-    if (!selectedStageData) {
-      console.error('Отсутствуют данные selectedStage в localStorage');
+    const stageId = localStorage.getItem('selectedMachineStageId');
+    if (!stageId) {
+      console.error('Отсутствует selectedMachineStageId в localStorage');
       return null;
     }
-
-    const parsedData = JSON.parse(selectedStageData);
-    if (!parsedData || parsedData.length === 0) {
-      console.error('Нет данных selectedStage отсутствуют stages');
-      return null;
-    }
-
-    return parsedData.id;
+    return Number(stageId);
   } catch (error) {
     console.error('Ошибка при получении stageid из localStorage:', error);
     return null;
@@ -644,19 +637,12 @@ export const redistributeParts = async (request: RedistributePartsRequestDto): P
 // Функция для получения ID этапа из localStorage
 export const getStageIdFromStorage = (): number | null => {
   try {
-    const selectedStageData = localStorage.getItem('selectedStage');
-    if (!selectedStageData) {
-      console.error('Отсутствуют данные selectedStage в localStorage');
+    const stageId = localStorage.getItem('selectedMachineStageId');
+    if (!stageId) {
+      console.error('Отсутствует selectedMachineStageId в localStorage');
       return null;
     }
-
-    const parsedData = JSON.parse(selectedStageData);
-    if (!parsedData || !parsedData.id) {
-      console.error('Нет данных selectedStage или отсутствует id');
-      return null;
-    }
-
-    return parsedData.id;
+    return Number(stageId);
   } catch (error) {
     console.error('Ошибка при получении stageId из localStorage:', error);
     return null;

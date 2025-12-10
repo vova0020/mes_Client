@@ -101,9 +101,11 @@ export const fetchMachinesBySegment = async (): Promise<Machine[]> => {
  */
 export const fetchMachineTasks = async (machineId: number): Promise<MachineTask[]> => {
   try {
+    const stageId = getSelectedStageIdFromStorage();
     const response = await axios.get<MachineTask[]>(`${API_URL}/master/machine-tasks`, {
       params: {
-        machineId
+        machineId,
+        stageId
       }
     });
     

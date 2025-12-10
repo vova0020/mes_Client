@@ -70,7 +70,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ stages, onStageSelect }) 
       
       {isDropdownOpen && (
         <div className={styles.dropdown}>
-          {stages.map((stage) => (
+          {[...stages].sort((a, b) => a.id - b.id).map((stage) => (
             <button
               key={stage.id}
               className={`${styles.dropdownItem} ${selectedStage?.id === stage.id ? styles.active : ''}`}
