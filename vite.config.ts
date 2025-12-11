@@ -21,6 +21,10 @@ export default defineConfig(({ mode }) => {
     port: 3000,
     host: true,
     allowedHosts: env.VITE_ALLOWED_HOSTS?.split(',') || [],
+    hmr: {
+      clientPort: 443,
+      protocol: 'wss'
+    },
     watch: {
       ignored: ['**/.env*']
     },
