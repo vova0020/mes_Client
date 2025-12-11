@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => {
     port: 3000,
     host: true,
     allowedHosts: env.VITE_ALLOWED_HOSTS?.split(',') || [],
+    watch: {
+      ignored: ['**/.env*']
+    },
     proxy: {
       '/api': {
         target: env.VITE_API_URL || 'http://localhost:5000',
