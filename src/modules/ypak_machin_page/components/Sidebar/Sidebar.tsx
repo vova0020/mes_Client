@@ -164,7 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Нижние иконки */}
         <div className={styles.footerIcon}>
-          <Button
+          {/* <Button
             onClick={toggleCleiButton}
             aria-label="Klei"
             disabled={areIconButtonsDisabled}
@@ -176,7 +176,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <KleiInActiveIcon className={styles.icon} />
               )}
             </div>
-          </Button>
+          </Button> */}
 
           <Button disabled={areIconButtonsDisabled}>
             <HistoriIcon className={styles.icon} />
