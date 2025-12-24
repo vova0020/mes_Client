@@ -52,7 +52,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   const [isRedistributing, setIsRedistributing] = useState<boolean>(false);
 
   // Используем хук для получения данных о станке и пользователе
-  const { machine, machineId } = useMachine();
+  const { machine, machineId, selectedStageId } = useMachine();
 
   // Получаем ID пользователя из localStorage (предполагаем, что он там хранится)
   const getUserId = (): number => {
@@ -266,30 +266,33 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
       setNextStepInfo(null);
-      console.log(`Поддон ${palletId} переводится в работу...`);
 
-      // Вызываем API-метод для изменения статуса поддона
-      await startPalletProcessing(palletId);
+      const pallet = pallets.find(p => p.id === palletId);
+      const stageId = selectedStageId || pallet?.currentStepId || machine?.stages?.[0]?.id;
+      
+      if (!stageId) {
+        setErrorMessage('Не удалось определить этап для обработки');
+        return;
+      }
+
+      console.log(`Поддон ${palletId} переводится в работу на этапе ${stageId}...`);
+
+      await startPalletProcessing(palletId, machineId!, getUserId(), stageId);
       console.log(`Поддон ${palletId} успешно переведен в работу`);
 
-      // Показываем сообщение об успехе
       setSuccessMessage(`Поддон успешно переведен в статус "В работу"`);
     } catch (error) {
       console.error(`Ошибка при переводе поддона ${palletId} в работу:`, error);
 
-      // Извлекаем сообщение об ошибке из ответа API
       const apiError = error as any;
       const errorMsg = apiError.response?.data?.message || apiError.message;
       
-      // Проверяем, является ли это ошибкой о незавершенном предыдущем этапе
       if (errorMsg && errorMsg.includes('Нельзя взять поддон') && errorMsg.includes('в работу. Предыдущий этап')) {
-        // Извлекаем название этапа из сообщения
         const stageMatch = errorMsg.match(/Предыдущий этап "([^"]+)" не завершен/);
         const stageName = stageMatch ? stageMatch[1] : 'предыдущий этап';
         
         setErrorMessage(`Поддон  не может быть взят в работу. Необходимо завершить этап "${stageName}".`);
       } else {
-        // Обрабатываем другие типы ошибок
         setErrorMessage(`Не удалось перевести поддон в работу: ${errorMsg || 'Неизвестная ошибка'}`);
       }
     } finally {
@@ -304,10 +307,18 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
       setNextStepInfo(null);
-      console.log(`Поддон ${palletId} отмечается как готовый...`);
 
-      // Вызываем API-метод для изменения статуса поддона на "Готово"
-      const response = await completePalletProcessing(palletId);
+      const pallet = pallets.find(p => p.id === palletId);
+      const stageId = selectedStageId || pallet?.currentStepId || machine?.stages?.[0]?.id;
+      
+      if (!stageId) {
+        setErrorMessage('Не удалось определить этап для завершения');
+        return;
+      }
+
+      console.log(`Поддон ${palletId} отмечается как готовый на этапе ${stageId}...`);
+
+      const response = await completePalletProcessing(palletId, machineId!, getUserId(), stageId);
       console.log(`Поддон ${palletId} успешно отмечен как готовый:`, response);
 
       // Обрабатываем успешный ответ API

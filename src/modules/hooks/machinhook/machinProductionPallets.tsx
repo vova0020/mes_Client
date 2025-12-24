@@ -29,8 +29,8 @@ interface UseProductionPalletsResult {
   refreshPalletData: (palletId: number) => Promise<void>;
   refreshPalletsData: (status: string) => Promise<void>;
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
-  startPalletProcessing: (palletId: number) => Promise<void>;
-  completePalletProcessing: (palletId: number) => Promise<CompleteProcessingResponseDto>;
+  startPalletProcessing: (palletId: number, machineId: number, operatorId: number, stageId: number) => Promise<void>;
+  completePalletProcessing: (palletId: number, machineId: number, operatorId: number, stageId: number) => Promise<CompleteProcessingResponseDto>;
   defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
   redistributeParts: (redistributeData: RedistributePartsRequest) => Promise<RedistributePartsResponse>;
 }
@@ -305,10 +305,10 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   }, [refreshPalletData]);
 
   // Функция для перевода поддона в статус "В работу"
-  const handleStartPalletProcessing = useCallback(async (palletId: number) => {
+  const handleStartPalletProcessing = useCallback(async (palletId: number, machineId: number, operatorId: number, stageId: number) => {
     try {
       // Вызываем API-метод для перевода поддона в статус "В работу"
-      await startPalletProcessing(palletId);
+      await startPalletProcessing(palletId, machineId, operatorId, stageId);
       
       // Обновляем данные о поддоне
       await refreshPalletData(palletId);
@@ -319,10 +319,10 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   }, [refreshPalletData]);
 
   // Функция для перевода поддона в статус "Готово"
-  const handleCompletePalletProcessing = useCallback(async (palletId: number): Promise<CompleteProcessingResponseDto> => {
+  const handleCompletePalletProcessing = useCallback(async (palletId: number, machineId: number, operatorId: number, stageId: number): Promise<CompleteProcessingResponseDto> => {
     try {
       // Вызываем API-метод для перевода поддона в статус "Готово"
-      const response = await completePalletProcessing(palletId);
+      const response = await completePalletProcessing(palletId, machineId, operatorId, stageId);
       
       // Обновляем данные о всех поддонах для обеспечения актуальности
       await refreshPalletData(palletId);

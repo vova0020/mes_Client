@@ -479,30 +479,15 @@ export const fetchBufferCellsBySegmentId = async (): Promise<BufferCellDto[]> =>
 };
 
 // Функция для перевода поддона в статус "В работу"
-export const startPalletProcessing = async (palletId: number): Promise<OperationDto | null> => {
+export const startPalletProcessing = async (palletId: number, machineId: number, operatorId: number, stageId: number): Promise<OperationDto | null> => {
   try {
-    // Получаем данные пользователя из localStorage
-    const userData = getUserData();
-    if (!userData) {
-      throw new Error('Данные пользователя не найдены');
-    }
-    
-    // Получаем данные о станке из localStorage
-    const assignmentsData = getAssignmentsData();
-    if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
-      throw new Error('Данные о станке не найдены');
-    }
-    
-    const machine = assignmentsData.machines[0];
-    
-    // Отправляем запрос на API
     const response = await axios.post(`${API_URL}/machins/pallets/start-processing`, {
-      palletId: palletId,
-      machineId: machine.id,
-      operatorId: userData.id,
+      palletId,
+      machineId,
+      operatorId,
+      stageId
     });
     
-    // console.log(`Поддон ${palletId} успешно переведен в статус "В работу":`, response.data);
     return response.data.operation || null;
   } catch (error) {
     console.error(`Ошибка при переводе поддона ${palletId} в статус "В работу":`, error);
@@ -511,35 +496,15 @@ export const startPalletProcessing = async (palletId: number): Promise<Operation
 };
 
 // Функция для перевода поддона в статус "Готово"
-export const completePalletProcessing = async (palletId: number): Promise<CompleteProcessingResponseDto> => {
+export const completePalletProcessing = async (palletId: number, machineId: number, operatorId: number, stageId: number): Promise<CompleteProcessingResponseDto> => {
   try {
-    // Получаем данные пользователя из localStorage
-    const userData = getUserData();
-    if (!userData) {
-      throw new Error('Данные пользователя не найдены');
-    }
+    const response = await axios.post(`${API_URL}/machins/pallets/complete-processing`, {
+      palletId,
+      machineId,
+      operatorId,
+      stageId
+    });
     
-    // Получаем данные о станке из localStorage
-    const assignmentsData = getAssignmentsData();
-    if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
-      throw new Error('Данные о станке не найдены');
-    }
-    
-    const machine = assignmentsData.machines[0];
-    
-    // Создаем объект запроса согласно документации
-    const requestData = {
-      palletId: palletId,
-      machineId: machine.id,
-      operatorId: userData.id,
-      // segmentId является опциональным, добавляем если доступен
-      segmentId: assignmentsData.machines[0].segmentId
-    };
-    
-    // Отправляем запрос на API по новому URL
-    const response = await axios.post(`${API_URL}/machins/pallets/complete-processing`, requestData);
-    
-    // console.log(`Поддон ${palletId} успешно переведен в статус "Готово":`, response.data);
     return response.data;
   } catch (error) {
     console.error(`Ошибка при переводе поддона ${palletId} в статус "Готово":`, error);
