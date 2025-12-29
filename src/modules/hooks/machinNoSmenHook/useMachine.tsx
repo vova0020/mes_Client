@@ -189,9 +189,11 @@ export const useMachine = (machineId?: number): UseMachineResult => {
     };
 
     socket.on('machine:event', handleMachineEvent);
+    socket.on('package:event', handleMachineEvent);
 
     return () => {
       socket.off('machine:event', handleMachineEvent);
+      socket.off('package:event', handleMachineEvent);
       if (refreshTimeoutRef.current) {
         window.clearTimeout(refreshTimeoutRef.current);
         refreshTimeoutRef.current = null;

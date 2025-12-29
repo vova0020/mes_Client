@@ -22,14 +22,21 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
-  machine, 
+  machine,
   isLoading = false,
   onStatusChange
 }) => {
   const [isStartActive, setIsStartActive] = useState(false);
   const [isPolomkaActive, setIsPolomkaActive] = useState(false);
   const [isCleiActive, setIsCleiActive] = useState(false);
-  const progressValue = 100; // Это значение можно получать из пропсов или состояния
+  
+  const progressValue = machine?.completionPercentage || 0;
+  
+  // Логируем обновления machine для отладки
+  useEffect(() => {
+    console.log('[Sidebar] machine updated:', machine);
+    console.log('[Sidebar] progressValue:', progressValue);
+  }, [machine, progressValue]);
   
   // Обновляем состояние кнопок в зависимости от статуса станка
   useEffect(() => {
@@ -152,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Вертикальный прогресс-бар */}
-        <div className={styles.progressContainer}>
+        <div className={styles.progressContainer} key={`progress-${progressValue}-${machine?.id}`}>
           <div className={styles.progressLabel}>{progressValue}%</div>
           <div className={styles.progressBar}>
             <div 
