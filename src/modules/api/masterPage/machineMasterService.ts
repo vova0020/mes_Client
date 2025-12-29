@@ -254,11 +254,18 @@ export const updateOperationStatus = async (
   masterId?: number
 ): Promise<any> => {
   try {
+    const stageId = getSelectedStageIdFromStorage();
+    
+    if (stageId === null) {
+      throw new Error('Не удалось получить ID этапа из localStorage');
+    }
+    
     const response = await axios.post(
       `${API_URL}/master/update-status`,
       {
         operationId,
         status,
+        stageId,
         masterId
       }
     );
