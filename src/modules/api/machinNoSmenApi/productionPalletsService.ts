@@ -377,7 +377,7 @@ export const fetchAvailablePallets = async (detailId: number): Promise<Productio
 };
 
 // Функция для взятия поддона в работу (новый API)
-export const takeToWork = async (palletId: number): Promise<TakeToWorkResponseDto> => {
+export const takeToWork = async (palletId: number, stageId: number): Promise<TakeToWorkResponseDto> => {
   try {
     // Получаем данные пользователя из localStorage
     const userData = getUserData();
@@ -390,7 +390,7 @@ export const takeToWork = async (palletId: number): Promise<TakeToWorkResponseDt
     if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
       throw new Error('Данные о станке не найдены');
     }
-    const stageid = getSegmentIdFromStorage();
+    
     const machine = assignmentsData.machines[0];
     
     // Отправляем запрос на новый API эндпоинт
@@ -398,7 +398,7 @@ export const takeToWork = async (palletId: number): Promise<TakeToWorkResponseDt
       palletId: palletId,
       machineId: machine.id,
       operatorId: userData.id,
-      stageId: stageid,
+      stageId: stageId,
     });
     
     console.log(`Поддон ${palletId} успешно взят в работу:`, response.data);
@@ -410,7 +410,7 @@ export const takeToWork = async (palletId: number): Promise<TakeToWorkResponseDt
 };
 
 // Функция для завершения обработки поддона (новый API)
-export const completeProcessing = async (palletId: number): Promise<CompleteProcessingResponseDto> => {
+export const completeProcessing = async (palletId: number, stageId: number): Promise<CompleteProcessingResponseDto> => {
   try {
     // Получаем данные пользователя из localStorage
     const userData = getUserData();
@@ -423,7 +423,7 @@ export const completeProcessing = async (palletId: number): Promise<CompleteProc
     if (!assignmentsData || !assignmentsData.machines || assignmentsData.machines.length === 0) {
       throw new Error('Данные о станке не найдены');
     }
-    const stageid = getSegmentIdFromStorage();
+    
     const machine = assignmentsData.machines[0];
     
     // Отправляем запрос на новый API эндпоинт
@@ -431,7 +431,7 @@ export const completeProcessing = async (palletId: number): Promise<CompleteProc
       palletId: palletId,
       machineId: machine.id,
       operatorId: userData.id,
-      stageId: stageid,
+      stageId: stageId,
     });
     
     console.log(`Поддон ${palletId} успешно завершен:`, response.data);

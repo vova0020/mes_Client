@@ -49,8 +49,8 @@ interface UseProductionPalletsResult {
   updateBufferCell: (palletId: number, bufferCellId: number) => Promise<void>;
   startPalletProcessing: (palletId: number) => Promise<void>;
   completePalletProcessing: (palletId: number) => Promise<CompleteProcessingResponseDto>;
-  takeToWork: (palletId: number) => Promise<TakeToWorkResponseDto>;
-  completeProcessing: (palletId: number) => Promise<CompleteProcessingResponseDto>;
+  takeToWork: (palletId: number, stageId: number) => Promise<TakeToWorkResponseDto>;
+  completeProcessing: (palletId: number, stageId: number) => Promise<CompleteProcessingResponseDto>;
   moveToBuffer: (palletId: number, bufferCellId: number) => Promise<{ message: string; pallet: any }>;
   createPallet: (request: CreatePalletRequestDto) => Promise<CreatePalletResponseDto>;
   defectParts: (palletId: number, quantity: number, description?: string, machineId?: number) => Promise<DefectPartsResponseDto>;
@@ -438,10 +438,10 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   }, [refreshPalletData]);
 
   // Функция для взятия поддона в работу (новая функция)
-  const handleTakeToWork = useCallback(async (palletId: number): Promise<TakeToWorkResponseDto> => {
+  const handleTakeToWork = useCallback(async (palletId: number, stageId: number): Promise<TakeToWorkResponseDto> => {
     try {
       // Вызываем новый API-метод для взятия поддона в работу
-      const response = await takeToWork(palletId);
+      const response = await takeToWork(palletId, stageId);
       
       // Обновляем данные о поддоне
       await refreshPalletData(palletId);
@@ -454,10 +454,10 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   }, [refreshPalletData]);
 
   // Функция для завершения обработки поддона (новая функция)
-  const handleCompleteProcessing = useCallback(async (palletId: number): Promise<CompleteProcessingResponseDto> => {
+  const handleCompleteProcessing = useCallback(async (palletId: number, stageId: number): Promise<CompleteProcessingResponseDto> => {
     try {
       // Вызываем новый API-метод для завершения обработки поддона
-      const response = await completeProcessing(palletId);
+      const response = await completeProcessing(palletId, stageId);
       
       // Обновляем данные о поддоне
       await refreshPalletData(palletId);
@@ -488,8 +488,14 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   // Функция для перевода поддона в статус "В работу" (устаревшая, оставлена для совместимости)
   const handleStartPalletProcessing = useCallback(async (palletId: number) => {
     try {
+      // Получаем stageId из localStorage
+      const stageId = getStageIdFromStorage();
+      if (!stageId) {
+        throw new Error('ID этапа не найден');
+      }
+      
       // Используем новую функцию takeToWork
-      await takeToWork(palletId);
+      await takeToWork(palletId, stageId);
       
       // Обновляем данные о поддоне
       await refreshPalletData(palletId);
@@ -502,8 +508,14 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   // Функция для перевода поддона в статус "Готово" (устаревшая, оставлена для совместимости)
   const handleCompletePalletProcessing = useCallback(async (palletId: number): Promise<CompleteProcessingResponseDto> => {
     try {
+      // Получаем stageId из localStorage
+      const stageId = getStageIdFromStorage();
+      if (!stageId) {
+        throw new Error('ID этапа не найден');
+      }
+      
       // Используем новую функцию completeProcessing
-      const response = await completeProcessing(palletId);
+      const response = await completeProcessing(palletId, stageId);
       
       // Обновляем данные о поддоне
       await refreshPalletData(palletId);

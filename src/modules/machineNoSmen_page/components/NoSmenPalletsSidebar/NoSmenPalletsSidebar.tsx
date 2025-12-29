@@ -204,7 +204,16 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setNextStepInfo(null);
       console.log(`Поддон ${palletId} берется в работу...`);
       
-      const response = await takeToWork(palletId);
+      // Получаем ID этапа из поддона
+      const pallet = pallets.find(p => p.id === palletId);
+      const stageId = pallet?.currentStepId;
+      
+      if (!stageId) {
+        setErrorMessage('Не удалось определить этап для обработки');
+        return;
+      }
+      
+      const response = await takeToWork(palletId, stageId);
       console.log(`Поддон ${palletId} успешно взят в работу:`, response);
       
       // Обновляем данные после успешной операции
@@ -268,7 +277,16 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setNextStepInfo(null);
       console.log(`Поддон ${palletId} завершается...`);
       
-      const response = await completeProcessing(palletId);
+      // Получаем ID этапа из поддона
+      const pallet = pallets.find(p => p.id === palletId);
+      const stageId = pallet?.currentStepId;
+      
+      if (!stageId) {
+        setErrorMessage('Не удалось определить этап для завершения');
+        return;
+      }
+      
+      const response = await completeProcessing(palletId, stageId);
       console.log(`Поддон ${palletId} успешно завершен:`, response);
       
       // Обновляем данные после успешной операции

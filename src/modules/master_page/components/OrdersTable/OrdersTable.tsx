@@ -31,12 +31,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     } 
   }, [activeOrderId]);
 
-  // Сбрасываем активный заказ при изменении списка заказов (например, при смене этапа)
+  // Сохраняем активный заказ при изменении списка заказов, если он есть в новом списке
   useEffect(() => {
     if (orders.length > 0 && activeOrderId && !orders.find(order => order.id === activeOrderId)) {
       setActiveOrderId(null);
+    } else if (orders.length > 0 && activeOrderId && orders.find(order => order.id === activeOrderId)) {
+      // Если заказ найден в новом списке, сохраняем его выбранным
+      onOrderSelect?.(activeOrderId);
     }
-  }, [orders, activeOrderId]);
+  }, [orders, activeOrderId, onOrderSelect]);
   
   useEffect(() => {
     if (!loading && orders.length > 0) {

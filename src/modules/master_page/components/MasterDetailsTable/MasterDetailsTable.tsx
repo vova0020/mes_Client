@@ -5,6 +5,7 @@ import useDetails from '../../../hooks/masterPage/useDetailsMaster';
 import PalletsSidebar from '../MasterPalletsSidebar/MasterPalletsSidebar';
 import DetailForm from '../../../detail-form/DetailForm';
 import { Detail } from '../../../api/masterPage/detailServiceMaster';
+import { useStageListener } from '../../../../componentsGlobal/Navbar/useStageListener';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
@@ -22,6 +23,9 @@ interface Filters {
 }
 
 const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpdate }) => {
+  // Отслеживаем смену этапа
+  const currentStage = useStageListener();
+  
   // Состояние для отслеживания активной детали
   const [activeDetailId, setActiveDetailId] = useState<number | null>(null);
   
@@ -56,13 +60,8 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
   // Ref для контейнера таблицы, используется для определения кликов за пределами sidebar
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Загружаем детали при изменении выбранного заказа
+  // Загружаем детали при изменении выбранного заказа или этапа
   useEffect(() => {
-    // Проверяем, действительно ли изменился ID заказа
-    if (prevOrderIdRef.current === selectedOrderId) {
-      return; // Если ID не изменился, не делаем ничего
-    }
-
     // Сбрасываем активную деталь при смене заказа
     setActiveDetailId(null);
     
@@ -89,7 +88,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
     
     // Обновляем ref
     prevOrderIdRef.current = selectedOrderId;
-  }, [selectedOrderId, fetchDetails, details.length]);
+  }, [selectedOrderId, currentStage, fetchDetails]);
 
   // Показываем детали с анимацией после загрузки
   useEffect(() => {

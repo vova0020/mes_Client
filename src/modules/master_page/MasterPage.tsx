@@ -26,12 +26,10 @@ const MasterPage: React.FC = () => {
   // Получаем данные заказов (единственный источник)
   const { orders, loading, error, fetchOrders } = useOrders();
 
-  // Сбрасываем выбранный заказ при смене этапа
+  // Отслеживаем смену этапа
   useEffect(() => {
     if (currentStage) {
       console.log('Этап изменен в MasterPage:', currentStage);
-      // Сбрасываем выбранный заказ
-      setSelectedOrderId(null);
       // НЕ закрываем модальное окно автоматически при смене этапа
       // НЕ вызываем fetchOrders здесь, так как хук useOrders уже делает это
     }
