@@ -17,6 +17,8 @@ import {
   redistributeParts,
   RedistributePartsResponse,
   PartDistribution,
+  returnParts,
+  ReturnPartsResponse,
 } from '../../api/masterPage/productionPalletsServiceMaster';
 import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
@@ -38,6 +40,7 @@ interface UseProductionPalletsResult {
   createPallet: (partId: number, quantity: number, palletName?: string) => Promise<CreatePalletResponse>;
   defectParts: (palletId: number, quantity: number, description?: string, machineId?: number) => Promise<DefectPartsResponse>;
   redistributeParts: (sourcePalletId: number, distributions: PartDistribution[], machineId?: number) => Promise<RedistributePartsResponse>;
+  returnParts: (partId: number, palletId: number, quantity: number) => Promise<ReturnPartsResponse>;
 }
 
 // Получение комнаты из localStorage или конфигурации
@@ -502,6 +505,31 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       setLoading(false);
     }
   }, [currentDetailId, fetchPallets]);
+
+  const returnPartsHandler = useCallback(async (
+    partId: number,
+    palletId: number,
+    quantity: number
+  ): Promise<ReturnPartsResponse> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await returnParts(partId, palletId, quantity);
+      
+      if (currentDetailId) {
+        await fetchPallets(currentDetailId);
+      }
+
+      return response;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Ошибка при возврате деталей');
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDetailId, fetchPallets]);
   
   // Инициализация с начальным ID детали
   useEffect(() => {
@@ -526,7 +554,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     refreshPalletData,
     createPallet,
     defectParts: defectPartsHandler,
-    redistributeParts: redistributePartsHandler
+    redistributeParts: redistributePartsHandler,
+    returnParts: returnPartsHandler
   };
 };
 

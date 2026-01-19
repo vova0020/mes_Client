@@ -35,7 +35,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     refreshPalletData,
     createPallet,
     defectParts,
-    redistributeParts
+    redistributeParts,
+    returnParts
   } = useProductionPallets(null);
 
   const [showDetails, setShowDetails] = useState<boolean>(false);
@@ -67,6 +68,12 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   const [showRedistributeModal, setShowRedistributeModal] = useState<boolean>(false);
   const [redistributePalletId, setRedistributePalletId] = useState<number | null>(null);
   const [isRedistributing, setIsRedistributing] = useState<boolean>(false);
+  
+  // Состояния для модального окна возврата деталей
+  const [showReturnModal, setShowReturnModal] = useState<boolean>(false);
+  const [returnPalletId, setReturnPalletId] = useState<number | null>(null);
+  const [returnQuantity, setReturnQuantity] = useState<string>('');
+  const [isReturning, setIsReturning] = useState<boolean>(false);
 //  маршрутник =======================
 
 
@@ -348,17 +355,25 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   };
 
   // Обработчик выбора действия с количеством
-  const handleQuantityAction = (action: 'defect' | 'redistribute', palletId: number) => {
+  const handleQuantityAction = (action: 'defect' | 'redistribute' | 'return', palletId: number) => {
     if (action === 'defect') {
       setRedistributePalletId(null);
+      setReturnPalletId(null);
       setDefectPalletId(palletId);
       setDefectQuantity('');
       setDefectDescription('');
       setShowDefectModal(true);
     } else if (action === 'redistribute') {
       setDefectPalletId(null);
+      setReturnPalletId(null);
       setRedistributePalletId(palletId);
       setShowRedistributeModal(true);
+    } else if (action === 'return') {
+      setDefectPalletId(null);
+      setRedistributePalletId(null);
+      setReturnPalletId(palletId);
+      setReturnQuantity('');
+      setShowReturnModal(true);
     }
     setShowQuantityMenu(null);
   };
@@ -423,6 +438,35 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       console.error('Ошибка при перераспределении деталей:', err);
     } finally {
       setIsRedistributing(false);
+    }
+  };
+
+  // Обработчик возврата деталей
+  const handleReturnParts = async () => {
+    if (!returnPalletId || !detailId) return;
+
+    const quantity = parseInt(returnQuantity);
+
+    if (isNaN(quantity) || quantity <= 0) {
+      setErrorMessage('Введите корректное количество деталей');
+      return;
+    }
+
+    try {
+      setIsReturning(true);
+      setErrorMessage(null);
+
+      await returnParts(detailId, returnPalletId, quantity);
+
+      setShowReturnModal(false);
+      setReturnQuantity('');
+      console.log('Детали успешно возвращены в производство');
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || err?.message || 'Не удалось вернуть детали';
+      setErrorMessage(errorMsg);
+      console.error('Ошибка при возврате деталей:', err);
+    } finally {
+      setIsReturning(false);
     }
   };
 
@@ -1040,6 +1084,15 @@ return (
             >
               Отбраковать детали
             </button>
+            <button
+              className={styles.quantityMenuButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleQuantityAction('return', showQuantityMenu);
+              }}
+            >
+              Вернуть детали
+            </button>
             {(() => {
               const pallet = pallets.find(p => p.id === showQuantityMenu);
               const isDisabled = false;
@@ -1079,6 +1132,70 @@ return (
         onRedistribute={handleRedistributeParts}
         isProcessing={isRedistributing}
       />
+    )}
+
+    {/* Модальное окно возврата деталей */}
+    {showReturnModal && returnPalletId && (
+      <div className={styles.modalOverlay} onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setShowReturnModal(false);
+        }
+      }}>
+        <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h3>Вернуть детали в производство</h3>
+            <button 
+              className={styles.modalCloseButton}
+              onClick={() => setShowReturnModal(false)}
+              disabled={isReturning}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className={styles.modalBody}>
+            <div className={styles.palletInfo}>
+              <span>Поддон: <strong>{pallets.find(p => p.id === returnPalletId)?.name}</strong></span>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="returnQuantity">Количество деталей *</label>
+              <input
+                id="returnQuantity"
+                type="number"
+                min="1"
+                value={returnQuantity}
+                onChange={(e) => setReturnQuantity(e.target.value)}
+                disabled={isReturning}
+                className={styles.formInput}
+              />
+            </div>
+
+            {errorMessage && (
+              <div className={styles.errorMessage}>
+                {errorMessage}
+              </div>
+            )}
+          </div>
+          
+          <div className={styles.modalFooter}>
+            <button 
+              className={styles.cancelButton}
+              onClick={() => setShowReturnModal(false)}
+              disabled={isReturning}
+            >
+              Отмена
+            </button>
+            <button 
+              className={styles.createButton}
+              onClick={handleReturnParts}
+              disabled={isReturning || !returnQuantity}
+            >
+              {isReturning ? 'Возврат...' : 'Вернуть'}
+            </button>
+          </div>
+        </div>
+      </div>
     )}
     {/* Боковая панель с поддонами, временно закоментировано чтобы не мешало отладке */}
           {/* <DetailForm 

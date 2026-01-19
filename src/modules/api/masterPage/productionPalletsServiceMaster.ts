@@ -567,3 +567,64 @@ export const redistributeParts = async (
     throw error;
   }
 };
+
+// Интерфейс для запроса возврата деталей
+export interface ReturnPartsRequest {
+  partId: number;
+  palletId: number;
+  quantity: number;
+  userId: number;
+}
+
+// Интерфейс для ответа возврата деталей
+export interface ReturnPartsResponse {
+  message: string;
+  movement: {
+    id: number;
+    quantity: number;
+    pallet: {
+      id: number;
+      name: string;
+      newQuantity: number;
+    };
+    defectStats: {
+      totalDefective: number;
+      alreadyReturned: number;
+      remainingToReturn: number;
+    };
+  };
+}
+
+// Функция для возврата деталей в производство
+export const returnParts = async (
+  partId: number,
+  palletId: number,
+  quantity: number
+): Promise<ReturnPartsResponse> => {
+  try {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      throw new Error('Данные пользователя не найдены');
+    }
+    const user = JSON.parse(userData);
+    const userId = user.id;
+
+    const payload: ReturnPartsRequest = {
+      partId,
+      palletId,
+      quantity,
+      userId
+    };
+
+    const response = await axios.post<ReturnPartsResponse>(
+      `${API_URL}/master/return-parts`,
+      payload
+    );
+
+    console.log('Детали успешно возвращены в производство:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при возврате деталей:', error);
+    throw error;
+  }
+};
