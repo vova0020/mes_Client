@@ -452,11 +452,28 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       return;
     }
 
+    // Получаем returnToStageId из selectedStage
+    let returnToStageId: number | null = null;
+    try {
+      const selectedStageData = localStorage.getItem('selectedStage');
+      if (selectedStageData) {
+        const selectedStage = JSON.parse(selectedStageData);
+        returnToStageId = selectedStage.id;
+      }
+    } catch (error) {
+      console.error('Ошибка при получении selectedStage:', error);
+    }
+
+    if (!returnToStageId) {
+      setErrorMessage('Не удалось определить ID этапа');
+      return;
+    }
+
     try {
       setIsReturning(true);
       setErrorMessage(null);
 
-      await returnParts(detailId, returnPalletId, quantity);
+      await returnParts(detailId, returnPalletId, quantity, returnToStageId);
 
       setShowReturnModal(false);
       setReturnQuantity('');

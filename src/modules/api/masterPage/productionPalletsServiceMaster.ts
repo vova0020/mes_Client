@@ -574,6 +574,7 @@ export interface ReturnPartsRequest {
   palletId: number;
   quantity: number;
   userId: number;
+  returnToStageId: number;
 }
 
 // Интерфейс для ответа возврата деталей
@@ -599,7 +600,8 @@ export interface ReturnPartsResponse {
 export const returnParts = async (
   partId: number,
   palletId: number,
-  quantity: number
+  quantity: number,
+  returnToStageId: number
 ): Promise<ReturnPartsResponse> => {
   try {
     const userData = localStorage.getItem('user');
@@ -613,7 +615,8 @@ export const returnParts = async (
       partId,
       palletId,
       quantity,
-      userId
+      userId,
+      returnToStageId
     };
 
     const response = await axios.post<ReturnPartsResponse>(
