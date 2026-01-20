@@ -554,3 +554,33 @@ export const getCurrentOperation = async (palletId: number): Promise<OperationDt
     return null;
   }
 };
+
+// Интерфейс для возврата деталей
+export interface ReturnPartsRequestDto {
+  partId: number;
+  palletId: number;
+  quantity: number;
+  returnToStageId: number;
+}
+
+// Интерфейс для ответа API при возврате деталей
+export interface ReturnPartsResponseDto {
+  message: string;
+  returnedPallet: {
+    id: number;
+    name: string;
+    quantity: number;
+  };
+}
+
+// Функция для возврата деталей в производство
+export const returnParts = async (request: ReturnPartsRequestDto): Promise<ReturnPartsResponseDto> => {
+  try {
+    const response = await axios.post<ReturnPartsResponseDto>(`${API_URL}/machins/pallets/return-parts`, request);
+    console.log('Детали успешно возвращены:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при возврате деталей:', error);
+    throw error;
+  }
+};

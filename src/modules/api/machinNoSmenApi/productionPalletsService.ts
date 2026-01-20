@@ -503,7 +503,7 @@ export const getPalletRouteSheet = async (palletId: number): Promise<Blob> => {
 export const getCurrentOperation = async (palletId: number): Promise<OperationDto | null> => {
   try {
     const response = await axios.get<{operation: OperationDto | null}>(`${API_URL}/pallets/${palletId}/current-operation`);
-    console.log(`Получе��а операция для поддона ${palletId}:`, response.data);
+    console.log(`Получена операция для поддона ${palletId}:`, response.data);
     return response.data.operation;
   } catch (error) {
     console.error('Ошибка при получении текущей операции поддона:', error);
@@ -646,5 +646,35 @@ export const getStageIdFromStorage = (): number | null => {
   } catch (error) {
     console.error('Ошибка при получении stageId из localStorage:', error);
     return null;
+  }
+};
+
+// Интерфейс для возврата деталей
+export interface ReturnPartsRequestDto {
+  partId: number;
+  palletId: number;
+  quantity: number;
+  returnToStageId: number;
+}
+
+// Интерфейс для ответа API при возврате деталей
+export interface ReturnPartsResponseDto {
+  message: string;
+  returnedPallet: {
+    id: number;
+    name: string;
+    quantity: number;
+  };
+}
+
+// Функция для возврата деталей в производство
+export const returnParts = async (request: ReturnPartsRequestDto): Promise<ReturnPartsResponseDto> => {
+  try {
+    const response = await axios.post<ReturnPartsResponseDto>(`${API_URL}/machines-no-smen/return-parts`, request);
+    console.log('Детали успешно возвращены:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при возврате деталей:', error);
+    throw error;
   }
 };

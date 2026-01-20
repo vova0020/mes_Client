@@ -25,6 +25,7 @@ import {
   PartDistribution,
   defectParts,
   redistributeParts,
+  returnParts,
   getUserData,
   getStageIdFromStorage
 } from '../../api/machinNoSmenApi/productionPalletsService';
@@ -55,6 +56,7 @@ interface UseProductionPalletsResult {
   createPallet: (request: CreatePalletRequestDto) => Promise<CreatePalletResponseDto>;
   defectParts: (palletId: number, quantity: number, description?: string, machineId?: number) => Promise<DefectPartsResponseDto>;
   redistributeParts: (sourcePalletId: number, distributions: PartDistribution[]) => Promise<RedistributePartsResponseDto>;
+  returnParts: (partId: number, palletId: number, quantity: number, returnToStageId: number) => Promise<any>;
 }
 
 // Получение комнаты из localStorage
@@ -646,6 +648,33 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     }
   }, [currentDetailId, handleFetchPalletsWithUnallocated]);
 
+  // Функция для возврата деталей в производство
+  const handleReturnParts = useCallback(async (
+    partId: number,
+    palletId: number,
+    quantity: number,
+    returnToStageId: number
+  ): Promise<any> => {
+    try {
+      const response = await returnParts({
+        partId,
+        palletId,
+        quantity,
+        returnToStageId
+      });
+      
+      // Обновляем список поддонов после возврата
+      if (currentDetailId) {
+        await handleFetchPalletsWithUnallocated(currentDetailId);
+      }
+      
+      return response;
+    } catch (err) {
+      console.error('Ошибка при возврате деталей:', err);
+      throw err;
+    }
+  }, [currentDetailId, handleFetchPalletsWithUnallocated]);
+
   // Функция для загрузки ресурсов выбранного сегмента
   const loadSegmentResources = useCallback(async () => {
     setLoading(true);
@@ -697,7 +726,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     moveToBuffer: handleMoveToBuffer,
     createPallet: handleCreatePallet,
     defectParts: handleDefectParts,
-    redistributeParts: handleRedistributeParts
+    redistributeParts: handleRedistributeParts,
+    returnParts: handleReturnParts
   };
 };
 

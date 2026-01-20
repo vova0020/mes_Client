@@ -10,7 +10,8 @@ import {
   startPalletProcessing,
   completePalletProcessing,
   updateBufferCell,
-  CompleteProcessingResponseDto
+  CompleteProcessingResponseDto,
+  returnParts
 } from '../../api/machineApi/machinProductionPalletsService';
 import { DefectPalletPartsDto, DefectPartsResponse, RedistributePartsRequest, RedistributePartsResponse } from '../../api/machineApi/machineApi';
 import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
@@ -33,6 +34,7 @@ interface UseProductionPalletsResult {
   completePalletProcessing: (palletId: number, machineId: number, operatorId: number, stageId: number) => Promise<CompleteProcessingResponseDto>;
   defectPalletParts: (defectData: DefectPalletPartsDto) => Promise<DefectPartsResponse>;
   redistributeParts: (redistributeData: RedistributePartsRequest) => Promise<RedistributePartsResponse>;
+  returnParts: (partId: number, palletId: number, quantity: number, returnToStageId: number) => Promise<any>;
 }
 
 // Получение комнаты из localStorage
@@ -389,6 +391,33 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     }
   }, [currentDetailId, fetchPallets, getMachineId]);
 
+  // Функция для возврата деталей в производство
+  const handleReturnParts = useCallback(async (
+    partId: number,
+    palletId: number,
+    quantity: number,
+    returnToStageId: number
+  ): Promise<any> => {
+    try {
+      const response = await returnParts({
+        partId,
+        palletId,
+        quantity,
+        returnToStageId
+      });
+      
+      // Обновляем данные о всех поддонах после возврата
+      if (currentDetailId) {
+        await fetchPallets(currentDetailId);
+      }
+      
+      return response;
+    } catch (err) {
+      console.error('Ошибка при возврате деталей:', err);
+      throw err;
+    }
+  }, [currentDetailId, fetchPallets]);
+
   // Функция для загрузки ресурсов выбранного сегмента
   const loadSegmentResources = useCallback(async () => {
     // Не устанавливаем loading здесь, так как это может конфликтовать с загрузкой поддонов
@@ -431,7 +460,8 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     startPalletProcessing: handleStartPalletProcessing,
     completePalletProcessing: handleCompletePalletProcessing,
     defectPalletParts: handleDefectPalletParts,
-    redistributeParts: handleRedistributeParts
+    redistributeParts: handleRedistributeParts,
+    returnParts: handleReturnParts
   };
 };
 
