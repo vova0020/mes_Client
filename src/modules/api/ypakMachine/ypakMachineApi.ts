@@ -187,3 +187,72 @@ export const assignPalletToPackage = async (
     throw error;
   }
 };
+
+// Интерфейс для отбраковки деталей
+export interface DefectPartsRequestDto {
+  palletId: number;
+  quantity: number;
+  reportedById: number;
+  description?: string;
+  machineId?: number;
+  stageId: number;
+}
+
+// Интерфейс для ответа API при отбраковке деталей
+export interface DefectPartsResponseDto {
+  message: string;
+  reclamation: {
+    id: number;
+    quantity: number;
+    description?: string;
+    createdAt: string;
+  };
+  pallet: {
+    id: number;
+    name: string;
+    newQuantity: number;
+  };
+}
+
+// Функция для отбраковки деталей с поддона
+export const defectParts = async (request: DefectPartsRequestDto): Promise<DefectPartsResponseDto> => {
+  try {
+    const response = await axios.post<DefectPartsResponseDto>(`${API_URL}/packaging/pallets/defect-parts`, request);
+    console.log('Детали успешно отбракованы:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при отбраковке деталей:', error);
+    throw error;
+  }
+};
+
+// Интерфейс для возврата деталей
+export interface ReturnPartsRequestDto {
+  partId: number;
+  palletId: number;
+  quantity: number;
+  returnToStageId: number;
+  userId: number;
+}
+
+// Интерфейс для ответа API при возврате деталей
+export interface ReturnPartsResponseDto {
+  message: string;
+  returnedPallet: {
+    id: number;
+    name: string;
+    quantity: number;
+  };
+}
+
+// Функция для возврата деталей в производство
+export const returnParts = async (request: ReturnPartsRequestDto): Promise<ReturnPartsResponseDto> => {
+  try {
+    const response = await axios.post<ReturnPartsResponseDto>(`${API_URL}/packaging/pallets/return-parts`, request);
+    console.log('Детали успешно возвращены:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при возврате деталей:', error);
+    throw error;
+  }
+};

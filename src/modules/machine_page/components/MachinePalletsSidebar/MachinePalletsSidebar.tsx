@@ -6,6 +6,7 @@ import useProductionPallets from '../../../hooks/machinhook/machinProductionPall
 import { useMachine } from '../../../hooks/machinhook/useMachine';
 import DefectModal from './DefectModal';
 import RedistributeModal from './RedistributeModal';
+import ReturnModal from './ReturnModal';
 import { PartDistribution, RedistributePartsRequest } from '../../../api/machineApi/machineApi';
 import {
   ProductionPallet,
@@ -54,8 +55,6 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   // Состояния для модального окна возврата деталей
   const [showReturnModal, setShowReturnModal] = useState<boolean>(false);
   const [returnPalletId, setReturnPalletId] = useState<number | null>(null);
-  const [returnQuantity, setReturnQuantity] = useState<string>('');
-  const [isReturning, setIsReturning] = useState<boolean>(false);
 
   // Используем хук для получения данных о станке и пользователе
   const { machine, machineId, selectedStageId } = useMachine();
@@ -444,7 +443,6 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setShowRedistributeModal(true);
     } else if (action === 'return') {
       setReturnPalletId(palletId);
-      setReturnQuantity('');
       setShowReturnModal(true);
     }
     setShowQuantityMenu(null);
@@ -525,15 +523,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   };
 
   // Обработчик возврата деталей
-  const handleReturnParts = async () => {
+  const handleReturnParts = async (quantity: number) => {
     if (!returnPalletId || !detailId) return;
-
-    const quantity = parseInt(returnQuantity);
-
-    if (isNaN(quantity) || quantity <= 0) {
-      setErrorMessage('Введите корректное количество деталей');
-      return;
-    }
 
     let returnToStageId: number | null = null;
     try {
@@ -547,26 +538,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     }
 
     if (!returnToStageId) {
-      setErrorMessage('Не удалось определить ID этапа');
-      return;
+      throw new Error('Не удалось определить ID этапа');
     }
 
-    try {
-      setIsReturning(true);
-      setErrorMessage(null);
-
-      await returnParts(detailId, returnPalletId, quantity, returnToStageId);
-
-      setShowReturnModal(false);
-      setReturnQuantity('');
-      setSuccessMessage('Детали успешно возвращены в производство');
-      console.log('Детали успешно возвращены в производство');
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err?.message || 'Не удалось вернуть детали';
-      setErrorMessage(errorMsg);
-      console.error('Ошибка при возврате деталей:', err);
-    } finally {
-      setIsReturning(false);
+    await returnParts(detailId, returnPalletId, quantity, returnToStageId);
+    setSuccessMessage('Детали успешно возвращены в производство');
+    
+    if (detailId) {
+      await fetchPallets(detailId);
     }
   };
 
@@ -923,66 +902,17 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
 
       {/* Модальное окно возврата деталей */}
       {showReturnModal && returnPalletId && (
-        <div className={styles.modalOverlay} onClick={(e) => {
-          if (e.target === e.currentTarget) {
+        <ReturnModal
+          isOpen={showReturnModal}
+          onClose={() => {
             setShowReturnModal(false);
-          }
-        }}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Вернуть детали в производство</h3>
-              <button 
-                className={styles.modalCloseButton}
-                onClick={() => setShowReturnModal(false)}
-                disabled={isReturning}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.modalBody}>
-              <div className={styles.palletInfo}>
-                <span>Поддон: <strong>{pallets.find(p => p.id === returnPalletId)?.name}</strong></span>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="returnQuantity">Количество деталей *</label>
-                <input
-                  id="returnQuantity"
-                  type="number"
-                  min="1"
-                  value={returnQuantity}
-                  onChange={(e) => setReturnQuantity(e.target.value)}
-                  disabled={isReturning}
-                  className={styles.formInput}
-                />
-              </div>
-
-              {errorMessage && (
-                <div className={styles.errorMessage}>
-                  {errorMessage}
-                </div>
-              )}
-            </div>
-            
-            <div className={styles.modalFooter}>
-              <button 
-                className={styles.cancelButton}
-                onClick={() => setShowReturnModal(false)}
-                disabled={isReturning}
-              >
-                Отмена
-              </button>
-              <button 
-                className={styles.createButton}
-                onClick={handleReturnParts}
-                disabled={isReturning || !returnQuantity}
-              >
-                {isReturning ? 'Возврат...' : 'Вернуть'}
-              </button>
-            </div>
-          </div>
-        </div>
+            setReturnPalletId(null);
+          }}
+          onSubmit={handleReturnParts}
+          palletId={returnPalletId}
+          palletName={pallets.find(p => p.id === returnPalletId)?.name || `Поддон №${returnPalletId}`}
+          maxQuantity={pallets.find(p => p.id === returnPalletId)?.quantity || 0}
+        />
       )}
     </>
   );
