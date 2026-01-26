@@ -4,7 +4,11 @@ import ProductionStatistics from './components/ProductionStatistics/ProductionSt
 import TimeStatistics from './components/TimeStatistics/TimeStatistics';
 import BreakdownStatistics from './components/BreakdownStatistics/BreakdownStatistics';
 
-const StatisticsDisplay: React.FC = () => {
+interface StatisticsDisplayProps {
+  onBack?: () => void;
+}
+
+const StatisticsDisplay: React.FC<StatisticsDisplayProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'production' | 'time' | 'breakdowns'>('production');
 
   // Тестовые данные для мебельной фабрики
@@ -31,13 +35,13 @@ const StatisticsDisplay: React.FC = () => {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'production':
-        return <ProductionStatistics data={productionData} />;
+        return <ProductionStatistics data={productionData} onBack={onBack} />;
       case 'time':
         return <TimeStatistics data={timeData} />;
       case 'breakdowns':
         return <BreakdownStatistics />;
       default:
-        return <ProductionStatistics data={productionData} />;
+        return <ProductionStatistics data={productionData} onBack={onBack} />;
     }
   };
 

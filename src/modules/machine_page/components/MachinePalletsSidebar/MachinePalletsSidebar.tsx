@@ -541,11 +541,16 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       throw new Error('Не удалось определить ID этапа');
     }
 
-    await returnParts(detailId, returnPalletId, quantity, returnToStageId);
-    setSuccessMessage('Детали успешно возвращены в производство');
-    
-    if (detailId) {
-      await fetchPallets(detailId);
+    try {
+      await returnParts(detailId, returnPalletId, quantity, returnToStageId);
+      setSuccessMessage('Детали успешно возвращены в производство');
+      
+      if (detailId) {
+        await fetchPallets(detailId);
+      }
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || error?.message || 'Не удалось вернуть детали';
+      throw new Error(errorMsg);
     }
   };
 

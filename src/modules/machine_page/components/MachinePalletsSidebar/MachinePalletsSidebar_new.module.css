@@ -1,0 +1,211 @@
+/* Copy all modal-related styles from master CSS */
+
+/* ===== СТИЛИ ДЛЯ РЕДАКТИРОВАНИЯ КОЛИЧЕСТВА ===== */
+
+/* Ячейка с количеством */
+.quantityCell {
+  position: relative;
+}
+
+/* Кнопка количества */
+.quantityButton {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.quantityButton:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.quantityButton:active {
+  background: rgba(52, 152, 219, 0.2);
+}
+
+/* Меню действий с количеством */
+.quantityMenu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeInOverlay 0.3s ease-out;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Контент меню количества */
+.quantityMenuContent {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  max-height: 80dvh;
+  overflow: hidden;
+  animation: slideInModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: 10px auto;
+  position: relative;
+}
+
+.quantityMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #374051, #2a303c);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quantityMenuHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.quantityMenuCloseButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.quantityMenuCloseButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.quantityMenuBody {
+  padding: 24px;
+}
+
+/* Кнопки в меню количества */
+.quantityMenuButton {
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.quantityMenuButton:last-child {
+  margin-bottom: 0;
+}
+
+.quantityMenuButton:hover {
+  background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+  color: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.quantityMenuButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Информация о поддоне в модальных окнах */
+.palletInfo {
+  display: flex;
+  gap: 20px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #e8f4fd, #d1ecf1);
+  border: 1px solid #bee5eb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #0c5460;
+}
+
+.palletInfo strong {
+  color: #0a4c57;
+  font-weight: 600;
+}
+
+/* Textarea для описания брака */
+.formTextarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2c3e50;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.formTextarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+}
+
+.formTextarea:disabled {
+  background: linear-gradient(145deg, #f5f6fa, #e9ecef);
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: #dee2e6;
+}
+
+.formTextarea::placeholder {
+  color: #95a5a6;
+  font-style: italic;
+}

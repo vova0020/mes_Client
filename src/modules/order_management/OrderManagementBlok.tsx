@@ -40,7 +40,7 @@ const OrderManagementBlok: React.FC = () => {
       case 'orderManagement':
         return <OrderPlanning onBack={handleBackToMain} />;
       case 'statistics':
-        return <StatisticsDisplay />;
+        return <StatisticsDisplay onBack={handleBackToMain} />;
       case 'orderDisplay':
       default:
         return (

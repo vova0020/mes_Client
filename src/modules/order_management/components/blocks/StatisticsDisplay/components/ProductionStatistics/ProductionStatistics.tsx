@@ -37,6 +37,7 @@ interface ProductionData {
 
 interface ProductionStatisticsProps {
   data: ProductionData;
+  onBack?: () => void;
 }
 
 type PeriodType = 'day' | 'week' | 'month' | 'year' | 'custom';
@@ -51,7 +52,7 @@ const periodToDateRangeType = (period: PeriodType): DateRangeType => {
   }
 };
 
-const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => {
+const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data, onBack }) => {
   const { lines, loading: linesLoading } = useProductionLines();
   
   const [selectedLineId, setSelectedLineId] = useState<number | null>(null);
@@ -225,6 +226,11 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     return (
       <div className={styles.container}>
         <div className={styles.emptyState}>
+          {onBack && (
+            <button className={styles.backToMainBtn} onClick={onBack}>
+              ← Вернуться к монитору заказов
+            </button>
+          )}
           <h2 className={styles.emptyTitle}>📊 Выберите производственный поток</h2>
           <p className={styles.emptyText}>Для просмотра статистики выберите один из доступных потоков:</p>
           <div className={styles.lineSelector}>
@@ -275,6 +281,11 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
+        {onBack && (
+          <button className={styles.backToMainBtn} onClick={onBack}>
+            ← Вернуться к монитору заказов
+          </button>
+        )}
         <h2 className={styles.title}>📊 Статистика производства</h2>
       </div>
 

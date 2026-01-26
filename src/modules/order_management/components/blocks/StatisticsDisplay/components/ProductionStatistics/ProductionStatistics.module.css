@@ -13,6 +13,34 @@
 
 .header {
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backToMainBtn {
+  padding: 10px 20px;
+  border: 1px solid #3498db;
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.backToMainBtn:hover {
+  background: linear-gradient(to bottom, #2980b9, #21618c);
+  transform: translateX(-3px);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .title {
@@ -331,6 +359,13 @@
   min-height: 400px;
   text-align: center;
   padding: 40px 20px;
+  position: relative;
+}
+
+.emptyState .backToMainBtn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
 }
 
 .loadingSpinner {

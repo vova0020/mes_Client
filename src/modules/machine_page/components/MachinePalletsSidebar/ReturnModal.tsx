@@ -86,39 +86,38 @@ const ReturnModal: React.FC<ReturnModalProps> = ({
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className={styles.modalForm}>
-          <div className={styles.modalField}>
-            <label>Поддон:</label>
-            <span className={styles.modalFieldValue}>{palletName}</span>
-          </div>
-
-          <div className={styles.modalField}>
-            <label htmlFor="returnQuantity">Количество деталей для возврата:</label>
-            <input
-              id="returnQuantity"
-              type="number"
-              min="1"
-              max={maxQuantity}
-              value={quantity}
-              onChange={handleQuantityChange}
-              className={styles.modalInput}
-              disabled={isSubmitting}
-              required
-            />
-            <span className={styles.modalFieldHint}>Максимум: {maxQuantity}</span>
-          </div>
-
-          {error && (
-            <div className={styles.errorMessage}>
-              {error}
+        <form onSubmit={handleSubmit}>
+          <div className={styles.modalBody}>
+            <div className={styles.palletInfo}>
+              <span>Поддон: <strong>{palletName}</strong></span>
             </div>
-          )}
 
-          <div className={styles.modalActions}>
+            <div className={styles.formGroup}>
+              <label htmlFor="returnQuantity">Количество деталей *</label>
+              <input
+                id="returnQuantity"
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={handleQuantityChange}
+                className={styles.formInput}
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+
+            {error && (
+              <div className={styles.errorMessage}>
+                {error}
+              </div>
+            )}
+          </div>
+
+          <div className={styles.modalFooter}>
             <button
               type="button"
               onClick={onClose}
-              className={styles.modalCancelButton}
+              className={styles.cancelButton}
               disabled={isSubmitting}
             >
               Отмена
