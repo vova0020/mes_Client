@@ -39,7 +39,8 @@ export const useLineStats = (
   date: string,
   startDate: string,
   endDate: string,
-  unit: UnitOfMeasurement
+  unit: UnitOfMeasurement,
+  refreshKey?: number
 ) => {
   const [stats, setStats] = useState<StageStats[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +70,7 @@ export const useLineStats = (
     };
 
     fetchStats();
-  }, [lineId, dateRangeType, date, startDate, endDate, unit]);
+  }, [lineId, dateRangeType, date, startDate, endDate, unit, refreshKey]);
 
   return { stats, loading, error };
 };
@@ -80,7 +81,8 @@ export const useStageStats = (
   dateRangeType: DateRangeType,
   date: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  refreshKey?: number
 ) => {
   const [stats, setStats] = useState<MachineStats[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,7 +112,7 @@ export const useStageStats = (
     };
 
     fetchStats();
-  }, [lineId, stageId, dateRangeType, date, startDate, endDate]);
+  }, [lineId, stageId, dateRangeType, date, startDate, endDate, refreshKey]);
 
   return { stats, loading, error };
 };

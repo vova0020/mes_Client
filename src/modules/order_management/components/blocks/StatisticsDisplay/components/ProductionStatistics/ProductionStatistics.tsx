@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,9 +10,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { useProductionLines, useLineStats, useStageStats } from '../../../../../../hooks/statisticsHook';
-import { DateRangeType, UnitOfMeasurement } from '../../../../../../api/statisticsApi'
+import { DateRangeType, UnitOfMeasurement } from '../../../../../../api/statisticsApi';
+import { useWebSocketRoom } from '../../../../../../../hooks/useWebSocketRoom';
 import styles from './ProductionStatistics.module.css';
 
 ChartJS.register(
@@ -50,8 +51,6 @@ const periodToDateRangeType = (period: PeriodType): DateRangeType => {
   }
 };
 
-
-
 const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => {
   const { lines, loading: linesLoading } = useProductionLines();
   
@@ -62,6 +61,7 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showTotal, setShowTotal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const currentDate = useMemo(() => new Date().toISOString().split('T')[0], []);
   
@@ -71,7 +71,8 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     currentDate,
     dateFrom,
     dateTo,
-    unit
+    unit,
+    refreshKey
   );
   
   const { stats: machineStats, loading: machineLoading } = useStageStats(
@@ -80,8 +81,25 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     periodToDateRangeType(period),
     currentDate,
     dateFrom,
-    dateTo
+    dateTo,
+    refreshKey
   );
+
+  const { socket } = useWebSocketRoom({ room: 'room:statisticks' });
+
+  const handleStatisticsUpdate = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('statisticks:event', handleStatisticsUpdate);
+
+    return () => {
+      socket.off('statisticks:event', handleStatisticsUpdate);
+    };
+  }, [socket, handleStatisticsUpdate]);
   
   const chartDataByUnit = useMemo(() => {
     const stats = selectedStageId ? machineStats : stageStats;
@@ -173,7 +191,7 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
 
   const selectedLine = lines.find((l: any) => l.lineId === selectedLineId);
   const selectedStage = stageStats.find((s: any) => s.stageId === selectedStageId);
-  
+
   const colors = [
     { bg: 'rgba(78, 205, 196, 0.6)', border: 'rgb(78, 205, 196)' },
     { bg: 'rgba(255, 107, 107, 0.6)', border: 'rgb(255, 107, 107)' },
@@ -191,8 +209,6 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data }) => 
     { bg: 'rgba(75, 192, 192, 0.6)', border: 'rgb(75, 192, 192)' },
     { bg: 'rgba(54, 162, 235, 0.6)', border: 'rgb(54, 162, 235)' }
   ];
-  
-
   
   if (linesLoading) {
     return (
