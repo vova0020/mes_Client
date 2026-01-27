@@ -1,0 +1,67 @@
+.container {
+  padding: 20px;
+}
+
+.controls {
+  margin-bottom: 30px;
+}
+
+.dateRangeButtons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.rangeButton {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.rangeButton:hover {
+  background: #f5f5f5;
+}
+
+.rangeButton.active {
+  background: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+.customDateRange {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dateInput {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+}
+
+.chartCard {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.machineName {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}

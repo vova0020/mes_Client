@@ -3,13 +3,14 @@ import styles from './StatisticsDisplay.module.css';
 import ProductionStatistics from './components/ProductionStatistics/ProductionStatistics';
 import TimeStatistics from './components/TimeStatistics/TimeStatistics';
 import BreakdownStatistics from './components/BreakdownStatistics/BreakdownStatistics';
+import MachineUptimeStatistics from './components/MachineUptimeStatistics/MachineUptimeStatistics';
 
 interface StatisticsDisplayProps {
   onBack?: () => void;
 }
 
 const StatisticsDisplay: React.FC<StatisticsDisplayProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<'production' | 'time' | 'breakdowns'>('production');
+  const [activeTab, setActiveTab] = useState<'production' | 'time' | 'breakdowns' | 'uptime'>('production');
 
   // Тестовые данные для мебельной фабрики
   const productionData = {
@@ -40,6 +41,8 @@ const StatisticsDisplay: React.FC<StatisticsDisplayProps> = ({ onBack }) => {
         return <TimeStatistics data={timeData} />;
       case 'breakdowns':
         return <BreakdownStatistics />;
+      case 'uptime':
+        return <MachineUptimeStatistics />;
       default:
         return <ProductionStatistics data={productionData} onBack={onBack} />;
     }
@@ -57,6 +60,12 @@ const StatisticsDisplay: React.FC<StatisticsDisplayProps> = ({ onBack }) => {
           onClick={() => setActiveTab('production')}
         >
           Статистика по выработке
+        </button>
+        <button 
+          className={`${styles.tabButton} ${activeTab === 'uptime' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('uptime')}
+        >
+          Время работы станков
         </button>
         {/* <button 
           className={`${styles.tabButton} ${activeTab === 'time' ? styles.activeTab : ''}`}
