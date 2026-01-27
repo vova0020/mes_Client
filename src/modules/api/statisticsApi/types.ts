@@ -11,6 +11,13 @@ export enum DateRangeType {
   CUSTOM = 'CUSTOM'
 }
 
+export enum MachineStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  MAINTENANCE = 'MAINTENANCE',
+  BROKEN = 'BROKEN'
+}
+
 export interface ProductionLine {
   lineId: number;
   lineName: string;
@@ -49,4 +56,35 @@ export interface LineStatsParams {
 
 export interface StageStatsParams extends LineStatsParams {
   stageId: number;
+}
+
+export interface StageInfo {
+  stageId: number;
+  stageName: string;
+}
+
+export interface StatusBreakdown {
+  status: MachineStatus;
+  hours: number;
+  percentage: number;
+}
+
+export interface MachineUptimeStats {
+  machineId: number;
+  machineName: string;
+  currentStatus: MachineStatus;
+  statusBreakdown: StatusBreakdown[];
+}
+
+export interface MachineUptimeResponse {
+  startDate: string;
+  endDate: string;
+  machines: MachineUptimeStats[];
+}
+
+export interface GetMachineUptimeParams {
+  dateRangeType: DateRangeType;
+  stageId?: number;
+  startDate?: string;
+  endDate?: string;
 }

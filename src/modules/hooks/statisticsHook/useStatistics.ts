@@ -5,7 +5,10 @@ import {
   StageStats, 
   MachineStats, 
   DateRangeType, 
-  UnitOfMeasurement 
+  UnitOfMeasurement,
+  StageInfo,
+  MachineUptimeStats,
+  MachineUptimeResponse
 } from '../../api/statisticsApi';
 
 export const useProductionLines = () => {
@@ -115,4 +118,65 @@ export const useStageStats = (
   }, [lineId, stageId, dateRangeType, date, startDate, endDate, refreshKey]);
 
   return { stats, loading, error };
+};
+
+export const useMachineUptimeStages = () => {
+  const [stages, setStages] = useState<StageInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStages = async () => {
+      try {
+        setLoading(true);
+        const data = await statisticsApi.getMachineUptimeStages();
+        setStages(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load stages');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStages();
+  }, []);
+
+  return { stages, loading, error };
+};
+
+export const useMachineUptimeStats = (
+  dateRangeType: DateRangeType,
+  stageId: number | null,
+  startDate: string,
+  endDate: string,
+  refreshKey?: number
+) => {
+  const [data, setData] = useState<MachineUptimeResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const response = await statisticsApi.getMachineUptimeStats({
+          dateRangeType,
+          stageId: stageId || undefined,
+          startDate: dateRangeType === DateRangeType.CUSTOM ? startDate : undefined,
+          endDate: dateRangeType === DateRangeType.CUSTOM ? endDate : undefined
+        });
+        setData(response);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load machine uptime stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [dateRangeType, stageId, startDate, endDate, refreshKey]);
+
+  return { data, loading, error };
 };

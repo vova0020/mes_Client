@@ -5,7 +5,11 @@ import {
   LineStatsParams, 
   StageStatsParams,
   UnitOfMeasurement,
-  DateRangeType
+  DateRangeType,
+  StageInfo,
+  MachineUptimeStats,
+  MachineUptimeResponse,
+  GetMachineUptimeParams
 } from './types';
 
 
@@ -54,6 +58,28 @@ export const statisticsApi = {
 
     const response = await fetch(`${BASE_URL}/stage?${searchParams}`);
     if (!response.ok) throw new Error('Failed to fetch stage stats');
+    return response.json();
+  },
+
+  async getMachineUptimeStages(): Promise<StageInfo[]> {
+    const response = await fetch(`${BASE_URL}/machine-uptime/stages`);
+    if (!response.ok) throw new Error('Failed to fetch machine uptime stages');
+    return response.json();
+  },
+
+  async getMachineUptimeStats(params: GetMachineUptimeParams): Promise<MachineUptimeResponse> {
+    const searchParams = new URLSearchParams({
+      dateRangeType: params.dateRangeType
+    });
+
+    if (params.stageId) searchParams.append('stageId', params.stageId.toString());
+    if (params.dateRangeType === DateRangeType.CUSTOM) {
+      if (params.startDate) searchParams.append('startDate', params.startDate);
+      if (params.endDate) searchParams.append('endDate', params.endDate);
+    }
+
+    const response = await fetch(`${BASE_URL}/machine-uptime?${searchParams}`);
+    if (!response.ok) throw new Error('Failed to fetch machine uptime stats');
     return response.json();
   }
 };
