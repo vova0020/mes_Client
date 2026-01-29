@@ -29,6 +29,7 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const handleAddPackaging = async (article: string, name: string) => {
     setIsLoading(true)
@@ -56,6 +57,11 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
     onSelectPackaging?.(packagingId)
   }
 
+  const filteredPackaging = packaging.filter(pack => 
+    pack.article.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pack.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   return (
     <div className={styles.section}>
       <header className={styles.header}>
@@ -63,7 +69,17 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
       </header>
 
       <div className={styles.content}>
-        {packaging.length > 0 ? (
+        <div className={styles.searchWrapper}>
+          <input
+            type="text"
+            placeholder="Поиск по артикулу или названию..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className={styles.searchInput}
+          />
+        </div>
+
+        {filteredPackaging.length > 0 ? (
           <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
@@ -76,7 +92,7 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {packaging.map((pack) => (
+                {filteredPackaging.map((pack) => (
                   <tr
                     key={pack.id}
                     className={`${styles.tableRow} ${

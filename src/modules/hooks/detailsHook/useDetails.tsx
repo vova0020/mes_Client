@@ -115,10 +115,9 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
 
   // Функция для создания новой детали с упаковкой
   const createDetailWithPackage = useCallback(async (createDto: CreateDetailWithPackageDto): Promise<Detail> => {
+    setIsCreating(true);
+    
     try {
-      setIsCreating(true);
-      setError(null);
-      
       console.log('Создание новой детали с упаковкой:', createDto);
       const newDetail = await detailsApi.createWithPackage(createDto);
       console.log('Деталь с упаковкой создана:', newDetail);
@@ -130,11 +129,6 @@ export const useDetails = (packageId?: number): UseDetailsResult => {
       window.dispatchEvent(new CustomEvent('detailsUpdated'));
       
       return newDetail;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Неизвестная ошибка при создании детали с упаковкой');
-      setError(error);
-      console.error('Ошибка при создании детали с упаковкой:', error);
-      throw error;
     } finally {
       setIsCreating(false);
     }

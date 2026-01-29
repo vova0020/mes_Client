@@ -15,6 +15,12 @@ export interface PackageInfo {
   quantity: number;
 }
 
+// Интерфейс для маршрута
+export interface RouteInfo {
+  routeId: number;
+  routeName: string;
+}
+
 // Интерфейс для парсированной детали
 export interface ParsedDetail {
   partSku: string;
@@ -53,6 +59,8 @@ export interface ParsedDetail {
   diffs: DataDiff[];
   packageId?: number;
   hasPackageConnection?: boolean;
+  availableRoutes?: RouteInfo[];
+  currentRouteId?: number;
 }
 
 // Ответ API при парсинге файла

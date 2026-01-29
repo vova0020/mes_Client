@@ -173,6 +173,24 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
+.inputAuto {
+  border-color: #a78bfa;
+  background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+  color: #6b21a8;
+  box-shadow: 0 2px 4px rgba(167, 139, 250, 0.2);
+}
+
+.inputAuto:hover {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+}
+
+.inputAuto:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
 .errorText {
   font-size: 0.75rem;
   color: #fca5a5;
@@ -230,6 +248,31 @@
 .checkbox:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Ошибка сервера */
+.serverError {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-top: 1px solid rgba(239, 68, 68, 0.3);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.serverError .errorIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: #ef4444;
+}
+
+.serverError span {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #fca5a5;
 }
 
 /* Подвал */

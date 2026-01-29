@@ -19,9 +19,10 @@ import {
 } from '@heroicons/react/24/outline';
 import { useDetails } from '../../../../../../hooks/detailsHook';
 import { useParser } from '../../../../../../hooks/parserHook';
-import { Detail, CreateDetailDto, UpdateDetailDto, CreateDetailWithPackageDto } from '../../../../../../api/detailsApi/detailsApi';
+import { usePackageDirectory } from '../../../../../../hooks/packageDirectoryHook';
+import { Detail, CreateDetailDto, UpdateDetailDto, CreateDetailWithPackageDto, detailsApi } from '../../../../../../api/detailsApi/detailsApi';
 import { ParsedDetail } from '../../../../../../api/parserApi/parserApi';
-import { DetailModal, DeleteConfirmModal, UploadModal, ParsedDataModal } from '../modals';
+import { DetailModal, DeleteConfirmModal, UploadModal, ParsedDataModal, CopyDetailModal } from '../modals';
 import styles from './DetailsSection.module.css';
 
 interface DetailsSectionProps {
@@ -61,6 +62,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showParsedDataModal, setShowParsedDataModal] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<Detail | null>(null);
   const [notification, setNotification] = useState<NotificationState>({
     show: false,
@@ -112,15 +114,17 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     clearAfterSave
   } = useParser();
 
+  const { packages } = usePackageDirectory();
+
   // Определяем состояние загрузки
   const isLoading = loading === 'loading';
 
   // Загружаем маршруты при открытии модальных окон
   React.useEffect(() => {
-    if (showCreateModal || showEditModal || showParsedDataModal) {
+    if (showCreateModal || showEditModal || showParsedDataModal || showCopyModal) {
       fetchRoutes();
     }
-  }, [showCreateModal, showEditModal, showParsedDataModal, fetchRoutes]);
+  }, [showCreateModal, showEditModal, showParsedDataModal, showCopyModal, fetchRoutes]);
 
   // Слушатель событий для автоматического обновления
   React.useEffect(() => {
@@ -250,13 +254,25 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     }
   };
 
-  const handleCopyDetail = async (detailId: number) => {
+  const handleCopyDetail = async (detail: Detail) => {
     try {
-      await copyDetail(detailId);
-      showNotification('success', 'Успех', 'Деталь успешно скопирована');
+      console.log('Начало копирования детали:', detail.id);
+      // Получаем актуальные данные детали с сервера
+      const actualDetail = await detailsApi.getById(detail.id);
+      console.log('Получены данные детали:', actualDetail);
+      setSelectedDetail(actualDetail);
+      setShowCopyModal(true);
     } catch (error) {
-      showNotification('error', 'Ошибка', 'Не удалось скопировать деталь');
+      console.error('Ошибка при копировании:', error);
+      showNotification('error', 'Ошибка', 'Не удалось загрузить данные детали');
     }
+  };
+
+  const handleCopySubmit = async (formData: CreateDetailWithPackageDto) => {
+    await createDetailWithPackage(formData);
+    setShowCopyModal(false);
+    setSelectedDetail(null);
+    showNotification('success', 'Успех', 'Деталь успешно скопирована');
   };
 
   const handleFileUpload = async (file: File, quantity?: number) => {
@@ -704,7 +720,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                         <PencilIcon className={styles.icon} />
                       </button>
                       <button 
-                        onClick={() => handleCopyDetail(d.id)}
+                        onClick={() => handleCopyDetail(d)}
                         title="Копировать"
                         className={styles.actionButton}
                         disabled={isCopying}
@@ -740,7 +756,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                       <PencilIcon className={styles.icon} />
                     </button>
                     <button 
-                      onClick={() => handleCopyDetail(d.id)}
+                      onClick={() => handleCopyDetail(d)}
                       title="Копировать"
                       className={styles.actionButton}
                     >
@@ -888,6 +904,25 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
         }}
         onSave={handleSaveParsedData}
         parsedData={parsedData}
+        isLoading={isCreating}
+        routes={routes}
+        routesLoading={routesLoading}
+      />
+
+      <CopyDetailModal
+        isOpen={showCopyModal}
+        onClose={() => {
+          setShowCopyModal(false);
+          setSelectedDetail(null);
+        }}
+        onSubmit={handleCopySubmit}
+        detail={selectedDetail}
+        packages={packages.map(p => ({
+          packageId: p.packageId,
+          packageCode: p.packageCode,
+          packageName: p.packageName
+        }))}
+        currentPackageId={packageId}
         isLoading={isCreating}
         routes={routes}
         routesLoading={routesLoading}

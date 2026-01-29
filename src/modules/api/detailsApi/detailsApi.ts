@@ -148,6 +148,22 @@ export interface GetRoutesResponse {
  */
 export const detailsApi = {
   /**
+   * Получение детали по ID
+   * @param id - Идентификатор детали
+   * @returns Promise с деталью
+   */
+  getById: async (id: number): Promise<Detail> => {
+    try {
+      console.log(`Получение детали с ID=${id}`);
+      const response = await axios.get<DetailResponse>(`${API_URL}/details/${id}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Ошибка при получении детали:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Получение всех деталей связанных с упаковкой
    * @param packageId - ID упаковки
    * @returns Promise с массивом деталей

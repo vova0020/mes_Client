@@ -72,18 +72,27 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
   const [showDiffsModal, setShowDiffsModal] = useState(false);
   const [selectedDiffs, setSelectedDiffs] = useState<any[]>([]);
   const [selectedDetailSku, setSelectedDetailSku] = useState<string>('');
+  const [userModifiedRoutes, setUserModifiedRoutes] = useState<Set<number>>(new Set());
 
   // Синхронизируем локальное состояние с входными данными
   useEffect(() => {
-    setEditedData([...parsedData]);
+    // Устанавливаем routeId из currentRouteId или первого доступного маршрута
+    const dataWithRoutes = parsedData.map(detail => ({
+      ...detail,
+      routeId: detail.currentRouteId || detail.availableRoutes?.[0]?.routeId || detail.routeId || 0
+    }));
+    setEditedData(dataWithRoutes);
+    setUserModifiedRoutes(new Set()); // Сбрасываем отметки при новых данных
   }, [parsedData]);
 
   const handleFieldChange = (index: number, field: string, value: any) => {
     const updated = [...editedData];
     if (field === 'quantity') {
-      value = Math.max(1, parseInt(value) || 1);
+      value = value ? parseFloat(value) : '';
     } else if (field === 'routeId') {
       value = parseInt(value) || 0;
+      // Отмечаем, что пользователь изменил маршрут (даже если выбрал тот же)
+      setUserModifiedRoutes(prev => new Set(prev).add(index));
     } else if (['thickness', 'thicknessWithEdging', 'finishedLength', 'finishedWidth', 'conveyorPosition'].includes(field)) {
       value = value ? parseFloat(value) : undefined;
     } else if (['pf', 'sbPart', 'pfSb'].includes(field)) {
@@ -98,6 +107,19 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
     const detailsWithoutRoute = editedData.filter(detail => !detail.routeId || detail.routeId === 0);
     if (detailsWithoutRoute.length > 0) {
       alert(`Необходимо выбрать маршрут для всех деталей. Не выбран маршрут для ${detailsWithoutRoute.length} деталей.`);
+      return;
+    }
+    
+    // Проверяем, что выбранный маршрут из доступных (если есть availableRoutes)
+    const detailsWithInvalidRoute = editedData.filter(detail => {
+      if (detail.availableRoutes && detail.availableRoutes.length > 0) {
+        return !detail.availableRoutes.some(route => route.routeId === detail.routeId);
+      }
+      return false;
+    });
+    
+    if (detailsWithInvalidRoute.length > 0) {
+      alert(`Для некоторых деталей выбран недоступный маршрут. Проверьте выбор маршрутов.`);
       return;
     }
     
@@ -151,7 +173,7 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
           </select>
         );
       } else {
-        const inputType = ['thickness', 'thicknessWithEdging', 'finishedLength', 'finishedWidth', 'conveyorPosition', 'quantity'].includes(field) ? 'number' : 'text';
+        const inputType = ['thickness', 'thicknessWithEdging', 'finishedLength', 'finishedWidth', 'quantity'].includes(field) ? 'number' : 'text';
         return (
           <input
             type={inputType}
@@ -249,6 +271,8 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
                   <th>Статус</th>
                   <th>Артикул детали</th>
                   <th>Наименование детали</th>
+                  <th>Маршрут</th>
+                  <th>Количество</th>
                   <th>Наименование материала</th>
                   <th>Артикул материала</th>
                   <th>Толщина детали</th>
@@ -268,8 +292,6 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
                   <th>ПФ СБ</th>
                   <th>Артикул СБ детали</th>
                   <th>Подстопное место</th>
-                  <th>Маршрут</th>
-                  <th>Количество</th>
                   <th>Различия</th>
                   <th>Действия</th>
                 </tr>
@@ -282,6 +304,85 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
                       <span className={styles.skuBadge}>{detail.partSku}</span>
                     </td>
                     <td>{renderEditableCell(detail, index, 'partName', detail.partName)}</td>
+                    <td>
+                      {detail.availableRoutes && detail.availableRoutes.length > 0 ? (
+                        <select
+                          value={detail.routeId || 0}
+                          onChange={(e) => handleFieldChange(index, 'routeId', parseInt(e.target.value))}
+                          onClick={() => setUserModifiedRoutes(prev => new Set(prev).add(index))}
+                          className={`${styles.routeSelect} ${
+                            (!detail.routeId || detail.routeId === 0) 
+                              ? styles.routeSelectError 
+                              : !userModifiedRoutes.has(index) 
+                                ? styles.routeSelectAuto 
+                                : ''
+                          }`}
+                          disabled={routesLoading}
+                        >
+                          <option value={0}>Выберите маршрут</option>
+                          {detail.availableRoutes.map(route => (
+                            <option key={route.routeId} value={route.routeId}>
+                              {route.routeName}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select
+                          value={detail.routeId || 0}
+                          onChange={(e) => handleFieldChange(index, 'routeId', parseInt(e.target.value))}
+                          onClick={() => setUserModifiedRoutes(prev => new Set(prev).add(index))}
+                          className={`${styles.routeSelect} ${
+                            (!detail.routeId || detail.routeId === 0) 
+                              ? styles.routeSelectError 
+                              : !userModifiedRoutes.has(index) 
+                                ? styles.routeSelectAuto 
+                                : ''
+                          }`}
+                          disabled={routesLoading}
+                        >
+                          <option value={0}>Выберите маршрут</option>
+                          {routes.map(route => (
+                            <option key={route.routeId} value={route.routeId}>
+                              {route.routeName}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+                    <td>
+                      {editingCell?.row === index && editingCell?.field === 'quantity' ? (
+                        <div className={styles.quantityEdit}>
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={detail.quantity}
+                            onChange={(e) => handleFieldChange(index, 'quantity', e.target.value ? parseFloat(e.target.value) : '')}
+                            className={styles.quantityInput}
+                            onBlur={() => setEditingCell(null)}
+                            onKeyDown={(e) => e.key === 'Enter' && setEditingCell(null)}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => setEditingCell(null)}
+                            className={styles.saveQuantityBtn}
+                          >
+                            <CheckIcon className={styles.icon} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className={styles.quantityDisplay}>
+                          <span className={styles.quantityBadge}>{detail.quantity}</span>
+                          <button
+                            onClick={() => setEditingCell({row: index, field: 'quantity'})}
+                            className={styles.editQuantityBtn}
+                            title="Редактировать количество"
+                          >
+                            <PencilIcon className={styles.icon} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
                     <td>{renderEditableCell(detail, index, 'materialName', detail.materialName)}</td>
                     <td>{renderEditableCell(detail, index, 'materialSku', detail.materialSku)}</td>
                     <td>{renderEditableCell(detail, index, 'thickness', detail.thickness)}</td>
@@ -330,55 +431,7 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
                     <td>{renderEditableCell(detail, index, 'sbPart', detail.sbPart)}</td>
                     <td>{renderEditableCell(detail, index, 'pfSb', detail.pfSb)}</td>
                     <td>{renderEditableCell(detail, index, 'sbPartSku', detail.sbPartSku)}</td>
-                    <td>{renderEditableCell(detail, index, 'conveyorPosition', detail.conveyorPosition)}</td>
-                    <td>
-                      <select
-                        value={detail.routeId || 0}
-                        onChange={(e) => handleFieldChange(index, 'routeId', parseInt(e.target.value))}
-                        className={`${styles.routeSelect} ${(!detail.routeId || detail.routeId === 0) ? styles.routeSelectError : ''}`}
-                        disabled={routesLoading}
-                      >
-                        <option value={0}>Выберите маршрут</option>
-                        {routes.map(route => (
-                          <option key={route.routeId} value={route.routeId}>
-                            {route.routeName}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      {editingCell?.row === index && editingCell?.field === 'quantity' ? (
-                        <div className={styles.quantityEdit}>
-                          <input
-                            type="number"
-                            min="1"
-                            value={detail.quantity}
-                            onChange={(e) => handleFieldChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                            className={styles.quantityInput}
-                            onBlur={() => setEditingCell(null)}
-                            onKeyDown={(e) => e.key === 'Enter' && setEditingCell(null)}
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => setEditingCell(null)}
-                            className={styles.saveQuantityBtn}
-                          >
-                            <CheckIcon className={styles.icon} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className={styles.quantityDisplay}>
-                          <span className={styles.quantityBadge}>{detail.quantity}</span>
-                          <button
-                            onClick={() => setEditingCell({row: index, field: 'quantity'})}
-                            className={styles.editQuantityBtn}
-                            title="Редактировать количество"
-                          >
-                            <PencilIcon className={styles.icon} />
-                          </button>
-                        </div>
-                      )}
-                    </td>
+                <td>{renderEditableCell(detail, index, 'conveyorPosition', detail.conveyorPosition)}</td>
                     <td>
                       {getDiffsInfo(detail.diffs)}
                     </td>
@@ -403,7 +456,7 @@ export const ParsedDataModal: React.FC<ParsedDataModalProps> = ({
         <div className={styles.footer}>
           <div className={styles.footerInfo}>
             <InformationCircleIcon className={styles.infoIcon} />
-            <span>Проверьте количество деталей перед сохранением</span>
+            <span>Фиолетовым выделены автоматически выбранные маршруты</span>
           </div>
           <div className={styles.footerActions}>
             <button

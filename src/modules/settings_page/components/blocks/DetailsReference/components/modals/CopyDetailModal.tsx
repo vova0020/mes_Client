@@ -4,33 +4,39 @@ import {
   CheckIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { Detail, CreateDetailDto, UpdateDetailDto, Route } from '../../../../../../api/detailsApi/detailsApi';
+import { Detail, CreateDetailWithPackageDto, Route } from '../../../../../../api/detailsApi/detailsApi';
 import styles from './DetailModal.module.css';
 
-interface DetailModalProps {
+interface Package {
+  packageId: number;
+  packageCode: string;
+  packageName: string;
+}
+
+interface CopyDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateDetailDto) => Promise<void>;
-  onSubmitUpdate?: (data: UpdateDetailDto) => Promise<void>;
-  detail?: Detail | null;
+  onSubmit: (data: CreateDetailWithPackageDto) => Promise<void>;
+  detail: Detail | null;
+  packages: Package[];
+  currentPackageId?: number;
   isLoading?: boolean;
-  title: string;
   routes: Route[];
   routesLoading?: boolean;
 }
 
-export const DetailModal: React.FC<DetailModalProps> = ({
+export const CopyDetailModal: React.FC<CopyDetailModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  onSubmitUpdate,
   detail,
+  packages,
+  currentPackageId,
   isLoading = false,
-  title,
   routes,
   routesLoading = false
 }) => {
-  const [formData, setFormData] = useState<CreateDetailDto>({
+  const [formData, setFormData] = useState<CreateDetailWithPackageDto>({
     partSku: '',
     partName: '',
     materialName: '',
@@ -60,15 +66,21 @@ export const DetailModal: React.FC<DetailModalProps> = ({
     conveyorPosition: '',
     quantity: 1,
     routeId: 0,
+    packageId: 0,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [userModifiedRoute, setUserModifiedRoute] = useState(false);
+  const [serverError, setServerError] = useState<string>('');
 
-  // Заполняем форму данными детали при редактировании
   useEffect(() => {
-    if (detail) {
+    if (detail && isOpen) {
+      // Получаем routeId из packageDetails для текущей упаковки
+      const currentPackageDetail = detail.packageDetails?.find(pd => pd.packageId === currentPackageId);
+      const routeId = currentPackageDetail?.route?.routeId || detail.route?.routeId || 0;
+      
       setFormData({
-        partSku: detail.partSku,
+        partSku: `${detail.partSku}`,
         partName: detail.partName,
         materialName: detail.materialName,
         materialSku: detail.materialSku,
@@ -95,45 +107,15 @@ export const DetailModal: React.FC<DetailModalProps> = ({
         pfSb: detail.pfSb,
         sbPartSku: detail.sbPartSku || '',
         conveyorPosition: detail.conveyorPosition || '',
-        quantity: detail.quantity || 1,
-        routeId: detail.route?.routeId || 0,
+        quantity: currentPackageDetail?.quantity || detail.quantity || 1,
+        routeId: routeId,
+        packageId: currentPackageId || 0,
       });
-    } else {
-      // Сброс формы для создания новой детали
-      setFormData({
-        partSku: '',
-        partName: '',
-        materialName: '',
-        materialSku: '',
-        thickness: undefined,
-        thicknessWithEdging: undefined,
-        finishedLength: undefined,
-        finishedWidth: undefined,
-        groove: '',
-        edgingSkuL1: '',
-        edgingNameL1: '',
-        edgingSkuL2: '',
-        edgingNameL2: '',
-        edgingSkuW1: '',
-        edgingNameW1: '',
-        edgingSkuW2: '',
-        edgingNameW2: '',
-        plasticFace: '',
-        plasticFaceSku: '',
-        plasticBack: '',
-        plasticBackSku: '',
-        pf: false,
-        pfSku: '',
-        sbPart: false,
-        pfSb: false,
-        sbPartSku: '',
-        conveyorPosition: '',
-        quantity: 1,
-        routeId: 0,
-      });
+      setUserModifiedRoute(false);
     }
     setErrors({});
-  }, [detail, isOpen]);
+    setServerError('');
+  }, [detail, isOpen, currentPackageId]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -141,17 +123,17 @@ export const DetailModal: React.FC<DetailModalProps> = ({
     if (!formData.partSku.trim()) {
       newErrors.partSku = 'Артикул детали обязателен';
     }
-
     if (!formData.partName.trim()) {
       newErrors.partName = 'Наименование детали обязательно';
     }
-
     if (!formData.quantity || formData.quantity <= 0) {
       newErrors.quantity = 'Количество должно быть больше 0';
     }
-
     if (!formData.routeId || formData.routeId === 0) {
       newErrors.routeId = 'Маршрут обязателен для выбора';
+    }
+    if (!formData.packageId || formData.packageId === 0) {
+      newErrors.packageId = 'Упаковка обязательна для выбора';
     }
 
     setErrors(newErrors);
@@ -165,21 +147,23 @@ export const DetailModal: React.FC<DetailModalProps> = ({
       return;
     }
 
+    setServerError('');
     try {
-      if (detail && onSubmitUpdate) {
-        await onSubmitUpdate(formData as UpdateDetailDto);
-      } else {
-        await onSubmit(formData);
-      }
-    } catch (error) {
-      console.error('Ошибка при сохранении детали:', error);
+      await onSubmit(formData);
+      onClose();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || 'Ошибка при копировании детали';
+      setServerError(message);
+      console.error('Ошибка при копировании детали:', error);
     }
   };
 
-  const handleInputChange = (field: keyof CreateDetailDto, value: any) => {
+  const handleInputChange = (field: keyof CreateDetailWithPackageDto, value: any) => {
+    if (field === 'routeId') {
+      setUserModifiedRoute(true);
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Очищаем ошибку для поля при изменении
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -191,7 +175,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.header}>
-          <h2>{title}</h2>
+          <h2>Копировать деталь</h2>
           <button onClick={onClose} className={styles.closeButton}>
             <XMarkIcon className={styles.icon} />
           </button>
@@ -199,6 +183,29 @@ export const DetailModal: React.FC<DetailModalProps> = ({
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGrid}>
+            {/* Выбор упаковки */}
+            <div className={styles.section}>
+              <h3>Упаковка</h3>
+              <div className={styles.fieldGrid}>
+                <div className={styles.field}>
+                  <label>Упаковка *</label>
+                  <select
+                    value={formData.packageId}
+                    onChange={e => handleInputChange('packageId', parseInt(e.target.value))}
+                    className={`${styles.input} ${errors.packageId ? styles.error : ''}`}
+                  >
+                    <option value={0}>Выберите упаковку</option>
+                    {packages.map(pkg => (
+                      <option key={pkg.packageId} value={pkg.packageId}>
+                        {pkg.packageCode} - {pkg.packageName}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.packageId && <span className={styles.errorText}>{errors.packageId}</span>}
+                </div>
+              </div>
+            </div>
+
             {/* Основная информация */}
             <div className={styles.section}>
               <h3>Основная информация</h3>
@@ -228,7 +235,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                 </div>
 
                 <div className={styles.field}>
-                  <label>Наименование материала </label>
+                  <label>Наименование материала</label>
                   <input
                     type="text"
                     value={formData.materialName}
@@ -240,7 +247,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                 </div>
 
                 <div className={styles.field}>
-                  <label>Артикул материала </label>
+                  <label>Артикул материала</label>
                   <input
                     type="text"
                     value={formData.materialSku}
@@ -270,7 +277,14 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                   <select
                     value={formData.routeId}
                     onChange={e => handleInputChange('routeId', parseInt(e.target.value))}
-                    className={`${styles.input} ${errors.routeId ? styles.error : ''}`}
+                    onClick={() => setUserModifiedRoute(true)}
+                    className={`${styles.input} ${
+                      errors.routeId 
+                        ? styles.error 
+                        : !userModifiedRoute && formData.routeId 
+                          ? styles.inputAuto 
+                          : ''
+                    }`}
                     disabled={routesLoading}
                   >
                     <option value={0}>Выберите маршрут</option>
@@ -281,7 +295,6 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                     ))}
                   </select>
                   {errors.routeId && <span className={styles.errorText}>{errors.routeId}</span>}
-                  {routesLoading && <span className={styles.loadingText}>Загрузка маршрутов...</span>}
                 </div>
               </div>
             </div>
@@ -303,7 +316,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                 </div>
 
                 <div className={styles.field}>
-                  <label>Толщина с учетом облицовки пласти</label>
+                  <label>Толщина с облицовкой</label>
                   <input
                     type="number"
                     step="0.1"
@@ -350,7 +363,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                 </div>
 
                 <div className={styles.field}>
-                  <label>Подстопное место на конвейере</label>
+                  <label>Подстопное место</label>
                   <input
                     type="text"
                     value={formData.conveyorPosition || ''}
@@ -362,95 +375,95 @@ export const DetailModal: React.FC<DetailModalProps> = ({
               </div>
             </div>
 
-            {/* Облицовка кромки */}
+            {/* Кромки */}
             <div className={styles.section}>
-              <h3>Облицовка кромки</h3>
+              <h3>Кромки</h3>
               <div className={styles.fieldGrid}>
                 <div className={styles.field}>
-                  <label>Артикул облицовки кромки [L1]</label>
+                  <label>Артикул кромки L1</label>
                   <input
                     type="text"
                     value={formData.edgingSkuL1}
                     onChange={e => handleInputChange('edgingSkuL1', e.target.value)}
                     className={styles.input}
-                    placeholder="Артикул L1"
+                    placeholder="Артикул кромки L1"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Обозначение облицовки кромки [L1]</label>
+                  <label>Обозначение облицовки кромки L1</label>
                   <input
                     type="text"
                     value={formData.edgingNameL1}
                     onChange={e => handleInputChange('edgingNameL1', e.target.value)}
                     className={styles.input}
-                    placeholder="Наименование L1"
+                    placeholder="Обозначение облицовки кромки L1"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Артикул облицовки кромки [L2]</label>
+                  <label>Артикул кромки L2</label>
                   <input
                     type="text"
                     value={formData.edgingSkuL2}
                     onChange={e => handleInputChange('edgingSkuL2', e.target.value)}
                     className={styles.input}
-                    placeholder="Артикул L2"
+                    placeholder="Артикул кромки L2"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Обозначение облицовки кромки [L2]</label>
+                  <label>Обозначение облицовки кромки L2</label>
                   <input
                     type="text"
                     value={formData.edgingNameL2}
                     onChange={e => handleInputChange('edgingNameL2', e.target.value)}
                     className={styles.input}
-                    placeholder="Наименование L2"
+                    placeholder="Обозначение облицовки кромки L2"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Артикул облицовки кромки [W1]</label>
+                  <label>Артикул кромки W1</label>
                   <input
                     type="text"
                     value={formData.edgingSkuW1}
                     onChange={e => handleInputChange('edgingSkuW1', e.target.value)}
                     className={styles.input}
-                    placeholder="Артикул W1"
+                    placeholder="Артикул кромки W1"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Обозначение облицовки кромки [W1]</label>
+                  <label>Обозначение облицовки кромки W1</label>
                   <input
                     type="text"
                     value={formData.edgingNameW1}
                     onChange={e => handleInputChange('edgingNameW1', e.target.value)}
                     className={styles.input}
-                    placeholder="Наименование W1"
+                    placeholder="Обозначение облицовки кромки W1"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Артикул облицовки кромки [W2]</label>
+                  <label>Артикул кромки W2</label>
                   <input
                     type="text"
                     value={formData.edgingSkuW2}
                     onChange={e => handleInputChange('edgingSkuW2', e.target.value)}
                     className={styles.input}
-                    placeholder="Артикул W2"
+                    placeholder="Артикул кромки W2"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Обозначение облицовки кромки [W2]</label>
+                  <label>Обозначение облицовки кромки W2</label>
                   <input
                     type="text"
                     value={formData.edgingNameW2}
                     onChange={e => handleInputChange('edgingNameW2', e.target.value)}
                     className={styles.input}
-                    placeholder="Наименование W2"
+                    placeholder="Обозначение облицовки кромки W2"
                   />
                 </div>
               </div>
@@ -461,46 +474,46 @@ export const DetailModal: React.FC<DetailModalProps> = ({
               <h3>Пластик</h3>
               <div className={styles.fieldGrid}>
                 <div className={styles.field}>
-                  <label>Пластик лицевая</label>
+                  <label>Пластик лицевой</label>
                   <input
                     type="text"
                     value={formData.plasticFace}
                     onChange={e => handleInputChange('plasticFace', e.target.value)}
                     className={styles.input}
-                    placeholder="Пластик лицевая"
+                    placeholder="Пластик лицевой"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Пластик (лиц) артикул</label>
+                  <label>Артикул пластика лицевого</label>
                   <input
                     type="text"
                     value={formData.plasticFaceSku}
                     onChange={e => handleInputChange('plasticFaceSku', e.target.value)}
                     className={styles.input}
-                    placeholder="Артикул пластика лиц"
+                    placeholder="Артикул пластика лицевого"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Пластик нелицевая</label>
+                  <label>Пластик тыльный</label>
                   <input
                     type="text"
                     value={formData.plasticBack}
                     onChange={e => handleInputChange('plasticBack', e.target.value)}
                     className={styles.input}
-                    placeholder="Пластик нелицевая"
+                    placeholder="Пластик тыльный"
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label>Пластик (нелиц) артикул</label>
+                  <label>Артикул пластика тыльного</label>
                   <input
                     type="text"
                     value={formData.plasticBackSku}
                     onChange={e => handleInputChange('plasticBackSku', e.target.value)}
                     className={styles.input}
-                    placeholder="Артикул пластика нелиц"
+                    placeholder="Артикул пластика тыльного"
                   />
                 </div>
               </div>
@@ -510,7 +523,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
             <div className={styles.section}>
               <h3>Дополнительные параметры</h3>
               <div className={styles.fieldGrid}>
-                <div className={styles.checkboxField}>
+                <div className={styles.field}>
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
@@ -518,12 +531,12 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                       onChange={e => handleInputChange('pf', e.target.checked)}
                       className={styles.checkbox}
                     />
-                    <span>ПФ</span>
+                    ПФ
                   </label>
                 </div>
 
                 <div className={styles.field}>
-                  <label>Артикул ПФ (для детали)</label>
+                  <label>Артикул ПФ</label>
                   <input
                     type="text"
                     value={formData.pfSku}
@@ -533,7 +546,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                   />
                 </div>
 
-                <div className={styles.checkboxField}>
+                <div className={styles.field}>
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
@@ -541,24 +554,12 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                       onChange={e => handleInputChange('sbPart', e.target.checked)}
                       className={styles.checkbox}
                     />
-                    <span>СБ деталь</span>
-                  </label>
-                </div>
-
-                <div className={styles.checkboxField}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={formData.pfSb}
-                      onChange={e => handleInputChange('pfSb', e.target.checked)}
-                      className={styles.checkbox}
-                    />
-                    <span>ПФ СБ</span>
+                    СБ деталь
                   </label>
                 </div>
 
                 <div className={styles.field}>
-                  <label>Артикул СБ детали (для ПФ СБ)</label>
+                  <label>Артикул СБ детали</label>
                   <input
                     type="text"
                     value={formData.sbPartSku}
@@ -567,9 +568,28 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                     placeholder="Артикул СБ детали"
                   />
                 </div>
+
+                <div className={styles.field}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={formData.pfSb}
+                      onChange={e => handleInputChange('pfSb', e.target.checked)}
+                      className={styles.checkbox}
+                    />
+                    ПФ СБ
+                  </label>
+                </div>
               </div>
             </div>
           </div>
+
+          {serverError && (
+            <div className={styles.serverError}>
+              <ExclamationTriangleIcon className={styles.errorIcon} />
+              <span>{serverError}</span>
+            </div>
+          )}
 
           <div className={styles.footer}>
             <button
@@ -588,12 +608,12 @@ export const DetailModal: React.FC<DetailModalProps> = ({
               {isLoading ? (
                 <>
                   <div className={styles.spinner}></div>
-                  Сохранение...
+                  Копирование...
                 </>
               ) : (
                 <>
                   <CheckIcon className={styles.icon} />
-                  Сохранить
+                  Копировать
                 </>
               )}
             </button>

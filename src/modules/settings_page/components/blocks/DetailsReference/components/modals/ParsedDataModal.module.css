@@ -815,6 +815,24 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.routeSelectAuto {
+  border-color: #a78bfa;
+  background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+  color: #6b21a8;
+  box-shadow: 0 2px 4px rgba(167, 139, 250, 0.2);
+}
+
+.routeSelectAuto:hover {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+}
+
+.routeSelectAuto:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
 .routeSelectError {
   border-color: #ef4444;
   background: linear-gradient(135deg, #fef2f2, #fee2e2);
@@ -829,6 +847,22 @@
 .routeSelectError:focus {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.routeSelectWarning {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  color: #92400e;
+}
+
+.routeSelectWarning:hover {
+  border-color: #d97706;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+.routeSelectWarning:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 /* Responsive */
