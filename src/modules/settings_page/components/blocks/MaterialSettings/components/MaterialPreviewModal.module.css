@@ -1,0 +1,441 @@
+/* ================================================
+   MATERIAL PREVIEW MODAL STYLES
+   ================================================ */
+
+@import '../MaterialSettingsPage.module.css';
+
+/* === MODAL OVERLAY === */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.modalContent {
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* === FORM CARD === */
+.formCard {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+}
+
+.formHeader {
+  padding: var(--space-6);
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.formTitle {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.formIcon {
+  font-size: var(--font-lg);
+}
+
+.closeButton {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.formContent {
+  padding: var(--space-6);
+}
+
+/* === INFO MESSAGE === */
+.infoMessage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--primary-light);
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  color: var(--primary-color);
+  font-size: var(--font-sm);
+  margin-bottom: var(--space-4);
+}
+
+.infoIcon {
+  font-size: var(--font-md);
+  flex-shrink: 0;
+}
+
+/* === QUICK ACTIONS === */
+.quickActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.quickActionsLabel {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.quickActionsButtons {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* === TABLE === */
+.tableWrapper {
+  overflow-x: auto;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.materialsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.materialsTable thead {
+  position: sticky;
+  top: 0;
+  background: var(--gray-100);
+  z-index: 10;
+}
+
+.materialsTable th {
+  padding: var(--space-3);
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray-700);
+  border-bottom: 2px solid var(--gray-300);
+}
+
+.materialsTable td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--gray-200);
+  color: var(--gray-900);
+}
+
+.materialsTable tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.rowIncomplete {
+  background: var(--danger-light) !important;
+}
+
+.codeCell {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.nameCell {
+  max-width: 400px;
+}
+
+.unitCell {
+  width: 200px;
+}
+
+.unitSelect {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  background: var(--white);
+  color: var(--gray-900);
+  transition: all 0.2s ease;
+}
+
+.unitSelect:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.unitSelectEmpty {
+  border-color: var(--danger-color);
+  background: var(--danger-light);
+}
+
+/* === EDITABLE INPUTS === */
+.editableInput {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  background: var(--white);
+  color: var(--gray-900);
+  transition: all 0.2s ease;
+}
+
+.editableInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.editableInput:disabled {
+  background: var(--gray-100);
+  cursor: not-allowed;
+}
+
+/* === EXISTING MATERIAL INDICATORS === */
+.existsBadge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  font-size: var(--font-sm);
+  cursor: help;
+}
+
+.oldName {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-style: italic;
+  margin-top: var(--space-1);
+}
+
+.rowUpdate {
+  background: var(--warning-light) !important;
+}
+
+/* === STATS === */
+.stats {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.statsItem {
+  font-size: var(--font-sm);
+  color: var(--gray-700);
+  font-weight: 600;
+}
+
+.statsWarning {
+  font-size: var(--font-sm);
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+/* === RESULT SUMMARY === */
+.resultSummary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.resultItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  font-size: var(--font-md);
+}
+
+.resultIcon {
+  font-size: var(--font-lg);
+}
+
+.resultText {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+/* === ERRORS LIST === */
+.errorsList {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--danger-light);
+  border: 1px solid var(--danger-color);
+  border-radius: var(--radius-md);
+}
+
+.errorsTitle {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--danger-color);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.errorItem {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  font-size: var(--font-sm);
+  color: var(--danger-color);
+}
+
+.errorCode {
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.errorMessage {
+  flex: 1;
+}
+
+/* === BUTTONS === */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  min-height: 2.5rem;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.buttonPrimary {
+  background: var(--primary-color);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.buttonSecondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+}
+
+.buttonSmall {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.75rem;
+  min-height: 2rem;
+}
+
+.buttonLarge {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-md);
+  min-height: 3rem;
+}
+
+.buttonIcon {
+  font-size: 1em;
+}
+
+.buttonSpinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* === FORM ACTIONS === */
+.formActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* === ANIMATIONS === */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+  .modalContent {
+    max-width: 100%;
+  }
+  
+  .formActions {
+    flex-direction: column;
+  }
+  
+  .quickActions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .stats {
+    flex-direction: column;
+  }
+}

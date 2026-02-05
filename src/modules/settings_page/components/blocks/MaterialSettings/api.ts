@@ -64,6 +64,22 @@ const updateMaterialApi = (id: number, dto: UpdateMaterialDto) =>
 const deleteMaterialApi = (id: number) =>
   api.delete<void>(`/settings/materials/${id}`);
 
+// --- Material Upload from Excel ---
+const uploadMaterialFileApi = (file: File, groupId: number) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('groupId', groupId.toString());
+  return api.post('/settings/materials/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(res => res.data);
+};
+
+const saveMaterialsFromFileApi = (groupId: number, materials: Array<{ code: string; name: string; unit: string }>) =>
+  api.post('/settings/materials/save-from-file', { groupId, materials }).then(res => res.data);
+
+const getMaterialUnitsApi = () =>
+  api.get<string[]>('/settings/materials/units').then(res => res.data);
+
 // ============= React Query Hooks =============
 
 // --- Material Groups Hooks ---
@@ -209,3 +225,6 @@ export const updateMaterial = updateMaterialApi;
 export const deleteMaterial = deleteMaterialApi;
 export const linkMaterialToGroup = linkMaterialToGroupApi;
 export const unlinkMaterialFromGroup = unlinkMaterialFromGroupApi;
+export const uploadMaterialFile = uploadMaterialFileApi;
+export const saveMaterialsFromFile = saveMaterialsFromFileApi;
+export const getMaterialUnits = getMaterialUnitsApi;

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MaterialGroups } from './components/MaterialGroups';
 import { MaterialsList } from './components/MaterialsList';
 import { MaterialForm } from './components/MaterialForm';
+import { MaterialUploadModal } from './components/MaterialUploadModal';
 import styles from './MaterialSettingsPage.module.css';
 
 // Создаем Query Client
@@ -26,6 +27,7 @@ const MaterialSettingsContent: React.FC = () => {
   const [selectedGroup, setSelectedGroup] = useState<number>();
   const [editMaterialId, setEditMaterialId] = useState<number>();
   const [showForm, setShowForm] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
 
 
@@ -85,6 +87,13 @@ const MaterialSettingsContent: React.FC = () => {
         </div>
         <div className={styles.pageHeaderActions}>
           <button
+            onClick={() => setShowUploadModal(true)}
+            className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonLarge}`}
+          >
+            <span className={styles.buttonIcon}>📤</span>
+            Загрузить из Excel
+          </button>
+          <button
             onClick={handleCreateMaterial}
             className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonLarge}`}
           >
@@ -125,6 +134,11 @@ const MaterialSettingsContent: React.FC = () => {
             />
           </div>
         </div>
+      )}
+
+      {/* Material Upload Modal */}
+      {showUploadModal && (
+        <MaterialUploadModal onClose={() => setShowUploadModal(false)} />
       )}
     </div>
   );

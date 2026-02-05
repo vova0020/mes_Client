@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { PlusIcon, DocumentIcon, MapIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, DocumentIcon, MapIcon, TrashIcon, PencilIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline'
 import styles from './PackagingSection.module.css'
 import { PackagingModal } from './PackagingModal'
+import { PackageUploadModal } from './PackageUploadModal'
 
 interface Packaging {
   id: string
@@ -28,6 +29,7 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
   selectedPackagingId,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -194,6 +196,13 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
 
         <footer className={styles.footer}>
           <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className={styles.uploadBtn}
+          >
+            <ArrowUpTrayIcon className={styles.icon} />
+            Загрузить из Excel
+          </button>
+          <button
             onClick={() => setIsModalOpen(true)}
             className={styles.addBtn}
           >
@@ -209,6 +218,10 @@ export const PackagingSection: React.FC<PackagingSectionProps> = ({
         onAdd={handleAddPackaging}
         isLoading={isLoading}
       />
+
+      {isUploadModalOpen && (
+        <PackageUploadModal onClose={() => setIsUploadModalOpen(false)} />
+      )}
     </div>
   )
 }

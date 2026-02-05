@@ -51,3 +51,43 @@ export interface LinkMaterialToGroupDto {
   materialId: number;
   groupId: number;
 }
+
+// DTO для загрузки материалов из Excel
+export interface UploadMaterialFileDto {
+  file: File;
+  groupId: number;
+}
+
+export interface ParsedMaterialFromFile {
+  code: string;
+  name: string;
+  exists?: boolean;
+  existingMaterial?: {
+    materialId: number;
+    materialName: string;
+    article: string;
+    unit: string;
+  };
+}
+
+export interface UploadMaterialFileResponse {
+  message: string;
+  filename: string;
+  data: ParsedMaterialFromFile[];
+  groupId: number;
+}
+
+export interface SaveMaterialsFromFileDto {
+  groupId: number;
+  materials: Array<{
+    code: string;
+    name: string;
+    unit: string;
+  }>;
+}
+
+export interface SaveMaterialsFromFileResponse {
+  created: Array<{ code: string; name: string; materialId: number }>;
+  updated: Array<{ code: string; name: string; materialId: number }>;
+  errors: Array<{ code: string; message: string }>;
+}
