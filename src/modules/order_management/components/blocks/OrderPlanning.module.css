@@ -6,68 +6,83 @@
   width: 100%;
   color: white;
   background: transparent;
+  gap: 16px;
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 700;
   color: #ffffff;
   margin: 0;
   text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
 }
 
 /* Контейнер таблицы */
 .tableContainer {
   flex: 1;
   overflow: auto;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .table {
-  background: linear-gradient(to bottom, #4a5568, #3a4553) !important;
-  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-radius: 12px !important;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
   min-width: 1100px;
   width: 100%;
 }
 
 .tableHeader {
-  background: linear-gradient(to right, #2d3748, #1a202c) !important;
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8) !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .headerCell {
-  color: #ffffff !important;
-  font-weight: 600 !important;
+  color: #2c3e50 !important;
+  font-weight: 700 !important;
   font-size: 11px !important;
-  padding: 10px 6px !important;
-  border-bottom: 1px solid #4a5568 !important;
+  padding: 12px 8px !important;
+  border-bottom: 2px solid #bdbdbd !important;
   text-align: center !important;
   min-width: 100px;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .tableRow {
-  background: transparent !important;
-  transition: background-color 0.2s ease;
+  background: #ffffff !important;
+  transition: all 0.3s ease;
   height: 65px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .tableRow:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: #f8f9fa !important;
+  transform: scale(1.002);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .cell {
-  color: #ffffff !important;
-  padding: 6px 4px !important;
-  border-bottom: 1px solid #4a5568 !important;
+  color: #2c3e50 !important;
+  padding: 8px 6px !important;
+  border-bottom: 1px solid #e8e8e8 !important;
   font-size: 11px !important;
   text-align: center !important;
   vertical-align: middle !important;
+  font-weight: 500;
 }
 
 /* Название заказа */
@@ -79,90 +94,96 @@
 
 /* Статусы */
 .status {
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 5px 10px;
+  border-radius: 14px;
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
   display: inline-block;
   white-space: nowrap;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .preliminary {
-  background: rgba(255, 193, 7, 0.2);
-  color: #ffc107;
-  border: 1px solid #ffc107;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.25), rgba(255, 193, 7, 0.15));
+  color: #f57f17;
+  border: 2px solid #ffc107;
 }
 
 .approved {
-  background: rgba(76, 175, 80, 0.2);
-  color: #4caf50;
-  border: 1px solid #4caf50;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.25), rgba(76, 175, 80, 0.15));
+  color: #2e7d32;
+  border: 2px solid #4caf50;
 }
 
 .allowedToStart {
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-  border: 1px solid #2196f3;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.25), rgba(33, 150, 243, 0.15));
+  color: #1565c0;
+  border: 2px solid #2196f3;
 }
 
 .inProgress {
-  background: rgba(255, 152, 0, 0.2);
-  color: #ff9800;
-  border: 1px solid #ff9800;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.25), rgba(255, 152, 0, 0.15));
+  color: #e65100;
+  border: 2px solid #ff9800;
 }
 
 .completed {
-  background: rgba(156, 39, 176, 0.2);
-  color: #9c27b0;
-  border: 1px solid #9c27b0;
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.25), rgba(156, 39, 176, 0.15));
+  color: #6a1b9a;
+  border: 2px solid #9c27b0;
 }
 
 /* Кнопки действий */
 .actionButtons {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
   justify-content: center;
 }
 
 .actionButton {
-  color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-radius: 4px !important;
-  padding: 6px !important;
-  transition: all 0.2s ease !important;
+  color: #2c3e50 !important;
+  background: rgba(189, 189, 189, 0.2) !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+  transition: all 0.3s ease !important;
   min-width: auto !important;
 }
 
 .actionButton:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  transform: scale(1.05);
+  background: rgba(76, 175, 80, 0.2) !important;
+  transform: scale(1.1);
+  color: #4caf50 !important;
 }
 
 /* Кнопка разрешения запуска */
 .startButton {
-  background: linear-gradient(to right, #4caf50, #45a049) !important;
+  background: linear-gradient(135deg, #4caf50, #45a049) !important;
   color: white !important;
-  padding: 4px 8px !important;
-  font-weight: 500 !important;
-  border-radius: 4px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
   text-transform: none !important;
   font-size: 10px !important;
-  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3) !important;
-  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+  transition: all 0.3s ease !important;
+  letter-spacing: 0.3px !important;
 }
 
 .startButton:hover {
-  background: linear-gradient(to right, #45a049, #3d8b40) !important;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4) !important;
+  background: linear-gradient(135deg, #45a049, #3d8b40) !important;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4) !important;
+  transform: translateY(-1px) !important;
 }
 
 .startButton:disabled {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(189, 189, 189, 0.3) !important;
+  color: rgba(117, 117, 117, 0.6) !important;
   box-shadow: none !important;
   cursor: not-allowed !important;
+  transform: none !important;
 }
 
 /* Селект производственного потока */
