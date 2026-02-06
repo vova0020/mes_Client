@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Alert, CircularProgress } from '@mui/material';
 import { Edit, CheckCircle, Assignment, MonetizationOn, Visibility, ExpandMore, ExpandLess, Delete, Schedule } from '@mui/icons-material';
 import styles from './OrderCreation.module.css';
+import { OrderUploadModal } from './OrderUploadModal';
 
 // Импорты API и хуков
 import { useProductionOrders } from '../../../hooks/productionOrdersHook';
@@ -106,6 +107,7 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
   const [viewingOrder, setViewingOrder] = useState<ProductionOrderResponseDto | null>(null);
   const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
   const [showPostponed, setShowPostponed] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [orderForm, setOrderForm] = useState<OrderFormData>({
     batchNumber: '',
     orderName: '',
@@ -490,10 +492,10 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
         </Button>
         <Button 
           variant="contained" 
-          disabled
+          onClick={() => setIsUploadModalOpen(true)}
           className={styles.loadButton}
         >
-          Загрузить новый заказ
+          Загрузить из Excel
         </Button>
         <Button 
           variant={showPostponed ? "contained" : "outlined"}
@@ -933,6 +935,11 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Модальное окно загрузки из Excel */}
+      {isUploadModalOpen && (
+        <OrderUploadModal onClose={() => setIsUploadModalOpen(false)} />
+      )}
     </div>
   );
 };
