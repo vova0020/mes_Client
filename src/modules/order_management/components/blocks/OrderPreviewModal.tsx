@@ -27,6 +27,8 @@ interface OrderPreviewModalProps {
   data: UploadResponse;
   onClose: () => void;
   onSuccess: () => void;
+  isEditMode?: boolean;
+  onEditSuccess?: (parsedPackages: ParsedPackage[]) => void;
 }
 
 interface SaveResponse {
@@ -40,6 +42,8 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
   data,
   onClose,
   onSuccess,
+  isEditMode = false,
+  onEditSuccess,
 }) => {
   const [packages, setPackages] = useState<ParsedPackage[]>(data.data.packages);
   const [batchNumber, setBatchNumber] = useState('');
@@ -60,6 +64,12 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
   };
 
   const handleSave = async () => {
+    // Режим редактирования - просто передаем данные назад
+    if (isEditMode && onEditSuccess) {
+      onEditSuccess(packages);
+      return;
+    }
+
     if (!batchNumber.trim()) {
       setError('Введите номер партии');
       return;
@@ -176,7 +186,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
           <div className={styles.formHeader}>
             <h2 className={styles.formTitle}>
               <span className={styles.formIcon}>📋</span>
-              Создание заказа ({packages.length} упаковок)
+              {isEditMode ? `Выбор упаковок (${packages.length} упаковок)` : `Создание заказа (${packages.length} упаковок)`}
             </h2>
             <button
               onClick={onClose}
@@ -208,8 +218,9 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
               </div>
             )}
 
-            <div className={styles.orderInfoSection}>
-              <h3 className={styles.sectionTitle}>Информация о заказе</h3>
+            {!isEditMode && (
+              <div className={styles.orderInfoSection}>
+                <h3 className={styles.sectionTitle}>Информация о заказе</h3>
               
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Номер партии *</label>
@@ -246,6 +257,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                 />
               </div>
             </div>
+            )}
 
             <div className={styles.packagesSection}>
               <h3 className={styles.sectionTitle}>Упаковки</h3>
@@ -344,8 +356,8 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <span className={styles.buttonIcon}>💾</span>
-                    Создать заказ
+                    <span className={styles.buttonIcon}>{isEditMode ? '✓' : '💾'}</span>
+                    {isEditMode ? 'Применить' : 'Создать заказ'}
                   </>
                 )}
               </button>

@@ -4,6 +4,8 @@ import styles from './OrderUploadModal.module.css';
 
 interface OrderUploadModalProps {
   onClose: () => void;
+  isEditMode?: boolean;
+  onEditSuccess?: (parsedPackages: ParsedPackage[]) => void;
 }
 
 interface ParsedPackage {
@@ -28,7 +30,7 @@ interface UploadResponse {
   };
 }
 
-export const OrderUploadModal: React.FC<OrderUploadModalProps> = ({ onClose }) => {
+export const OrderUploadModal: React.FC<OrderUploadModalProps> = ({ onClose, isEditMode = false, onEditSuccess }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -98,6 +100,18 @@ export const OrderUploadModal: React.FC<OrderUploadModalProps> = ({ onClose }) =
   };
 
   if (parsedData) {
+    if (isEditMode && onEditSuccess) {
+      return (
+        <OrderPreviewModal
+          data={parsedData}
+          onClose={handlePreviewClose}
+          onSuccess={handleSuccess}
+          isEditMode={true}
+          onEditSuccess={onEditSuccess}
+        />
+      );
+    }
+    
     return (
       <OrderPreviewModal
         data={parsedData}
@@ -114,7 +128,7 @@ export const OrderUploadModal: React.FC<OrderUploadModalProps> = ({ onClose }) =
           <div className={styles.formHeader}>
             <h2 className={styles.formTitle}>
               <span className={styles.formIcon}>📤</span>
-              Загрузка заказа из Excel
+              {isEditMode ? 'Загрузка упаковок для редактирования' : 'Загрузка заказа из Excel'}
             </h2>
             <button
               onClick={onClose}

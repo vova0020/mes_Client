@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Alert, CircularProgress } from '@mui/material';
-import { Edit, CheckCircle, Assignment, MonetizationOn, Visibility, ExpandMore, ExpandLess, Delete, Schedule } from '@mui/icons-material';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Alert, CircularProgress, InputAdornment, Chip } from '@mui/material';
+import { Edit, CheckCircle, Assignment, MonetizationOn, Visibility, ExpandMore, ExpandLess, Delete, Schedule, Search, Clear } from '@mui/icons-material';
 import styles from './OrderCreation.module.css';
 import { OrderUploadModal } from './OrderUploadModal';
 
@@ -108,6 +108,10 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
   const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
   const [showPostponed, setShowPostponed] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isEditUploadModalOpen, setIsEditUploadModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>([]);
+  const [packageSearchQuery, setPackageSearchQuery] = useState('');
   const [orderForm, setOrderForm] = useState<OrderFormData>({
     batchNumber: '',
     orderName: '',
@@ -143,6 +147,7 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
         quantity: 0
       }))
     });
+    setPackageSearchQuery('');
     setIsCreateDialogOpen(true);
   };
 
@@ -220,7 +225,27 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
       requiredDate: order.requiredDate.split('T')[0], // Преобразуем ISO дату в формат для input[type="date"]
       packages: formPackages
     });
+    setPackageSearchQuery('');
     setIsEditDialogOpen(true);
+  };
+
+  const handleEditUploadSuccess = (parsedPackages: ParsedPackage[]) => {
+    // Обновляем форму с данными из Excel
+    const updatedPackages = orderForm.packages.map(pkg => {
+      const parsedPkg = parsedPackages.find(p => 
+        p.existingPackage?.packageId === pkg.packageId
+      );
+      return {
+        ...pkg,
+        quantity: parsedPkg ? parsedPkg.quantity : 0
+      };
+    });
+    
+    setOrderForm({
+      ...orderForm,
+      packages: updatedPackages
+    });
+    setIsEditUploadModalOpen(false);
   };
 
   const handleUpdateOrder = async () => {
@@ -275,7 +300,7 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
     setOrderForm({
       ...orderForm,
       packages: orderForm.packages.map(pkg => 
-        pkg.packageId === packageId ? { ...pkg, quantity } : pkg
+        pkg.packageId === packageId ? { ...pkg, quantity: quantity || 0 } : pkg
       )
     });
   };
@@ -335,10 +360,53 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
     }
   };
 
-  // Фильтрация заказов по статусу
-  const filteredOrders = showPostponed 
-    ? orders.filter(order => order.status === OrderStatus.POSTPONED)
-    : orders.filter(order => order.status !== OrderStatus.POSTPONED);
+  // Фильтрация заказов по статусу и поиску
+  const filteredOrders = useMemo(() => {
+    let result = showPostponed 
+      ? orders.filter(order => order.status === OrderStatus.POSTPONED)
+      : orders.filter(order => order.status !== OrderStatus.POSTPONED);
+
+    // Фильтрация по выбранным статусам
+    if (selectedStatuses.length > 0) {
+      result = result.filter(order => selectedStatuses.includes(order.status));
+    }
+
+    // Поиск по номеру партии и названию заказа
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(order => 
+        order.batchNumber.toLowerCase().includes(query) ||
+        order.orderName.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [orders, showPostponed, selectedStatuses, searchQuery]);
+
+  // Обработчики для фильтрации
+  const handleStatusToggle = (status: OrderStatus) => {
+    setSelectedStatuses(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setSelectedStatuses([]);
+    setSearchQuery('');
+  };
+
+  // Доступные статусы для фильтрации
+  const availableStatuses = showPostponed 
+    ? [OrderStatus.POSTPONED]
+    : [
+        OrderStatus.PRELIMINARY,
+        OrderStatus.APPROVED,
+        OrderStatus.LAUNCH_PERMITTED,
+        OrderStatus.IN_PROGRESS,
+        OrderStatus.COMPLETED
+      ];
 
   // Показыв��ем индикатор загрузки
   if (ordersLoading === 'loading' || packagesLoading === 'loading') {
@@ -384,6 +452,57 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
           {ordersError?.message || packagesError?.message || 'Произошла ошибка при загрузке данных'}
         </Alert>
       )}
+
+      {/* Панель поиска и фильтрации */}
+      <div className={styles.filterPanel}>
+        <TextField
+          placeholder="Поиск по номеру партии или названию заказа..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className={styles.searchField}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search className={styles.searchIcon} />
+              </InputAdornment>
+            ),
+            endAdornment: searchQuery && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={() => setSearchQuery('')}
+                  className={styles.clearButton}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
+        />
+        
+        <div className={styles.statusFilters}>
+          <span className={styles.filterLabel}>Статусы:</span>
+          {availableStatuses.map(status => (
+            <Chip
+              key={status}
+              label={getStatusLabel(status)}
+              onClick={() => handleStatusToggle(status)}
+              className={`${styles.statusChip} ${selectedStatuses.includes(status) ? styles.statusChipActive : ''} ${styles[getStatusClass(status) + 'Chip']}`}
+              variant={selectedStatuses.includes(status) ? "filled" : "outlined"}
+            />
+          ))}
+          {(selectedStatuses.length > 0 || searchQuery) && (
+            <Button
+              size="small"
+              onClick={handleClearFilters}
+              className={styles.clearFiltersButton}
+              startIcon={<Clear />}
+            >
+              Сбросить
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Таблица заказов */}
       <div className={styles.tableContainer}>
@@ -558,53 +677,95 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                   Нет доступных упаковок для выбора. Сначала создайте упаковки в справочнике.
                 </Alert>
               ) : (
-                <div className={styles.packagesList}>
-                  <table className={styles.packageTable}>
-                    <thead>
-                      <tr>
-                        <th className={styles.checkboxCell}>Выбор</th>
-                        <th className={styles.articleCell}>Артикул</th>
-                        <th className={styles.nameCell}>Название</th>
-                        <th className={styles.quantityCell}>Количество</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orderForm.packages.map((pkg) => (
-                        <tr 
-                          key={pkg.packageId} 
-                          className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
-                        >
-                          <td className={styles.checkboxCell}>
-                            <Checkbox
-                              checked={pkg.quantity > 0}
-                              onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
-                              size="small"
-                            />
-                          </td>
-                          <td className={styles.articleCell}>
-                            <span className={styles.articleBadge}>{pkg.packageCode}</span>
-                          </td>
-                          <td className={styles.nameCell}>
-                            <span className={styles.packageName}>{pkg.packageName}</span>
-                          </td>
-                          <td className={styles.quantityCell}>
-                            {pkg.quantity > 0 ? (
+                <>
+                  <TextField
+                    placeholder="Поиск упаковок..."
+                    value={packageSearchQuery}
+                    onChange={(e) => setPackageSearchQuery(e.target.value)}
+                    size="small"
+                    className={styles.packageSearchField}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search style={{ fontSize: 18, color: '#8c8c8c' }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: packageSearchQuery && (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={() => setPackageSearchQuery('')}
+                            style={{ padding: 4 }}
+                          >
+                            <Clear style={{ fontSize: 16 }} />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }}
+                  />
+                  <div className={styles.packagesList}>
+                    <table className={styles.packageTable}>
+                      <thead>
+                        <tr>
+                          <th className={styles.checkboxCell}>Выбор</th>
+                          <th className={styles.articleCell}>Артикул</th>
+                          <th className={styles.nameCell}>Название</th>
+                          <th className={styles.quantityCell}>Количество</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orderForm.packages
+                          .filter(pkg => 
+                            !packageSearchQuery.trim() ||
+                            pkg.packageCode.toLowerCase().includes(packageSearchQuery.toLowerCase()) ||
+                            pkg.packageName.toLowerCase().includes(packageSearchQuery.toLowerCase())
+                          )
+                          .map((pkg) => (
+                          <tr 
+                            key={pkg.packageId} 
+                            className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
+                          >
+                            <td className={styles.checkboxCell}>
+                              <Checkbox
+                                checked={pkg.quantity > 0}
+                                onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
+                                size="small"
+                              />
+                            </td>
+                            <td className={styles.articleCell}>
+                              <span className={styles.articleBadge}>{pkg.packageCode}</span>
+                            </td>
+                            <td className={styles.nameCell}>
+                              <span className={styles.packageName}>{pkg.packageName}</span>
+                            </td>
+                            <td className={styles.quantityCell}>
                               <input
                                 type="number"
-                                value={pkg.quantity}
-                                onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
+                                value={pkg.quantity || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value === '' ? '' : parseInt(e.target.value);
+                                  if (value === '') {
+                                    handlePackageQuantityChange(pkg.packageId, 0);
+                                  } else if (!isNaN(value)) {
+                                    handlePackageQuantityChange(pkg.packageId, value);
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  if (pkg.quantity === 0 || pkg.quantity === null) {
+                                    handlePackageQuantityChange(pkg.packageId, 1);
+                                  }
+                                }}
                                 className={styles.quantityInput}
                                 min="1"
+                                placeholder="0"
                               />
-                            ) : (
-                              <span>-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -742,7 +903,41 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
               {/* Форма для изменения упаковок */}
               {editingOrder?.status !== OrderStatus.IN_PROGRESS && (
                 <>
-                  <h5 style={{ margin: '1rem 0 0.5rem 0', color: '#666' }}>Изменить состав упаковок:</h5>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '1rem 0 0.5rem 0' }}>
+                    <h5 style={{ margin: 0, color: '#666' }}>Изменить состав упаковок:</h5>
+                    <button 
+                      onClick={() => setIsEditUploadModalOpen(true)}
+                      disabled={isUpdating}
+                      style={{
+                        padding: '8px 16px',
+                        background: 'linear-gradient(to bottom, #1890ff, #0050b3)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: isUpdating ? 'not-allowed' : 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(24, 144, 255, 0.3)',
+                        textShadow: '0 1px 1px rgba(0, 0, 0, 0.3)',
+                        opacity: isUpdating ? 0.6 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isUpdating) {
+                          e.currentTarget.style.background = 'linear-gradient(to bottom, #0050b3, #003a8c)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(24, 144, 255, 0.4)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(to bottom, #1890ff, #0050b3)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(24, 144, 255, 0.3)';
+                      }}
+                    >
+                      📤 Загрузить из Excel
+                    </button>
+                  </div>
                   {isPackagesFetching ? (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
                       <CircularProgress size={24} />
@@ -752,53 +947,95 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                       Нет доступных упаковок для выбора. Сначала создайте упаковки в справочнике.
                     </Alert>
                   ) : (
-                    <div className={styles.packagesList}>
-                      <table className={styles.packageTable}>
-                        <thead>
-                          <tr>
-                            <th className={styles.checkboxCell}>Выбор</th>
-                            <th className={styles.articleCell}>Артикул</th>
-                            <th className={styles.nameCell}>Название</th>
-                            <th className={styles.quantityCell}>Количество</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderForm.packages.map((pkg) => (
-                            <tr 
-                              key={pkg.packageId} 
-                              className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
-                            >
-                              <td className={styles.checkboxCell}>
-                                <Checkbox
-                                  checked={pkg.quantity > 0}
-                                  onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
-                                  size="small"
-                                />
-                              </td>
-                              <td className={styles.articleCell}>
-                                <span className={styles.articleBadge}>{pkg.packageCode}</span>
-                              </td>
-                              <td className={styles.nameCell}>
-                                <span className={styles.packageName}>{pkg.packageName}</span>
-                              </td>
-                              <td className={styles.quantityCell}>
-                                {pkg.quantity > 0 ? (
+                    <>
+                      <TextField
+                        placeholder="Поиск упаковок..."
+                        value={packageSearchQuery}
+                        onChange={(e) => setPackageSearchQuery(e.target.value)}
+                        size="small"
+                        className={styles.packageSearchField}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Search style={{ fontSize: 18, color: '#8c8c8c' }} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: packageSearchQuery && (
+                            <InputAdornment position="end">
+                              <IconButton
+                                size="small"
+                                onClick={() => setPackageSearchQuery('')}
+                                style={{ padding: 4 }}
+                              >
+                                <Clear style={{ fontSize: 16 }} />
+                              </IconButton>
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                      <div className={styles.packagesList}>
+                        <table className={styles.packageTable}>
+                          <thead>
+                            <tr>
+                              <th className={styles.checkboxCell}>Выбор</th>
+                              <th className={styles.articleCell}>Артикул</th>
+                              <th className={styles.nameCell}>Название</th>
+                              <th className={styles.quantityCell}>Количество</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderForm.packages
+                              .filter(pkg => 
+                                !packageSearchQuery.trim() ||
+                                pkg.packageCode.toLowerCase().includes(packageSearchQuery.toLowerCase()) ||
+                                pkg.packageName.toLowerCase().includes(packageSearchQuery.toLowerCase())
+                              )
+                              .map((pkg) => (
+                              <tr 
+                                key={pkg.packageId} 
+                                className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
+                              >
+                                <td className={styles.checkboxCell}>
+                                  <Checkbox
+                                    checked={pkg.quantity > 0}
+                                    onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
+                                    size="small"
+                                  />
+                                </td>
+                                <td className={styles.articleCell}>
+                                  <span className={styles.articleBadge}>{pkg.packageCode}</span>
+                                </td>
+                                <td className={styles.nameCell}>
+                                  <span className={styles.packageName}>{pkg.packageName}</span>
+                                </td>
+                                <td className={styles.quantityCell}>
                                   <input
                                     type="number"
-                                    value={pkg.quantity}
-                                    onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
+                                    value={pkg.quantity || ''}
+                                    onChange={(e) => {
+                                      const value = e.target.value === '' ? '' : parseInt(e.target.value);
+                                      if (value === '') {
+                                        handlePackageQuantityChange(pkg.packageId, 0);
+                                      } else if (!isNaN(value)) {
+                                        handlePackageQuantityChange(pkg.packageId, value);
+                                      }
+                                    }}
+                                    onBlur={(e) => {
+                                      if (pkg.quantity === 0 || pkg.quantity === null) {
+                                        handlePackageQuantityChange(pkg.packageId, 1);
+                                      }
+                                    }}
                                     className={styles.quantityInput}
                                     min="1"
+                                    placeholder="0"
                                   />
-                                ) : (
-                                  <span>-</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   )}
                 </>
               )}
@@ -940,8 +1177,29 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
       {isUploadModalOpen && (
         <OrderUploadModal onClose={() => setIsUploadModalOpen(false)} />
       )}
+
+      {/* Модальное окно загрузки из Excel для редактирования */}
+      {isEditUploadModalOpen && (
+        <OrderUploadModal 
+          onClose={() => setIsEditUploadModalOpen(false)}
+          isEditMode={true}
+          onEditSuccess={handleEditUploadSuccess}
+        />
+      )}
     </div>
   );
 };
+
+interface ParsedPackage {
+  code: string;
+  name: string;
+  quantity: number;
+  exists?: boolean;
+  existingPackage?: {
+    packageId: number;
+    packageCode: string;
+    packageName: string;
+  };
+}
 
 export default OrderCreation;

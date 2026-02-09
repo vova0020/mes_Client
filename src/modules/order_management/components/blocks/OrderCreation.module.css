@@ -501,13 +501,41 @@
 }
 
 .packagesTitle {
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: bold;
   color: #333333;
   padding-bottom: 12px;
   border-bottom: 1px solid #e0e0e0;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.packageSearchField {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.packageSearchField .MuiOutlinedInput-root {
+  background: #ffffff;
+  border-radius: 6px;
+}
+
+.packageSearchField .MuiOutlinedInput-notchedOutline {
+  border-color: #e0e0e0;
+}
+
+.packageSearchField .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #40a9ff;
+}
+
+.packageSearchField .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1890ff;
+}
+
+.packageSearchField .MuiOutlinedInput-input {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #333333;
 }
 
 .packagesList {
@@ -887,6 +915,178 @@
   font-weight: 500;
 }
 
+/* Панель поиска и фильтрации */
+.filterPanel {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.searchField {
+  flex: 1;
+  min-width: 250px;
+}
+
+.searchField .MuiOutlinedInput-root {
+  background: #ffffff;
+  border-radius: 6px;
+}
+
+.searchField .MuiOutlinedInput-notchedOutline {
+  border-color: #e0e0e0;
+}
+
+.searchField .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #40a9ff;
+}
+
+.searchField .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1890ff;
+}
+
+.searchField .MuiOutlinedInput-input {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #333333;
+}
+
+.searchIcon {
+  color: #8c8c8c;
+  font-size: 20px;
+}
+
+.clearButton {
+  color: #8c8c8c;
+}
+
+.clearButton:hover {
+  color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.statusFilters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #595959;
+}
+
+.statusChip {
+  font-size: 11px;
+  font-weight: 600;
+  height: 28px;
+  border-radius: 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.statusChip:hover {
+  transform: translateY(-1px);
+}
+
+.statusChipActive {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.preliminaryChip {
+  border-color: #ffb300;
+  color: #ff8f00;
+}
+
+.preliminaryChip.statusChipActive {
+  background: linear-gradient(135deg, #ffd54f, #ffb300);
+  color: #ffffff;
+  border-color: #ff8f00;
+}
+
+.approvedChip {
+  border-color: #4caf50;
+  color: #388e3c;
+}
+
+.approvedChip.statusChipActive {
+  background: linear-gradient(135deg, #66bb6a, #4caf50);
+  color: #ffffff;
+  border-color: #388e3c;
+}
+
+.launchPermittedChip {
+  border-color: #2196f3;
+  color: #1976d2;
+}
+
+.launchPermittedChip.statusChipActive {
+  background: linear-gradient(135deg, #42a5f5, #2196f3);
+  color: #ffffff;
+  border-color: #1976d2;
+}
+
+.inProgressChip {
+  border-color: #ff5722;
+  color: #d84315;
+}
+
+.inProgressChip.statusChipActive {
+  background: linear-gradient(135deg, #ff7043, #ff5722);
+  color: #ffffff;
+  border-color: #d84315;
+}
+
+.completedChip {
+  border-color: #9c27b0;
+  color: #7b1fa2;
+}
+
+.completedChip.statusChipActive {
+  background: linear-gradient(135deg, #ab47bc, #9c27b0);
+  color: #ffffff;
+  border-color: #7b1fa2;
+}
+
+.postponedChip {
+  border-color: #607d8b;
+  color: #455a64;
+}
+
+.postponedChip.statusChipActive {
+  background: linear-gradient(135deg, #78909c, #607d8b);
+  color: #ffffff;
+  border-color: #455a64;
+}
+
+.clearFiltersButton {
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #f5f5f5;
+  color: #595959;
+  border: 1px solid #d9d9d9;
+  min-width: auto;
+  height: 28px;
+}
+
+.clearFiltersButton:hover {
+  background: #ff4d4f;
+  color: #ffffff;
+  border-color: #ff4d4f;
+}
+
 /* Стили для Alert компонентов */
 .dialog .MuiAlert-root {
   background: linear-gradient(to bottom, #374051, #2d3441) !important;
@@ -926,6 +1126,20 @@
   
   .header {
     padding: 20px;
+  }
+  
+  .filterPanel {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  
+  .searchField {
+    min-width: 100%;
+  }
+  
+  .searchField .MuiOutlinedInput-input {
+    padding: 8px 10px;
+    font-size: 13px;
   }
   
   .tableContainer {
