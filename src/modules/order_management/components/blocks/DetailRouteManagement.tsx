@@ -20,9 +20,14 @@ import {
   TextField,
   InputAdornment,
   IconButton,
-  TableSortLabel
+  TableSortLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Collapse
 } from '@mui/material';
-import { Search, Clear, FilterList } from '@mui/icons-material';
+import { Search, Clear, FilterList, Visibility, ExpandMore, ExpandLess } from '@mui/icons-material';
 import { 
   useRouteManagement
 } from '../../../hooks';
@@ -59,6 +64,10 @@ const DetailRouteManagement: React.FC<Props> = ({ onBack }) => {
 
   // Локальное состояние для выбранного заказа
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  
+  // Состояние для модального окна состава заказа
+  const [isCompositionDialogOpen, setIsCompositionDialogOpen] = useState(false);
+  const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
   
   // Состояние для фильтрации и сортировки заказов
   const [orderFilter, setOrderFilter] = useState('');
@@ -98,6 +107,32 @@ const DetailRouteManagement: React.FC<Props> = ({ onBack }) => {
         severity: 'error'
       });
     }
+  };
+
+  // Обработчик просмотра состава заказа
+  const handleViewComposition = async (order: OrderForRoutesResponseDto) => {
+    try {
+      if (selectedOrderId !== order.orderId) {
+        setSelectedOrderId(order.orderId);
+        await fetchOrderParts(order.orderId);
+      }
+      setExpandedPackages({});
+      setIsCompositionDialogOpen(true);
+    } catch (error) {
+      console.error('Ошибка при загрузке состава заказа:', error);
+      setSnackbar({
+        open: true,
+        message: 'Ошибка при загрузке состава заказа',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handlePackageExpand = (packageId: number) => {
+    setExpandedPackages(prev => ({
+      ...prev,
+      [packageId]: !prev[packageId]
+    }));
   };
 
   // Обработчик изменения технологического маршрута
@@ -622,6 +657,103 @@ const DetailRouteManagement: React.FC<Props> = ({ onBack }) => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Диалог просмотра состава заказа */}
+      <Dialog 
+        open={isCompositionDialogOpen} 
+        onClose={() => setIsCompositionDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        className={styles.dialog}
+      >
+        <DialogTitle className={styles.dialogTitle}>
+          Состав заказа: {selectedOrderParts?.order.orderName}
+        </DialogTitle>
+        <DialogContent className={styles.dialogContent}>
+          <div className={styles.compositionContainer}>
+            {partsLoading === 'loading' ? (
+              <Box display="flex" justifyContent="center" p={3}>
+                <CircularProgress />
+              </Box>
+            ) : selectedOrderParts && selectedOrderParts.parts.length > 0 ? (
+              <TableContainer component={Paper} className={styles.compositionTable}>
+                <Table>
+                  <TableHead>
+                    <TableRow className={styles.tableHeader}>
+                      <TableCell className={styles.headerCell}>Артикул детали</TableCell>
+                      <TableCell className={styles.headerCell}>Деталь</TableCell>
+                      <TableCell className={styles.headerCell}>Количество</TableCell>
+                      <TableCell className={styles.headerCell}>Действия</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {selectedOrderParts.parts.map((part) => (
+                      <React.Fragment key={part.partId}>
+                        <TableRow className={styles.tableRow}>
+                          <TableCell className={styles.cell}>{part.partCode}</TableCell>
+                          <TableCell className={styles.cell}>{part.partName}</TableCell>
+                          <TableCell className={styles.cell}>{part.totalQuantity}</TableCell>
+                          <TableCell className={styles.cell}>
+                            <IconButton
+                              onClick={() => handlePackageExpand(part.partId)}
+                              className={styles.expandButton}
+                              title="Показать упаковки"
+                            >
+                              {expandedPackages[part.partId] ? <ExpandLess /> : <ExpandMore />}
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell colSpan={4} className={styles.collapseCell}>
+                            <Collapse in={expandedPackages[part.partId]} timeout="auto" unmountOnExit>
+                              <div className={styles.detailsContainer}>
+                                <h5 className={styles.detailsTitle}>Упаковки с этой деталью:</h5>
+                                {part.packages && part.packages.length > 0 ? (
+                                  <TableContainer component={Paper} className={styles.detailsTable}>
+                                    <Table size="small">
+                                      <TableHead>
+                                        <TableRow className={styles.detailsTableHeader}>
+                                          <TableCell className={styles.detailsHeaderCell}>Артикул упаковки</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Упаковка</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Количество упаковок</TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {part.packages.map((pkg) => (
+                                          <TableRow key={pkg.packageId} className={styles.detailsTableRow}>
+                                            <TableCell className={styles.detailsCell}>{pkg.packageCode}</TableCell>
+                                            <TableCell className={styles.detailsCell}>{pkg.packageName}</TableCell>
+                                            <TableCell className={styles.detailsCell}>{pkg.quantity}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </TableContainer>
+                                ) : (
+                                  <p>Нет упаковок с этой деталью</p>
+                                )}
+                              </div>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      </React.Fragment>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <div className={styles.emptyComposition}>
+                <p>В заказе нет деталей</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+        <DialogActions className={styles.dialogActions}>
+          <Button onClick={() => setIsCompositionDialogOpen(false)} className={styles.cancelButton}>
+            Закрыть
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

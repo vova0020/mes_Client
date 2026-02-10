@@ -85,21 +85,55 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                     <th>Код упаковки</th>
                     <th>Название упаковки</th>
                     <th>Количество</th>
-                    <th>Деталей</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {orderDetails.packages.map((pkg) => (
-                    <tr 
-                      key={pkg.packageId} 
-                      className={`${styles.packageRow} ${selectedPackageId === pkg.packageId ? styles.selectedPackage : ''}`}
-                      onClick={() => handlePackageClick(pkg.packageId)}
-                    >
-                      <td>{pkg.packageCode}</td>
-                      <td>{pkg.packageName}</td>
-                      <td>{pkg.quantity}</td>
-                      <td>{pkg.partCount}</td>
-                    </tr>
+                    <React.Fragment key={pkg.packageId}>
+                      <tr 
+                        className={`${styles.packageRow} ${selectedPackageId === pkg.packageId ? styles.selectedPackage : ''}`}
+                        onClick={() => handlePackageClick(pkg.packageId)}
+                      >
+                        <td>{pkg.packageCode}</td>
+                        <td>{pkg.packageName}</td>
+                        <td>{pkg.quantity}</td>
+                        <td>
+                          <span className={styles.expandIcon}>
+                            {selectedPackageId === pkg.packageId ? '▼' : '▶'}
+                          </span>
+                        </td>
+                      </tr>
+                      {selectedPackageId === pkg.packageId && pkg.details && pkg.details.length > 0 && (
+                        <tr>
+                          <td colSpan={4}>
+                            <div className={styles.packageDetailsTable}>
+                              <h5>Детали упаковки:</h5>
+                              <table>
+                                <thead>
+                                  <tr>
+                                    <th>Артикул детали</th>
+                                    <th>Деталь</th>
+                                    <th>Количество на упаковку</th>
+                                    <th>Общее количество</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {pkg.details.map((detail) => (
+                                    <tr key={detail.partId}>
+                                      <td>{detail.partCode}</td>
+                                      <td>{detail.partName}</td>
+                                      <td>{detail.quantityPerPackage}</td>
+                                      <td>{detail.totalQuantity}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

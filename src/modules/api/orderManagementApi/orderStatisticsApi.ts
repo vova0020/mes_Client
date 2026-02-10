@@ -29,6 +29,7 @@ export interface OrderPackageDetail {
   packageName: string;
   quantity: number;
   partCount: number;
+  details: OrderPartDetail[];
 }
 
 export interface OrderPartStage {
@@ -50,6 +51,14 @@ export interface OrderPallet {
   palletName: string;
   quantity: number;
   stages: OrderPalletStage[];
+}
+
+export interface OrderPartDetail {
+  partId: number;
+  partCode: string;
+  partName: string;
+  quantityPerPackage: number;
+  totalQuantity: number;
 }
 
 export interface OrderPart {

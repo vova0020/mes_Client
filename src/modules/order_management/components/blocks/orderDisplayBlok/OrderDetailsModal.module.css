@@ -342,3 +342,48 @@
   border-radius: 6px;
   border: 1px dashed rgba(255, 255, 255, 0.2);
 }
+
+.packageDetailsTable {
+  margin: 15px 0;
+  padding: 15px;
+  background: linear-gradient(to bottom, #374051, #2d3441);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.packageDetailsTable h5 {
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.packageDetailsTable table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: #ffffff;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.packageDetailsTable th,
+.packageDetailsTable td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.packageDetailsTable th {
+  background: #d7d7d7;
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.packageDetailsTable td {
+  color: #2d3748;
+  font-size: 12px;
+  background: #faf8f8;
+}

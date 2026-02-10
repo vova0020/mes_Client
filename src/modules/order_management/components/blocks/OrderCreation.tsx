@@ -1129,7 +1129,6 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                                           <TableCell className={styles.detailsHeaderCell}>Деталь</TableCell>
                                           <TableCell className={styles.detailsHeaderCell}>Количество на упаковку</TableCell>
                                           <TableCell className={styles.detailsHeaderCell}>Общее количество</TableCell>
-                                          {/* <TableCell className={styles.detailsHeaderCell}>Единица измерения</TableCell> */}
                                         </TableRow>
                                       </TableHead>
                                       <TableBody>
@@ -1137,11 +1136,8 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                                           <TableRow key={detail.partId} className={styles.detailsTableRow}>
                                             <TableCell className={styles.detailsCell}>{detail.partCode}</TableCell>
                                             <TableCell className={styles.detailsCell}>{detail.partName}</TableCell>
-                                            <TableCell className={styles.detailsCell}>{detail.quantity}</TableCell>
-                                            <TableCell className={styles.detailsCell}>
-                                              {detail.quantity * pkg.quantity}
-                                            </TableCell>
-                                            {/* <TableCell className={styles.detailsCell}>шт</TableCell> */}
+                                            <TableCell className={styles.detailsCell}>{detail.quantityPerPackage}</TableCell>
+                                            <TableCell className={styles.detailsCell}>{detail.totalQuantity}</TableCell>
                                           </TableRow>
                                         ))}
                                       </TableBody>

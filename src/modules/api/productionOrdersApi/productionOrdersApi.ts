@@ -59,7 +59,8 @@ export interface PackageDetailResponseDto {
   partId: number;             // ID детали
   partCode: string;           // Код детали
   partName: string;           // Название детали
-  quantity: number;           // Общее количество деталей
+  quantityPerPackage: number; // Количество в 1 упаковке
+  totalQuantity: number;      // Общее количество в заказе
 }
 
 // Ответ с данными упаковки

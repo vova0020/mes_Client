@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -44,7 +44,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import styles from './OrderPlanning.module.css';
-import { useOrderManagement } from '../../../hooks';
+import { useOrderManagement, useProductionOrders } from '../../../hooks';
 import { 
   transformOrderToPlanning, 
   transformOrderDetailsToPlanning,
@@ -55,6 +55,7 @@ import {
   Package,
   Detail
 } from '../../utils/dataTransformers';
+import { ProductionOrderResponseDto } from '../../../api/productionOrdersApi/productionOrdersApi';
 
 // Типы данных
 interface ProductionFlow {
@@ -230,20 +231,22 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
   // Используем хук для управления заказами
   const {
     orders: apiOrders,
-    orderDetails,
-    selectedOrderId,
     loading,
     error,
-    setSelectedOrderId,
     approveOrderForLaunch,
     updateOrderPriority,
     refetchOrders,
   } = useOrderManagement();
 
+  // Хук для получения деталей заказа (для модалки)
+  const { fetchOrderById } = useProductionOrders(false);
+
   // Локальное состояние для UI
   const [isCompositionDialogOpen, setIsCompositionDialogOpen] = useState(false);
   const [expandedPackages, setExpandedPackages] = useState<{ [key: string]: boolean }>({});
   const [localOrders, setLocalOrders] = useState<OrderPlanningData[]>([]);
+  const [viewingOrderDetails, setViewingOrderDetails] = useState<ProductionOrderResponseDto | null>(null);
+  const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
 
   // Настройка сенсоров для drag-and-drop
   const sensors = useSensors(
@@ -338,11 +341,21 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
   // Обработчики для кнопок действий
   const handleOrderComposition = async (orderId: string) => {
     try {
-      setSelectedOrderId(parseInt(orderId));
+      setLoadingOrderDetails(true);
+      const orderDetails = await fetchOrderById(parseInt(orderId));
+      if (!orderDetails) {
+        console.error('Заказ не найден');
+        alert('Не удалось загрузить данные заказа');
+        return;
+      }
+      setViewingOrderDetails(orderDetails);
       setExpandedPackages({});
       setIsCompositionDialogOpen(true);
     } catch (error) {
       console.error('Ошибка при загрузке состава заказа:', error);
+      alert('Ошибка при загрузке состава заказа');
+    } finally {
+      setLoadingOrderDetails(false);
     }
   };
 
@@ -357,15 +370,49 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
     }));
   };
 
-
-
-  // Получить данные для про��мотра заказа
-  const getViewingOrderData = (): OrderPlanningData | null => {
-    if (!orderDetails) return null;
-    return transformOrderDetailsToPlanning(orderDetails);
+  // Маппинг статусов
+  const statusMapping: Record<string, 'preliminary' | 'approved' | 'allowedToStart' | 'inProgress' | 'completed'> = {
+    'PRELIMINARY': 'preliminary',
+    'APPROVED': 'approved',
+    'LAUNCH_PERMITTED': 'allowedToStart',
+    'IN_PROGRESS': 'inProgress',
+    'COMPLETED': 'completed',
+    'POSTPONED': 'preliminary',
   };
 
-  const viewingOrder = getViewingOrderData();
+  // Преобразуем данные для отображения в модалке
+  const viewingOrder = useMemo(() => {
+    if (!viewingOrderDetails) return null;
+    
+    const packages: Package[] = (viewingOrderDetails.packages || []).map(pkg => ({
+      id: pkg.packageId.toString(),
+      name: pkg.packageName,
+      quantity: pkg.quantity,
+      articleNumber: pkg.packageCode,
+      details: (pkg.details || []).filter(detail => detail).map((detail, index) => ({
+        id: `${pkg.packageId}-${index}`,
+        name: detail.partName,
+        quantity: detail.quantityPerPackage,
+        unit: 'шт',
+        articleNumber: detail.partCode,
+      })),
+    }));
+
+    return {
+      id: viewingOrderDetails.orderId.toString(),
+      name: viewingOrderDetails.orderName,
+      requiredDate: viewingOrderDetails.requiredDate.split('T')[0],
+      status: statusMapping[viewingOrderDetails.status] || 'preliminary',
+      mainFlowId: '1',
+      secondaryFlowCompletionDate: '',
+      startDate: viewingOrderDetails.createdAt.split('T')[0],
+      plannedStartDate: viewingOrderDetails.createdAt.split('T')[0],
+      actualStartDate: '',
+      plannedReleaseDate: viewingOrderDetails.requiredDate.split('T')[0],
+      actualReleaseDate: viewingOrderDetails.completedAt ? viewingOrderDetails.completedAt.split('T')[0] : '',
+      packages,
+    } as OrderPlanningData;
+  }, [viewingOrderDetails]);
 
   return (
     <div className={styles.container}>
@@ -458,7 +505,10 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
       {/* Диалог просмотра состава заказа */}
       <Dialog 
         open={isCompositionDialogOpen} 
-        onClose={() => setIsCompositionDialogOpen(false)}
+        onClose={() => {
+          setIsCompositionDialogOpen(false);
+          setViewingOrderDetails(null);
+        }}
         maxWidth="lg"
         fullWidth
         className={styles.dialog}
@@ -467,6 +517,11 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
           Состав заказа: {viewingOrder?.name}
         </DialogTitle>
         <DialogContent className={styles.dialogContent}>
+          {loadingOrderDetails ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+              <CircularProgress />
+            </div>
+          ) : (
           <div className={styles.compositionContainer}>
             {viewingOrder?.packages && viewingOrder.packages.length > 0 ? (
               <TableContainer component={Paper} className={styles.compositionTable}>
@@ -501,32 +556,34 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
                             <Collapse in={expandedPackages[pkg.id]} timeout="auto" unmountOnExit>
                               <div className={styles.detailsContainer}>
                                 <h5 className={styles.detailsTitle}>Детали упаковки:</h5>
-                                <TableContainer component={Paper} className={styles.detailsTable}>
-                                  <Table size="small">
-                                    <TableHead>
-                                      <TableRow className={styles.detailsTableHeader}>
-                                        <TableCell className={styles.detailsHeaderCell}>Артикул детали</TableCell>
-                                        <TableCell className={styles.detailsHeaderCell}>Деталь</TableCell>
-                                        <TableCell className={styles.detailsHeaderCell}>Количество на упаковку</TableCell>
-                                        <TableCell className={styles.detailsHeaderCell}>Общее количество</TableCell>
-                                        {/* <TableCell className={styles.detailsHeaderCell}>Единица измерения</TableCell> */}
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {pkg.details.map((detail) => (
-                                        <TableRow key={detail.id} className={styles.detailsTableRow}>
-                                          <TableCell className={styles.detailsCell}>{detail.articleNumber}</TableCell>
-                                          <TableCell className={styles.detailsCell}>{detail.name}</TableCell>
-                                          <TableCell className={styles.detailsCell}>{detail.quantity}</TableCell>
-                                          <TableCell className={styles.detailsCell}>
-                                            {detail.quantity * pkg.quantity}
-                                          </TableCell>
-                                          {/* <TableCell className={styles.detailsCell}>{detail.unit}</TableCell> */}
+                                {pkg.details && pkg.details.length > 0 ? (
+                                  <TableContainer component={Paper} className={styles.detailsTable}>
+                                    <Table size="small">
+                                      <TableHead>
+                                        <TableRow className={styles.detailsTableHeader}>
+                                          <TableCell className={styles.detailsHeaderCell}>Артикул детали</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Деталь</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Количество на упаковку</TableCell>
+                                          <TableCell className={styles.detailsHeaderCell}>Общее количество</TableCell>
                                         </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </TableContainer>
+                                      </TableHead>
+                                      <TableBody>
+                                        {pkg.details.map((detail) => (
+                                          <TableRow key={detail.id} className={styles.detailsTableRow}>
+                                            <TableCell className={styles.detailsCell}>{detail.articleNumber}</TableCell>
+                                            <TableCell className={styles.detailsCell}>{detail.name}</TableCell>
+                                            <TableCell className={styles.detailsCell}>{detail.quantity}</TableCell>
+                                            <TableCell className={styles.detailsCell}>
+                                              {detail.quantity * pkg.quantity}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </TableContainer>
+                                ) : (
+                                  <p>Нет деталей в упаковке</p>
+                                )}
                               </div>
                             </Collapse>
                           </TableCell>
@@ -542,9 +599,13 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
               </div>
             )}
           </div>
+          )}
         </DialogContent>
         <DialogActions className={styles.dialogActions}>
-          <Button onClick={() => setIsCompositionDialogOpen(false)} className={styles.cancelButton}>
+          <Button onClick={() => {
+            setIsCompositionDialogOpen(false);
+            setViewingOrderDetails(null);
+          }} className={styles.cancelButton}>
             Закрыть
           </Button>
         </DialogActions>

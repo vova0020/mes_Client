@@ -98,13 +98,13 @@ export const transformOrderDetailsToPlanning = (orderDetails: OrderDetailsRespon
     id: pkg.packageId.toString(),
     name: pkg.packageName,
     quantity: pkg.quantity,
-    articleNumber: `PKG-${pkg.packageId.toString().padStart(3, '0')}`,
+    articleNumber: pkg.packageCode,
     details: pkg.details.map(detail => ({
       id: detail.partId.toString(),
       name: detail.partName,
-      quantity: detail.totalQuantity,
-      unit: 'шт', // По умолчанию, можно добавить в API
-      articleNumber: `ART-${detail.partId.toString().padStart(3, '0')}`,
+      quantity: detail.quantityPerPackage,
+      unit: 'шт',
+      articleNumber: detail.partCode,
     })),
   }));
 
