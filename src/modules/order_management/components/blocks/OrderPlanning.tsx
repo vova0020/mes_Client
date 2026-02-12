@@ -115,7 +115,7 @@ const SortableOrderRow: React.FC<SortableOrderRowProps> = ({
 
       {/* Заказ */}
       <TableCell className={styles.cell}>
-        <div className={styles.orderName}>{order.name}</div>
+        <div className={styles.orderName}>№{order.batchNumber} - {order.name}</div>
       </TableCell>
 
       {/* Требуемая дата готовности */}
@@ -265,11 +265,7 @@ const OrderPlanning: React.FC<Props> = ({ onBack }) => {
     if (apiOrders) {
       const transformedOrders = apiOrders
         .map(transformOrderToPlanning)
-        .sort((a, b) => {
-          const priorityA = a.priority || 999;
-          const priorityB = b.priority || 999;
-          return priorityA - priorityB;
-        });
+        .sort((a, b) => parseInt(b.id) - parseInt(a.id));
       setLocalOrders(transformedOrders);
       console.log('Sorted orders:', transformedOrders.map(o => ({ id: o.id, name: o.name, priority: o.priority })));
     }

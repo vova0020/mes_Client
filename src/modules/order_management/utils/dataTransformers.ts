@@ -5,6 +5,7 @@ import { Order, OrderDetailsResponse, OrderPackage, OrderDetail } from '../../ap
 export interface OrderPlanningData {
   id: string;
   name: string;
+  batchNumber: string;
   requiredDate: string;
   status: 'preliminary' | 'approved' | 'allowedToStart' | 'inProgress' | 'completed';
   mainFlowId: string;
@@ -58,6 +59,7 @@ export const transformOrderToPlanning = (order: Order): OrderPlanningData => {
   const result = {
     id: order.orderId.toString(),
     name: order.orderName,
+    batchNumber: order.batchNumber,
     requiredDate: order.requiredDate.split('T')[0], // Преобразуем ISO дату в YYYY-MM-DD
     status: statusMapping[order.status] || 'preliminary',
     mainFlowId: '1', // По умолчанию, можно настроить логику
