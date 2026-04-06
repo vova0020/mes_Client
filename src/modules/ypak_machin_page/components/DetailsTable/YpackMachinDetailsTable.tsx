@@ -166,9 +166,9 @@ const DetailsTable: React.FC = () => {
       setActionError(null);
       
       const task = tasks.find(t => t.taskId === taskId);
-      const availableQuantity = task?.availableToComplete || 0;
+      const remainingQuantity = task?.remainingQuantity || 0;
       
-      await updatePackingTaskStatus(taskId, 'COMPLETED', availableQuantity);
+      await updatePackingTaskStatus(taskId, 'COMPLETED', remainingQuantity);
       setSuccessMessage('Задача успешно завершена');
       refetch();
     } catch (error: any) {
@@ -472,7 +472,7 @@ const DetailsTable: React.FC = () => {
               {partialCompleteTaskId && (() => {
                 const task = tasks.find(t => t.taskId === partialCompleteTaskId);
                 if (task) {
-                  const maxQuantity = task.remainingQuantity || 0;
+                  const maxQuantity = task.availableToComplete || 0;
                   return (
                     <>
                       <div className={styles.modalInfoRow}>
