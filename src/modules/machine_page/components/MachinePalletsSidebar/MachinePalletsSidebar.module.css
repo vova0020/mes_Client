@@ -619,8 +619,8 @@
 
 /* Анимация появления строк */
 .animatedRow {
-  opacity: 0;
-  transform: translateY(10px);
+  opacity: 1;
+  transform: translateY(0);
   animation-duration: 0.4s;
   animation-fill-mode: forwards;
   animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);

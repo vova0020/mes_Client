@@ -72,6 +72,7 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
   // Сбрасываем активную упаковку при смене заказа
   useEffect(() => {
     setActivePackagingId(null);
+    setShowDetails(false);
     prevOrderIdRef.current = selectedOrderId;
   }, [selectedOrderId]);
 
@@ -84,6 +85,8 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
       }, 100);
 
       return () => clearTimeout(timer);
+    } else if (!loading && (!packages || packages.length === 0)) {
+      setShowDetails(false);
     }
   }, [loading, packages]);
 

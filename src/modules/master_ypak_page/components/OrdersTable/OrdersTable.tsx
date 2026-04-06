@@ -24,6 +24,17 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   const { orders, loading, error, fetchOrders } = useOrders();
   const isFirstLoad = useRef(true);
 
+  // Детальная диагностика
+  useEffect(() => {
+    console.log('=== OrdersTable STATE ===', {
+      loading,
+      ordersCount: orders.length,
+      showOrders,
+      isFirstLoad: isFirstLoad.current,
+      orders
+    });
+  }, [loading, orders, showOrders]);
+
   // Синхронизация локального activeOrderId с пропом selectedOrderId (если передан)
   useEffect(() => {
     // Если родитель явно передаёт selectedOrderId — синхронизируем
@@ -56,25 +67,32 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     }
   }, [orders, activeOrderId]);
 
+  // ИСПРАВЛЕНИЕ: Показываем заказы только один раз после первой загрузки
   useEffect(() => {
-    if (!loading && orders.length > 0) {
+    console.log('>>> useEffect showOrders triggered:', { loading, ordersLength: orders.length, showOrders, isFirstLoad: isFirstLoad.current });
+    
+    if (!loading && orders.length > 0 && !showOrders) {
+      console.log('>>> Условие выполнено, isFirstLoad:', isFirstLoad.current);
+      
       if (isFirstLoad.current) {
+        console.log('>>> Устанавливаем таймер на 200ms');
         const timer = setTimeout(() => {
+          console.log('>>> Таймер сработал! Устанавливаем showOrders = true');
           setShowOrders(true);
           isFirstLoad.current = false;
         }, 200);
-        return () => clearTimeout(timer);
+        return () => {
+          console.log('>>> Очищаем таймер');
+          clearTimeout(timer);
+        };
       } else {
+        console.log('>>> Сразу устанавливаем showOrders = true');
         setShowOrders(true);
       }
+    } else {
+      console.log('>>> Условие НЕ выполнено');
     }
-  }, [loading, orders]);
-
-  useEffect(() => {
-    if (loading && !isFirstLoad.current) {
-      setShowOrders(false);
-    }
-  }, [loading]);
+  }, [loading, orders, showOrders]);
 
   const handleOrderClick = (orderId: number) => {
     if (activeOrderId === orderId) {
