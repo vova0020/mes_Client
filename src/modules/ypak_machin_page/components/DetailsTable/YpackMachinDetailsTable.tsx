@@ -1,11 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import styles from './DetailsTable.module.css';
 import { useYpakMachine } from '../../../hooks/ypakMachine/useYpakMachine';
 import { YpakTask } from '../../../api/ypakMachine/ypakMachineApi';
 import { updatePackingTaskStatus } from '../../../api/ypakMasterApi/machineMasterService';
 import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
+import { SearchAndSort, SortableHeader, SortConfig } from '../../../../components/SearchAndSort';
 
 const DetailsTable: React.FC = () => {
+  // Состояние для поиска и сортировки
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'priority', direction: 'asc' });
+  
   // Состояние для отслеживания активной задачи
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
   
@@ -311,6 +316,49 @@ const DetailsTable: React.FC = () => {
   // Фильтруем задачи, исключая завершенные
   const filteredTasks = tasks.filter(task => task.status !== 'COMPLETED');
 
+  // Обработчик сортировки
+  const handleSort = (field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Фильтрация и сортировка задач
+  const filteredAndSortedTasks = useMemo(() => {
+    let result = filteredTasks.filter(task => {
+      const searchText = `${task.productionPackage.order.batchNumber} ${task.productionPackage.order.orderName} ${task.productionPackage.packageCode} ${task.productionPackage.packageName}`.toLowerCase();
+      return searchText.includes(searchTerm.toLowerCase());
+    });
+
+    result.sort((a, b) => {
+      let aVal: any, bVal: any;
+      
+      if (sortConfig.field.includes('.')) {
+        const parts = sortConfig.field.split('.');
+        aVal = parts.reduce((obj, key) => obj?.[key], a as any);
+        bVal = parts.reduce((obj, key) => obj?.[key], b as any);
+      } else {
+        aVal = (a as any)[sortConfig.field];
+        bVal = (b as any)[sortConfig.field];
+      }
+      
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aVal.localeCompare(bVal) 
+          : bVal.localeCompare(aVal);
+      }
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      return 0;
+    });
+
+    return result;
+  }, [filteredTasks, searchTerm, sortConfig]);
+
   // Если нет задач для отображения
   if (filteredTasks.length === 0) {
     return (
@@ -353,23 +401,31 @@ const DetailsTable: React.FC = () => {
         </div>
       )}
 
+      <SearchAndSort
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortConfig={sortConfig}
+        onSortChange={handleSort}
+        searchPlaceholder="Поиск по заказу, коду упаковки, названию..."
+      />
+
       <div className={styles.tableContainer}>
         <table className={styles.detailsTable}>
           <thead>
             <tr>
-              <th>Приоритет</th>
-              <th>Заказ</th>
-              <th>Код упаковки</th>
-              <th>Название упаковки</th>
+              <SortableHeader field="priority" label="Приоритет" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="productionPackage.order.orderName" label="Заказ" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="productionPackage.packageCode" label="Код упаковки" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="productionPackage.packageName" label="Название упаковки" sortConfig={sortConfig} onSort={handleSort} />
               <th>Тех. информация</th>
-              <th>Назначено / Выполнено</th>
+              <SortableHeader field="assignedQuantity" label="Назначено / Выполнено" sortConfig={sortConfig} onSort={handleSort} />
               <th>Статус</th>
               <th>Действия</th>
-              <th></th> {/* Колонка для кнопки-стрелки */}
+              <th></th>
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {filteredTasks.map((task, index) => (
+            {filteredAndSortedTasks.map((task, index) => (
               <tr
                 key={task.taskId}
                 className={`

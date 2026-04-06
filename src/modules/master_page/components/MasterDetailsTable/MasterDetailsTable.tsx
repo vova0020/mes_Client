@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import styles from './MasterDetailsTable.module.css';
 import useDetails from '../../../hooks/masterPage/useDetailsMaster';
 import PalletsSidebar from '../MasterPalletsSidebar/MasterPalletsSidebar';
 import DetailForm from '../../../detail-form/DetailForm';
 import { Detail } from '../../../api/masterPage/detailServiceMaster';
 import { useStageListener } from '../../../../componentsGlobal/Navbar/useStageListener';
+import { SearchAndSort, SortableHeader, SortConfig } from '../../../../components/SearchAndSort';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
@@ -25,6 +26,10 @@ interface Filters {
 const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpdate }) => {
   // Отслеживаем смену этапа
   const currentStage = useStageListener();
+  
+  // Состояние для поиска и сортировки
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'articleNumber', direction: 'asc' });
   
   // Состояние для отслеживания активной детали
   const [activeDetailId, setActiveDetailId] = useState<number | null>(null);
@@ -74,6 +79,9 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
       size: [],
       substage: []
     });
+    
+    // Сбрасываем поиск
+    setSearchTerm('');
     
     // Закрываем открытый фильтр
     setOpenFilter(null);
@@ -170,6 +178,51 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
         : prev[column].filter(v => v !== value)
     }));
   };
+
+  // Обработчик сортировки
+  const handleSort = (field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Фильтрация и сортировка деталей
+  const filteredAndSortedDetails = useMemo(() => {
+    let result = filteredDetails.filter(detail => {
+      const searchText = `${detail.articleNumber} ${detail.name} ${detail.material} ${detail.size}`.toLowerCase();
+      return searchText.includes(searchTerm.toLowerCase());
+    });
+
+    result.sort((a, b) => {
+      let aVal: any, bVal: any;
+      
+      if (sortConfig.field === 'substage') {
+        aVal = a.substage?.substageName || '';
+        bVal = b.substage?.substageName || '';
+      } else if (sortConfig.field === 'packages') {
+        aVal = a.packages.map(p => p.packageCode).join(',');
+        bVal = b.packages.map(p => p.packageCode).join(',');
+      } else {
+        aVal = (a as any)[sortConfig.field];
+        bVal = (b as any)[sortConfig.field];
+      }
+      
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aVal.localeCompare(bVal) 
+          : bVal.localeCompare(aVal);
+      }
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      return 0;
+    });
+
+    return result;
+  }, [filteredDetails, searchTerm, sortConfig]);
 
   // Компонент фильтра
   const FilterDropdown: React.FC<{
@@ -374,13 +427,21 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
     <div className={styles.detailsContainer} ref={containerRef}>
       <h2 className={styles.title}>Информация о деталях</h2>
 
+      <SearchAndSort
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortConfig={sortConfig}
+        onSortChange={handleSort}
+        searchPlaceholder="Поиск по артикулу, названию, материалу, размеру..."
+      />
+
       <div className={styles.tableContainer}>
         <table className={styles.detailsTable}>
           <thead>
             <tr>
               <th>
                 <div className={styles.headerWithFilter}>
-                  <span>Артикул детали</span>
+                  <SortableHeader field="articleNumber" label="Артикул детали" sortConfig={sortConfig} onSort={handleSort} />
                   <FilterDropdown 
                     column="articleNumber" 
                     values={getUniqueValues('articleNumber')} 
@@ -389,7 +450,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
               </th>
               <th>
                 <div className={styles.headerWithFilter}>
-                  <span>Упаковки</span>
+                  <SortableHeader field="packages" label="Упаковки" sortConfig={sortConfig} onSort={handleSort} />
                   <FilterDropdown 
                     column="packages" 
                     values={getUniqueValues('packages')} 
@@ -398,7 +459,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
               </th>
               <th>
                 <div className={styles.headerWithFilter}>
-                  <span>Название</span>
+                  <SortableHeader field="name" label="Название" sortConfig={sortConfig} onSort={handleSort} />
                   <FilterDropdown 
                     column="name" 
                     values={getUniqueValues('name')} 
@@ -407,7 +468,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
               </th>
               <th>
                 <div className={styles.headerWithFilter}>
-                  <span>Материал</span>
+                  <SortableHeader field="material" label="Материал" sortConfig={sortConfig} onSort={handleSort} />
                   <FilterDropdown 
                     column="material" 
                     values={getUniqueValues('material')} 
@@ -416,7 +477,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
               </th>
               <th>
                 <div className={styles.headerWithFilter}>
-                  <span>Размер</span>
+                  <SortableHeader field="size" label="Размер" sortConfig={sortConfig} onSort={handleSort} />
                   <FilterDropdown 
                     column="size" 
                     values={getUniqueValues('size')} 
@@ -425,7 +486,7 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
               </th>
               <th>
                 <div className={styles.headerWithFilter}>
-                  <span>Подэтап</span>
+                  <SortableHeader field="substage" label="Подэтап" sortConfig={sortConfig} onSort={handleSort} />
                   <FilterDropdown 
                     column="substage" 
                     values={getUniqueValues('substage')} 
@@ -433,15 +494,15 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
                 </div>
               </th>
               <th>Тех. информация</th>
-              <th>Общее кол-во</th>
-              <th>Готово к обработке</th>
-              <th>Распределено</th>
-              <th>Выполнено</th>
+              <SortableHeader field="totalQuantity" label="Общее кол-во" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="readyForProcessing" label="Готово к обработке" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="distributed" label="Распределено" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="completed" label="Выполнено" sortConfig={sortConfig} onSort={handleSort} />
               <th></th>
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {filteredDetails.sort((a, b) => a.id - b.id).map((detail, index) => (
+            {filteredAndSortedDetails.map((detail, index) => (
               <tr
                 key={detail.id}
                 className={`

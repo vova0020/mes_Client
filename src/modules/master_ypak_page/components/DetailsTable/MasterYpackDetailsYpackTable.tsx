@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import styles from './DetailsTable.module.css';
 import usePackagingDetails from '../../../hooks/ypakMasterHook/packagingMasterHook';
 import useMachines from '../../../hooks/ypakMasterHook/useMachinesMaster';
 import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
 import QuantityModal from '../QuantityModal/QuantityModal';
+import { SearchAndSort, SortableHeader, SortConfig } from '../../../../components/SearchAndSort';
 
 interface DetailsYpakTableProps {
   selectedOrderId: number | null;
 }
 
 const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) => {
+  // Состояние для поиска и сортировки
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'packageCode', direction: 'asc' });
+  
   // Состояние для отслеживания активной упаковки
   const [activePackagingId, setActivePackagingId] = useState<number | null>(null);
 
@@ -316,6 +321,43 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     console.log(`Частичное завершение упаковки ${packageId}`);
   };
 
+  // Обработчик сортировки
+  const handleSort = (field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Фильтрация и сортировка упаковок
+  const filteredAndSortedPackages = useMemo(() => {
+    if (!packages) return [];
+    
+    let result = packages.filter(pkg => {
+      const searchText = `${pkg.packageCode} ${pkg.packageName}`.toLowerCase();
+      return searchText.includes(searchTerm.toLowerCase());
+    });
+
+    result.sort((a, b) => {
+      const aVal = (a as any)[sortConfig.field];
+      const bVal = (b as any)[sortConfig.field];
+      
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aVal.localeCompare(bVal) 
+          : bVal.localeCompare(aVal);
+      }
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      return 0;
+    });
+
+    return result;
+  }, [packages, searchTerm, sortConfig]);
+
   // Функция для получения класса стиля в зависимости от статуса упаковки
   const getPackingStatusClass = (status: string): string => {
     switch (status) {
@@ -430,26 +472,33 @@ const DetailsYpakTable: React.FC<DetailsYpakTableProps> = ({ selectedOrderId }) 
     <div className={styles.detailsContainer} ref={containerRef}>
       <h2 className={styles.title}>Информация об упаковке</h2>
 
+      <SearchAndSort
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortConfig={sortConfig}
+        onSortChange={handleSort}
+        searchPlaceholder="Поиск по артикулу, названию упаковки..."
+      />
+
       <div className={styles.tableContainer}>
         <table className={styles.detailsTable}>
           <thead>
             <tr>
-              <th>Артикул</th>
-              <th>Название</th>
+              <SortableHeader field="packageCode" label="Артикул" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="packageName" label="Название" sortConfig={sortConfig} onSort={handleSort} />
               <th>Тех. информация</th>
-              <th>Общее кол-во</th>
-              <th>Готово к упаковке</th>
-              <th>Распределено</th>
-              <th>Скомплектовано</th>
-              <th>Упаковано</th>
+              <SortableHeader field="totalQuantity" label="Общее кол-во" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="readyForPackaging" label="Готово к упаковке" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="distributed" label="Распределено" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="assembled" label="Скомплектовано" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="completed" label="Упаковано" sortConfig={sortConfig} onSort={handleSort} />
               <th>Статус упаковки</th>
-              {/* <th>Разрешить паковать вне линии</th> */}
               <th>Назначить станок</th>
               <th>Действия</th>
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {(packages || []).sort((a, b) => a.id - b.id).map((packaging, index) => (
+            {(filteredAndSortedPackages || []).map((packaging, index) => (
               <tr
                 key={packaging.id}
                 className={`

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import styles from './NoSmenDetailsTable.module.css';
 import useDetails from '../../../hooks/machinNoSmenHook/useDetails';
 import PalletsSidebar from '../NoSmenPalletsSidebar/NoSmenPalletsSidebar';
 import DetailForm from '../../../detail-form/DetailForm';
+import { SearchAndSort, SortableHeader, SortConfig } from '../../../../components/SearchAndSort';
 
 interface DetailsTableProps {
   selectedOrderId: number | null;
@@ -10,6 +11,10 @@ interface DetailsTableProps {
 }
 
 const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpdate }) => {
+  // Состояние для поиска и сортировки
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'articleNumber', direction: 'asc' });
+  
   // Состояние для отслеживания активной детали
   const [activeDetailId, setActiveDetailId] = useState<number | null>(null);
   
@@ -127,6 +132,41 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
     setSelectedPalletId(null);
   };
 
+  // Обработчик сортировки
+  const handleSort = (field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Фильтрация и сортировка деталей
+  const filteredAndSortedDetails = useMemo(() => {
+    let result = details.filter(detail => {
+      const searchText = `${detail.articleNumber} ${detail.name} ${detail.material} ${detail.size}`.toLowerCase();
+      return searchText.includes(searchTerm.toLowerCase());
+    });
+
+    result.sort((a, b) => {
+      const aVal = (a as any)[sortConfig.field];
+      const bVal = (b as any)[sortConfig.field];
+      
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aVal.localeCompare(bVal) 
+          : bVal.localeCompare(aVal);
+      }
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      return 0;
+    });
+
+    return result;
+  }, [details, searchTerm, sortConfig]);
+
   // Отображаем сообщение о загрузке
   if (loading) {
     return (
@@ -217,23 +257,31 @@ const DetailsTable: React.FC<DetailsTableProps> = ({ selectedOrderId, onDataUpda
     <div className={styles.detailsContainer} ref={containerRef}>
       <h2 className={styles.title}>Информация о деталях</h2>
 
+      <SearchAndSort
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortConfig={sortConfig}
+        onSortChange={handleSort}
+        searchPlaceholder="Поиск по артикулу, названию, материалу, размеру..."
+      />
+
       <div className={styles.tableContainer}>
         <table className={styles.detailsTable}>
           <thead>
             <tr>
-              <th>Артикул</th>
-              <th>Название</th>
-              <th>Материал</th>
-              <th>Размер</th>
+              <SortableHeader field="articleNumber" label="Артикул" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="name" label="Название" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="material" label="Материал" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="size" label="Размер" sortConfig={sortConfig} onSort={handleSort} />
               <th>Тех. информация</th>
-              <th>Общее кол-во</th>
-              <th>Готово к обработке</th>
-              <th>Выполнено</th>
-              <th></th> {/* Колонка для кнопки-стрелки */}
+              <SortableHeader field="totalQuantity" label="Общее кол-во" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="readyForProcessing" label="Готово к обработке" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="completed" label="Выполнено" sortConfig={sortConfig} onSort={handleSort} />
+              <th></th>
             </tr>
           </thead>
           <tbody className={showDetails ? styles.showDetails : styles.hideDetails}>
-            {details.sort((a, b) => a.id - b.id).map((detail, index) => (
+            {filteredAndSortedDetails.map((detail, index) => (
               <tr
                 key={detail.id}
                 className={`
