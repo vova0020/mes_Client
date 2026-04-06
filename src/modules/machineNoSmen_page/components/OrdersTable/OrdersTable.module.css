@@ -744,8 +744,8 @@
 
 /* Анимация для элементов списка заказов */
 .animatedItem {
-  opacity: 0;
-  transform: translateY(15px);
+  opacity: 1;
+  transform: translateY(0);
   animation-name: fadeInUp;
   animation-duration: 0.5s;
   animation-fill-mode: forwards;
