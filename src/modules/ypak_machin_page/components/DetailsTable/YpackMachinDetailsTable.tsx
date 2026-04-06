@@ -159,18 +159,17 @@ const DetailsTable: React.FC = () => {
 
   // Обработчик для кнопки "Готово"
   const handleCompleteOperation = async (e: React.MouseEvent, taskId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
+    e.stopPropagation();
     
     try {
       setProcessingTaskId(taskId);
       setActionError(null);
       
       const task = tasks.find(t => t.taskId === taskId);
-      const remainingQuantity = task?.remainingQuantity || 0;
+      const availableQuantity = task?.availableToComplete || 0;
       
-      await updatePackingTaskStatus(taskId, 'COMPLETED', remainingQuantity);
+      await updatePackingTaskStatus(taskId, 'COMPLETED', availableQuantity);
       setSuccessMessage('Задача успешно завершена');
-      // Перезагружаем данные для обновления статуса
       refetch();
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при завершении задачи';
@@ -180,13 +179,12 @@ const DetailsTable: React.FC = () => {
     }
   };
 
-  // Открытие модального окна для частичного завершения
   const handleOpenPartialModal = (e: React.MouseEvent, task: YpakTask) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
+    e.stopPropagation();
     
     setPartialCompleteTaskId(task.taskId);
-    const maxQuantity = task.remainingQuantity || 0;
-    setPackagedCount(Math.min(10, maxQuantity)); // По умолчанию 10 или меньше, если доступно меньше
+    const maxQuantity = task.availableToComplete || 0;
+    setPackagedCount(Math.min(10, maxQuantity));
     setShowPartialModal(true);
   };
 
@@ -197,12 +195,11 @@ const DetailsTable: React.FC = () => {
     setPackagedCount(0);
   };
 
-  // Эффект для установки начального значения при открытии модального окна
   useEffect(() => {
     if (showPartialModal && partialCompleteTaskId) {
       const task = tasks.find(t => t.taskId === partialCompleteTaskId);
       if (task) {
-        const maxQuantity = task.remainingQuantity || 0;
+        const maxQuantity = task.availableToComplete || 0;
         setPackagedCount(Math.min(10, maxQuantity));
       }
     }
@@ -426,24 +423,24 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={`${styles.actionButton} ${styles.startButton}`}
                     onClick={(e) => handleStartOperation(e, task.taskId)}
-                    disabled={processingTaskId === task.taskId || task.status === 'IN_PROGRESS' || task.status === 'COMPLETED'}
-                    title="Перевести задачу в работу"
+                    disabled={processingTaskId === task.taskId || task.status === 'IN_PROGRESS' || task.status === 'COMPLETED' || task.availableToComplete === 0}
+                    title={task.availableToComplete === 0 ? 'Нет скомплектованных упаковок' : 'Перевести задачу в работу'}
                   >
                     В работу
                   </button>
                   <button 
                     className={`${styles.actionButton} ${styles.completeButton}`}
                     onClick={(e) => handleCompleteOperation(e, task.taskId)}
-                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
-                    title="Завершить задачу"
+                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING' || task.availableToComplete === 0}
+                    title={task.availableToComplete === 0 ? 'Нет скомплектованных упаковок' : 'Завершить задачу'}
                   >
                     Готово
                   </button>
                   <button 
                     className={`${styles.actionButton} ${styles.partialButton}`}
                     onClick={(e) => handleOpenPartialModal(e, task)}
-                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING'}
-                    title="Частично завершить задачу"
+                    disabled={processingTaskId === task.taskId || task.status === 'COMPLETED' || task.status === 'PENDING' || task.availableToComplete === 0}
+                    title={task.availableToComplete === 0 ? 'Нет скомплектованных упаковок' : 'Частично завершить задачу'}
                   >
                     Частично
                   </button>
@@ -510,8 +507,32 @@ const DetailsTable: React.FC = () => {
                       
                       <div className={styles.modalInfoRow}>
                         <span className={styles.modalLabel}>Осталось выполнить:</span>
-                        <span className={styles.modalValue}>{maxQuantity} шт.</span>
+                        <span className={styles.modalValue}>{task.remainingQuantity} шт.</span>
                       </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel}>Скомплектовано:</span>
+                        <span className={styles.modalValue}>{task.assembledQuantity} шт.</span>
+                      </div>
+                      
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalLabel} style={{ fontWeight: 'bold', color: '#2196F3' }}>Доступно для выполнения:</span>
+                        <span className={styles.modalValue} style={{ fontWeight: 'bold', color: '#2196F3' }}>{maxQuantity} шт.</span>
+                      </div>
+                      
+                      {task.assembledQuantity < task.remainingQuantity && (
+                        <div style={{ 
+                          padding: '8px 12px', 
+                          backgroundColor: '#fff3cd', 
+                          border: '1px solid #ffc107', 
+                          borderRadius: '4px', 
+                          marginTop: '8px',
+                          fontSize: '13px',
+                          color: '#856404'
+                        }}>
+                          ⚠️ Не все упаковки скомплектованы. Вы можете выполнить только {maxQuantity} из {task.remainingQuantity} шт.
+                        </div>
+                      )}
                       
                       <div className={styles.quantityInputContainer}>
                         <label className={styles.quantityLabel} htmlFor="partial-quantity">

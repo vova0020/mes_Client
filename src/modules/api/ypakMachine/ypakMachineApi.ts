@@ -44,6 +44,8 @@ export interface YpakTask {
   assignedQuantity: number;
   completedQuantity: number;
   remainingQuantity: number;
+  assembledQuantity: number;
+  availableToComplete: number;
   machine: YpakMachine;
   package: YpakPackage;
   productionPackage: YpakProductionPackage;

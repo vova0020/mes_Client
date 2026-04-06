@@ -31,6 +31,9 @@ export interface MachineTask {
   completedAt: string | null;
   assignedQuantity: number;
   completedQuantity: number;
+  remainingQuantity: number;
+  assembledQuantity: number;
+  availableToComplete: number;
   machine: {
     machineId: number;
     machineName: string;
