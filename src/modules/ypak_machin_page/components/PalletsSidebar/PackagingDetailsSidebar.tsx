@@ -463,6 +463,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                           <th>Размер</th>
                           <th>Общее кол-во</th>
                           <th>Подстопное место</th>
+                          <th>Кол-во на упаковку</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -482,12 +483,13 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                               <td>{part.material.materialName}</td>
                               <td>{part.size}</td>
                               <td>{part.totalQuantity}</td>
-                              <td>-</td>
+                              <td>{part.substackLocation || '-'}</td>
+                              <td>{part.quantityPerPackage || '-'}</td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                            <td colSpan={7} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
                               {selectedPackageId ? 'Нет деталей в данной упаковке' : 'Выберите упаковку для просмотра деталей'}
                             </td>
                           </tr>

@@ -36,6 +36,8 @@ export interface PartDto {
   isSubassembly: boolean;
   readyForMainFlow: boolean;
   size: string;
+  substackLocation?: string;
+  quantityPerPackage?: number;
   material: MaterialDto;
   route: RouteDto;
   pallets?: PalletInPartDto[];
