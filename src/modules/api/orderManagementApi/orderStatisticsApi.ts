@@ -28,6 +28,7 @@ export interface OrderPackageDetail {
   packageCode: string;
   packageName: string;
   quantity: number;
+  completedPackagesCount: number;
   partCount: number;
   details: OrderPartDetail[];
 }

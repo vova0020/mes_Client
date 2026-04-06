@@ -85,6 +85,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                     <th>Код упаковки</th>
                     <th>Название упаковки</th>
                     <th>Количество</th>
+                    <th>Закрыто</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -99,6 +100,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                         <td>{pkg.packageName}</td>
                         <td>{pkg.quantity}</td>
                         <td>
+                          <span className={styles.closedQuantity}>
+                            {pkg.completedPackagesCount || 0} / {pkg.quantity}
+                          </span>
+                        </td>
+                        <td>
                           <span className={styles.expandIcon}>
                             {selectedPackageId === pkg.packageId ? '▼' : '▶'}
                           </span>
@@ -106,7 +112,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                       </tr>
                       {selectedPackageId === pkg.packageId && pkg.details && pkg.details.length > 0 && (
                         <tr>
-                          <td colSpan={4}>
+                          <td colSpan={5}>
                             <div className={styles.packageDetailsTable}>
                               <h5>Детали упаковки:</h5>
                               <table>

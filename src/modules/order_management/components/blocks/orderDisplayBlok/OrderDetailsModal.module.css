@@ -318,6 +318,19 @@
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
+.closedQuantity {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #e8f4fd, #d1ecf1);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .palletsSection {
   margin-bottom: 20px;
   padding: 15px;
