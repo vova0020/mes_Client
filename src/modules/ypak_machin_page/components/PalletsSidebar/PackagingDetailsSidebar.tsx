@@ -103,6 +103,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
     } else {
       // Выбираем новую деталь и загружаем её поддоны
       setSelectedDetailId(partId);
+      console.log('🔍 Загружаем поддоны для детали:', partId, 'packageId:', selectedPackageId);
       fetchPalletsByPartId(partId, { packageId: selectedPackageId || undefined });
     }
   };
@@ -550,20 +551,42 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                               </td>
                               <td>{pallet.currentCell?.cellCode || '-'}</td>
                               <td className={styles.actionsCell}>
-                                {pallet.assignedToPackage && pallet.status === 'AWAITING_PACKAGING' ? (
-                                  <span className={styles.statusBadge}>
-                                    Ожидает упаковки
-                                  </span>
-                                ) : (
-                                  <button
-                                    className={`${styles.actionButton} ${styles.moveToPackagingButton}`}
-                                    onClick={() => handleMoveToPackaging(pallet.palletId)}
-                                    disabled={movingPalletId === pallet.palletId}
-                                    title="Переместить на упаковку"
-                                  >
-                                    {movingPalletId === pallet.palletId ? 'Перемещение...' : 'Переместить на упаковку'}
-                                  </button>
-                                )}
+                                {(() => {
+                                  console.log(`🔍 Поддон ${pallet.palletId}:`, {
+                                    status: pallet.status,
+                                    readyForPackaging: pallet.readyForPackaging,
+                                    assignedToPackage: pallet.assignedToPackage
+                                  });
+                                  
+                                  if (pallet.status === 'AWAITING_PACKAGING') {
+                                    return (
+                                      <span className={styles.statusBadge}>
+                                        Ожидает упаковки
+                                      </span>
+                                    );
+                                  } else if (!pallet.readyForPackaging) {
+                                    return (
+                                      <button
+                                        className={`${styles.actionButton} ${styles.moveToPackagingButton}`}
+                                        disabled
+                                        title="Поддон еще проходит производственные этапы"
+                                      >
+                                        В производстве
+                                      </button>
+                                    );
+                                  } else {
+                                    return (
+                                      <button
+                                        className={`${styles.actionButton} ${styles.moveToPackagingButton}`}
+                                        onClick={() => handleMoveToPackaging(pallet.palletId)}
+                                        disabled={movingPalletId === pallet.palletId}
+                                        title="Переместить на упаковку"
+                                      >
+                                        {movingPalletId === pallet.palletId ? 'Перемещение...' : 'Переместить на упаковку'}
+                                      </button>
+                                    );
+                                  }
+                                })()}
                               </td>
                             </tr>
                           ))}

@@ -97,6 +97,12 @@ const usePallets = () => {
 
     try {
       const response = await palletsApi.getPalletsByPartId(partId, params);
+      console.log('📦 Получены поддоны:', response.pallets.map(p => ({
+        id: p.palletId,
+        name: p.palletName,
+        readyForPackaging: p.readyForPackaging,
+        status: p.status
+      })));
       updatePalletsSmartly(response);
     } catch (err: any) {
       console.error(`Ошибка при получении поддонов для детали ${partId}:`, err);

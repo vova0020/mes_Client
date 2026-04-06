@@ -471,6 +471,7 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                           <th>Размер</th>
                           <th>Общее кол-во</th>
                           <th>Подстопное место</th>
+                          <th>Кол-во на упаковку</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -490,12 +491,13 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                               <td>{part.material.materialName}</td>
                               <td>{part.size}</td>
                               <td>{part.totalQuantity}</td>
-                              <td>-</td>
+                              <td>{part.substackLocation || '-'}</td>
+                              <td>{part.quantityPerPackage || '-'}</td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                            <td colSpan={7} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
                               {selectedPackageId ? 'Нет деталей в данной упаковке' : 'Выберите упаковку для просмотра деталей'}
                             </td>
                           </tr>
@@ -556,10 +558,18 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                               </td>
                               <td>{pallet.currentCell?.cellCode || '-'}</td>
                               <td className={styles.actionsCell}>
-                                {pallet.assignedToPackage && pallet.status === 'AWAITING_PACKAGING' ? (
+                                {pallet.status === 'AWAITING_PACKAGING' ? (
                                   <span className={styles.statusBadge}>
                                     Ожидает упаковки
                                   </span>
+                                ) : !pallet.readyForPackaging ? (
+                                  <button
+                                    className={`${styles.actionButton} ${styles.moveToPackagingButton}`}
+                                    disabled
+                                    title="Поддон еще проходит производственные этапы"
+                                  >
+                                    В производстве
+                                  </button>
                                 ) : (
                                   <button
                                     className={`${styles.actionButton} ${styles.moveToPackagingButton}`}

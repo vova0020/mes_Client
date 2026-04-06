@@ -38,6 +38,7 @@ export interface PalletDto {
   quantity: number;
   status: string;
   assignedToPackage: boolean;
+  readyForPackaging: boolean;
   currentCell?: CellDto;
   placedAt?: Date;
   machineAssignments: MachineAssignmentDto[];
