@@ -274,7 +274,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setNextStepInfo(null);
 
       const pallet = pallets.find(p => p.id === palletId);
-      const stageId = selectedStageId || pallet?.currentStepId || machine?.stages?.[0]?.id;
+      const stageId = selectedStageId || pallet?.currentStepId;
       
       if (!stageId) {
         setErrorMessage('Не удалось определить этап для обработки');
@@ -315,7 +315,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       setNextStepInfo(null);
 
       const pallet = pallets.find(p => p.id === palletId);
-      const stageId = selectedStageId || pallet?.currentStepId || machine?.stages?.[0]?.id;
+      const stageId = selectedStageId || pallet?.currentStepId;
       
       if (!stageId) {
         setErrorMessage('Не удалось определить этап для завершения');
