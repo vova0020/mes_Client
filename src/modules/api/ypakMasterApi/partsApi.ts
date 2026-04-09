@@ -27,6 +27,8 @@ export interface PalletInPartDto {
 }
 
 export interface PartDto {
+  totalOnPallets: number;
+  availableForPackaging: number;
   partId: number;
   partCode: string;
   partName: string;
