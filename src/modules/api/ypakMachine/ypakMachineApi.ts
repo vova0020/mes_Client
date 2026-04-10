@@ -87,8 +87,9 @@ export const getMachineTask = async (): Promise<YpakMachineDetails> => {
   const machineId = getMachineIdFromStorage();
   
   if (machineId === null) {
-    console.error('Не удалось получить ID станка из localStorage');
-    throw new Error('Не удалось получить ID станка из localStorage');
+    const errorMsg = 'Не удалось получить ID станка из localStorage. Пожалуйста, авторизуйтесь заново.';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
   
   try {
@@ -103,9 +104,10 @@ export const getMachineTask = async (): Promise<YpakMachineDetails> => {
     };
     
     return machineDetails;
-  } catch (error) {
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.message || error?.message || 'Ошибка при получении данных о задачах станка упаковки';
     console.error('Ошибка при получении данных о задачах станка упаковки:', error);
-    throw error;
+    throw new Error(errorMsg);
   }
 };
 

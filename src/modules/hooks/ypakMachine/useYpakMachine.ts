@@ -67,16 +67,18 @@ export const useYpakMachine = (): UseYpakMachineResult => {
   // Функция для загрузки данных о задачах станка упаковки
   const fetchMachineDetails = useCallback(async (): Promise<void> => {
     try {
+      console.log('[useYpakMachine] Начало загрузки данных...');
       setLoading('loading');
       setError(null);
 
       const data = await getMachineTask();
+      console.log('[useYpakMachine] Данные успешно загружены:', data);
       setMachineDetails(data);
       setLoading('success');
     } catch (err) {
+      console.error('[useYpakMachine] Ошибка при загрузке данных:', err);
       setLoading('error');
       setError(err instanceof Error ? err : new Error('Неизвестная ошибка при загрузке данных'));
-      console.error('Ошибка при загрузке данных о станке упаковки:', err);
     }
   }, []);
 

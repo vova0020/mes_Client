@@ -486,8 +486,8 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                               <td>{part.material.materialName}</td>
                               <td>{part.size}</td>
                               <td>{part.totalQuantity}</td>
-                              <td>{part.totalOnPallets || 0}</td>
-                              <td>{part.availableForPackaging || 0}</td>
+                              <td>{part.totalOnPallets ?? '-'}</td>
+                              <td>{part.availableForPackaging ?? '-'}</td>
                               <td>{part.substackLocation || '-'}</td>
                               <td>{part.quantityPerPackage || '-'}</td>
                             </tr>

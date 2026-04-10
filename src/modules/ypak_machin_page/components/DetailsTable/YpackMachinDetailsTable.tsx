@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import styles from './DetailsTable.module.css';
 import { useYpakMachine } from '../../../hooks/ypakMachine/useYpakMachine';
 import { YpakTask } from '../../../api/ypakMachine/ypakMachineApi';
@@ -7,26 +7,23 @@ import PackagingDetailsSidebar from '../PalletsSidebar/PackagingDetailsSidebar';
 import { SearchAndSort, SortableHeader, SortConfig } from '../../../../components/SearchAndSort';
 
 const DetailsTable: React.FC = () => {
-  // Состояние для поиска и сортировки
+  // ВСЕ ХУКИ В НАЧАЛЕ КОМПОНЕНТА
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'priority', direction: 'asc' });
-  
-  // Состояние для отслеживания активной задачи
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
-  
-  // Состояние для анимации (показывать/скрывать детали)
   const [showDetails, setShowDetails] = useState(false);
-  
- // Состояние для боковой панели с поддонами
-   const [sidebarOpen, setSidebarOpen] = useState(false);
-   const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
-  
-  // Состояние для модального окна частичного завершения
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedDetailForPallets, setSelectedDetailForPallets] = useState<number | null>(null);
   const [showPartialModal, setShowPartialModal] = useState(false);
   const [partialCompleteTaskId, setPartialCompleteTaskId] = useState<number | null>(null);
   const [packagedCount, setPackagedCount] = useState<number>(0);
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [processingTaskId, setProcessingTaskId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
-  // Используем хук для получения данных о задачах
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const { 
     machineDetails, 
     tasks, 
@@ -39,292 +36,9 @@ const DetailsTable: React.FC = () => {
     partiallyCompleteOperation,
     getPackingScheme
   } = useYpakMachine();
-  
-  // Состояние для уведомлений
-  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
-  
-  // Ref для контейнера таблицы
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Состояние для обработки действий
-  const [processingTaskId, setProcessingTaskId] = useState<number | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const filteredTasks = useMemo(() => tasks.filter(task => task.status !== 'COMPLETED'), [tasks]);
 
-  // Показываем детали с анимацией после загрузки
-  useEffect(() => {
-    if (loading === 'success' && tasks.length > 0) {
-      // Небольшая задержка перед показом дет��лей для более заметной анимации
-      const timer = setTimeout(() => {
-        setShowDetails(true);
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [loading, tasks]);
-
-  // Очищаем сообщения через 3 секунды
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  useEffect(() => {
-    if (actionError) {
-      const timer = setTimeout(() => {
-        setActionError(null);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [actionError]);
-
-  // Обработчик клика по строке таблицы с возможностью сброса выбора
-  const handleRowClick = (taskId: number) => {
-    // Если нажали на уже выбранную строку, сбрасываем выбор
-    if (activeTaskId === taskId) {
-      setActiveTaskId(null);
-      // setIsSidebarOpen(false);
-    } else {
-      // Иначе выбираем новую строку
-      setActiveTaskId(taskId);
-    }
-  };
-
-  // Обработчик клика по кнопке "Схема уклад��и"
-  const handlePackingSchemeClick = async (e: React.MouseEvent, packageId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
-    
-    try {
-      setProcessingTaskId(packageId);
-      const schemeUrl = await getPackingScheme(packageId);
-      
-      // Открываем схему укладки в новом окне
-      window.open(schemeUrl, '_blank');
-    } catch (error) {
-      setActionError(`Ошибка при загрузке схемы укладки: ${(error as Error).message}`);
-    } finally {
-      setProcessingTaskId(null);
-    }
-  };
-
-  // Обработчик клика по кнопке-стрелке
-    const handleArrowClick = (e: React.MouseEvent, packageId: number) => {
-      e.stopPropagation(); // Предотвращаем всплытие события
-      setSelectedDetailForPallets(packageId);
-      setSidebarOpen(true);
-    };
-  
-    // Обработчик закрытия боковой панели
-    const handleCloseSidebar = () => {
-      setSidebarOpen(false);
-    };
-
-  // Обработчик для кнопки "Отправить на мониторы"
-  const handleSendToMonitors = async (e: React.MouseEvent, taskId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
-    
-    try {
-      setProcessingTaskId(taskId);
-      setActionError(null);
-      
-      await sendToMonitors(taskId);
-      setSuccessMessage('Задача успешно отправлена на мониторы');
-    } catch (error) {
-      setActionError(`Ошибка при отправке на мониторы: ${(error as Error).message}`);
-    } finally {
-      setProcessingTaskId(null);
-    }
-  };
-
-  // Обработчик для кнопки "В работу"
-  const handleStartOperation = async (e: React.MouseEvent, taskId: number) => {
-    e.stopPropagation(); // Предотвращаем всплытие события
-    
-    try {
-      setProcessingTaskId(taskId);
-      setActionError(null);
-      
-      await updatePackingTaskStatus(taskId, 'IN_PROGRESS');
-      setSuccessMessage('Задача успешно переведена в работу');
-      // Перезагружаем данные для обновления статуса
-      refetch();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при переводе в работу';
-      setActionError(errorMessage);
-    } finally {
-      setProcessingTaskId(null);
-    }
-  };
-
-  // Обработчик для кнопки "Готово"
-  const handleCompleteOperation = async (e: React.MouseEvent, taskId: number) => {
-    e.stopPropagation();
-    
-    try {
-      setProcessingTaskId(taskId);
-      setActionError(null);
-      
-      const task = tasks.find(t => t.taskId === taskId);
-      const remainingQuantity = task?.remainingQuantity || 0;
-      
-      await updatePackingTaskStatus(taskId, 'COMPLETED', remainingQuantity);
-      setSuccessMessage('Задача успешно завершена');
-      refetch();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при завершении задачи';
-      setActionError(errorMessage);
-    } finally {
-      setProcessingTaskId(null);
-    }
-  };
-
-  const handleOpenPartialModal = (e: React.MouseEvent, task: YpakTask) => {
-    e.stopPropagation();
-    
-    setPartialCompleteTaskId(task.taskId);
-    const maxQuantity = task.availableToComplete || 0;
-    setPackagedCount(Math.min(10, maxQuantity));
-    setShowPartialModal(true);
-  };
-
-  // Закрытие модального окна
-  const handleClosePartialModal = () => {
-    setShowPartialModal(false);
-    setPartialCompleteTaskId(null);
-    setPackagedCount(0);
-  };
-
-  useEffect(() => {
-    if (showPartialModal && partialCompleteTaskId) {
-      const task = tasks.find(t => t.taskId === partialCompleteTaskId);
-      if (task) {
-        const maxQuantity = task.availableToComplete || 0;
-        setPackagedCount(Math.min(10, maxQuantity));
-      }
-    }
-  }, [showPartialModal, partialCompleteTaskId, tasks]);
-
-  // Обработчик для подтверждения частичного завершения
-  const handleConfirmPartialComplete = async () => {
-    if (partialCompleteTaskId === null) return;
-    
-    try {
-      setProcessingTaskId(partialCompleteTaskId);
-      setActionError(null);
-      
-      await updatePackingTaskStatus(partialCompleteTaskId, 'IN_PROGRESS', packagedCount);
-      setSuccessMessage('Задача частично завершена');
-      handleClosePartialModal();
-      // Перезагружаем данные для обновления статуса
-      refetch();
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при частичном завершении';
-      setActionError(errorMessage);
-    } finally {
-      setProcessingTaskId(null);
-    }
-  };
-
-  // Функция для получения класса стиля в зависимости от статуса операции
-  const getStatusClass = (status: string): string => {
-    switch (status) {
-      case 'PENDING': return styles.statusOnMachine;
-      case 'IN_PROGRESS': return styles.statusInProgress;
-      case 'COMPLETED': return styles.statusCompleted;
-      case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
-      default: return '';
-    }
-  };
-
-  // Функция для получения текста статуса
-  const getStatusText = (status: string): string => {
-    switch (status) {
-      case 'PENDING': return 'Ожидает';
-      case 'IN_PROGRESS': return 'В работе';
-      case 'COMPLETED': return 'Завершено';
-      case 'PARTIALLY_COMPLETED': return 'Завершено частично';
-      default: return status;
-    }
-  };
-
-  // Функция для форматирования даты
-  const formatDate = (dateString: string | null): string => {
-    if (!dateString) return '-';
-    
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return '-';
-    }
-  };
-
-  // Отображаем сообщение о загрузке
-  if (loading === 'loading' || loading === 'idle') {
-    return (
-      <div className={styles.detailsContainer}>
-        <h2 className={styles.title}>Информация об упаковке</h2>
-        <div className={styles.stateContainer}>
-          <div className={styles.loadingSpinner}></div>
-          <div className={styles.loadingMessage}>
-            <h3>Загрузка данных</h3>
-            <p>Пожалуйста, подождите...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Отображаем сообщение об ошибке
-  if (error) {
-    console.error("Ошибка в компоненте DetailsTable:", error);
-    return (
-      <div className={styles.detailsContainer}>
-        <h2 className={styles.title}>Информация об упаковке</h2>
-        <div className={styles.stateContainer}>
-          <div className={styles.errorIcon}>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" stroke="currentColor" strokeWidth="2" />
-              <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="12" cy="16" r="1" fill="currentColor" />
-            </svg>
-          </div>
-          <div className={styles.errorMessage}>
-            <h3>Не удалось загрузить данные</h3>
-            <p>Произошла ошибка при получении данных с сервера</p>
-            <button onClick={() => refetch()} className={styles.retryButton}>
-              Попробовать снова
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Фильтруем задачи, исключая завершенные
-  const filteredTasks = tasks.filter(task => task.status !== 'COMPLETED');
-
-  // Обработчик сортировки
-  const handleSort = (field: string) => {
-    setSortConfig(prev => ({
-      field,
-      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-
-  // Фильтрация и сортировка задач
   const filteredAndSortedTasks = useMemo(() => {
     let result = filteredTasks.filter(task => {
       const searchText = `${task.productionPackage.order.batchNumber} ${task.productionPackage.order.orderName} ${task.productionPackage.packageCode} ${task.productionPackage.packageName}`.toLowerCase();
@@ -359,7 +73,253 @@ const DetailsTable: React.FC = () => {
     return result;
   }, [filteredTasks, searchTerm, sortConfig]);
 
-  // Если нет задач для отображения
+  useEffect(() => {
+    if (loading === 'success' && tasks.length > 0) {
+      const timer = setTimeout(() => {
+        setShowDetails(true);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, tasks]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (actionError) {
+      const timer = setTimeout(() => {
+        setActionError(null);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [actionError]);
+
+  useEffect(() => {
+    if (showPartialModal && partialCompleteTaskId) {
+      const task = tasks.find(t => t.taskId === partialCompleteTaskId);
+      if (task) {
+        const maxQuantity = task.availableToComplete || 0;
+        setPackagedCount(Math.min(10, maxQuantity));
+      }
+    }
+  }, [showPartialModal, partialCompleteTaskId, tasks]);
+
+  const handleRowClick = useCallback((taskId: number) => {
+    if (activeTaskId === taskId) {
+      setActiveTaskId(null);
+    } else {
+      setActiveTaskId(taskId);
+    }
+  }, [activeTaskId]);
+
+  const handlePackingSchemeClick = useCallback(async (e: React.MouseEvent, packageId: number) => {
+    e.stopPropagation();
+    
+    try {
+      setProcessingTaskId(packageId);
+      const schemeUrl = await getPackingScheme(packageId);
+      window.open(schemeUrl, '_blank');
+    } catch (error) {
+      setActionError(`Ошибка при загрузке схемы укладки: ${(error as Error).message}`);
+    } finally {
+      setProcessingTaskId(null);
+    }
+  }, [getPackingScheme]);
+
+  const handleArrowClick = useCallback((e: React.MouseEvent, packageId: number) => {
+    e.stopPropagation();
+    setSelectedDetailForPallets(packageId);
+    setSidebarOpen(true);
+  }, []);
+
+  const handleCloseSidebar = useCallback(() => {
+    setSidebarOpen(false);
+  }, []);
+
+  const handleSendToMonitors = useCallback(async (e: React.MouseEvent, taskId: number) => {
+    e.stopPropagation();
+    
+    try {
+      setProcessingTaskId(taskId);
+      setActionError(null);
+      
+      await sendToMonitors(taskId);
+      setSuccessMessage('Задача успешно отправлена на мониторы');
+    } catch (error) {
+      setActionError(`Ошибка при отправке на мониторы: ${(error as Error).message}`);
+    } finally {
+      setProcessingTaskId(null);
+    }
+  }, [sendToMonitors]);
+
+  const handleStartOperation = useCallback(async (e: React.MouseEvent, taskId: number) => {
+    e.stopPropagation();
+    
+    try {
+      setProcessingTaskId(taskId);
+      setActionError(null);
+      
+      await updatePackingTaskStatus(taskId, 'IN_PROGRESS');
+      setSuccessMessage('Задача успешно переведена в работу');
+      refetch();
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при переводе в работу';
+      setActionError(errorMessage);
+    } finally {
+      setProcessingTaskId(null);
+    }
+  }, [refetch]);
+
+  const handleCompleteOperation = useCallback(async (e: React.MouseEvent, taskId: number) => {
+    e.stopPropagation();
+    
+    try {
+      setProcessingTaskId(taskId);
+      setActionError(null);
+      
+      const task = tasks.find(t => t.taskId === taskId);
+      const remainingQuantity = task?.remainingQuantity || 0;
+      
+      await updatePackingTaskStatus(taskId, 'COMPLETED', remainingQuantity);
+      setSuccessMessage('Задача успешно завершена');
+      refetch();
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при завершении задачи';
+      setActionError(errorMessage);
+    } finally {
+      setProcessingTaskId(null);
+    }
+  }, [tasks, refetch]);
+
+  const handleOpenPartialModal = useCallback((e: React.MouseEvent, task: YpakTask) => {
+    e.stopPropagation();
+    
+    setPartialCompleteTaskId(task.taskId);
+    const maxQuantity = task.availableToComplete || 0;
+    setPackagedCount(Math.min(10, maxQuantity));
+    setShowPartialModal(true);
+  }, []);
+
+  const handleClosePartialModal = useCallback(() => {
+    setShowPartialModal(false);
+    setPartialCompleteTaskId(null);
+    setPackagedCount(0);
+  }, []);
+
+  const handleConfirmPartialComplete = useCallback(async () => {
+    if (partialCompleteTaskId === null) return;
+    
+    try {
+      setProcessingTaskId(partialCompleteTaskId);
+      setActionError(null);
+      
+      await updatePackingTaskStatus(partialCompleteTaskId, 'IN_PROGRESS', packagedCount);
+      setSuccessMessage('Задача частично завершена');
+      handleClosePartialModal();
+      refetch();
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при частичном завершении';
+      setActionError(errorMessage);
+    } finally {
+      setProcessingTaskId(null);
+    }
+  }, [partialCompleteTaskId, packagedCount, handleClosePartialModal, refetch]);
+
+  const handleSort = useCallback((field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  }, []);
+
+  const getStatusClass = (status: string): string => {
+    switch (status) {
+      case 'PENDING': return styles.statusOnMachine;
+      case 'IN_PROGRESS': return styles.statusInProgress;
+      case 'COMPLETED': return styles.statusCompleted;
+      case 'PARTIALLY_COMPLETED': return styles.statusPartiallyCompleted;
+      default: return '';
+    }
+  };
+
+  const getStatusText = (status: string): string => {
+    switch (status) {
+      case 'PENDING': return 'Ожидает';
+      case 'IN_PROGRESS': return 'В работе';
+      case 'COMPLETED': return 'Завершено';
+      case 'PARTIALLY_COMPLETED': return 'Завершено частично';
+      default: return status;
+    }
+  };
+
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return '-';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return '-';
+    }
+  };
+
+  // УСЛОВНЫЕ ВОЗВРАТЫ ПОСЛЕ ВСЕХ ХУКОВ
+  if (loading === 'loading' || loading === 'idle') {
+    console.log('[DetailsTable] Состояние загрузки:', loading);
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>Информация об упаковке</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <div className={styles.loadingMessage}>
+            <h3>Загрузка данных</h3>
+            <p>Пожалуйста, подождите...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("[DetailsTable] Ошибка в компоненте DetailsTable:", error);
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>Информация об упаковке</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.errorIcon}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" stroke="currentColor" strokeWidth="2" />
+              <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="16" r="1" fill="currentColor" />
+            </svg>
+          </div>
+          <div className={styles.errorMessage}>
+            <h3>Не удалось загрузить данные</h3>
+            <p>Произошла ошибка при получении данных с сервера</p>
+            <button onClick={() => refetch()} className={styles.retryButton}>
+              Попробовать снова
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (filteredTasks.length === 0) {
     return (
       <div className={styles.detailsContainer}>
@@ -381,12 +341,10 @@ const DetailsTable: React.FC = () => {
     );
   }
 
-  // Если есть задачи для отображения
   return (
     <div className={styles.detailsContainer} ref={containerRef}>
       <h2 className={styles.title}>Информация об упаковке</h2>
 
-      {/* Сообщения об успехе или ошибке */}
       {successMessage && (
         <div className={styles.successMessage}>
           <span className={styles.successIcon}>✓</span>
@@ -444,7 +402,6 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={styles.schemeButton}
                     onClick={(e) => handlePackingSchemeClick(e, task.packageId)}
-                    // disabled={processingTaskId === task.packageId}
                     disabled= {true}
                   >
                     Схема укладки
@@ -470,7 +427,6 @@ const DetailsTable: React.FC = () => {
                   <button 
                     className={`${styles.actionButton} ${styles.monitorButton}`}
                     onClick={(e) => handleSendToMonitors(e, task.taskId)}
-                    // disabled={processingTaskId === task.taskId || task.status === 'COMPLETED'}
                     disabled= {true}
                     title="Отправить на мониторы"
                   >
@@ -506,7 +462,7 @@ const DetailsTable: React.FC = () => {
                     className={styles.arrowButton}
                     onClick={(e) => handleArrowClick(e, task.packageId)}
                   >
-                    &#10095; {/* Символ стрелки вправо */}
+                    &#10095;
                   </button>
                 </td>
               </tr>
@@ -515,7 +471,6 @@ const DetailsTable: React.FC = () => {
         </table>
       </div>
 
-      {/* Модальное окно для частичного завершения */}
       {showPartialModal && (
         <div className={styles.modalOverlay} onClick={handleClosePartialModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -524,7 +479,6 @@ const DetailsTable: React.FC = () => {
               <button className={styles.modalCloseBtn} onClick={handleClosePartialModal}>×</button>
             </div>
             <div className={styles.modalBody}>
-              {/* Находим текущую задачу */}
               {partialCompleteTaskId && (() => {
                 const task = tasks.find(t => t.taskId === partialCompleteTaskId);
                 if (task) {
@@ -660,7 +614,6 @@ const DetailsTable: React.FC = () => {
         </div>
       )}
       
-      {/* Боковая панель поддонов */}
      <PackagingDetailsSidebar 
         isOpen={sidebarOpen} 
         onClose={handleCloseSidebar}
