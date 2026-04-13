@@ -39,25 +39,21 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   onConfirm
 }) => {
   const [quantity, setQuantity] = useState<string>('');
-  const maxQuantity = (taskItem?.assignedQuantity || 0) - (taskItem?.completedQuantity || 0);
+  const maxQuantity = taskItem?.availableToComplete || 0;
   
-  // Сбрасываем количество при открытии модального окна
   useEffect(() => {
     if (isOpen && taskItem) {
-      setQuantity(Math.min(10, maxQuantity).toString()); // По умолчанию 10 или меньше, если доступно меньше
+      setQuantity(Math.min(10, maxQuantity).toString());
     }
   }, [isOpen, taskItem, maxQuantity]);
   
-  // Обработчик изменения количества
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Разрешаем пустое поле или числа в допустимом диапазоне
     if (value === '' || (/^\d+$/.test(value) && parseInt(value, 10) <= maxQuantity)) {
       setQuantity(value);
     }
   };
   
-  // Обработчик подтверждения
   const handleConfirm = () => {
     const numQuantity = parseInt(quantity, 10);
     if (taskItem && !isNaN(numQuantity) && numQuantity > 0 && numQuantity <= maxQuantity) {
@@ -68,12 +64,12 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
   
   if (!isOpen || !taskItem) return null;
   
-  return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalContent}>
+  return createPortal(
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h3>Частичная обработка детали</h3>
-          <button className={styles.modalCloseButton}  onClick={onClose}>&times;</button>
+          <button className={styles.modalCloseButton} onClick={onClose}>&times;</button>
         </div>
         
         <div className={styles.modalBody}>
@@ -98,9 +94,43 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
           </div>
           
           <div className={styles.modalInfoRow}>
-            <span className={styles.modalLabel}>Осталось выполнить:</span>
-            <span className={styles.modalValue}>{(taskItem.assignedQuantity || 0) - (taskItem.completedQuantity || 0)} шт.</span>
+            <span className={styles.modalLabel}>Назначено станку:</span>
+            <span className={styles.modalValue}>{taskItem.assignedQuantity} шт.</span>
           </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Выполнено:</span>
+            <span className={styles.modalValue}>{taskItem.completedQuantity} шт.</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Осталось выполнить:</span>
+            <span className={styles.modalValue}>{taskItem.remainingQuantity} шт.</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel}>Скомплектовано:</span>
+            <span className={styles.modalValue}>{taskItem.assembledQuantity} шт.</span>
+          </div>
+          
+          <div className={styles.modalInfoRow}>
+            <span className={styles.modalLabel} style={{ fontWeight: 'bold', color: '#2196F3' }}>Доступно для выполнения:</span>
+            <span className={styles.modalValue} style={{ fontWeight: 'bold', color: '#2196F3' }}>{maxQuantity} шт.</span>
+          </div>
+          
+          {taskItem.assembledQuantity < taskItem.remainingQuantity && (
+            <div style={{ 
+              padding: '8px 12px', 
+              backgroundColor: '#fff3cd', 
+              border: '1px solid #ffc107', 
+              borderRadius: '4px', 
+              marginTop: '8px',
+              fontSize: '13px',
+              color: '#856404'
+            }}>
+              ⚠️ Не все упаковки скомплектованы. Вы можете выполнить только {maxQuantity} из {taskItem.remainingQuantity} шт.
+            </div>
+          )}
           
           <div className={styles.quantityInputContainer}>
             <label className={styles.quantityLabel} htmlFor="partial-quantity">
@@ -152,7 +182,8 @@ const PartialProcessingModal: React.FC<PartialProcessingModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -180,9 +211,9 @@ const PriorityModal: React.FC<PriorityModalProps> = ({
   
   if (!isOpen || !taskItem) return null;
   
-  return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalContent}>
+  return createPortal(
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h3>Редактирование приоритета</h3>
           <button className={styles.modalCloseButton} onClick={onClose}>&times;</button>
@@ -254,7 +285,8 @@ const PriorityModal: React.FC<PriorityModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -622,9 +654,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                               onClick={() => handleStartWork(item.taskId)}
                               disabled={
                                 mapApiStatusToUiStatus(item.status) === 'processing' || 
-                                mapApiStatusToUiStatus(item.status) === 'completed'
+                                mapApiStatusToUiStatus(item.status) === 'completed' ||
+                                item.availableToComplete === 0
                               }
-                              title="В работу"
+                              title={item.availableToComplete === 0 ? 'Нет скомплектованных упаковок' : 'В работу'}
                             >
                               В работу
                             </button>
@@ -632,8 +665,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             <button 
                               className={`${styles.actionButton} ${styles.completedButton}`}
                               onClick={() => handleCompleteWork(item.taskId)}
-                              disabled={mapApiStatusToUiStatus(item.status) !== 'processing'}
-                              title="Готово"
+                              disabled={mapApiStatusToUiStatus(item.status) !== 'processing' || item.availableToComplete === 0}
+                              title={item.availableToComplete === 0 ? 'Нет скомплектованных упаковок' : 'Готово'}
                             >
                               Готово
                             </button>
@@ -641,8 +674,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             <button 
                               className={`${styles.actionButton} ${styles.partialButton}`}
                               onClick={() => handlePartialProcessing(item.taskId)}
-                              disabled={mapApiStatusToUiStatus(item.status) !== 'processing'}
-                              title="Частично"
+                              disabled={mapApiStatusToUiStatus(item.status) !== 'processing' || item.availableToComplete === 0}
+                              title={item.availableToComplete === 0 ? 'Нет скомплектованных упаковок' : 'Частично'}
                             >
                               Частично
                             </button>
