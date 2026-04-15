@@ -379,6 +379,8 @@ const DetailsTable: React.FC = () => {
               <SortableHeader field="productionPackage.packageName" label="Название упаковки" sortConfig={sortConfig} onSort={handleSort} />
               <th>Тех. информация</th>
               <SortableHeader field="assignedQuantity" label="Назначено / Выполнено" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="assembledQuantity" label="Скомплектовано" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableHeader field="availableToComplete" label="Доступно" sortConfig={sortConfig} onSort={handleSort} />
               <th>Статус</th>
               <th>Действия</th>
               <th></th>
@@ -416,6 +418,20 @@ const DetailsTable: React.FC = () => {
                     </span>
                     <span style={{ fontSize: '10px', color: '#666' }}>
                       ост.: {task.remainingQuantity}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: task.assembledQuantity >= task.remainingQuantity ? '#4caf50' : '#ff9800' }}>
+                      {task.assembledQuantity} шт.
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: task.availableToComplete > 0 ? '#2196f3' : '#f44336' }}>
+                      {task.availableToComplete} шт.
                     </span>
                   </div>
                 </td>
