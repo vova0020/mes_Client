@@ -37,7 +37,9 @@ const DetailsTable: React.FC = () => {
     getPackingScheme
   } = useYpakMachine();
 
-  const filteredTasks = useMemo(() => tasks.filter(task => task.status !== 'COMPLETED'), [tasks]);
+  const filteredTasks = useMemo(() => tasks.filter(task => 
+    task.status !== 'COMPLETED' && task.completedQuantity < task.assignedQuantity
+  ), [tasks]);
 
   const filteredAndSortedTasks = useMemo(() => {
     let result = filteredTasks.filter(task => {

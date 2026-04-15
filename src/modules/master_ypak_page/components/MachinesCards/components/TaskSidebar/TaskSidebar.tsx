@@ -556,9 +556,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     alert('Экспорт данных в Excel...');
   };
   
-  // Функция сортировки заданий по приоритету
+  // Функция сортировки заданий по приоритету с фильтрацией полностью выполненных
   const sortedTasks = React.useMemo(() => {
-    return [...machineTasks].sort((a, b) => {
+    // Фильтруем полностью выполненные задания
+    const activeTasks = machineTasks.filter(task => 
+      task.status !== 'COMPLETED' && task.completedQuantity < task.assignedQuantity
+    );
+    
+    return [...activeTasks].sort((a, b) => {
       const priorityA = a.priority && a.priority > 0 ? a.priority : null;
       const priorityB = b.priority && b.priority > 0 ? b.priority : null;
       
