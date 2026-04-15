@@ -34,6 +34,8 @@ export interface MachineTask {
   remainingQuantity: number;
   assembledQuantity: number;
   availableToComplete: number;
+  defectedQuantity: number;
+  returnedQuantity: number;
   machine: {
     machineId: number;
     machineName: string;

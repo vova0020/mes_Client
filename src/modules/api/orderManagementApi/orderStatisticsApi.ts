@@ -60,6 +60,8 @@ export interface OrderPartDetail {
   partName: string;
   quantityPerPackage: number;
   totalQuantity: number;
+  totalDefected: number;
+  totalReturned: number;
 }
 
 export interface OrderPart {
@@ -67,6 +69,8 @@ export interface OrderPart {
   partCode: string;
   partName: string;
   totalQuantity: number;
+  totalDefected: number;
+  totalReturned: number;
   packages: string[];
   stages: OrderPartStage[];
   pallets: OrderPallet[];

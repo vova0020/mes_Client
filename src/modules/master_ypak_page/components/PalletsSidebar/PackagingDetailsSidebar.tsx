@@ -472,6 +472,16 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                           <th>Общее кол-во</th>
                           <th>На поддонах</th>
                           <th>Доступно</th>
+                          <th 
+                            title="Отбраковано / Возвращено" 
+                            style={{ 
+                              cursor: 'help',
+                              textAlign: 'center',
+                              minWidth: '80px'
+                            }}
+                          >
+                           Отбраковано / Возвращено
+                          </th>
                           <th>Подстопное место</th>
                           <th>Кол-во на упаковку</th>
                         </tr>
@@ -495,13 +505,46 @@ const PackagingDetailsSidebar: React.FC<PackagingDetailsSidebarProps> = ({
                               <td>{part.totalQuantity}</td>
                               <td>{part.totalOnPallets || 0}</td>
                               <td>{part.availableForPackaging || 0}</td>
+                              <td 
+                                style={{ 
+                                  textAlign: 'center',
+                                  padding: '8px',
+                                  minWidth: '80px'
+                                }}
+                                title={`Отбраковано: ${part.totalDefected || 0}, Возвращено: ${part.totalReturned || 0}`}
+                              >
+                                <div style={{
+                                  display: 'inline-block',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: 'bold',
+                                  backgroundColor: part.totalDefected === 0 
+                                    ? 'rgba(76, 175, 80, 0.1)' 
+                                    : part.totalDefected === part.totalReturned 
+                                    ? 'rgba(33, 150, 243, 0.1)' 
+                                    : 'rgba(255, 152, 0, 0.1)',
+                                  color: part.totalDefected === 0 
+                                    ? '#4caf50' 
+                                    : part.totalDefected === part.totalReturned 
+                                    ? '#2196f3' 
+                                    : '#ff9800',
+                                  border: `1px solid ${part.totalDefected === 0 
+                                    ? '#4caf50' 
+                                    : part.totalDefected === part.totalReturned 
+                                    ? '#2196f3' 
+                                    : '#ff9800'}`
+                                }}>
+                                  {part.totalDefected || 0} / {part.totalReturned || 0}
+                                </div>
+                              </td>
                               <td>{part.substackLocation || '-'}</td>
                               <td>{part.quantityPerPackage || '-'}</td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={9} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                            <td colSpan={10} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
                               {selectedPackageId ? 'Нет деталей в данной упаковке' : 'Выберите упаковку для просмотра деталей'}
                             </td>
                           </tr>

@@ -122,6 +122,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                                     <th>Деталь</th>
                                     <th>Количество на упаковку</th>
                                     <th>Общее количество</th>
+                                    <th title="Отбраковано / Возвращено" style={{ cursor: 'help', textAlign: 'center' }}>⚠️</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -131,6 +132,32 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                                       <td>{detail.partName}</td>
                                       <td>{detail.quantityPerPackage}</td>
                                       <td>{detail.totalQuantity}</td>
+                                      <td style={{ textAlign: 'center', padding: '8px' }}>
+                                        <div style={{
+                                          display: 'inline-block',
+                                          padding: '4px 8px',
+                                          borderRadius: '4px',
+                                          fontSize: '11px',
+                                          fontWeight: 'bold',
+                                          backgroundColor: (detail.totalDefected || 0) === 0 
+                                            ? 'rgba(76, 175, 80, 0.1)' 
+                                            : (detail.totalDefected || 0) === (detail.totalReturned || 0) 
+                                            ? 'rgba(33, 150, 243, 0.1)' 
+                                            : 'rgba(255, 152, 0, 0.1)',
+                                          color: (detail.totalDefected || 0) === 0 
+                                            ? '#4caf50' 
+                                            : (detail.totalDefected || 0) === (detail.totalReturned || 0) 
+                                            ? '#2196f3' 
+                                            : '#ff9800',
+                                          border: `1px solid ${(detail.totalDefected || 0) === 0 
+                                            ? '#4caf50' 
+                                            : (detail.totalDefected || 0) === (detail.totalReturned || 0) 
+                                            ? '#2196f3' 
+                                            : '#ff9800'}`
+                                        }}>
+                                          {detail.totalDefected || 0} / {detail.totalReturned || 0}
+                                        </div>
+                                      </td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -155,6 +182,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                     <th>Код</th>
                     <th>Название</th>
                     <th>Количество</th>
+                    <th title="Отбраковано / Возвращено" style={{ cursor: 'help', textAlign: 'center' }}>⚠️</th>
                     {allStages.map(stage => (
                       <th key={stage}>{stage}</th>
                     ))}
@@ -171,6 +199,32 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                         <td>{part.partCode}</td>
                         <td>{part.partName}</td>
                         <td>{part.totalQuantity}</td>
+                        <td style={{ textAlign: 'center', padding: '8px' }}>
+                          <div style={{
+                            display: 'inline-block',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            backgroundColor: (part.totalDefected || 0) === 0 
+                              ? 'rgba(76, 175, 80, 0.1)' 
+                              : (part.totalDefected || 0) === (part.totalReturned || 0) 
+                              ? 'rgba(33, 150, 243, 0.1)' 
+                              : 'rgba(255, 152, 0, 0.1)',
+                            color: (part.totalDefected || 0) === 0 
+                              ? '#4caf50' 
+                              : (part.totalDefected || 0) === (part.totalReturned || 0) 
+                              ? '#2196f3' 
+                              : '#ff9800',
+                            border: `1px solid ${(part.totalDefected || 0) === 0 
+                              ? '#4caf50' 
+                              : (part.totalDefected || 0) === (part.totalReturned || 0) 
+                              ? '#2196f3' 
+                              : '#ff9800'}`
+                          }}>
+                            {part.totalDefected || 0} / {part.totalReturned || 0}
+                          </div>
+                        </td>
                         {allStages.map(stageName => {
                           const stage = part.stages.find(s => s.stageName === stageName);
                           return (
@@ -201,7 +255,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                       
                       {expandedDetail === part.partId && (
                         <tr>
-                          <td colSpan={allStages.length + 3}>
+                          <td colSpan={allStages.length + 4}>
                             <div className={styles.palletsTable}>
                               <h5>Поддоны:</h5>
                               {part.pallets && part.pallets.length > 0 ? (

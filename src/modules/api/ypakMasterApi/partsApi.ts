@@ -40,6 +40,8 @@ export interface PartDto {
   size: string;
   substackLocation?: string;
   quantityPerPackage?: number;
+  totalDefected: number;
+  totalReturned: number;
   material: MaterialDto;
   route: RouteDto;
   pallets?: PalletInPartDto[];
