@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Alert, CircularProgress, InputAdornment, Chip } from '@mui/material';
 import { Edit, CheckCircle, Assignment, MonetizationOn, Visibility, ExpandMore, ExpandLess, Delete, Schedule, Search, Clear } from '@mui/icons-material';
 import styles from './OrderCreation.module.css';
@@ -26,6 +26,7 @@ interface OrderFormData {
     packageCode: string;
     packageName: string;
     quantity: number;
+    detailsCount?: number;
   }>;
 }
 
@@ -72,6 +73,68 @@ const getStatusClass = (status: OrderStatus): string => {
 interface Props {
   onBack?: () => void;
 }
+
+// Мемоизированный компонент строки упаковки
+const PackageRow = React.memo<{
+  pkg: {
+    packageId: number;
+    packageCode: string;
+    packageName: string;
+    quantity: number;
+    detailsCount?: number;
+  };
+  onToggle: (packageId: number, checked: boolean) => void;
+  onQuantityChange: (packageId: number, quantity: number) => void;
+}>(({ pkg, onToggle, onQuantityChange }) => {
+  const hasDetails = (pkg.detailsCount || 0) > 0;
+  
+  return (
+    <tr 
+      className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
+      style={{ opacity: hasDetails ? 1 : 0.5 }}
+    >
+      <td className={styles.checkboxCell}>
+        <Checkbox
+          checked={pkg.quantity > 0}
+          onChange={(e) => onToggle(pkg.packageId, e.target.checked)}
+          size="small"
+          disabled={!hasDetails}
+        />
+      </td>
+      <td className={styles.articleCell}>
+        <span className={styles.articleBadge}>{pkg.packageCode}</span>
+        {!hasDetails && (
+          <span style={{ marginLeft: '4px', fontSize: '10px', color: '#ff9800' }} title="Упаковка не содержит деталей">
+            ⚠️
+          </span>
+        )}
+      </td>
+      <td className={styles.nameCell}>
+        <span className={styles.packageName}>{pkg.packageName}</span>
+      </td>
+      <td className={styles.quantityCell}>
+        <input
+          type="number"
+          value={pkg.quantity || ''}
+          onChange={(e) => {
+            const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+            if (!isNaN(value)) {
+              onQuantityChange(pkg.packageId, value);
+            }
+          }}
+          className={styles.quantityInput}
+          min="0"
+          placeholder="0"
+          disabled={!hasDetails}
+        />
+      </td>
+    </tr>
+  );
+}, (prevProps, nextProps) => {
+  // Перерисовываем только если изменилось количество или ID
+  return prevProps.pkg.packageId === nextProps.pkg.packageId &&
+         prevProps.pkg.quantity === nextProps.pkg.quantity;
+});
 
 const OrderCreation: React.FC<Props> = ({ onBack }) => {
   // Хуки для работы с API
@@ -128,7 +191,8 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
           packageId: pkg.packageId,
           packageCode: pkg.packageCode,
           packageName: pkg.packageName,
-          quantity: 0
+          quantity: 0,
+          detailsCount: pkg.detailsCount
         }))
       }));
     }
@@ -144,7 +208,8 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
         packageId: pkg.packageId,
         packageCode: pkg.packageCode,
         packageName: pkg.packageName,
-        quantity: 0
+        quantity: 0,
+        detailsCount: pkg.detailsCount
       }))
     });
     setPackageSearchQuery('');
@@ -155,13 +220,14 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
     try {
       const selectedPackages: CreatePackageDto[] = orderForm.packages
         .filter(pkg => pkg.quantity > 0)
+        .filter(pkg => (pkg.detailsCount || 0) > 0)
         .map(pkg => ({
           packageDirectoryId: pkg.packageId,
           quantity: pkg.quantity
         }));
 
       if (selectedPackages.length === 0) {
-        alert('Выберите хотя бы одну упаковку для заказа');
+        alert('Выберите хотя бы одну упаковку с деталями для заказа');
         return;
       }
 
@@ -195,7 +261,16 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
       });
     } catch (error) {
       console.error('Ошибка при создании заказа:', error);
-      alert('Ошибка при создании заказа. Проверьте данные и попробуйте снова.');
+      
+      // Детальное логирование ошибки
+      if (error.response) {
+        const errorMessage = error.response.data?.message || error.response.data?.error || 'Неизвестная ошибка';
+        alert(`Ошибка при создании заказа: ${errorMessage}`);
+      } else if (error.request) {
+        alert('Ошибка: Сервер не отвечает. Проверьте подключение.');
+      } else {
+        alert(`Ошибка при создании заказа: ${error.message}`);
+      }
     }
   };
 
@@ -211,18 +286,23 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
     // Загружаем данные заказа в форму
     const formPackages = availablePackages.map(pkg => {
       const orderPackage = order.packages?.find(op => op.packageId === pkg.packageId);
+      const hasDetails = (pkg.detailsCount || 0) > 0;
+      
+      // Если упаковка без деталей - обнуляем количество, даже если оно было в заказе
+      const quantity = hasDetails && orderPackage ? orderPackage.quantity : 0;
+      
       return {
         packageId: pkg.packageId,
         packageCode: pkg.packageCode,
         packageName: pkg.packageName,
-        quantity: orderPackage ? orderPackage.quantity : 0
+        quantity: quantity,
+        detailsCount: pkg.detailsCount
       };
     });
-    
     setOrderForm({
       batchNumber: order.batchNumber,
       orderName: order.orderName,
-      requiredDate: order.requiredDate.split('T')[0], // Преобразуем ISO дату в формат для input[type="date"]
+      requiredDate: order.requiredDate.split('T')[0],
       packages: formPackages
     });
     setPackageSearchQuery('');
@@ -254,13 +334,14 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
     try {
       const selectedPackages: CreatePackageDto[] = orderForm.packages
         .filter(pkg => pkg.quantity > 0)
+        .filter(pkg => (pkg.detailsCount || 0) > 0)
         .map(pkg => ({
           packageDirectoryId: pkg.packageId,
           quantity: pkg.quantity
         }));
 
       if (selectedPackages.length === 0) {
-        alert('Выберите хотя бы одну упаковку для заказа');
+        alert('Выберите хотя бы одну упаковку с деталями для заказа');
         return;
       }
 
@@ -281,7 +362,16 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
       setEditingOrder(null);
     } catch (error) {
       console.error('Ошибка при обновлении заказа:', error);
-      alert('Ошибка при обновлении заказа. Попробуйте снова.');
+      
+      // Детальное логирование ошибки
+      if (error.response) {
+        const errorMessage = error.response.data?.message || error.response.data?.error || 'Неизвестная ошибка';
+        alert(`Ошибка при обновлении заказа: ${errorMessage}`);
+      } else if (error.request) {
+        alert('Ошибка: Сервер не отвечает. Проверьте подключение.');
+      } else {
+        alert(`Ошибка при обновлении заказа: ${error.message}`);
+      }
     }
   };
 
@@ -295,24 +385,24 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
     }
   };
 
-  // Обработчики для упаковок
-  const handlePackageQuantityChange = (packageId: number, quantity: number) => {
-    setOrderForm({
-      ...orderForm,
-      packages: orderForm.packages.map(pkg => 
+  // Обработчики для упаковок (оптимизированные)
+  const handlePackageQuantityChange = useCallback((packageId: number, quantity: number) => {
+    setOrderForm(prev => ({
+      ...prev,
+      packages: prev.packages.map(pkg => 
         pkg.packageId === packageId ? { ...pkg, quantity: quantity || 0 } : pkg
       )
-    });
-  };
+    }));
+  }, []);
 
-  const handlePackageToggle = (packageId: number, checked: boolean) => {
-    setOrderForm({
-      ...orderForm,
-      packages: orderForm.packages.map(pkg => 
+  const handlePackageToggle = useCallback((packageId: number, checked: boolean) => {
+    setOrderForm(prev => ({
+      ...prev,
+      packages: prev.packages.map(pkg => 
         pkg.packageId === packageId ? { ...pkg, quantity: checked ? 1 : 0 } : pkg
       )
-    });
-  };
+    }));
+  }, []);
 
   // Обработчики для просмотра состава заказа
   const handleOrderComposition = (orderId: number) => {
@@ -359,6 +449,26 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
       }
     }
   };
+
+  // Debounced обработчик для поиска упаковок
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(packageSearchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [packageSearchQuery]);
+
+  // Мемоизация отфильтрованных упаковок для диалогов
+  const filteredPackages = useMemo(() => {
+    const result = orderForm.packages.filter(pkg => 
+      !debouncedSearchQuery.trim() ||
+      pkg.packageCode.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      pkg.packageName.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+    );
+    return result;
+  }, [orderForm.packages, debouncedSearchQuery]);
 
   // Фильтрация заказов по статусу и поиску
   const filteredOrders = useMemo(() => {
@@ -678,6 +788,9 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                 </Alert>
               ) : (
                 <>
+                  <Alert severity="info" style={{ marginBottom: '1rem' }}>
+                    ⚠️ Упаковки без деталей отмечены значком ⚠️ и недоступны для выбора. Добавьте детали в упаковку в справочнике.
+                  </Alert>
                   <TextField
                     placeholder="Поиск упаковок..."
                     value={packageSearchQuery}
@@ -703,9 +816,12 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                       )
                     }}
                   />
-                  <div className={styles.packagesList}>
+                  <div className={styles.packagesList} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <div style={{ marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
+                      Показано: {filteredPackages.length} из {orderForm.packages.length} упаковок
+                    </div>
                     <table className={styles.packageTable}>
-                      <thead>
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1 }}>
                         <tr>
                           <th className={styles.checkboxCell}>Выбор</th>
                           <th className={styles.articleCell}>Артикул</th>
@@ -714,53 +830,13 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {orderForm.packages
-                          .filter(pkg => 
-                            !packageSearchQuery.trim() ||
-                            pkg.packageCode.toLowerCase().includes(packageSearchQuery.toLowerCase()) ||
-                            pkg.packageName.toLowerCase().includes(packageSearchQuery.toLowerCase())
-                          )
-                          .map((pkg) => (
-                          <tr 
-                            key={pkg.packageId} 
-                            className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
-                          >
-                            <td className={styles.checkboxCell}>
-                              <Checkbox
-                                checked={pkg.quantity > 0}
-                                onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
-                                size="small"
-                              />
-                            </td>
-                            <td className={styles.articleCell}>
-                              <span className={styles.articleBadge}>{pkg.packageCode}</span>
-                            </td>
-                            <td className={styles.nameCell}>
-                              <span className={styles.packageName}>{pkg.packageName}</span>
-                            </td>
-                            <td className={styles.quantityCell}>
-                              <input
-                                type="number"
-                                value={pkg.quantity || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value === '' ? '' : parseInt(e.target.value);
-                                  if (value === '') {
-                                    handlePackageQuantityChange(pkg.packageId, 0);
-                                  } else if (!isNaN(value)) {
-                                    handlePackageQuantityChange(pkg.packageId, value);
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  if (pkg.quantity === 0 || pkg.quantity === null) {
-                                    handlePackageQuantityChange(pkg.packageId, 1);
-                                  }
-                                }}
-                                className={styles.quantityInput}
-                                min="1"
-                                placeholder="0"
-                              />
-                            </td>
-                          </tr>
+                        {filteredPackages.map((pkg) => (
+                          <PackageRow
+                            key={pkg.packageId}
+                            pkg={pkg}
+                            onToggle={handlePackageToggle}
+                            onQuantityChange={handlePackageQuantityChange}
+                          />
                         ))}
                       </tbody>
                     </table>
@@ -903,6 +979,9 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
               {/* Форма для изменения упаковок */}
               {editingOrder?.status !== OrderStatus.IN_PROGRESS && (
                 <>
+                  <Alert severity="info" style={{ marginBottom: '1rem' }}>
+                    ⚠️ Упаковки без деталей отмечены значком ⚠️ и недоступны для выбора.
+                  </Alert>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '1rem 0 0.5rem 0' }}>
                     <h5 style={{ margin: 0, color: '#666' }}>Изменить состав упаковок:</h5>
                     <button 
@@ -973,9 +1052,12 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                           )
                         }}
                       />
-                      <div className={styles.packagesList}>
+                      <div className={styles.packagesList} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        <div style={{ marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
+                          Показано: {filteredPackages.length} из {orderForm.packages.length} упаковок
+                        </div>
                         <table className={styles.packageTable}>
-                          <thead>
+                          <thead style={{ position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1 }}>
                             <tr>
                               <th className={styles.checkboxCell}>Выбор</th>
                               <th className={styles.articleCell}>Артикул</th>
@@ -984,53 +1066,13 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                             </tr>
                           </thead>
                           <tbody>
-                            {orderForm.packages
-                              .filter(pkg => 
-                                !packageSearchQuery.trim() ||
-                                pkg.packageCode.toLowerCase().includes(packageSearchQuery.toLowerCase()) ||
-                                pkg.packageName.toLowerCase().includes(packageSearchQuery.toLowerCase())
-                              )
-                              .map((pkg) => (
-                              <tr 
-                                key={pkg.packageId} 
-                                className={`${styles.packageRow} ${pkg.quantity > 0 ? styles.selectedPackageRow : ''}`}
-                              >
-                                <td className={styles.checkboxCell}>
-                                  <Checkbox
-                                    checked={pkg.quantity > 0}
-                                    onChange={(e) => handlePackageToggle(pkg.packageId, e.target.checked)}
-                                    size="small"
-                                  />
-                                </td>
-                                <td className={styles.articleCell}>
-                                  <span className={styles.articleBadge}>{pkg.packageCode}</span>
-                                </td>
-                                <td className={styles.nameCell}>
-                                  <span className={styles.packageName}>{pkg.packageName}</span>
-                                </td>
-                                <td className={styles.quantityCell}>
-                                  <input
-                                    type="number"
-                                    value={pkg.quantity || ''}
-                                    onChange={(e) => {
-                                      const value = e.target.value === '' ? '' : parseInt(e.target.value);
-                                      if (value === '') {
-                                        handlePackageQuantityChange(pkg.packageId, 0);
-                                      } else if (!isNaN(value)) {
-                                        handlePackageQuantityChange(pkg.packageId, value);
-                                      }
-                                    }}
-                                    onBlur={(e) => {
-                                      if (pkg.quantity === 0 || pkg.quantity === null) {
-                                        handlePackageQuantityChange(pkg.packageId, 1);
-                                      }
-                                    }}
-                                    className={styles.quantityInput}
-                                    min="1"
-                                    placeholder="0"
-                                  />
-                                </td>
-                              </tr>
+                            {filteredPackages.map((pkg) => (
+                              <PackageRow
+                                key={pkg.packageId}
+                                pkg={pkg}
+                                onToggle={handlePackageToggle}
+                                onQuantityChange={handlePackageQuantityChange}
+                              />
                             ))}
                           </tbody>
                         </table>
