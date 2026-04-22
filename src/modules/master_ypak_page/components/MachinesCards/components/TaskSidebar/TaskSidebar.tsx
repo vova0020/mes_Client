@@ -701,7 +701,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             <button 
                               className={`${styles.actionButton} ${styles.deleteButton}`}
                               onClick={() => handleDeleteItem(item.taskId)}
-                              title="Удалить из сменного задания"
+                              disabled={item.completedQuantity > 0}
+                              title={item.completedQuantity > 0 ? 'Нельзя удалить задание с выполненными упаковками' : 'Удалить из сменного задания'}
                             >
                               Удалить
                             </button>

@@ -280,6 +280,10 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
       alert('Нельзя редактировать заказы, которые находятся в работе');
       return;
     }
+    if (order.status === OrderStatus.LAUNCH_PERMITTED) {
+      alert('Нельзя редактировать заказы, которые разрешены к запуску');
+      return;
+    }
     
     setEditingOrder(order);
     
@@ -670,7 +674,7 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
                         <IconButton 
                           onClick={() => handleEditOrder(order)}
                           className={styles.actionButton}
-                          disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED || isUpdating}
+                          disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED || order.status === OrderStatus.LAUNCH_PERMITTED || isUpdating}
                           title="Редактировать заказ"
                         >
                           <Edit />
