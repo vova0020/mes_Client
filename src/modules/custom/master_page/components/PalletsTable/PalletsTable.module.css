@@ -1,0 +1,486 @@
+/* Используем базовые стили из MasterDetailsTable */
+.detailsContainer {
+  background: linear-gradient(to bottom, #374051, #2d3441);
+  border-radius: 8px;
+  box-sizing: border-box;
+  padding: 12px;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid #243342;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+}
+
+.title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  margin-top: 0;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.tableContainer {
+  width: 100%;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 6px;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid #e0e0e0;
+  overflow-x: auto;
+  overflow-y: auto;
+  flex-grow: 1;
+  max-height: calc(100% - 50px);
+}
+
+.createButtonContainer {
+  padding: 10px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.createButton {
+  background: linear-gradient(to bottom, #27ae60, #229954);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.createButton:hover {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.createButton:active {
+  background: linear-gradient(to bottom, #229954, #1e8449);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.palletsTable {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.palletsTable th {
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  color: #333;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.palletsTable td {
+  padding: 6px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #333;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.palletsTable tr {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  transition: all 0.2s ease;
+}
+
+.palletsTable tr:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.mlButton {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.mlButton:hover {
+  background: linear-gradient(to bottom, #3caae8, #3498db);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.arrowButton {
+  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  margin: 0 auto;
+}
+
+.arrowButton:hover {
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+  color: #333;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.emptyState {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.stateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  height: 100%;
+  min-height: 150px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.emptyIcon {
+  color: #bdc3c7;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}
+
+.emptyMessage {
+  text-align: center;
+}
+
+.emptyMessage h3 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.emptyMessage p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Модальное окно */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.modalBody {
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.partCheckbox {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.partCheckbox:hover {
+  background: #f8f9fa;
+}
+
+.partCheckbox input {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.cancelButton {
+  background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.cancelButton:hover {
+  background: linear-gradient(to bottom, #d0d0d0, #c0c0c0);
+}
+
+.createButtonModal {
+  background: linear-gradient(to bottom, #27ae60, #229954);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.createButtonModal:hover {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+}
+
+.createButtonModal:disabled {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Стили для контейнера деталей */
+.partsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+/* Стили для отдельной детали */
+.partItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.partItem:hover {
+  background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Код детали */
+.partCode {
+  font-weight: bold;
+  color: #495057;
+  margin-right: 4px;
+}
+
+/* Количество детали */
+.partQuantity {
+  color: #6c757d;
+  font-size: 10px;
+  background: rgba(108, 117, 125, 0.1);
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+/* Ячейка с действиями */
+.actionsCell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 6px !important;
+  vertical-align: middle !important;
+}
+
+/* Кнопка действия */
+.actionButton {
+  min-width: 70px;
+  max-width: 100px;
+  height: 28px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.actionButton:hover::before {
+  opacity: 1;
+}
+
+.actionButton:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Кнопка "В работе" */
+.inProgressButton {
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+  color: white;
+  border-left: 3px solid #d35400;
+}
+
+.inProgressButton:hover {
+  background: linear-gradient(to bottom, #f5b041, #f39c12);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.inProgressButton:active {
+  background: linear-gradient(to bottom, #e67e22, #f39c12);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Кнопка "Завершено" */
+.completedButton {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: white;
+  border-left: 3px solid #219653;
+}
+
+.completedButton:hover {
+  background: linear-gradient(to bottom, #40d47e, #2ecc71);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.completedButton:active {
+  background: linear-gradient(to bottom, #27ae60, #2ecc71);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}

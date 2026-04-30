@@ -1,13 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import MesPage from './modules/machineNoSmen_page/MachineNoSmen';
+import MesPage from './modules/series/machineNoSmen_page/MachineNoSmen';
 import AuthPage from './modules/auth/AuthPage';
-import MasterPage from './modules/master_page/MasterPage';
+import MasterPage from './modules/series/master_page/MasterPage';
+import CustomMasterPage from './modules/custom/master_page/CustomMasterPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingScreen from './componentsGlobal/LoadingScreen';
-import MachinePage from './modules/machine_page/MachinePage';
-import MasterYpakPage from './modules/master_ypak_page/MasterYpakPage';
-import YpakMachinePage from './modules/ypak_machin_page/YpakMachinePage';
+import MachinePage from './modules/series/machine_page/MachinePage';
+import MasterYpakPage from './modules/series/master_ypak_page/MasterYpakPage';
+import YpakMachinePage from './modules/series/ypak_machin_page/YpakMachinePage';
 import ComplectPage from './modules/complectPage/ComplectPage';
 import SettingsPage from './modules/settings_page/SettingsPage';
 import OrderManagementBlok from './modules/order_management/OrderManagementBlok';
@@ -50,6 +51,11 @@ function App() {
           {/* Защищенные маршруты для обычных мастеров (без финальных этапов) и администраторов */}
            <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} excludeFinalStage={true} />}>
             <Route path="/master" element={<MasterPage />} />
+          </Route>
+          
+          {/* Маршрут для заказного производства */}
+          <Route element={<ProtectedRoute requiredRoles={["admin", "master"]} />}>
+            <Route path="/custom-master" element={<CustomMasterPage />} />
           </Route> 
           
           {/* Маршрут для мастеров упаковки (с финальными этапами) */}
