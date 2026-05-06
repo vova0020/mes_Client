@@ -50,6 +50,9 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
   const [availableParts, setAvailableParts] = useState<Part[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<keyof Part | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedPalletId, setSelectedPalletId] = useState<number | null>(null);
   const [selectedPallet, setSelectedPallet] = useState<Pallet | null>(null);
@@ -60,6 +63,74 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
       setPallets([]);
     }
   }, [selectedOrderId]);
+
+  const handleSort = (field: keyof Part) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredParts = availableParts.filter(part => {
+    const query = searchQuery.toLowerCase();
+    return (
+      part.articleNumber.toLowerCase().includes(query) ||
+      part.name.toLowerCase().includes(query) ||
+      part.material.toLowerCase().includes(query) ||
+      part.size.toLowerCase().includes(query) ||
+      part.substage.toLowerCase().includes(query)
+    );
+  });
+
+  const sortedParts = [...filteredParts].sort((a, b) => {
+    if (!sortField) return 0;
+    
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' 
+        ? aValue - bValue
+        : bValue - aValue;
+    }
+    
+    return 0;
+  });
+
+  const handleTogglePart = (partId: number) => {
+    if (selectedParts.includes(partId)) {
+      setSelectedParts(selectedParts.filter(id => id !== partId));
+    } else {
+      setSelectedParts([...selectedParts, partId]);
+    }
+  };
+
+  const handleRowClick = (partId: number) => {
+    handleTogglePart(partId);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedParts.length === sortedParts.length) {
+      setSelectedParts([]);
+    } else {
+      setSelectedParts(sortedParts.map(p => p.id));
+    }
+  };
+
+  const isAllSelected = sortedParts.length > 0 && selectedParts.length === sortedParts.length;
+
+  const getSortIcon = (field: keyof Part) => {
+    if (sortField !== field) return ' ⇅';
+    return sortDirection === 'asc' ? ' ▲' : ' ▼';
+  };
 
   const handleCreatePallet = () => {
     if (selectedParts.length === 0) return;
@@ -178,26 +249,32 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
             className={styles.createButton}
             onClick={() => setShowCreateModal(true)}
           >
-            + Создать поддон
+            Добавить поддон
+          </button>
+          <button className={styles.redistributeButton}>
+            Распределить на существующий поддон
           </button>
         </div>
 
         {pallets.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>Поддоны не созданы. Нажмите "Создать поддон" для добавления.</p>
+            <p>Поддоны не созданы. Нажмите "Добавить поддон" для добавления.</p>
           </div>
         ) : (
           <table className={styles.palletsTable}>
             <thead>
               <tr>
-                <th>Номер поддона</th>
-                <th>Детали</th>
+                <th>Поддон</th>
                 <th>Материалы</th>
-                <th>Адрес поддона</th>
-                <th>Статус поддона</th>
-                <th>Назначить станок</th>
+                <th>Адрес</th>
+                <th>Статус</th>
+                <th>Деталей на поддоне</th>
+                <th>Готово к обработке</th>
+                <th>Выполнено</th>
                 <th>МЛ поддона</th>
-                <th>Действия</th>
+                <th>Подэтап</th>
+                <th>Назначить станок</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -214,36 +291,17 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
                       ))}
                     </div>
                   </td>
-                  <td>{pallet.materials}</td>
                   <td>{pallet.address}</td>
                   <td>{pallet.status}</td>
+                  <td>111</td>
+                  <td>50</td>
+                  <td>61</td>
+                  <td>
+                    <button className={styles.mlButton}>МЛ поддона</button>
+                  </td>
+                  <td>Правильный (15)<br/>Не очень (30)</td>
                   <td>{pallet.machine}</td>
                   <td>
-                    <button className={styles.mlButton}>МЛ</button>
-                  </td>
-                  <td className={styles.actionsCell}>
-                    {pallet.status === 'Создан' && (
-                      <button 
-                        className={`${styles.actionButton} ${styles.inProgressButton}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartWork(pallet.id);
-                        }}
-                      >
-                        Взять
-                      </button>
-                    )}
-                    {pallet.status === 'В работе' && (
-                      <button 
-                        className={`${styles.actionButton} ${styles.completedButton}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCompleteWork(pallet.id);
-                        }}
-                      >
-                        Завершить
-                      </button>
-                    )}
                     <button 
                       className={styles.arrowButton}
                       onClick={(e) => {
@@ -268,25 +326,77 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
               <h3>Создать поддон</h3>
               <button className={styles.closeButton} onClick={() => setShowCreateModal(false)}>×</button>
             </div>
-            <div className={styles.modalBody}>
-              <p>Выберите детали для поддона:</p>
-              {availableParts.map(part => (
-                <label key={part.id} className={styles.partCheckbox}>
-                  <input
-                    type="checkbox"
-                    checked={selectedParts.includes(part.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedParts([...selectedParts, part.id]);
-                      } else {
-                        setSelectedParts(selectedParts.filter(id => id !== part.id));
-                      }
-                    }}
-                  />
-                  <span>{part.articleNumber} - {part.name} ({part.quantity} шт.)</span>
-                </label>
-              ))}
+            
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Поиск по артикулу, названию, материалу, размеру, подэтапу"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
+
+            <div className={styles.modalBody}>
+              <table className={styles.partsTable}>
+                <thead>
+                  <tr>
+                    <th onClick={() => handleSort('articleNumber')} style={{ cursor: 'pointer' }}>
+                      Артикул детали{getSortIcon('articleNumber')}
+                    </th>
+                    <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
+                      Название детали{getSortIcon('name')}
+                    </th>
+                    <th onClick={() => handleSort('material')} style={{ cursor: 'pointer' }}>
+                      Материал{getSortIcon('material')}
+                    </th>
+                    <th onClick={() => handleSort('size')} style={{ cursor: 'pointer' }}>
+                      Размер{getSortIcon('size')}
+                    </th>
+                    <th onClick={() => handleSort('quantity')} style={{ cursor: 'pointer' }}>
+                      Общее количество{getSortIcon('quantity')}
+                    </th>
+                    <th onClick={() => handleSort('substage')} style={{ cursor: 'pointer' }}>
+                      Подэтап{getSortIcon('substage')}
+                    </th>
+                    <th>
+                      <input
+                        type="checkbox"
+                        className={styles.partCheckbox}
+                        checked={isAllSelected}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedParts.map(part => (
+                    <tr 
+                      key={part.id}
+                      className={selectedParts.includes(part.id) ? styles.selected : ''}
+                      onClick={() => handleRowClick(part.id)}
+                    >
+                      <td>{part.articleNumber}</td>
+                      <td>{part.name}</td>
+                      <td>{part.material}</td>
+                      <td>{part.size}</td>
+                      <td>{part.quantity}</td>
+                      <td>{part.substage}</td>
+                      <td>
+                        <input
+                          type="checkbox"
+                          className={styles.partCheckbox}
+                          checked={selectedParts.includes(part.id)}
+                          onChange={() => handleTogglePart(part.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
             <div className={styles.modalFooter}>
               <button className={styles.cancelButton} onClick={() => setShowCreateModal(false)}>
                 Отмена

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from './MachinesCards.module.css';
+import ShiftTaskModal from '../ShiftTaskModal/ShiftTaskModal';
 
 interface Machine {
   id: number;
@@ -18,6 +19,18 @@ const MOCK_MACHINES: Machine[] = [
 
 const MachinesCards: React.FC = () => {
   const [machines] = useState<Machine[]>(MOCK_MACHINES);
+  const [selectedMachineId, setSelectedMachineId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenTask = (machineId: number) => {
+    setSelectedMachineId(machineId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMachineId(null);
+  };
 
   const getStatusClass = (status: string): string => {
     switch (status.toLowerCase()) {
@@ -122,11 +135,28 @@ const MachinesCards: React.FC = () => {
                 {machine.status.toLowerCase() === 'inactive' && renderInactiveOverlay()}
                 {machine.status.toLowerCase() === 'maintenance' && renderMaintenanceOverlay()}
                 {machine.status.toLowerCase() === 'broken' && renderBrokenOverlay()}
+
+                <div className={styles.buttonContainer}>
+                  <button 
+                    className={styles.openTaskButton}
+                    onClick={() => handleOpenTask(machine.id)}
+                  >
+                    Открыть сменное задание
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {selectedMachineId && (
+        <ShiftTaskModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          machineId={selectedMachineId}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,270 @@
+/* Модальное окно сменного задания */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
+  border-radius: 12px;
+  width: 95%;
+  max-width: 1400px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 2px solid #d0d0d0;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 2px solid #d0d0d0;
+  background: linear-gradient(to bottom, #374051, #2d3441);
+  border-radius: 10px 10px 0 0;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.modalBody {
+  padding: 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+  background: #ffffff;
+}
+
+/* Уровень 1: Заказы */
+.orderRow {
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.orderHeader:hover {
+  background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+}
+
+.orderInfo {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  flex: 1;
+}
+
+.orderTitle {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.orderDetail {
+  font-size: 13px;
+  color: #666;
+}
+
+.expandIcon {
+  font-size: 18px;
+  color: #666;
+  transition: transform 0.3s ease;
+}
+
+.expandIcon.expanded {
+  transform: rotate(90deg);
+}
+
+/* Уровень 2: Поддоны */
+.palletsContainer {
+  padding: 10px 16px;
+  background: #fff;
+}
+
+.palletRow {
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.palletHeader {
+  display: grid;
+  grid-template-columns: 150px 1fr 120px 150px 120px 120px 120px;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  align-items: center;
+}
+
+.palletHeader:hover {
+  background: linear-gradient(to bottom, #f0f7ff, #e5f1ff);
+}
+
+.palletCell {
+  font-size: 12px;
+  color: #333;
+}
+
+.palletCell.bold {
+  font-weight: bold;
+}
+
+.materials {
+  font-size: 11px;
+  color: #666;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.statusInProgress {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+}
+
+.actionButton {
+  background: linear-gradient(to bottom, #27ae60, #229954);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.actionButton:hover {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  transform: translateY(-1px);
+}
+
+.deleteButton {
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+}
+
+.deleteButton:hover {
+  background: linear-gradient(to bottom, #e95e4f, #e74c3c);
+}
+
+/* Уровень 3: Детали */
+.partsContainer {
+  padding: 10px 12px 10px 30px;
+  background: #f8f9fa;
+}
+
+.partsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.partsTable th {
+  background: linear-gradient(to bottom, #f5f5f5, #e5e5e5);
+  color: #333;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+  font-size: 11px;
+}
+
+.partsTable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e8e8e8;
+  color: #333;
+  text-align: center;
+}
+
+.partsTable tr:hover {
+  background: #f0f7ff;
+}
+
+.startButton {
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.startButton:hover {
+  background: linear-gradient(to bottom, #f5b041, #f39c12);
+}
+
+.completeButton {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+}
+
+.completeButton:hover {
+  background: linear-gradient(to bottom, #40d47e, #2ecc71);
+}
