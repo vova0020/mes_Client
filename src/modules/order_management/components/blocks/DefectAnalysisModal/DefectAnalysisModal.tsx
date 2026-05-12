@@ -637,7 +637,7 @@ const DefectAnalysisModal: React.FC<DefectAnalysisModalProps> = ({ onClose }) =>
                                     {formatDate(record.startedAt)} {formatTime(record.startedAt)}
                                   </span>
                                   <span className={styles.prodDateEnd}>
-                                    → {formatTime(record.completedAt)}
+                                    → {formatDate(record.completedAt)} {formatTime(record.completedAt)}
                                   </span>
                                 </div>
                               </td>
