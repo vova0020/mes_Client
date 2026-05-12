@@ -9,7 +9,7 @@ import { ReactComponent as History } from '../../../../assets/orderManager/histo
 import { ReactComponent as OrderManagement } from '../../../../assets/orderManager/orderManagement.svg';
 import { ReactComponent as Reclamats } from '../../../../assets/orderManager/reclamats.svg';
 
-import DefectAnalysisModal from '../blocks/DefectAnalysisModal';
+import DefectAnalysisModal from '../blocks/DefectAnalysisModal/index';
 
 import { Button, Tooltip } from '@mui/material';
 

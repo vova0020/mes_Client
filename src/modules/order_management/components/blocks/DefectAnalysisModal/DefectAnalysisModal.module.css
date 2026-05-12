@@ -24,6 +24,8 @@
   border-left: 1px solid #243342;
   transform: translateX(100%);
   transition: transform 0.4s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .modalContent.slideIn {
@@ -40,6 +42,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .modalHeader h3 {
@@ -69,9 +72,48 @@
   transform: scale(1.05);
 }
 
+/* ── Вкладки ── */
+.tabsBar {
+  display: flex;
+  gap: 0;
+  background: #1a202c;
+  border-bottom: 2px solid #4a5568;
+  flex-shrink: 0;
+  position: sticky;
+  top: 77px;
+  z-index: 9;
+}
+
+.tab {
+  padding: 14px 28px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #a0aec0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: -2px;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabActive {
+  color: #63b3ed;
+  border-bottom-color: #63b3ed;
+  background: rgba(99, 179, 237, 0.08);
+}
+
+/* ── Тело модального окна ── */
 .modalBody {
   padding: 20px;
   color: #ffffff;
+  flex: 1;
 }
 
 /* Секция фильтров */
@@ -637,11 +679,11 @@
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .defectTable {
     font-size: 11px;
   }
-  
+
   .defectTable th,
   .defectTable td {
     padding: 8px 6px;
@@ -655,6 +697,11 @@
 
   .modalHeader h3 {
     font-size: 16px;
+  }
+
+  .tab {
+    padding: 12px 16px;
+    font-size: 13px;
   }
 
   .filtersGrid {
@@ -689,6 +736,135 @@
   }
 }
 
+/* ── Таблица учёта выпуска продукции ── */
+.prodTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.prodTable thead {
+  background: #d7d7d7;
+}
+
+.prodTable th {
+  padding: 12px 10px;
+  text-align: left;
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 12px;
+  border-bottom: 2px solid #cbd5e0;
+  white-space: nowrap;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thProdDate     { width: 130px; }
+.thProdMachine  { width: 150px; }
+.thProdOrder    { width: 170px; }
+.thProdPart     { width: 160px; }
+.thProdMaterial { width: 130px; }
+.thProdPallet   { width: 130px; }
+.thProdQty      { width: 75px; text-align: center; }
+.thProdDuration { width: 75px; text-align: center; }
+.thProdOperator { width: 110px; }
+
+.prodTable tbody tr {
+  background: #faf8f8;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.prodTable tbody tr:nth-child(even) {
+  background: #f7fafc;
+}
+
+.prodTable tbody tr:hover {
+  background: #edf2f7;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.prodTable td {
+  padding: 10px;
+  color: #2d3748;
+  font-size: 12px;
+  vertical-align: top;
+  overflow: hidden;
+}
+
+.tdProdDate,
+.tdProdMachine,
+.tdProdOrder,
+.tdProdPart,
+.tdProdMaterial,
+.tdProdPallet,
+.tdProdOperator {
+  vertical-align: top;
+}
+
+.tdProdQty,
+.tdProdDuration {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.prodDateStart {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2d3748;
+  line-height: 1.4;
+}
+
+.prodDateEnd {
+  display: block;
+  font-size: 10px;
+  color: #718096;
+  line-height: 1.4;
+}
+
+/* Ячейка количества: бейдж сверху, единица снизу */
+.prodQtyCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.prodQtyBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #68d391, #48bb78);
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
+  min-width: 40px;
+  text-align: center;
+}
+
+.prodUnit {
+  font-size: 10px;
+  color: #718096;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.durationBadge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(99, 179, 237, 0.15);
+  color: #2b6cb0;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(99, 179, 237, 0.3);
+}
+
 @media screen and (max-width: 480px) {
   .modalBody {
     padding: 12px;
@@ -702,5 +878,10 @@
 
   .statValue {
     font-size: 24px;
+  }
+
+  .tab {
+    padding: 10px 12px;
+    font-size: 12px;
   }
 }

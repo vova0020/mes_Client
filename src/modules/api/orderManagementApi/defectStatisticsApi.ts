@@ -74,25 +74,38 @@ export interface DefectFilterParams {
   endDate?: string;
   orderId?: number;
   materialId?: number;
-  color?: string;
-  workerId?: number;
+  machineId?: number;
   stageId?: number;
 }
 
-// Интерфейс для опций фильтров
-export interface FilterOption {
-  id: number;
-  name: string;
-}
-
-export interface MaterialFilterOption extends FilterOption {
-  sku: string;
-}
-
+// Интерфейсы для опций фильтров (соответствуют ответу GET /statistics/filter-options)
 export interface OrderFilterOption {
-  id: number;
-  name: string;
+  orderId: number;
   batchNumber: string;
+  orderName: string;
+}
+
+export interface MaterialFilterOption {
+  materialId: number;
+  materialName: string;
+  article: string;
+}
+
+export interface MachineFilterOption {
+  machineId: number;
+  machineName: string;
+}
+
+export interface StageFilterOption {
+  stageId: number;
+  stageName: string;
+}
+
+export interface FilterOptions {
+  orders: OrderFilterOption[];
+  materials: MaterialFilterOption[];
+  machines: MachineFilterOption[];
+  stages: StageFilterOption[];
 }
 
 // Функция для получения детальной информации по браку с фильтрацией
@@ -106,8 +119,7 @@ export const getDefectStatistics = async (
     if (params.endDate) queryParams.append('endDate', params.endDate);
     if (params.orderId) queryParams.append('orderId', params.orderId.toString());
     if (params.materialId) queryParams.append('materialId', params.materialId.toString());
-    if (params.color) queryParams.append('color', params.color);
-    if (params.workerId) queryParams.append('workerId', params.workerId.toString());
+    if (params.machineId) queryParams.append('machineId', params.machineId.toString());
     if (params.stageId) queryParams.append('stageId', params.stageId.toString());
 
     const response = await axios.get<DefectDetail[]>(
@@ -121,67 +133,81 @@ export const getDefectStatistics = async (
   }
 };
 
-// Функция для получения списка заказов для фильтра
-export const getOrdersForFilter = async (): Promise<OrderFilterOption[]> => {
+// Функция для получения всех опций фильтров одним запросом
+export const getFilterOptions = async (): Promise<FilterOptions> => {
   try {
-    const response = await axios.get<OrderFilterOption[]>(
-      `${API_URL}/order-management/orders/list`
+    const response = await axios.get<FilterOptions>(
+      `${API_URL}/statistics/filter-options`
     );
     return response.data;
   } catch (error) {
-    console.error('Ошибка при получении списка заказов:', error);
-    return [];
+    console.error('Ошибка при получении опций фильтров:', error);
+    throw error;
   }
 };
 
-// Функция для получения списка материалов для фильтра
-export const getMaterialsForFilter = async (): Promise<MaterialFilterOption[]> => {
-  try {
-    const response = await axios.get<MaterialFilterOption[]>(
-      `${API_URL}/materials/list`
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка при получении списка материалов:', error);
-    return [];
-  }
-};
+// ─── Учёт выпуска продукции ──────────────────────────────────────────────────
 
-// Функция для получения списка работников для фильтра
-export const getWorkersForFilter = async (): Promise<FilterOption[]> => {
-  try {
-    const response = await axios.get<FilterOption[]>(
-      `${API_URL}/users/workers`
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка при получении списка работников:', error);
-    return [];
-  }
-};
+// Информация об упаковке/заказе в записи выпуска
+export interface ProductionPackageInfo {
+  packageId: number;
+  packageCode: string;
+  packageName: string;
+  orderId: number;
+  orderBatchNumber: string;
+  orderName: string;
+}
 
-// Функция для получения списка этапов производства для фильтра
-export const getStagesForFilter = async (): Promise<FilterOption[]> => {
-  try {
-    const response = await axios.get<FilterOption[]>(
-      `${API_URL}/stages/list`
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка при получении списка этапов:', error);
-    return [];
-  }
-};
+// Одна запись журнала выпуска (операция на станке)
+export interface MachineProductionRecord {
+  operationId: number;
+  machineId: number;
+  machineName: string;
+  machineLoadUnit: string;
+  partId: number;
+  partCode: string;
+  partName: string;
+  partSize: string;
+  materialId: number | null;
+  materialName: string | null;
+  materialSku: string | null;
+  palletId: number;
+  palletName: string;
+  routeStageId: number;
+  stageId: number;
+  stageName: string;
+  quantityProcessed: number;
+  startedAt: string;
+  completedAt: string;
+  durationSeconds: number;
+  operatorId: number | null;
+  operatorName: string | null;
+  packages: ProductionPackageInfo[];
+}
 
-// Функция для получения уникальных цветов материалов
-export const getColorsForFilter = async (): Promise<string[]> => {
+// Параметры фильтрации учёта выпуска
+export interface MachineProductionFilterParams {
+  startDate?: string;
+  endDate?: string;
+  machineId?: number;
+}
+
+// Функция для получения журнала выпуска продукции
+export const getMachineProduction = async (
+  params: MachineProductionFilterParams
+): Promise<MachineProductionRecord[]> => {
   try {
-    const response = await axios.get<string[]>(
-      `${API_URL}/materials/colors`
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.machineId) queryParams.append('machineId', params.machineId.toString());
+
+    const response = await axios.get<MachineProductionRecord[]>(
+      `${API_URL}/statistics/machine-production?${queryParams.toString()}`
     );
     return response.data;
   } catch (error) {
-    console.error('Ошибка при получении списка цветов:', error);
-    return [];
+    console.error('Ошибка при получении данных о выпуске продукции:', error);
+    throw error;
   }
 };
