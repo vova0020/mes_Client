@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
 
 import { ReactComponent as Statistik } from '../../../../assets/orderManager/statistik.svg';
@@ -9,6 +9,7 @@ import { ReactComponent as History } from '../../../../assets/orderManager/histo
 import { ReactComponent as OrderManagement } from '../../../../assets/orderManager/orderManagement.svg';
 import { ReactComponent as Reclamats } from '../../../../assets/orderManager/reclamats.svg';
 
+import DefectAnalysisModal from '../blocks/DefectAnalysisModal';
 
 import { Button, Tooltip } from '@mui/material';
 
@@ -27,9 +28,21 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => {
+  const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+
   // Функция для определения класса активной кнопки
   const getButtonClass = (section: SettingSection) => {
     return activeSection === section ? `${styles.icon} ${styles.activeIcon}` : styles.icon;
+  };
+
+  // Обработчик открытия модального окна анализа брака
+  const handleOpenDefectModal = () => {
+    setIsDefectModalOpen(true);
+  };
+
+  // Обработчик закрытия модального окна анализа брака
+  const handleCloseDefectModal = () => {
+    setIsDefectModalOpen(false);
   };
 
   return (
@@ -54,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
           </Button>
         </Tooltip>
         <Tooltip title="История обработки" placement="right">
-          <Button >
+          <Button onClick={handleOpenDefectModal}>
             <History  />
           </Button>
         </Tooltip>
@@ -84,6 +97,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
 
      
       </div>
+
+      {/* Модальное окно анализа брака */}
+      {isDefectModalOpen && (
+        <DefectAnalysisModal onClose={handleCloseDefectModal} />
+      )}
     </div>
   );
 };

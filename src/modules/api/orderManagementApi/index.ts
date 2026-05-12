@@ -2,6 +2,10 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// Экспорт функций для работы со статистикой брака
+export * from './defectStatisticsApi';
+export * from './orderStatisticsApi';
+
 // Типы данных
 export type OrderStatus = 
   | 'PRELIMINARY' 
@@ -150,6 +154,27 @@ class OrderManagementApi {
   // Функция для завершения заказа
   async completeOrder(orderId: number): Promise<StatusUpdateResponse> {
     return this.updateOrderStatus(orderId, 'COMPLETED');
+  }
+
+  // Функция для принудительного закрытия заказа
+  async forceCompleteOrder(orderId: number): Promise<{ orderId: number; status: OrderStatus; isCompleted: boolean; completedAt: string }> {
+    try {
+      const response = await axios.patch<{ orderId: number; status: OrderStatus; isCompleted: boolean; completedAt: string }>(
+        `${API_URL}/order-statistics/${orderId}/force-complete`
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          throw new Error('Заказ не найден');
+        }
+        if (error.response?.status === 400) {
+          throw new Error(error.response.data?.message || 'Недопустимая операция принудительного закрытия');
+        }
+      }
+      console.error('Ошибка при принудительном закрытии заказа:', error);
+      throw error;
+    }
   }
 
   // Функция для отложения заказа

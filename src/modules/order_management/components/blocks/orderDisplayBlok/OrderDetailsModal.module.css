@@ -23,20 +23,73 @@
   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
   border-left: 1px solid #243342;
   transform: translateX(100%);
-  transition: transform 0.4s ease;
+  transition: all 0.4s ease;
+  position: relative;
+  cursor: pointer;
 }
 
 .modalContent.slideIn {
   transform: translateX(0);
 }
 
+.modalContentActive {
+  box-shadow: -4px 0 20px rgba(255, 107, 107, 0.5), 0 0 30px rgba(255, 107, 107, 0.3);
+  border-left: 3px solid #ff6b6b;
+  animation: modalPulse 0.3s ease;
+}
+
+@keyframes modalPulse {
+  0%, 100% {
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(0) scale(1.002);
+  }
+}
+
+.clickIndicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.clickIndicatorText {
+  display: inline-block;
+  padding: 20px 40px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(255, 107, 107, 0.6);
+  border: 3px solid #ff8787;
+  animation: clickIndicatorAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes clickIndicatorAppear {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 16px 20px;
   border-bottom: 1px solid #4a5568;
   background: linear-gradient(to right, #2d3748, #1a202c);
+  flex-wrap: nowrap;
+  gap: 12px;
 }
 
 .modalHeader h3 {
@@ -44,6 +97,65 @@
   margin: 0;
   font-size: 18px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.forceCloseButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border: 2px solid #ff8787;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.forceCloseButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transition: left 0.5s ease;
+}
+
+.forceCloseButton:hover {
+  background: linear-gradient(135deg, #ff5252, #e53935);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+}
+
+.forceCloseButton:hover::before {
+  left: 100%;
+}
+
+.forceCloseButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
 }
 
 .closeButton {
@@ -312,6 +424,203 @@
   background: #faf8f8;
 }
 
+/* Стили для модального окна подтверждения */
+.confirmOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeInOverlay 0.3s ease;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    background-color: rgba(0, 0, 0, 0);
+  }
+  to {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+.confirmModal {
+  background: linear-gradient(to bottom, #ffffff, #f7fafc);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: slideInModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 3px solid #ff6b6b;
+}
+
+@keyframes slideInModal {
+  from {
+    transform: scale(0.7) translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.confirmHeader {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 3px solid #ff8787;
+}
+
+.warningIcon {
+  font-size: 48px;
+  animation: warningPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.confirmHeader h3 {
+  color: #ffffff;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.confirmBody {
+  padding: 32px;
+  color: #2d3748;
+}
+
+.warningText {
+  font-size: 16px;
+  margin: 0 0 20px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border-left: 4px solid #ffc107;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.warningText strong {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+.warningDescription {
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+  color: #4a5568;
+}
+
+.warningList {
+  background: #f8f9fa;
+  padding: 16px 20px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.warningList p {
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 15px;
+}
+
+.warningList ul {
+  margin: 0;
+  padding-left: 24px;
+  list-style: none;
+}
+
+.warningList li {
+  position: relative;
+  padding: 6px 0;
+  color: #4a5568;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.warningList li::before {
+  content: '⚠️';
+  position: absolute;
+  left: -24px;
+  font-size: 14px;
+}
+
+.confirmFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 32px;
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.cancelButton,
+.confirmButton {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  min-width: 140px;
+}
+
+.cancelButton {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+  color: #2d3748;
+  border: 2px solid #a0aec0;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #cbd5e0, #a0aec0);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.confirmButton {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: #ffffff;
+  border: 2px solid #ff8787;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.confirmButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252, #e53935);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+}
+
+.cancelButton:active:not(:disabled),
+.confirmButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.cancelButton:disabled,
+.confirmButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .statusIcon {
   font-size: 16px;
   font-weight: bold;
@@ -399,4 +708,61 @@
   color: #2d3748;
   font-size: 12px;
   background: #faf8f8;
+}
+
+/* Индикатор прогресса подтверждения */
+.confirmProgress {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff5f5, #fed7d7);
+  border-radius: 12px;
+  border: 2px solid #fc8181;
+  text-align: center;
+}
+
+.confirmProgressText {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: #c53030;
+  font-weight: 500;
+}
+
+.confirmProgressText strong {
+  font-size: 18px;
+  color: #9b2c2c;
+}
+
+.confirmDots {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.confirmDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 3px solid #a0aec0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.confirmDotActive {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border-color: #ff8787;
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.6);
+  transform: scale(1.2);
+}
+
+/* Активное состояние кнопки подтверждения */
+.confirmButtonActive {
+  animation: confirmPulse 0.4s ease;
+  background: linear-gradient(135deg, #ffa726, #ff9800) !important;
+  border-color: #ffb74d !important;
+  box-shadow: 0 4px 20px rgba(255, 167, 38, 0.6) !important;
+}
+
+@keyframes confirmPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
 }
