@@ -768,8 +768,8 @@
 .thProdPart     { width: 160px; }
 .thProdMaterial { width: 130px; }
 .thProdPallet   { width: 130px; }
-.thProdQty      { width: 75px; text-align: center; }
-.thProdDuration { width: 75px; text-align: center; }
+.thProdQty      { width: 75px; text-align: center; vertical-align: middle; }
+.thProdDuration { width: 75px; text-align: center; vertical-align: middle; }
 .thProdOperator { width: 110px; }
 
 .prodTable tbody tr {
