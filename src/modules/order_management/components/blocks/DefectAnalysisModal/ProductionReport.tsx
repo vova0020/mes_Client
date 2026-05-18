@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styles from './ProductionReport.module.css';
+import ProductionTableRow from './ProductionTableRow';
 import {
   getMachineProduction,
   MachineProductionRecord,
   getFilterOptions,
   MachineFilterOption,
+  StageFilterOption,
+  OrderFilterOption,
 } from '../../../../api/orderManagementApi/defectStatisticsApi';
 
 interface ProductionReportProps {
@@ -16,26 +19,42 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
   const [records, setRecords] = useState<MachineProductionRecord[]>([]);
   
   const [machines, setMachines] = useState<MachineFilterOption[]>([]);
+  const [stages, setStages] = useState<StageFilterOption[]>([]);
+  const [orders, setOrders] = useState<OrderFilterOption[]>([]);
   
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedMachine, setSelectedMachine] = useState<number | ''>('');
+  const [selectedStage, setSelectedStage] = useState<number | ''>('');
+  const [selectedOrder, setSelectedOrder] = useState<number | ''>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
+  // Debounce для поиска
   useEffect(() => {
-    loadFilterOptions();
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
 
-  const loadFilterOptions = async () => {
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const loadFilterOptions = useCallback(async () => {
     try {
       const data = await getFilterOptions();
       setMachines(data.machines);
+      setStages(data.stages);
+      setOrders(data.orders);
     } catch (error) {
       console.error('Ошибка загрузки опций фильтров:', error);
     }
-  };
+  }, []);
 
-  const applyFilters = async () => {
+  useEffect(() => {
+    loadFilterOptions();
+  }, [loadFilterOptions]);
+
+  const applyFilters = useCallback(async () => {
     setLoading(true);
     setRecords([]);
     try {
@@ -43,6 +62,8 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
       if (dateFrom) params.startDate = dateFrom;
       if (dateTo) params.endDate = dateTo;
       if (selectedMachine) params.machineId = Number(selectedMachine);
+      if (selectedStage) params.stageId = Number(selectedStage);
+      if (selectedOrder) params.orderId = Number(selectedOrder);
       const data = await getMachineProduction(params);
       setRecords(data);
     } catch (error) {
@@ -51,50 +72,59 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateFrom, dateTo, selectedMachine, selectedStage, selectedOrder]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setDateFrom('');
     setDateTo('');
     setSelectedMachine('');
+    setSelectedStage('');
+    setSelectedOrder('');
     setSearchQuery('');
+    setDebouncedSearchQuery('');
     setRecords([]);
-  };
+  }, []);
 
-  const totalQty = records.reduce((sum, r) => sum + r.quantityProcessed, 0);
-  const totalDuration = records.reduce((sum, r) => sum + r.durationSeconds, 0);
+  // Мемоизация статистики
+  const statistics = useMemo(() => {
+    const totalQty = records.reduce((sum, r) => sum + r.quantityProcessed, 0);
+    const totalDuration = records.reduce((sum, r) => sum + r.durationSeconds, 0);
+    return { totalQty, totalDuration };
+  }, [records]);
 
-  const filteredRecords = records.filter((record) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
+  // Мемоизация фильтрации с debounced query
+  const filteredRecords = useMemo(() => {
+    if (!debouncedSearchQuery) return records;
+    
+    const query = debouncedSearchQuery.toLowerCase();
+    return records.filter((record) =>
       record.partCode?.toLowerCase().includes(query) ||
       record.partName?.toLowerCase().includes(query) ||
       record.materialName?.toLowerCase().includes(query) ||
       record.materialSku?.toLowerCase().includes(query) ||
-      record.packages.some(pkg => 
+      record.packages.some(pkg =>
         pkg.packageName?.toLowerCase().includes(query) ||
         pkg.packageCode?.toLowerCase().includes(query)
       )
     );
-  });
+  }, [records, debouncedSearchQuery]);
 
-  const formatDate = (date: Date | string) =>
+  const formatDate = useCallback((date: Date | string) =>
     new Date(date).toLocaleDateString('ru-RU', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-    });
+    }), []);
 
-  const formatTime = (date: Date | string) =>
-    new Date(date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const formatTime = useCallback((date: Date | string) =>
+    new Date(date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }), []);
 
-  const formatDuration = (seconds: number) => {
+  const formatDuration = useCallback((seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     if (h > 0) return `${h}ч ${m}м`;
     return `${m}м`;
-  };
+  }, []);
 
   return (
     <>
@@ -120,6 +150,21 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
             />
           </div>
           <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Заказ:</label>
+            <select
+              value={selectedOrder}
+              onChange={(e) => setSelectedOrder(e.target.value ? Number(e.target.value) : '')}
+              className={styles.filterSelect}
+            >
+              <option value="">Все заказы</option>
+              {orders.map((o) => (
+                <option key={o.orderId} value={o.orderId}>
+                  {o.batchNumber} — {o.orderName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.filterGroup}>
             <label className={styles.filterLabel}>Рабочее место (станок):</label>
             <select
               value={selectedMachine}
@@ -130,6 +175,21 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
               {machines.map((m) => (
                 <option key={m.machineId} value={m.machineId}>
                   {m.machineName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Этап производства:</label>
+            <select
+              value={selectedStage}
+              onChange={(e) => setSelectedStage(e.target.value ? Number(e.target.value) : '')}
+              className={styles.filterSelect}
+            >
+              <option value="">Все этапы</option>
+              {stages.map((s) => (
+                <option key={s.stageId} value={s.stageId}>
+                  {s.stageName}
                 </option>
               ))}
             </select>
@@ -171,19 +231,19 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
             <div className={styles.statsGrid}>
               <div className={styles.statCard}>
                 <div className={styles.statValue}>{filteredRecords.length}</div>
-                <div className={styles.statLabel}>Операций {searchQuery ? 'найдено' : 'выполнено'}</div>
+                <div className={styles.statLabel}>Операций {debouncedSearchQuery ? 'найдено' : 'выполнено'}</div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statValue}>{totalQty}</div>
+                <div className={styles.statValue}>{statistics.totalQty}</div>
                 <div className={styles.statLabel}>Деталей обработано</div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statValue}>{formatDuration(totalDuration)}</div>
+                <div className={styles.statValue}>{formatDuration(statistics.totalDuration)}</div>
                 <div className={styles.statLabel}>Суммарное время работы</div>
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statValue}>
-                  {records.length > 0 ? Math.round(totalQty / records.length) : 0}
+                  {records.length > 0 ? Math.round(statistics.totalQty / records.length) : 0}
                 </div>
                 <div className={styles.statLabel}>Среднее кол-во за операцию</div>
               </div>
@@ -208,77 +268,13 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
                 </thead>
                 <tbody>
                   {filteredRecords.map((record) => (
-                    <tr key={record.operationId}>
-                      <td className={styles.tdProdDate}>
-                        <div className={styles.dateCell}>
-                          <span className={styles.prodDateStart}>
-                            {formatDate(record.startedAt)} {formatTime(record.startedAt)}
-                          </span>
-                          <span className={styles.prodDateEnd}>
-                            → {formatDate(record.completedAt)} {formatTime(record.completedAt)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className={styles.tdProdMachine}>
-                        <div className={styles.cellContent}>
-                          <div className={styles.cellMain}>{record.machineName}</div>
-                          <div className={styles.cellSub}>{record.stageName}</div>
-                        </div>
-                      </td>
-                      <td className={styles.tdProdOrder}>
-                        {record.packages.length > 0 ? (
-                          <div className={styles.packagesCell}>
-                            {record.packages.map((pkg, idx) => (
-                              <div key={pkg.packageId} className={styles.packageItem}>
-                                {idx === 0 && (
-                                  <>
-                                    <div className={styles.cellMain}>№ {pkg.orderBatchNumber}</div>
-                                    <div className={styles.cellSub}>{pkg.orderName}</div>
-                                  </>
-                                )}
-                                <div className={styles.cellSub}>
-                                  📦 {pkg.packageName} ({pkg.packageCode})
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : '-'}
-                      </td>
-                      <td className={styles.tdProdPart}>
-                        <div className={styles.cellContent}>
-                          <div className={styles.cellMain}>{record.partCode}</div>
-                          <div className={styles.cellSub}>{record.partName}</div>
-                          {record.partSize && (
-                            <div className={styles.cellSub}>{record.partSize}</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className={styles.tdProdMaterial}>
-                        {record.materialName ? (
-                          <div className={styles.cellContent}>
-                            <div className={styles.cellMain}>{record.materialName}</div>
-                            <div className={styles.cellSub}>{record.materialSku}</div>
-                          </div>
-                        ) : '-'}
-                      </td>
-                      <td className={styles.tdProdPallet}>
-                        <div className={styles.cellContent}>
-                          <div className={styles.cellMain}>{record.palletName}</div>
-                        </div>
-                      </td>
-                      <td className={styles.tdProdQty}>
-                        <div className={styles.prodQtyCell}>
-                          <span className={styles.prodQtyBadge}>
-                            {record.quantityProcessed}
-                          </span>
-                        </div>
-                      </td>
-                      <td className={styles.tdProdDuration}>
-                        <span className={styles.durationBadge}>
-                          {formatDuration(record.durationSeconds)}
-                        </span>
-                      </td>
-                    </tr>
+                    <ProductionTableRow
+                      key={record.operationId}
+                      record={record}
+                      formatDate={formatDate}
+                      formatTime={formatTime}
+                      formatDuration={formatDuration}
+                    />
                   ))}
                 </tbody>
               </table>

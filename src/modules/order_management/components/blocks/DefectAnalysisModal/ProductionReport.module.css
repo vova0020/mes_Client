@@ -34,7 +34,7 @@
   border-radius: 8px;
   font-size: 14px;
   color: #2d3748;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .searchInput:focus {
@@ -207,6 +207,9 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   background: #ffffff;
+  /* Оптимизация производительности */
+  will-change: scroll-position;
+  contain: layout style paint;
 }
 
 .prodTable {
@@ -245,8 +248,10 @@
 
 .prodTable tbody tr {
   background: #faf8f8;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   border-bottom: 1px solid #e2e8f0;
+  /* Оптимизация производительности */
+  contain: layout style;
 }
 
 .prodTable tbody tr:nth-child(even) {
@@ -255,7 +260,7 @@
 
 .prodTable tbody tr:hover {
   background: #edf2f7;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* Убрана box-shadow для улучшения производительности при наведении */
 }
 
 .prodTable td {

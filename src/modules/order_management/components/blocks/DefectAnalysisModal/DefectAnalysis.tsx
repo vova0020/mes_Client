@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styles from './DefectAnalysis.module.css';
+import DefectTableRow from './DefectTableRow';
 import {
   DefectDetail,
   getDefectStatistics,
@@ -30,11 +31,7 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
   const [selectedStage, setSelectedStage] = useState<number | ''>('');
   const [selectedOrder, setSelectedOrder] = useState<number | ''>('');
 
-  useEffect(() => {
-    loadFilterOptions();
-  }, []);
-
-  const loadFilterOptions = async () => {
+  const loadFilterOptions = useCallback(async () => {
     try {
       const data = await getFilterOptions();
       setOrders(data.orders);
@@ -44,9 +41,13 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
     } catch (error) {
       console.error('Ошибка загрузки опций фильтров:', error);
     }
-  };
+  }, []);
 
-  const applyFilters = async () => {
+  useEffect(() => {
+    loadFilterOptions();
+  }, [loadFilterOptions]);
+
+  const applyFilters = useCallback(async () => {
     setLoading(true);
     setRecords([]);
     try {
@@ -65,9 +66,9 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateFrom, dateTo, selectedMaterial, selectedMachine, selectedStage, selectedOrder]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setDateFrom('');
     setDateTo('');
     setSelectedMaterial('');
@@ -75,40 +76,54 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
     setSelectedStage('');
     setSelectedOrder('');
     setRecords([]);
-  };
+  }, []);
 
-  const totalDefects = records.reduce((sum, r) => sum + r.defectQuantity, 0);
-  const uniquePartsReturns = records.reduce((acc, r) => {
-    if (!acc.has(r.partId)) acc.set(r.partId, r.totalReturnedQuantity);
-    return acc;
-  }, new Map<number, number>());
-  const totalReturned = Array.from(uniquePartsReturns.values()).reduce((s, q) => s + q, 0);
-  const totalLost = totalDefects - totalReturned;
+  // Мемоизация статистики
+  const statistics = useMemo(() => {
+    const totalDefects = records.reduce((sum, r) => sum + r.defectQuantity, 0);
+    const uniquePartsReturns = records.reduce((acc, r) => {
+      if (!acc.has(r.partId)) acc.set(r.partId, r.totalReturnedQuantity);
+      return acc;
+    }, new Map<number, number>());
+    const totalReturned = Array.from(uniquePartsReturns.values()).reduce((s, q) => s + q, 0);
+    const totalLost = totalDefects - totalReturned;
 
-  const defectsByMaterial = records.reduce((acc, r) => {
-    if (r.materialName) acc[r.materialName] = (acc[r.materialName] || 0) + r.defectQuantity;
-    return acc;
-  }, {} as Record<string, number>);
+    return { totalDefects, totalReturned, totalLost };
+  }, [records]);
 
-  const defectsByMachine = records.reduce((acc, r) => {
-    if (r.machineName) acc[r.machineName] = (acc[r.machineName] || 0) + r.defectQuantity;
-    return acc;
-  }, {} as Record<string, number>);
+  // Мемоизация анализа по материалам
+  const defectsByMaterial = useMemo(() => {
+    return records.reduce((acc, r) => {
+      if (r.materialName) acc[r.materialName] = (acc[r.materialName] || 0) + r.defectQuantity;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [records]);
 
-  const defectsByStage = records.reduce((acc, r) => {
-    acc[r.stageName] = (acc[r.stageName] || 0) + r.defectQuantity;
-    return acc;
-  }, {} as Record<string, number>);
+  // Мемоизация анализа по станкам
+  const defectsByMachine = useMemo(() => {
+    return records.reduce((acc, r) => {
+      if (r.machineName) acc[r.machineName] = (acc[r.machineName] || 0) + r.defectQuantity;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [records]);
 
-  const formatDate = (date: Date | string) =>
+  // Мемоизация анализа по этапам
+  const defectsByStage = useMemo(() => {
+    return records.reduce((acc, r) => {
+      acc[r.stageName] = (acc[r.stageName] || 0) + r.defectQuantity;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [records]);
+
+  const formatDate = useCallback((date: Date | string) =>
     new Date(date).toLocaleDateString('ru-RU', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-    });
+    }), []);
 
-  const formatTime = (date: Date | string) =>
-    new Date(date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const formatTime = useCallback((date: Date | string) =>
+    new Date(date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }), []);
 
   return (
     <>
@@ -217,20 +232,20 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
             <h4>📈 Общая статистика</h4>
             <div className={styles.statsGrid}>
               <div className={styles.statCard}>
-                <div className={styles.statValue}>{totalDefects}</div>
+                <div className={styles.statValue}>{statistics.totalDefects}</div>
                 <div className={styles.statLabel}>Всего отбраковано</div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statValue}>{totalReturned}</div>
+                <div className={styles.statValue}>{statistics.totalReturned}</div>
                 <div className={styles.statLabel}>Возвращено в производство</div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statValue}>{totalLost}</div>
+                <div className={styles.statValue}>{statistics.totalLost}</div>
                 <div className={styles.statLabel}>Невозвращенный брак</div>
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statValue}>
-                  {totalDefects > 0 ? ((totalReturned / totalDefects) * 100).toFixed(1) : 0}%
+                  {statistics.totalDefects > 0 ? ((statistics.totalReturned / statistics.totalDefects) * 100).toFixed(1) : 0}%
                 </div>
                 <div className={styles.statLabel}>Процент возврата</div>
               </div>
@@ -304,104 +319,12 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
                 </thead>
                 <tbody>
                   {records.map((record) => (
-                    <tr key={record.reclamationId}>
-                      <td className={styles.tdDate}>
-                        <div className={styles.dateCell}>
-                          {formatDate(record.detectedAt)}
-                          <span className={styles.timeCell}>
-                            {formatTime(record.detectedAt)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className={styles.tdOrder}>
-                        {record.packages.length > 0 ? (
-                          <div className={styles.packagesCell}>
-                            {record.packages.map((pkg, idx) => (
-                              <div key={pkg.packageId} className={styles.packageItem}>
-                                {idx === 0 && (
-                                  <>
-                                    <div className={styles.cellMain}>№ {pkg.orderBatchNumber}</div>
-                                    <div className={styles.cellSub}>{pkg.orderName}</div>
-                                  </>
-                                )}
-                                <div className={styles.cellSub}>
-                                  📦 {pkg.packageName} ({pkg.packageCode})
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : '-'}
-                      </td>
-                      <td className={styles.tdPart}>
-                        <div className={styles.cellContent}>
-                          <div className={styles.cellMain}>{record.partCode}</div>
-                          <div className={styles.cellSub}>{record.partName}</div>
-                        </div>
-                      </td>
-                      <td className={styles.tdMaterial}>
-                        {record.materialName ? (
-                          <div className={styles.cellContent}>
-                            <div className={styles.cellMain}>{record.materialName}</div>
-                            <div className={styles.cellSub}>{record.materialSku}</div>
-                          </div>
-                        ) : '-'}
-                      </td>
-                      <td className={styles.tdQty}>
-                        <div className={styles.qtyCell}>
-                          <span className={styles.defectBadge}>{record.defectQuantity}</span>
-                        </div>
-                      </td>
-                      <td className={styles.tdStage}>
-                        <div className={styles.cellContent}>
-                          <div className={styles.cellMain}>{record.stageName}</div>
-                          {record.machineName && (
-                            <div className={styles.cellSub}>{record.machineName}</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className={styles.tdWorker}>{record.reportedByName || '-'}</td>
-                      <td className={styles.tdReturn}>
-                        {record.returnEvents.length > 0 ? (
-                          <div className={styles.returnCell}>
-                            <div className={styles.returnHeader}>
-                              <span className={styles.returnBadge}>
-                                ✓ Возвращено: {record.totalReturnedQuantity} шт.
-                              </span>
-                              {record.returnEvents.length > 1 && (
-                                <span className={styles.returnCount}>
-                                  {record.returnEvents.length}{' '}
-                                  {record.returnEvents.length < 5 ? 'возврата' : 'возвратов'}
-                                </span>
-                              )}
-                            </div>
-                            <div className={styles.returnEventsList}>
-                              {record.returnEvents.map((event) => (
-                                <div key={event.movementId} className={styles.returnEvent}>
-                                  <div className={styles.returnEventLine}>
-                                    <span className={styles.returnEventQty}>{event.returnedQuantity} шт.</span>
-                                    <span className={styles.returnEventDate}>{formatDate(event.returnedAt)}</span>
-                                  </div>
-                                  <div className={styles.returnEventStage}>
-                                    → {event.returnToStageName || 'Не указан'}
-                                  </div>
-                                  {(event.returnToMachineName || event.returnPalletName) && (
-                                    <div className={styles.returnEventDetails}>
-                                      {event.returnToMachineName && <span>⚙️ {event.returnToMachineName}</span>}
-                                      {event.returnPalletName && <span>📦 {event.returnPalletName}</span>}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className={styles.noReturn}>—</span>
-                        )}
-                      </td>
-                      <td className={styles.tdNote}>
-                        <div className={styles.noteCell}>{record.note || '—'}</div>
-                      </td>
-                    </tr>
+                    <DefectTableRow
+                      key={record.reclamationId}
+                      record={record}
+                      formatDate={formatDate}
+                      formatTime={formatTime}
+                    />
                   ))}
                 </tbody>
               </table>

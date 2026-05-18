@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import styles from './DefectAnalysisModal.module.css';
-import DefectAnalysis from './DefectAnalysis';
-import ProductionReport from './ProductionReport';
+
+// Ленивая загрузка компонентов для оптимизации
+const DefectAnalysis = lazy(() => import('./DefectAnalysis'));
+const ProductionReport = lazy(() => import('./ProductionReport'));
 
 type ActiveTab = 'defects' | 'production';
 
@@ -53,8 +55,21 @@ const DefectAnalysisModal: React.FC<DefectAnalysisModalProps> = ({ onClose }) =>
         </div>
 
         <div className={styles.modalBody}>
-          {activeTab === 'defects' && <DefectAnalysis key="defects" onClose={handleClose} />}
-          {activeTab === 'production' && <ProductionReport key="production" onClose={handleClose} />}
+          <Suspense fallback={
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '400px',
+              color: '#cbd5e0',
+              fontSize: '16px'
+            }}>
+              ⏳ Загрузка...
+            </div>
+          }>
+            {activeTab === 'defects' && <DefectAnalysis key="defects" onClose={handleClose} />}
+            {activeTab === 'production' && <ProductionReport key="production" onClose={handleClose} />}
+          </Suspense>
         </div>
       </div>
     </div>

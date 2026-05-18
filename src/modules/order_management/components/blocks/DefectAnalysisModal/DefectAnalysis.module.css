@@ -216,6 +216,9 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   background: #ffffff;
+  /* Оптимизация производительности */
+  will-change: scroll-position;
+  contain: layout style paint;
 }
 
 .defectTable {
@@ -223,6 +226,8 @@
   border-collapse: collapse;
   background: #ffffff;
   font-size: 13px;
+  /* Оптимизация производительности */
+  table-layout: fixed;
 }
 
 .defectTable thead {
@@ -255,8 +260,10 @@
 
 .defectTable tbody tr {
   background: #faf8f8;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   border-bottom: 1px solid #e2e8f0;
+  /* Оптимизация производительности */
+  contain: layout style;
 }
 
 .defectTable tbody tr:nth-child(even) {
@@ -265,7 +272,7 @@
 
 .defectTable tbody tr:hover {
   background: #edf2f7;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* Убрана box-shadow для улучшения производительности при наведении */
 }
 
 .defectTable td {

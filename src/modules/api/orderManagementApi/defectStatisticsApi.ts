@@ -190,6 +190,8 @@ export interface MachineProductionFilterParams {
   startDate?: string;
   endDate?: string;
   machineId?: number;
+  stageId?: number;
+  orderId?: number;
 }
 
 // Функция для получения журнала выпуска продукции
@@ -201,6 +203,8 @@ export const getMachineProduction = async (
     if (params.startDate) queryParams.append('startDate', params.startDate);
     if (params.endDate) queryParams.append('endDate', params.endDate);
     if (params.machineId) queryParams.append('machineId', params.machineId.toString());
+    if (params.stageId) queryParams.append('stageId', params.stageId.toString());
+    if (params.orderId) queryParams.append('orderId', params.orderId.toString());
 
     const response = await axios.get<MachineProductionRecord[]>(
       `${API_URL}/statistics/machine-production?${queryParams.toString()}`
