@@ -10,6 +10,7 @@ import { ReactComponent as OrderManagement } from '../../../../assets/orderManag
 import { ReactComponent as Reclamats } from '../../../../assets/orderManager/reclamats.svg';
 
 import DefectAnalysisModal from '../blocks/DefectAnalysisModal/index';
+import InternalReclamationsModal from '../blocks/InternalReclamationsModal/index';
 
 import { Button, Tooltip } from '@mui/material';
 
@@ -30,6 +31,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => {
   const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+  const [isReclamationsModalOpen, setIsReclamationsModalOpen] = useState(false);
 
   // Функция для определения класса активной кнопки
   const getButtonClass = (section: SettingSection) => {
@@ -44,6 +46,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
   // Обработчик закрытия модального окна анализа брака
   const handleCloseDefectModal = () => {
     setIsDefectModalOpen(false);
+  };
+
+  // Обработчик открытия модального окна рекламаций
+  const handleOpenReclamationsModal = () => {
+    setIsReclamationsModalOpen(true);
+  };
+
+  // Обработчик закрытия модального окна рекламаций
+  const handleCloseReclamationsModal = () => {
+    setIsReclamationsModalOpen(false);
   };
 
   return (
@@ -62,9 +74,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
             <Buffers />
           </Button>
         </Tooltip>
-        <Tooltip title="Журнал внутренниз рекламаций" placement="right">
-          <Button >
-            <Reclamats  />
+        <Tooltip title="Журнал внутренних рекламаций" placement="right">
+          <Button onClick={handleOpenReclamationsModal}>
+            <Reclamats />
           </Button>
         </Tooltip>
         <Tooltip title="История обработки" placement="right">
@@ -102,6 +114,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
       {/* Модальное окно анализа брака */}
       {isDefectModalOpen && (
         <DefectAnalysisModal onClose={handleCloseDefectModal} />
+      )}
+
+      {/* Модальное окно журнала внутренних рекламаций */}
+      {isReclamationsModalOpen && (
+        <InternalReclamationsModal onClose={handleCloseReclamationsModal} />
       )}
     </div>
   );

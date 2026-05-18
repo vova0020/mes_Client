@@ -10,10 +10,12 @@ import { ReactComponent as PolomkaActiveIcon } from '../../../../../assets/sideb
 
 import { Button } from '@mui/material';
 import YpakMachineStatusMenu from './YpakMachineStatusMenu';
+import InternalReclamationsModal from '../../../../order_management/components/blocks/InternalReclamationsModal';
 
 const Sidebar: React.FC = () => {
   const [isStartActive, setIsStartActive] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [isReclamationsModalOpen, setIsReclamationsModalOpen] = useState(false);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setMenuAnchorEl(event.currentTarget);
@@ -23,6 +25,14 @@ const Sidebar: React.FC = () => {
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
     setIsStartActive(false);
+  };
+
+  const handleOpenReclamationsModal = () => {
+    setIsReclamationsModalOpen(true);
+  };
+
+  const handleCloseReclamationsModal = () => {
+    setIsReclamationsModalOpen(false);
   };
 
   return (
@@ -63,13 +73,18 @@ const Sidebar: React.FC = () => {
           <Button>
             <HistoriIcon className={styles.icon} />
           </Button>
-          <Button>
+          <Button onClick={handleOpenReclamationsModal}>
             <ReclamaciIcon className={styles.icon} />
           </Button>
 
 
         </div>
       </div>
+
+      {/* Модальное окно журнала внутренних рекламаций */}
+      {isReclamationsModalOpen && (
+        <InternalReclamationsModal onClose={handleCloseReclamationsModal} />
+      )}
     </div>
   );
 };
