@@ -19,6 +19,7 @@ export type SettingSection =
   | 'detailRouteManagement'
   | 'orderManagement'
   | 'orderDisplay'
+  | 'handleOpenDefectModal'
   | 'statistics'
   | null;
 
@@ -67,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
           </Button>
         </Tooltip>
         <Tooltip title="История обработки" placement="right">
-          <Button onClick={handleOpenDefectModal}>
+          <Button  className={getButtonClass('handleOpenDefectModal')} onClick={handleOpenDefectModal}>
             <History  />
           </Button>
         </Tooltip>
