@@ -21,6 +21,7 @@ export type SettingSection =
   | 'orderManagement'
   | 'orderDisplay'
   | 'handleOpenDefectModal'
+  | 'handleOpenReclamationsModal'
   | 'statistics'
   | null;
 
@@ -75,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange }) => 
           </Button>
         </Tooltip>
         <Tooltip title="Журнал внутренних рекламаций" placement="right">
-          <Button onClick={handleOpenReclamationsModal}>
+          <Button className={getButtonClass('handleOpenReclamationsModal')} onClick={handleOpenReclamationsModal}>
             <Reclamats />
           </Button>
         </Tooltip>
