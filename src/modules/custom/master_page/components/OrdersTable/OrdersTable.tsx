@@ -1,30 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useCustomOrders } from '../../../../hooks/custom';
 import styles from './OrdersTable.module.css';
 
 interface Order {
   id: number;
-  batchNumber: string;
+  orderNumber: string;
   orderName: string;
   available: number;
   completed: number;
   priority?: number;
+  completionPercentage: number;
+  status: string;
 }
 
 interface OrdersTableProps {
   onOrderSelect?: (orderId: number | null) => void;
+  stageId: number | null;
 }
 
-const MOCK_ORDERS: Order[] = [
-  { id: 1, batchNumber: 'ЗАК-001', orderName: 'Заказ клиента А', available: 100, completed: 45, priority: 1 },
-  { id: 2, batchNumber: 'ЗАК-002', orderName: 'Заказ клиента Б', available: 80, completed: 20, priority: 2 },
-  { id: 3, batchNumber: 'ЗАК-003', orderName: 'Заказ клиента В', available: 60, completed: 75, priority: 3 },
-];
-
-const OrdersTable: React.FC<OrdersTableProps> = ({ onOrderSelect }) => {
+const OrdersTable: React.FC<OrdersTableProps> = ({ onOrderSelect, stageId }) => {
   const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
   const [showOrders, setShowOrders] = useState(false);
-  const [orders] = useState<Order[]>(MOCK_ORDERS);
   const isFirstLoad = useRef(true);
+  const { orders, loading, error, fetchOrdersByStage } = useCustomOrders();
+
+  useEffect(() => {
+    if (stageId) {
+      fetchOrdersByStage(stageId);
+    }
+  }, [stageId, fetchOrdersByStage]);
 
   useEffect(() => {
     if (onOrderSelect) {
@@ -58,7 +62,20 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onOrderSelect }) => {
     <div className={styles.ordersContainer}>
       <h2 className={styles.title}>ЗАКАЗЫ</h2>
       <div className={styles.listContainer}>
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className={styles.stateContainer}>
+            <div className={styles.emptyMessage}>
+              <p>Загрузка заказов...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className={styles.stateContainer}>
+            <div className={styles.emptyMessage}>
+              <h3>Ошибка загрузки</h3>
+              <p>{error}</p>
+            </div>
+          </div>
+        ) : orders.length === 0 ? (
           <div className={styles.stateContainer}>
             <div className={styles.emptyIcon}>
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -87,7 +104,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onOrderSelect }) => {
                 onClick={() => handleOrderClick(order.id)}
               >
                 <div className={styles.orderTitle}>
-                  {order.batchNumber} - {order.orderName || 'Без названия'}
+                  {order.orderNumber} - {order.orderName || 'Без названия'}
                 </div>
                 <div className={styles.orderInfo}>
                   <div className={styles.orderAvailability}>

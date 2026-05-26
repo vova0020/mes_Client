@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header/Header';
 import Sidebar from './components/Sidebar/Sidebar';
 import OrdersTable from './components/OrdersTable/OrdersTable';
@@ -6,12 +6,22 @@ import PalletsTable from './components/PalletsTable/PalletsTable';
 import MachinesCards from './components/MachinesCards/MachinesCards';
 import PartsModal from './components/PartsModal/PartsModal';
 import RotateScreen from '../../../componentsGlobal/RotateScreen/RotateScreen';
+import { useStageNavbar } from '../../../componentsGlobal/Navbar/useStageNavbar';
 import styles from './CustomMasterPage.module.css';
 
 const CustomMasterPage: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [isPartsModalOpen, setIsPartsModalOpen] = useState(false);
   const [selectedPalletId, setSelectedPalletId] = useState<number | null>(null);
+  const [currentStageId, setCurrentStageId] = useState<number | null>(null);
+  const { getCurrentStage } = useStageNavbar();
+
+  useEffect(() => {
+    const stage = getCurrentStage();
+    if (stage) {
+      setCurrentStageId(stage.id);
+    }
+  }, [getCurrentStage]);
 
   const handleOrderSelect = (orderId: number | null) => {
     setSelectedOrderId(orderId);
@@ -43,7 +53,10 @@ const CustomMasterPage: React.FC = () => {
           <div className={styles.mainContainer}>
             <div className={styles.topRow}>
               <div className={styles.ordersSection}>
-                <OrdersTable onOrderSelect={handleOrderSelect} />
+                <OrdersTable 
+                  onOrderSelect={handleOrderSelect}
+                  stageId={currentStageId}
+                />
               </div>
 
               <div className={styles.machinesSection}>

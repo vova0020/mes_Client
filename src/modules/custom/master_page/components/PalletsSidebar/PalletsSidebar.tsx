@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import styles from './PalletsSidebar.module.css';
 
 interface Part {
@@ -107,10 +108,6 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ isOpen, onClose, pallet
     handleTogglePart(partId);
   };
 
-  const handleRedistribute = () => {
-    console.log('Перераспределить выбранные детали:', selectedParts);
-  };
-
   const getStatusClass = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'готово к обработке':
@@ -130,9 +127,6 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ isOpen, onClose, pallet
         <div className={styles.headerTop}>
           <h2>Номер поддона, статус, адрес</h2>
           <div className={styles.headerActions}>
-            <button className={styles.redistributeButton} onClick={handleRedistribute}>
-              Перераспределить группу деталей
-            </button>
             <button className={styles.closeButton} onClick={onClose}>×</button>
           </div>
         </div>

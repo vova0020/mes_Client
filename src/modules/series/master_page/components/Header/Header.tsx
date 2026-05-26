@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 // Если есть логотип/иконки, импортируйте их, например:
 import logo from '../../../../../assets/logo-Photoroom.png';
@@ -31,6 +32,11 @@ const Header: React.FC = () => {
 
   // Используем хук для работы с навбаром
   const { getCurrentStage } = useStageNavbar();
+  const navigate = useNavigate();
+
+  const handleSwitchToCustom = () => {
+    navigate('/custom-master');
+  };
 
   // Функция для загрузки данных этапа
   const loadStageData = () => {
@@ -113,8 +119,15 @@ const Header: React.FC = () => {
           {techStageName}
         </div>
         <div className={styles.navButtons}>
-          {/* <button className={styles.navButton}>{productionLineName}</button> */}
           <Navbar />
+          <div className={styles.switchContainer}>
+            <button className={`${styles.switchButton} ${styles.active}`}>
+              Серийное
+            </button>
+            <button className={styles.switchButton} onClick={handleSwitchToCustom}>
+              Индивидуальное
+            </button>
+          </div>
         </div>
       </div>
 

@@ -42,8 +42,61 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 12px;
   /* background: linear-gradient(to bottom, #3a5269, #2c3e50); градиент для объемности */
   padding: 4px;
+}
+
+/* Контейнер для кнопок переключателя */
+.switchContainer {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  border-radius: 6px;
+}
+
+/* Стили для кнопки переключателя */
+.switchButton {
+  background: linear-gradient(to bottom, #4a6583, #34495e);
+  border: 1px solid #243342;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  position: relative;
+  top: 0;
+  white-space: nowrap;
+}
+
+.switchButton:hover:not(.active) {
+  background: linear-gradient(to bottom, #547599, #3b536b);
+  color: rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.switchButton:active:not(.active) {
+  background: linear-gradient(to bottom, #34495e, #2c3e50);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  top: 1px;
+}
+
+.switchButton.active {
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  border: 1px solid #1f5f8b;
+  color: #fff;
+  cursor: default;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* Стили для кнопок "СТАНОК" и "ОПЕРАТОР" */
@@ -291,12 +344,23 @@
   .navButtons {
     margin-top: 6px;
     justify-content: center;
+    gap: 8px;
+  }
+  
+  .switchContainer {
+    gap: 6px;
+    padding: 3px;
   }
   
   .navButton {
     padding: 6px 24px;
     font-size: 14px;
     margin-right: 12px;
+  }
+  
+  .switchButton {
+    padding: 6px 20px;
+    font-size: 13px;
   }
   
   .rightContainer {
