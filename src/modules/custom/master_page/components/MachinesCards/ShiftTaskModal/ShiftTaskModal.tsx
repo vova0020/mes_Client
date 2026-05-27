@@ -46,20 +46,60 @@ const MOCK_ORDERS: Order[] = [
       {
         id: 1,
         palletNumber: 'ABCD-ABCD-38',
-        materials: 'ЛДСП Дуб Сонома светлый - 16мм (50)\nЛДСП Дуб Сонома темный - 16мм (23)\nЛМДФ - 16мм (15)',
+        materials: 'ЛДСП Дуб Сонома светлый - 16мм (50), ЛДСП Дуб Сонома темный - 16мм (23), ЛМДФ - 16мм (15)',
         status: 'В работе',
         detailsCount: 111,
         parts: [
           { id: 1, articleNumber: 'ABCD-ABCD-38', name: 'Боковина шкафа правая/левая кривая', material: 'ЛДСП Дуб Сонома светлый - 16мм', size: '2050x650', quantity: 25, status: 'В работе' },
-          { id: 2, articleNumber: 'ABCD-ABCD-38', name: 'Боковина шкафа правая/левая кривая', material: 'ЛДСП Дуб Сонома светлый - 16мм', size: '2050x650', quantity: 25, status: 'В работе' },
+          { id: 2, articleNumber: 'ABCD-ABCD-39', name: 'Полка верхняя', material: 'ЛДСП Дуб Сонома темный - 16мм', size: '1800x400', quantity: 30, status: 'В работе' },
+          { id: 3, articleNumber: 'ABCD-ABCD-40', name: 'Дверца фасадная', material: 'ЛМДФ - 16мм', size: '2000x600', quantity: 15, status: 'Ожидание' },
         ]
       },
       {
         id: 2,
-        palletNumber: 'ABCD-ABCD-38',
-        materials: 'ЛДСП Дуб Сонома светлый - 16мм (50)\nЛДСП Дуб Сонома темный - 16мм (23)\nЛМДФ - 16мм (15)',
+        palletNumber: 'ABCD-ABCD-39',
+        materials: 'ЛДСП Дуб Сонома светлый - 16мм (40), ЛМДФ - 16мм (20)',
+        status: 'Ожидание',
+        detailsCount: 88,
+        parts: [
+          { id: 4, articleNumber: 'ABCD-ABCD-41', name: 'Столешница', material: 'ЛДСП Дуб Сонома светлый - 16мм', size: '2400x600', quantity: 20, status: 'Ожидание' },
+          { id: 5, articleNumber: 'ABCD-ABCD-42', name: 'Задняя стенка', material: 'ЛМДФ - 16мм', size: '2000x800', quantity: 20, status: 'Ожидание' },
+        ]
+      },
+      {
+        id: 3,
+        palletNumber: 'ABCD-ABCD-40',
+        materials: 'ЛДСП Дуб Сонома темный - 16мм (60)',
+        status: 'Завершено',
+        detailsCount: 60,
+        parts: []
+      }
+    ]
+  },
+  {
+    id: 2,
+    orderNumber: '304/150 Срочный',
+    palletsTotal: 2,
+    detailsTotal: 200,
+    materials: '3шт',
+    pallets: [
+      {
+        id: 4,
+        palletNumber: 'EFGH-EFGH-50',
+        materials: 'ЛДСП Венге - 18мм (100)',
         status: 'В работе',
-        detailsCount: 111,
+        detailsCount: 100,
+        parts: [
+          { id: 6, articleNumber: 'EFGH-EFGH-50', name: 'Боковина тумбы', material: 'ЛДСП Венге - 18мм', size: '800x400', quantity: 50, status: 'В работе' },
+          { id: 7, articleNumber: 'EFGH-EFGH-51', name: 'Полка внутренняя', material: 'ЛДСП Венге - 18мм', size: '750x350', quantity: 50, status: 'Ожидание' },
+        ]
+      },
+      {
+        id: 5,
+        palletNumber: 'EFGH-EFGH-51',
+        materials: 'ЛДСП Венге - 18мм (100)',
+        status: 'Ожидание',
+        detailsCount: 100,
         parts: []
       }
     ]
@@ -110,35 +150,30 @@ const ShiftTaskModal: React.FC<ShiftTaskModalProps> = ({ isOpen, onClose, machin
                 <div className={styles.palletsContainer}>
                   {order.pallets.map(pallet => (
                     <div key={pallet.id} className={styles.palletRow}>
-                      <div className={styles.palletHeader} onClick={() => togglePallet(pallet.id)}>
-                        <div className={`${styles.palletCell} ${styles.bold}`}>
-                          <div>№ поддона</div>
-                          <div>{pallet.palletNumber}</div>
-                        </div>
-                        <div className={styles.palletCell}>
-                          <div>Материалы</div>
-                          <div className={styles.materials}>{pallet.materials}</div>
-                        </div>
-                        <div className={styles.palletCell}>
-                          <div>Статус</div>
-                          <div>
+                      <div className={styles.palletHeader}>
+                        <div className={styles.palletMainInfo} onClick={() => togglePallet(pallet.id)}>
+                          <div className={`${styles.expandIcon} ${expandedPallets.includes(pallet.id) ? styles.expanded : ''}`}>
+                            ▶
+                          </div>
+                          <div className={`${styles.palletCell} ${styles.bold}`}>
+                            {pallet.palletNumber}
+                          </div>
+                          <div className={styles.palletCell}>
+                            <div className={styles.materials}>{pallet.materials}</div>
+                          </div>
+                          <div className={styles.palletCell}>
                             <span className={`${styles.statusBadge} ${styles.statusInProgress}`}>
                               {pallet.status}
                             </span>
                           </div>
+                          <div className={styles.palletCell}>
+                            {pallet.detailsCount} шт.
+                          </div>
                         </div>
-                        <div className={styles.palletCell}>
-                          <div>Деталей на поддоне</div>
-                          <div>{pallet.detailsCount}</div>
-                        </div>
-                        <div className={styles.palletCell}>
-                          <button className={styles.actionButton}>Начать/Завершить</button>
-                        </div>
-                        <div className={styles.palletCell}>
-                          <button className={styles.actionButton}>Переназначить станок</button>
-                        </div>
-                        <div className={styles.palletCell}>
-                          <button className={`${styles.actionButton} ${styles.deleteButton}`}>Удалить</button>
+                        <div className={styles.palletActions}>
+                          <button className={styles.actionButton} onClick={(e) => e.stopPropagation()}>Начать/Завершить</button>
+                          <button className={styles.actionButton} onClick={(e) => e.stopPropagation()}>Переназначить</button>
+                          <button className={`${styles.actionButton} ${styles.deleteButton}`} onClick={(e) => e.stopPropagation()}>Удалить</button>
                         </div>
                       </div>
 

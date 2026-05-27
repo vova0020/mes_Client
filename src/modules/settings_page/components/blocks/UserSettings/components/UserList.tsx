@@ -72,7 +72,7 @@ export const UserList: React.FC<UserListProps> = ({
       .sort((a, b) => a.userId - b.userId);
   }, [users, debouncedSearch, filter.position]);
 
-  // Мемоизированные уникальные должности для филь��ра
+  // Мемоизированные уникальные должности для фильтра
   const uniquePositions = useMemo(() => {
     return Array.from(new Set(
       users

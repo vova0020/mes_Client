@@ -1,6 +1,7 @@
 
 import axios, { AxiosResponse } from 'axios';
 import { Machine, CreateMachineDto, UpdateMachineDto, StageWithSubstages, MachineSubstage } from '../MachineSettings';
+import { ProductionType } from '@/types/production';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const MACHINES_URL = '/machines';

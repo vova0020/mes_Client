@@ -1,24 +1,15 @@
 import React, { useState } from 'react';
 import styles from './MachinesCards.module.css';
-import ShiftTaskModal from '../ShiftTaskModal/ShiftTaskModal';
+import ShiftTaskModal from './ShiftTaskModal/ShiftTaskModal';
+import useMachinesCustomMaster from '../../../../hooks/custom/master/useMachinesCustomMaster';
+import { resetMachineCounter } from '../../../../api/custom/master/machineCustomMasterService';
 
-interface Machine {
-  id: number;
-  name: string;
-  status: string;
-  recommendedLoad: number;
-  completedQuantity: number;
-  load_unit: string;
+interface MachinesCardsProps {
+  onDataUpdate?: () => void;
 }
 
-const MOCK_MACHINES: Machine[] = [
-  { id: 1, name: 'Станок 1', status: 'active', recommendedLoad: 100, completedQuantity: 65, load_unit: 'шт' },
-  { id: 2, name: 'Станок 2', status: 'active', recommendedLoad: 100, completedQuantity: 40, load_unit: 'шт' },
-  { id: 3, name: 'Станок 3', status: 'inactive', recommendedLoad: 100, completedQuantity: 0, load_unit: 'шт' },
-];
-
-const MachinesCards: React.FC = () => {
-  const [machines] = useState<Machine[]>(MOCK_MACHINES);
+const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
+  const { machines, loading, error, refreshMachines } = useMachinesCustomMaster();
   const [selectedMachineId, setSelectedMachineId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -30,6 +21,19 @@ const MachinesCards: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedMachineId(null);
+  };
+
+  const handleResetCounter = async (machineId: number, machineName: string) => {
+    try {
+      const result = await resetMachineCounter(machineId);
+      console.log(result.message);
+      refreshMachines();
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
+    } catch (error) {
+      console.error('Ошибка при сбросе счетчика:', error);
+    }
   };
 
   const getStatusClass = (status: string): string => {
@@ -88,76 +92,145 @@ const MachinesCards: React.FC = () => {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <div className={styles.loadingMessage}>
+            <h3>Загрузка данных</h3>
+            <p>Пожалуйста, подождите...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorMessage}>
+            <h3>Ошибка загрузки данных</h3>
+            <p>{error.message || 'Произошла ошибка при получении информации о станках.'}</p>
+            <button className={styles.retryButton} onClick={refreshMachines}>
+              Повторить загрузку
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (machines.length === 0) {
+    return (
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        <div className={styles.stateContainer}>
+          <div className={styles.emptyIcon}>📭</div>
+          <div className={styles.emptyMessage}>
+            <h3>Нет доступных станков</h3>
+            <p>Не найдено ни одного станка для текущего сегмента.</p>
+            <button className={styles.retryButton} onClick={refreshMachines}>
+              Обновить данные
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.detailsContainer}>
-      <h2 className={styles.title}>СТАНКИ</h2>
-      
-      <div className={styles.tableContainer}>
-        <div className={styles.cardsWrapper}>
-          {machines.sort((a, b) => a.id - b.id).map(machine => (
-            <div 
-              key={machine.id} 
-              className={styles.machineCard}
-              data-status={machine.status.toLowerCase()}
-            >
-              <div className={styles.cardHeader}>
-                <h3 className={styles.machineName}>{machine.name}</h3>
-                <div className={styles.headerRight}>
-                  <div className={`${styles.statusIndicator} ${getStatusClass(machine.status)}`}>
-                    {getStatusText(machine.status)}
+    <>
+      <div className={styles.detailsContainer}>
+        <h2 className={styles.title}>СТАНКИ</h2>
+        
+        <div className={styles.tableContainer}>
+          <div className={styles.cardsWrapper}>
+            {machines.sort((a, b) => a.id - b.id).map(machine => (
+              <div 
+                key={machine.id} 
+                className={styles.machineCard}
+                data-status={machine.status.toLowerCase()}
+              >
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.machineName}>{machine.name}</h3>
+                  <div className={styles.headerRight}>
+                    {machine.status.toLowerCase() === 'active' && (
+                      <button 
+                        className={styles.resetButton}
+                        onClick={() => handleResetCounter(machine.id, machine.name)}
+                        title="Сбросить счетчик выполнено"
+                      >
+                        ↻
+                      </button>
+                    )}
+                    <div className={`${styles.statusIndicator} ${getStatusClass(machine.status)}`}>
+                      {getStatusText(machine.status)}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className={styles.cardBody}>
-                {machine.status.toLowerCase() === 'active' && (
-                  <>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Норма выработки:</span>
-                      <span className={styles.infoValue}>{machine.recommendedLoad} {machine.load_unit}.</span>
-                    </div>
-                    
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Выполнено:</span>
-                      <span className={styles.infoValue}>
-                        {machine.completedQuantity} {machine.load_unit}. ({calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%)
-                        <div className={styles.progressBar}>
-                          <div 
-                            className={styles.progressFill}  
-                            style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%` }}
-                          />
-                        </div>
-                      </span>
-                    </div>
-                  </>
-                )}
                 
-                {machine.status.toLowerCase() === 'inactive' && renderInactiveOverlay()}
-                {machine.status.toLowerCase() === 'maintenance' && renderMaintenanceOverlay()}
-                {machine.status.toLowerCase() === 'broken' && renderBrokenOverlay()}
+                <div className={styles.cardBody}>
+                  {machine.status.toLowerCase() === 'active' && (
+                    <>
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Норма выработки:</span>
+                        <span className={styles.infoValue}>{machine.recommendedLoad} {machine.load_unit}.</span>
+                      </div>
+                      
+                      {!machine.noSmenTask && (
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>Запланировано:</span>
+                          <span className={styles.infoValue}>{machine.plannedQuantity} {machine.load_unit}.</span>
+                        </div>
+                      )}
+                      
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Выполнено:</span>
+                        <span className={styles.infoValue}>
+                          {machine.completedQuantity} {machine.load_unit}. ({calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%)
+                          <div className={styles.progressBar}>
+                            <div 
+                              className={styles.progressFill}  
+                              style={{ width: `${calculateCompletionPercentage(machine.completedQuantity, machine.recommendedLoad)}%` }}
+                            />
+                          </div>
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {machine.status.toLowerCase() === 'inactive' && renderInactiveOverlay()}
+                  {machine.status.toLowerCase() === 'maintenance' && renderMaintenanceOverlay()}
+                  {machine.status.toLowerCase() === 'broken' && renderBrokenOverlay()}
 
-                <div className={styles.buttonContainer}>
-                  <button 
-                    className={styles.openTaskButton}
-                    onClick={() => handleOpenTask(machine.id)}
-                  >
-                    Открыть сменное задание
-                  </button>
+                  {!machine.noSmenTask && (
+                    <div className={styles.buttonContainer}>
+                      <button 
+                        className={styles.openTaskButton}
+                        onClick={() => handleOpenTask(machine.id)}
+                      >
+                        Открыть сменное задание
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
-      {selectedMachineId && (
-        <ShiftTaskModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          machineId={selectedMachineId}
-        />
-      )}
-    </div>
+      <ShiftTaskModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        machineId={selectedMachineId || 0}
+      />
+    </>
   );
 };
 

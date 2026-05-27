@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMachine, useCreateMachine, useUpdateMachine } from '../hooks/useMachinesQuery';
 import { MachineStatus, CreateMachineDto, UpdateMachineDto } from '../MachineSettings';
+import { ProductionType, PRODUCTION_TYPE_LABELS } from '@/types/production';
 import styles from './MachineForm.module.css';
 
 interface MachineFormProps {
@@ -15,6 +16,7 @@ interface FormData {
   recommendedLoad: string;
   loadUnit: string;
   noSmenTask: boolean;
+  productionType: ProductionType;
 }
 
 interface FormErrors {
@@ -35,6 +37,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
     recommendedLoad: '',
     loadUnit: '',
     noSmenTask: false,
+    productionType: ProductionType.BOTH,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -56,6 +59,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
         recommendedLoad: existingMachine.recommendedLoad.toString(),
         loadUnit: existingMachine.loadUnit,
         noSmenTask: existingMachine.noSmenTask,
+        productionType: existingMachine.productionType || ProductionType.BOTH,
       });
     }
   }, [isEditing, existingMachine]);
@@ -125,6 +129,7 @@ export const MachineForm: React.FC<MachineFormProps> = ({
         recommendedLoad: parseFloat(formData.recommendedLoad),
         loadUnit: formData.loadUnit.trim(),
         noSmenTask: formData.noSmenTask,
+        productionType: formData.productionType,
       };
 
       if (isEditing && editId) {
@@ -273,6 +278,23 @@ export const MachineForm: React.FC<MachineFormProps> = ({
           <div className={styles.fieldHelp}>
             Если включено, то станок работает без сменного задания
           </div>
+        </div>
+
+        {/* Тип производства */}
+        <div className={styles.field}>
+          <label htmlFor="productionType" className={styles.label}>
+            Тип производства *
+          </label>
+          <select
+            id="productionType"
+            value={formData.productionType}
+            onChange={(e) => handleInputChange('productionType', e.target.value as ProductionType)}
+            className={styles.select}
+          >
+            <option value={ProductionType.SERIAL}>{PRODUCTION_TYPE_LABELS[ProductionType.SERIAL]}</option>
+            <option value={ProductionType.CUSTOM}>{PRODUCTION_TYPE_LABELS[ProductionType.CUSTOM]}</option>
+            <option value={ProductionType.BOTH}>{PRODUCTION_TYPE_LABELS[ProductionType.BOTH]}</option>
+          </select>
         </div>
 
         {/* Кнопки */}

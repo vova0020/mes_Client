@@ -4,6 +4,7 @@ import { MachineList } from './components/MachineList';
 import { MachineDetails } from './components/MachineDetails';
 import { MachineForm } from './components/MachineForm';
 import { useMachines } from './hooks/useMachinesQuery';
+import { ProductionType } from '@/types/production';
 import styles from './MachineSettings.module.css';
 
 // Создаем Query Client
@@ -62,6 +63,7 @@ export interface Machine {
   recommendedLoad: number;
   loadUnit: string;
   noSmenTask: boolean;
+  productionType?: ProductionType;
   machinesStages?: MachineStageResponse[];
   machineSubstages?: MachineSubstageResponse[];
 }
@@ -72,6 +74,7 @@ export interface CreateMachineDto {
   recommendedLoad: number;
   loadUnit: string;
   noSmenTask: boolean;
+  productionType?: ProductionType;
 }
 
 export interface UpdateMachineDto {
@@ -80,6 +83,7 @@ export interface UpdateMachineDto {
   recommendedLoad?: number;
   loadUnit?: string;
   noSmenTask?: boolean;
+  productionType?: ProductionType;
 }
 
 export interface StageWithSubstages {

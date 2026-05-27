@@ -9,6 +9,7 @@ import {
   useMachines
 } from '../hooks/useMachinesQuery';
 import { Machine, MachineStatus } from '../MachineSettings';
+import { PRODUCTION_TYPE_LABELS } from '@/types/production';
 import styles from './MachineDetails.module.css';
 
 interface MachineDetailsProps {
@@ -254,6 +255,12 @@ export const MachineDetails: React.FC<MachineDetailsProps> = ({
                   <span className={styles.infoLabel}>Без сменного задания:</span>
                   <span className={styles.infoValue}>
                     {currentMachine.noSmenTask ? 'Да' : 'Нет'}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Тип производства:</span>
+                  <span className={styles.infoValue}>
+                    {currentMachine.productionType ? PRODUCTION_TYPE_LABELS[currentMachine.productionType] : 'Не указан'}
                   </span>
                 </div>
               </div>

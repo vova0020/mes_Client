@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { ProductionType } from '@/types/production';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const USERS_URL = '/settings/users';
@@ -90,6 +91,7 @@ export interface User {
   login: string;
   createdAt: string;
   updatedAt: string;
+  productionType?: ProductionType;
   userDetail: {
     firstName: string;
     lastName: string;
@@ -107,6 +109,7 @@ export interface CreateUserDto {
   phone?: string;
   position?: string;
   salary?: number;
+  productionType?: ProductionType;
 }
 
 export interface UpdateUserDto {
@@ -117,6 +120,7 @@ export interface UpdateUserDto {
   phone?: string;
   position?: string;
   salary?: number;
+  productionType?: ProductionType;
 }
 
 // Типы для комплектовщиков

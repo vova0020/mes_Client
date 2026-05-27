@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser, useUsers, useCreateUser, useUpdateUser, useCreatePickerWithRole } from '../hooks/useUsersQuery';
 import { CreateUserDto, UpdateUserDto } from '../services/usersApi';
+import { ProductionType, PRODUCTION_TYPE_LABELS } from '@/types/production';
 import styles from './UserForm.module.css';
 
 interface UserFormProps {
@@ -18,6 +19,7 @@ interface FormData {
   position: string;
   salary: string;
   createPicker: boolean;
+  productionType: ProductionType;
 }
 
 interface FormErrors {
@@ -44,6 +46,7 @@ export const UserForm: React.FC<UserFormProps> = ({
     position: '',
     salary: '',
     createPicker: false,
+    productionType: ProductionType.BOTH,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -71,6 +74,7 @@ export const UserForm: React.FC<UserFormProps> = ({
         position: existingUser.userDetail.position || '',
         salary: existingUser.userDetail.salary?.toString() || '',
         createPicker: false, // При редактировании не показываем опцию создания комплектовщика
+        productionType: existingUser.productionType || ProductionType.BOTH,
       });
     }
   }, [isEditing, existingUser]);
@@ -103,7 +107,7 @@ export const UserForm: React.FC<UserFormProps> = ({
       if (!formData.password.trim()) {
         newErrors.password = 'Пароль обязателен';
       } else if (formData.password.length < 6) {
-        newErrors.password = 'Пароль должен содержать минимум 6 символ��в';
+        newErrors.password = 'Пароль должен содержать минимум 6 символов';
       } else if (formData.password.length > 100) {
         newErrors.password = 'Пароль не должен превышать 100 символов';
       }
@@ -156,7 +160,7 @@ export const UserForm: React.FC<UserFormProps> = ({
   const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Очищаем ошибку для этого поля при изменении (только для строко��ых полей)
+    // Очищаем ошибку для этого поля при изменении (только для строковых полей)
     if (typeof value === 'string' && errors[field as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -176,6 +180,7 @@ export const UserForm: React.FC<UserFormProps> = ({
         login: formData.login.trim(),
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
+        productionType: formData.productionType,
       };
 
       // Добавляем пароль если он указан
@@ -196,7 +201,7 @@ export const UserForm: React.FC<UserFormProps> = ({
       if (formData.salary.trim()) {
         const salaryValue = parseFloat(formData.salary);
         if (!isNaN(salaryValue)) {
-          userData.salary = salaryValue; // Отп��авляем как число, а не строку
+          userData.salary = salaryValue; // Отправляем как число, а не строку
         }
       }
 
@@ -440,6 +445,23 @@ export const UserForm: React.FC<UserFormProps> = ({
             </div>
           </div>
         )}
+
+        {/* Тип производства */}
+        <div className={styles.field}>
+          <label htmlFor="productionType" className={styles.label}>
+            Тип производства *
+          </label>
+          <select
+            id="productionType"
+            value={formData.productionType}
+            onChange={(e) => handleInputChange('productionType', e.target.value as ProductionType)}
+            className={styles.select}
+          >
+            <option value={ProductionType.SERIAL}>{PRODUCTION_TYPE_LABELS[ProductionType.SERIAL]}</option>
+            <option value={ProductionType.CUSTOM}>{PRODUCTION_TYPE_LABELS[ProductionType.CUSTOM]}</option>
+            <option value={ProductionType.BOTH}>{PRODUCTION_TYPE_LABELS[ProductionType.BOTH]}</option>
+          </select>
+        </div>
 
         {/* Кнопки */}
         <div className={styles.actions}>

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ProductionType } from '@/types/production';
 
 // Типы данных для авторизации
 export interface AuthCredentials {
@@ -15,6 +16,7 @@ export interface User {
   firstName: string;
   lastName: string;
   position: string;
+  productionType?: ProductionType;
 }
 
 export interface Machine {
@@ -80,6 +82,11 @@ const authService = {
     localStorage.setItem('authToken', authData.token);
     localStorage.setItem('user', JSON.stringify(authData.user));
     localStorage.setItem('assignments', JSON.stringify(authData.assignments));
+
+    // Сохраняем тип производства отдельно для быстрого доступа
+    if (authData.user.productionType) {
+      localStorage.setItem('productionType', authData.user.productionType);
+    }
 
     // Устанавливаем первый доступный этап как выбранный для роли master
     if (authData.user.primaryRole === 'master' && authData.assignments.stages && authData.assignments.stages.length > 0) {
@@ -172,6 +179,7 @@ const authService = {
     localStorage.removeItem('assignments');
     localStorage.removeItem('tokenExpires');
     localStorage.removeItem('selectedStage');
+    localStorage.removeItem('productionType');
   },
 
   // Проверка наличия определенной роли у пользователя

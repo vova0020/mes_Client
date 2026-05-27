@@ -16,6 +16,7 @@ import {
   useDeletePicker
 } from '../hooks/useUsersQuery';
 import { User, CreateRoleBindingDto } from '../services/usersApi';
+import { PRODUCTION_TYPE_LABELS } from '@/types/production';
 import styles from './UserDetails.module.css';
 
 interface UserDetailsProps {
@@ -63,7 +64,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   useEffect(() => {
     if (currentUser && onUserUpdated && selectedUser) {
       if (JSON.stringify(currentUser) !== JSON.stringify(selectedUser)) {
-        console.log('[UserDetails] Обнаружено обновление поль��ователя, уведомляем родителя');
+        console.log('[UserDetails] Обнаружено обновление пользователя, уведомляем родителя');
         onUserUpdated(currentUser);
       }
     }
@@ -136,7 +137,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
         console.log('[UserDetails] Контекстная привязка успешно удалена');
       } catch (error) {
         console.error('Ошибка удаления контекстной привязки:', error);
-        alert('Ошибка удаления контекстной привязки. Поп��обуйте еще раз.');
+        alert('Ошибка удаления контекстной привязки. Попробуйте еще раз.');
       }
     }
   };
@@ -145,7 +146,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
     if (!currentUser) return;
     
     try {
-      console.log('[UserDetails] Создаем ��омплектовщика для пользователя:', currentUser.userId);
+      console.log('[UserDetails] Создаем комплектовщика для пользователя:', currentUser.userId);
       await createPickerWithRoleMutation.mutateAsync({
         userId: currentUser.userId,
         assignRole: true
@@ -153,7 +154,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
       setShowCreatePickerModal(false);
       console.log('[UserDetails] Комплектовщик успешно создан');
     } catch (error) {
-      console.error('Ошибка создания комплект��вщика:', error);
+      console.error('Ошибка создания комплектовщика:', error);
       alert('Ошибка создания комплектовщика. Попробуйте еще раз.');
     }
   };
@@ -346,6 +347,12 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                     {formatSalary(currentUser.userDetail.salary)}
                   </span>
                 </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Тип производства:</span>
+                  <span className={styles.infoValue}>
+                    {currentUser.productionType ? PRODUCTION_TYPE_LABELS[currentUser.productionType] : 'Не указан'}
+                  </span>
+                </div>
               </div>
 
               <div className={styles.infoCard}>
@@ -363,7 +370,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   </span>
                 </div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Глобальных р��лей:</span>
+                  <span className={styles.infoLabel}>Глобальных ролей:</span>
                   <span className={styles.infoValue}>
                     {userRoles?.globalRoles.length || 0}
                   </span>
