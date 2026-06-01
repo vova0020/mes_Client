@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useCustomPallets } from '../../../../hooks/custom';
 import { useCustomDetails } from '../../../../hooks/custom';
 import { useRedistribute } from '../../../../hooks/custom/pallets/useRedistribute';
+import { machineAssignmentApi } from '../../../../api/custom/machines/machineAssignmentApi';
+import { CustomMachine } from '../../../../hooks/custom/master/useMachinesCustomMaster';
 import styles from './PalletsTable.module.css';
 import PalletsSidebar from '../PalletsSidebar/PalletsSidebar';
 import RedistributeModal from '../RedistributeModal/RedistributeModal';
@@ -31,9 +33,11 @@ interface Part {
 interface PalletsTableProps {
   selectedOrderId: number | null;
   onShowParts: (palletId: number) => void;
+  machines: CustomMachine[];
+  currentStageId: number | null;
 }
 
-const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowParts }) => {
+const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowParts, machines, currentStageId }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
   const [partQuantities, setPartQuantities] = useState<{ [key: number]: number }>({});
@@ -242,6 +246,28 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
     }
   };
 
+  const handleAssignMachine = async (palletId: number, machineId: number) => {
+    if (!currentStageId) {
+      console.error('Не выбран этап производства');
+      return;
+    }
+
+    try {
+      await machineAssignmentApi.createAssignment({
+        machineId,
+        customPalletId: palletId,
+        stageId: currentStageId,
+        priority: 0
+      });
+      
+      if (selectedOrderId) {
+        await fetchOrderPallets(selectedOrderId);
+      }
+    } catch (error) {
+      console.error('Ошибка назначения станка:', error);
+    }
+  };
+
   if (!selectedOrderId) {
     return (
       <div className={styles.detailsContainer}>
@@ -307,6 +333,8 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
             <tbody>
               {pallets?.pallets?.map((pallet) => {
                 const materials = [...new Set(pallet.parts.map(p => p.materialName))].join(', ');
+                const assignedMachine = pallet.assignedMachine;
+                
                 return (
                 <tr key={pallet.customPalletId}>
                   <td>{pallet.palletName}</td>
@@ -320,7 +348,32 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
                     <button className={styles.mlButton}>МЛ поддона</button>
                   </td>
                   <td>-</td>
-                  <td>Не назначен</td>
+                  <td>
+                    {assignedMachine ? (
+                      <div className={styles.assignedMachineInfo}>
+                        <span className={styles.machineName}>{assignedMachine.machineName}</span>
+                        <span className={styles.assignmentStatus}>
+                          {assignedMachine.assignmentStatus === 'PENDING' && 'Ожидает'}
+                          {assignedMachine.assignmentStatus === 'IN_PROGRESS' && 'В работе'}
+                          {assignedMachine.assignmentStatus === 'COMPLETED' && 'Завершено'}
+                          {assignedMachine.assignmentStatus === 'NOT_PROCESSED' && 'Не обработано'}
+                        </span>
+                      </div>
+                    ) : (
+                      <select 
+                        className={styles.machineSelect}
+                        onChange={(e) => handleAssignMachine(pallet.customPalletId, Number(e.target.value))}
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Выберите станок</option>
+                        {machines.filter(m => m.status === 'ACTIVE').map(machine => (
+                          <option key={machine.id} value={machine.id}>
+                            {machine.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
                   <td>
                     <button 
                       className={styles.arrowButton}

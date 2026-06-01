@@ -7,6 +7,7 @@ import MachinesCards from './components/MachinesCards/MachinesCards';
 import PartsModal from './components/PartsModal/PartsModal';
 import RotateScreen from '../../../componentsGlobal/RotateScreen/RotateScreen';
 import { useStageNavbar } from '../../../componentsGlobal/Navbar/useStageNavbar';
+import useMachinesCustomMaster from '../../hooks/custom/master/useMachinesCustomMaster';
 import styles from './CustomMasterPage.module.css';
 
 const CustomMasterPage: React.FC = () => {
@@ -15,6 +16,7 @@ const CustomMasterPage: React.FC = () => {
   const [selectedPalletId, setSelectedPalletId] = useState<number | null>(null);
   const [currentStageId, setCurrentStageId] = useState<number | null>(null);
   const { getCurrentStage } = useStageNavbar();
+  const { machines } = useMachinesCustomMaster();
 
   useEffect(() => {
     const stage = getCurrentStage();
@@ -69,6 +71,8 @@ const CustomMasterPage: React.FC = () => {
                 <PalletsTable 
                   selectedOrderId={selectedOrderId}
                   onShowParts={handleShowParts}
+                  machines={machines}
+                  currentStageId={currentStageId}
                 />
               </div>
             </div>

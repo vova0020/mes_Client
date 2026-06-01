@@ -688,3 +688,58 @@
   line-height: 1.6;
   max-width: 400px;
 }
+
+.machineSelect {
+  padding: 6px 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 12px;
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-width: 120px;
+}
+
+.machineSelect:hover {
+  border-color: #3498db;
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.05),
+    0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.machineSelect:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.05),
+    0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.machineSelect option {
+  padding: 8px;
+}
+
+.assignedMachineInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.machineName {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 12px;
+}
+
+.assignmentStatus {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, #e8f4fc, #d4e9f7);
+  color: #2980b9;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}

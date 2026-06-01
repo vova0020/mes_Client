@@ -11,6 +11,18 @@ export interface PalletPart {
   quantity: number;
 }
 
+export interface PalletAssignedMachine {
+  assignmentId: number;
+  machineId: number;
+  machineName: string;
+  machineStatus: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'BROKEN';
+  routeStageId: number;
+  stageName: string;
+  assignmentStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'NOT_PROCESSED';
+  priority: number;
+  assignedAt: string;
+}
+
 export interface PalletPartDetails {
   customPartId: number;
   customOrderId: number;
@@ -48,6 +60,7 @@ export interface CustomPallet {
   palletName: string;
   isActive: boolean;
   createdAt: string;
+  assignedMachine: PalletAssignedMachine | null;
   parts: PalletPart[];
 }
 

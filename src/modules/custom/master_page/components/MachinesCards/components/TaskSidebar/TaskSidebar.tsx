@@ -1,31 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './TaskSidebar.module.css';
-
-// Типы данных
-interface Detail {
-  id: number;
-  detailArticle: string;
-  detailName: string;
-  material: string;
-  size: string;
-  quantity: number;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
-}
-
-interface Pallet {
-  id: number;
-  palletNumber: string;
-  details: Detail[];
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
-}
-
-interface Order {
-  id: number;
-  orderName: string;
-  totalPallets: number;
-  totalDetails: number;
-  pallets: Pallet[];
-}
+import { machineAssignmentsApi } from '../../../../../../api/custom/machines/machineAssignmentsApi';
+import useCustomMachinesMaster from '../../../../../../hooks/custom/master/useCustomMachinesMaster';
 
 interface TaskSidebarProps {
   isOpen: boolean;
@@ -34,119 +10,22 @@ interface TaskSidebarProps {
   machineName?: string;
 }
 
-// Тестовые данные
-const mockData: Order[] = [
-  {
-    id: 1,
-    orderName: '303/145 Очень важный',
-    totalPallets: 2,
-    totalDetails: 666,
-    pallets: [
-      {
-        id: 1,
-        palletNumber: 'ABCD-ABCD-38',
-        status: 'IN_PROGRESS',
-        details: [
-          {
-            id: 1,
-            detailArticle: 'ABCD-ABCD-38',
-            detailName: 'Боковина шкафа правая/левая кривая',
-            material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-            size: '2050x650',
-            quantity: 25,
-            status: 'IN_PROGRESS'
-          },
-          {
-            id: 2,
-            detailArticle: 'ABCD-ABCD-38',
-            detailName: 'Боковина шкафа правая/левая кривая',
-            material: 'ЛДСП Дуб Сонома темный - 16мм (23)',
-            size: '2050x650',
-            quantity: 25,
-            status: 'PENDING'
-          },
-          {
-            id: 3,
-            detailArticle: 'ABCD-ABCD-38',
-            detailName: 'Боковина шкафа правая/левая кривая',
-            material: 'ЛМДФ - 16мм (15)',
-            size: '2050x650',
-            quantity: 25,
-            status: 'PENDING'
-          }
-        ]
-      },
-      {
-        id: 2,
-        palletNumber: 'ABCD-ABCD-38',
-        status: 'PENDING',
-        details: [
-          {
-            id: 4,
-            detailArticle: 'ABCD-ABCD-38',
-            detailName: 'Боковина шкафа правая/левая кривая',
-            material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-            size: '2050x650',
-            quantity: 111,
-            status: 'PENDING'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    orderName: '304/150 Срочный заказ',
-    totalPallets: 1,
-    totalDetails: 150,
-    pallets: [
-      {
-        id: 3,
-        palletNumber: 'EFGH-EFGH-42',
-        status: 'PENDING',
-        details: [
-          {
-            id: 5,
-            detailArticle: 'EFGH-EFGH-42',
-            detailName: 'Полка верхняя',
-            material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-            size: '1800x400',
-            quantity: 50,
-            status: 'PENDING'
-          },
-          {
-            id: 6,
-            detailArticle: 'EFGH-EFGH-42',
-            detailName: 'Полка нижняя',
-            material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-            size: '1800x400',
-            quantity: 50,
-            status: 'PENDING'
-          },
-          {
-            id: 7,
-            detailArticle: 'EFGH-EFGH-42',
-            detailName: 'Полка средняя',
-            material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-            size: '1800x400',
-            quantity: 50,
-            status: 'PENDING'
-          }
-        ]
-      }
-    ]
-  }
-];
-
 const TaskSidebar: React.FC<TaskSidebarProps> = ({ 
   isOpen, 
   onClose, 
   machineId,
   machineName = 'Станок'
 }) => {
-  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set([1]));
+  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set([]));
   const [expandedPallets, setExpandedPallets] = useState<Set<number>>(new Set());
-  const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
+
+  const { orders, loading, fetchAssignments } = useCustomMachinesMaster(machineId);
+
+  useEffect(() => {
+    if (isOpen && machineId) {
+      fetchAssignments(machineId);
+    }
+  }, [isOpen, machineId, fetchAssignments]);
 
   const toggleOrder = (orderId: number) => {
     const newExpanded = new Set(expandedOrders);
@@ -166,16 +45,6 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       newExpanded.add(palletId);
     }
     setExpandedPallets(newExpanded);
-  };
-
-  const toggleDetail = (detailId: number) => {
-    const newExpanded = new Set(expandedDetails);
-    if (newExpanded.has(detailId)) {
-      newExpanded.delete(detailId);
-    } else {
-      newExpanded.add(detailId);
-    }
-    setExpandedDetails(newExpanded);
   };
 
   const getStatusClass = (status: string): string => {
@@ -204,43 +73,95 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     }
   };
 
-  const handleStartPallet = (palletId: number) => {
-    console.log('Взять в работу поддон:', palletId);
-    // TODO: API вызов
-  };
-
-  const handleCompletePallet = (palletId: number) => {
-    console.log('Завершить работу над поддоном:', palletId);
-    // TODO: API вызов
-  };
-
-  const handleStartDetail = (detailId: number) => {
-    console.log('Взять в работу деталь:', detailId);
-    // TODO: API вызов
-  };
-
-  const handleCompleteDetail = (detailId: number) => {
-    console.log('Завершить работу над деталью:', detailId);
-    // TODO: API вызов
-  };
-
-  const handleDeletePallet = (palletId: number) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот поддон?')) {
-      console.log('Удалить поддон:', palletId);
-      // TODO: API вызов
+  // Взять в работу все детали поддона, которые еще не в работе
+  const handleStartAllDetails = async (pallet: any) => {
+    try {
+      const pendingDetails = pallet.details.filter((d: any) => d.status === 'PENDING');
+      
+      for (const detail of pendingDetails) {
+        await machineAssignmentsApi.startDetail(detail.assignmentPartId);
+      }
+      
+      await fetchAssignments(machineId);
+    } catch (err: any) {
+      console.error('Ошибка начала работы над деталями:', err);
     }
   };
 
-  const handleDeleteDetail = (detailId: number) => {
+  // Завершить все детали поддона, которые еще не завершены
+  const handleCompleteAllDetails = async (pallet: any) => {
+    try {
+      const inProgressDetails = pallet.details.filter((d: any) => d.status === 'IN_PROGRESS');
+      
+      for (const detail of inProgressDetails) {
+        await machineAssignmentsApi.completeDetail(detail.assignmentPartId, {
+          processedQuantity: detail.plannedQuantity
+        });
+      }
+      
+      await fetchAssignments(machineId);
+    } catch (err: any) {
+      console.error('Ошибка завершения работы над деталями:', err);
+    }
+  };
+
+  // Проверить, все ли детали в работе
+  const areAllDetailsInProgress = (pallet: any): boolean => {
+    return pallet.details.every((d: any) => d.status === 'IN_PROGRESS' || d.status === 'COMPLETED');
+  };
+
+  // Проверить, все ли детали завершены
+  const areAllDetailsCompleted = (pallet: any): boolean => {
+    return pallet.details.every((d: any) => d.status === 'COMPLETED');
+  };
+
+  // Проверить, есть ли хотя бы одна деталь в работе
+  const hasDetailsInProgress = (pallet: any): boolean => {
+    return pallet.details.some((d: any) => d.status === 'IN_PROGRESS');
+  };
+
+  const handleStartDetail = async (assignmentPartId: number) => {
+    try {
+      await machineAssignmentsApi.startDetail(assignmentPartId);
+      await fetchAssignments(machineId);
+    } catch (err: any) {
+      console.error('Ошибка начала работы над деталью:', err);
+    }
+  };
+
+  const handleCompleteDetail = async (assignmentPartId: number, processedQuantity: number) => {
+    try {
+      await machineAssignmentsApi.completeDetail(assignmentPartId, { processedQuantity });
+      await fetchAssignments(machineId);
+    } catch (err: any) {
+      console.error('Ошибка завершения работы над деталью:', err);
+    }
+  };
+
+  const handleDeletePallet = async (assignmentId: number) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот поддон?')) {
+      try {
+        await machineAssignmentsApi.deleteAssignment(assignmentId);
+        await fetchAssignments(machineId);
+      } catch (err: any) {
+        console.error('Ошибка удаления задания:', err);
+      }
+    }
+  };
+
+  const handleDeleteDetail = async (assignmentPartId: number) => {
     if (window.confirm('Вы уверены, что хотите удалить эту деталь?')) {
-      console.log('Удалить деталь:', detailId);
-      // TODO: API вызов
+      try {
+        await machineAssignmentsApi.deleteDetail(assignmentPartId);
+        await fetchAssignments(machineId);
+      } catch (err: any) {
+        console.error('Ошибка удаления детали:', err);
+      }
     }
   };
 
   const handleReassignMachine = (itemId: number, itemType: 'pallet' | 'detail') => {
     console.log(`Переназначить станок для ${itemType}:`, itemId);
-    // TODO: API вызов
   };
 
   return (
@@ -251,15 +172,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       </div>
 
       <div className={styles.sidebarContent}>
-        {mockData.map((order) => (
-          <div key={order.id} className={styles.orderGroup}>
-            {/* Уровень 1: Заказ */}
+        {orders.map((order) => (
+          <div key={order.orderId} className={styles.orderGroup}>
             <div 
               className={styles.orderHeader}
-              onClick={() => toggleOrder(order.id)}
+              onClick={() => toggleOrder(order.orderId)}
             >
               <div className={styles.expandIcon}>
-                {expandedOrders.has(order.id) ? '▼' : '▶'}
+                {expandedOrders.has(order.orderId) ? '▼' : '▶'}
               </div>
               <div className={styles.orderInfo}>
                 <div className={styles.orderTitle}>Заказ: {order.orderName}</div>
@@ -269,17 +189,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
               </div>
             </div>
 
-            {/* Уровень 2: Поддоны */}
-            {expandedOrders.has(order.id) && (
+            {expandedOrders.has(order.orderId) && (
               <div className={styles.palletsContainer}>
                 {order.pallets.map((pallet) => (
-                  <div key={pallet.id} className={styles.palletGroup}>
+                  <div key={pallet.assignmentId} className={styles.palletGroup}>
                     <div 
                       className={styles.palletHeader}
-                      onClick={() => togglePallet(pallet.id)}
+                      onClick={() => togglePallet(pallet.assignmentId)}
                     >
                       <div className={styles.expandIcon}>
-                        {expandedPallets.has(pallet.id) ? '▼' : '▶'}
+                        {expandedPallets.has(pallet.assignmentId) ? '▼' : '▶'}
                       </div>
                       <div className={styles.palletInfo}>
                         <div className={styles.palletNumber}>№ поддона</div>
@@ -288,7 +207,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                       <div className={styles.palletInfo}>
                         <div className={styles.palletLabel}>Материалы</div>
                         <div className={styles.palletValue}>
-                          {pallet.details.map(d => d.material).join(', ')}
+                          {pallet.details.map(d => d.materialName).join(', ')}
                         </div>
                       </div>
                       <div className={styles.palletInfo}>
@@ -299,16 +218,29 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                       </div>
                       <div className={styles.palletInfo}>
                         <div className={styles.palletLabel}>Деталей на поддоне</div>
-                        <div className={styles.palletValue}>{pallet.details.reduce((sum, d) => sum + d.quantity, 0)}</div>
+                        <div className={styles.palletValue}>{pallet.details.reduce((sum, d) => sum + d.plannedQuantity, 0)}</div>
                       </div>
                       <div className={styles.palletActions} onClick={(e) => e.stopPropagation()}>
-                        <button 
-                          className={`${styles.actionButton} ${styles.startButton}`}
-                          onClick={() => handleStartPallet(pallet.id)}
-                          disabled={pallet.status === 'IN_PROGRESS' || pallet.status === 'COMPLETED'}
-                        >
-                          Начать/Завершить
-                        </button>
+                        {!areAllDetailsCompleted(pallet) && (
+                          <>
+                            {!areAllDetailsInProgress(pallet) && (
+                              <button
+                                className={`${styles.actionButton} ${styles.startButton}`}
+                                onClick={() => handleStartAllDetails(pallet)}
+                              >
+                                Взять в работу все
+                              </button>
+                            )}
+                            {hasDetailsInProgress(pallet) && areAllDetailsInProgress(pallet) && (
+                              <button
+                                className={`${styles.actionButton} ${styles.completeButton}`}
+                                onClick={() => handleCompleteAllDetails(pallet)}
+                              >
+                                Завершить все
+                              </button>
+                            )}
+                          </>
+                        )}
                         <input 
                           type="text" 
                           className={styles.machineInput}
@@ -317,15 +249,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                         />
                         <button 
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => handleDeletePallet(pallet.id)}
+                          onClick={() => handleDeletePallet(pallet.assignmentId)}
                         >
                           Удалить
                         </button>
                       </div>
                     </div>
 
-                    {/* Уровень 3: Детали */}
-                    {expandedPallets.has(pallet.id) && (
+                    {expandedPallets.has(pallet.assignmentId) && (
                       <div className={styles.detailsContainer}>
                         <div className={styles.detailsHeader}>
                           <span>Артикул детали</span>
@@ -338,21 +269,21 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                         </div>
 
                         {pallet.details.map((detail) => (
-                          <div key={detail.id} className={styles.detailRow}>
+                          <div key={detail.assignmentPartId} className={styles.detailRow}>
                             <div className={styles.detailCell} data-label="Артикул детали">
-                              {detail.detailArticle}
+                              {detail.partCode}
                             </div>
                             <div className={styles.detailCell} data-label="Название детали">
-                              {detail.detailName}
+                              {detail.partName}
                             </div>
                             <div className={styles.detailCell} data-label="Материал">
-                              {detail.material}
+                              {detail.materialName}
                             </div>
                             <div className={styles.detailCell} data-label="Размер">
                               {detail.size}
                             </div>
                             <div className={styles.detailCell} data-label="Количество">
-                              {detail.quantity}
+                              {detail.plannedQuantity}
                             </div>
                             <div className={styles.detailCell} data-label="Статус">
                               <div className={`${styles.statusIndicator} ${getStatusClass(detail.status)}`}>
@@ -361,13 +292,22 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             </div>
                             <div className={styles.detailCell} data-label="Действия">
                               <div className={styles.detailActions}>
-                                <button
-                                  className={`${styles.actionButton} ${styles.startButton}`}
-                                  onClick={() => handleStartDetail(detail.id)}
-                                  disabled={detail.status === 'IN_PROGRESS' || detail.status === 'COMPLETED'}
-                                >
-                                  Начать/Завершить
-                                </button>
+                                {detail.status === 'PENDING' && (
+                                  <button
+                                    className={`${styles.actionButton} ${styles.startButton}`}
+                                    onClick={() => handleStartDetail(detail.assignmentPartId)}
+                                  >
+                                    В работу
+                                  </button>
+                                )}
+                                {detail.status === 'IN_PROGRESS' && (
+                                  <button
+                                    className={`${styles.actionButton} ${styles.completeButton}`}
+                                    onClick={() => handleCompleteDetail(detail.assignmentPartId, detail.plannedQuantity)}
+                                  >
+                                    Завершить
+                                  </button>
+                                )}
                                 <input
                                   type="text"
                                   className={styles.machineInput}
@@ -375,7 +315,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                 />
                                 <button
                                   className={`${styles.actionButton} ${styles.deleteButton}`}
-                                  onClick={() => handleDeleteDetail(detail.id)}
+                                  onClick={() => handleDeleteDetail(detail.assignmentPartId)}
                                 >
                                   Удалить
                                 </button>
