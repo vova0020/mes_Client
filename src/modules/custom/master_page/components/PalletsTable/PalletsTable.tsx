@@ -11,11 +11,24 @@ import RedistributeModal from '../RedistributeModal/RedistributeModal';
 interface Pallet {
   id: number;
   palletNumber: string;
-  parts: Part[];
+  parts: PartForSidebar[];
   materials: string;
   address: string;
   status: string;
   machine: string;
+}
+
+interface PartForSidebar {
+  id: number;
+  articleNumber: string;
+  name: string;
+  quantity: number;
+  material: string;
+  size: string;
+  substage: string;
+  readyForProcessing: number;
+  completed: number;
+  status: string;
 }
 
 interface Part {
@@ -56,9 +69,9 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
 
   useEffect(() => {
     if (selectedOrderId) {
-      fetchOrderPallets(selectedOrderId);
+      fetchOrderPallets(selectedOrderId, currentStageId || undefined);
     }
-  }, [selectedOrderId, fetchOrderPallets]);
+  }, [selectedOrderId, currentStageId, fetchOrderPallets]);
 
   useEffect(() => {
     if (showCreateModal && selectedOrderId) {
@@ -75,7 +88,7 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
     }
   };
 
-  const availableParts = (orderDetails?.parts || []).filter(part => part.undistributedQuantity > 0);
+  const availableParts = (orderDetails?.parts || []).filter(part => (part.undistributedQuantity ?? 0) > 0);
 
   const filteredParts = availableParts.filter(part => {
     const query = searchQuery.toLowerCase();
@@ -107,7 +120,7 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
     return 0;
   });
 
-  const handleTogglePart = (partId: number, maxQuantity: number) => {
+  const handleTogglePart = (partId: number, maxQuantity?: number) => {
     if (selectedParts.includes(partId)) {
       setSelectedParts(selectedParts.filter(id => id !== partId));
       const newQuantities = { ...partQuantities };
@@ -115,17 +128,17 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
       setPartQuantities(newQuantities);
     } else {
       setSelectedParts([...selectedParts, partId]);
-      setPartQuantities({ ...partQuantities, [partId]: Math.min(maxQuantity, 1) });
+      setPartQuantities({ ...partQuantities, [partId]: Math.min(maxQuantity ?? 1, 1) });
     }
   };
 
-  const handleRowClick = (partId: number, maxQuantity: number) => {
+  const handleRowClick = (partId: number, maxQuantity?: number) => {
     handleTogglePart(partId, maxQuantity);
   };
 
-  const handleQuantityChange = (partId: number, value: string, maxQuantity: number) => {
+  const handleQuantityChange = (partId: number, value: string, maxQuantity?: number) => {
     const numValue = parseInt(value) || 0;
-    const clampedValue = Math.min(Math.max(1, numValue), maxQuantity);
+    const clampedValue = Math.min(Math.max(1, numValue), maxQuantity ?? 1);
     setPartQuantities({ ...partQuantities, [partId]: clampedValue });
   };
 
@@ -138,7 +151,7 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
       setSelectedParts(allPartIds);
       const quantities: { [key: number]: number } = {};
       sortedParts.forEach(p => {
-        quantities[p.customPartId] = p.undistributedQuantity;
+        quantities[p.customPartId] = p.undistributedQuantity ?? 0;
       });
       setPartQuantities(quantities);
     }
@@ -175,8 +188,8 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
     const pallet = pallets?.pallets?.find(p => p.customPalletId === palletId);
     if (pallet) {
       try {
-        // Запрашиваем детали конкретного поддона
-        const palletDetails = await fetchPalletParts(palletId);
+        // Запрашиваем детали конкретного поддона с учетом текущего этапа
+        const palletDetails = await fetchPalletParts(palletId, currentStageId || undefined);
         
         // Преобразуем данные из API в формат, который ожидает PalletsSidebar
         const adaptedPallet: Pallet = {
@@ -196,7 +209,7 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
             substage: '-',
             readyForProcessing: 0,
             completed: 0,
-            status: part.status
+            status: part.stageStatus || part.status // Используем stageStatus, если доступен
           }))
         };
         setSelectedPalletId(palletId);
@@ -243,6 +256,44 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
       setShowRedistributeModal(false);
     } catch (error) {
       console.error('Ошибка перераспределения:', error);
+    }
+  };
+
+  const getStatusClass = (status: string): string => {
+    switch (status) {
+      case 'NOT_PROCESSED':
+        return styles.statusNotProcessed;
+      case 'PENDING':
+        return styles.statusPending;
+      case 'IN_PROGRESS':
+        return styles.statusInProgress;
+      case 'COMPLETED':
+        return styles.statusCompleted;
+      case 'ACTIVE':
+        return styles.statusActive;
+      case 'INACTIVE':
+        return styles.statusInactive;
+      default:
+        return styles.statusPending;
+    }
+  };
+
+  const getStatusText = (status: string): string => {
+    switch (status) {
+      case 'NOT_PROCESSED':
+        return 'Не обработано';
+      case 'PENDING':
+        return 'Ожидание';
+      case 'IN_PROGRESS':
+        return 'В работе';
+      case 'COMPLETED':
+        return 'Завершено';
+      case 'ACTIVE':
+        return 'Активен';
+      case 'INACTIVE':
+        return 'Неактивен';
+      default:
+        return 'Ожидание';
     }
   };
 
@@ -340,23 +391,38 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
                   <td>{pallet.palletName}</td>
                   <td>{materials || '-'}</td>
                   <td>Не назначен</td>
-                  <td>{pallet.isActive ? 'Активен' : 'Неактивен'}</td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${getStatusClass(pallet.status || (pallet.isActive ? 'ACTIVE' : 'INACTIVE'))}`}>
+                      {getStatusText(pallet.status || (pallet.isActive ? 'ACTIVE' : 'INACTIVE'))}
+                    </span>
+                  </td>
                   <td>{pallet.parts.length}</td>
-                  <td>-</td>
-                  <td>-</td>
+                  <td>{pallet.readyToProcess ?? '-'}</td>
+                  <td>{pallet.completed ?? '-'}</td>
                   <td>
                     <button className={styles.mlButton}>МЛ поддона</button>
                   </td>
                   <td>-</td>
                   <td>
-                    {assignedMachine ? (
+                    {pallet.currentMachine ? (
+                      <div className={styles.assignedMachineInfo}>
+                        <span className={styles.machineName}>{pallet.currentMachine.machineName}</span>
+                        <span className={`${styles.statusBadge} ${getStatusClass(pallet.currentMachine.assignmentStatus || '')}`}>
+                          {getStatusText(pallet.currentMachine.assignmentStatus || '')}
+                        </span>
+                      </div>
+                    ) : pallet.completedByMachine ? (
+                      <div className={styles.assignedMachineInfo}>
+                        <span className={styles.machineName}>{pallet.completedByMachine.machineName}</span>
+                        <span className={`${styles.statusBadge} ${styles.statusCompleted}`}>
+                          Завершено
+                        </span>
+                      </div>
+                    ) : assignedMachine ? (
                       <div className={styles.assignedMachineInfo}>
                         <span className={styles.machineName}>{assignedMachine.machineName}</span>
-                        <span className={styles.assignmentStatus}>
-                          {assignedMachine.assignmentStatus === 'PENDING' && 'Ожидает'}
-                          {assignedMachine.assignmentStatus === 'IN_PROGRESS' && 'В работе'}
-                          {assignedMachine.assignmentStatus === 'COMPLETED' && 'Завершено'}
-                          {assignedMachine.assignmentStatus === 'NOT_PROCESSED' && 'Не обработано'}
+                        <span className={`${styles.statusBadge} ${getStatusClass(assignedMachine.assignmentStatus)}`}>
+                          {getStatusText(assignedMachine.assignmentStatus)}
                         </span>
                       </div>
                     ) : (
@@ -488,17 +554,17 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
                       <td>{part.partName}</td>
                       <td>{part.materialName}</td>
                       <td>{part.finishedLength} x {part.finishedWidth}</td>
-                      <td>{part.undistributedQuantity}</td>
+                      <td>{part.undistributedQuantity ?? 0}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <input
                           type="number"
                           className={styles.quantityInput}
                           min="1"
-                          max={part.undistributedQuantity}
-                          value={partQuantities[part.customPartId] || part.undistributedQuantity}
+                          max={part.undistributedQuantity ?? 0}
+                          value={partQuantities[part.customPartId] || (part.undistributedQuantity ?? 0)}
                           onChange={(e) => handleQuantityChange(part.customPartId, e.target.value, part.undistributedQuantity)}
                           disabled={!selectedParts.includes(part.customPartId)}
-                          placeholder={part.undistributedQuantity.toString()}
+                          placeholder={(part.undistributedQuantity ?? 0).toString()}
                         />
                       </td>
                       <td>-</td>

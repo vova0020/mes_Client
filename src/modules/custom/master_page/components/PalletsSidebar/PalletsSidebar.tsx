@@ -109,15 +109,50 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ isOpen, onClose, pallet
   };
 
   const getStatusClass = (status: string): string => {
-    switch (status.toLowerCase()) {
-      case 'готово к обработке':
+    const normalizedStatus = status.toUpperCase().replace(/\s+/g, '_');
+    switch (normalizedStatus) {
+      case 'NOT_PROCESSED':
+      case 'ГОТОВО_К_ОБРАБОТКЕ':
+      case 'PASSED_PREVIOUS_STAGE':
         return styles.statusPassedPreviousStage;
-      case 'в работе':
+      case 'IN_PROGRESS':
+      case 'В_РАБОТЕ':
         return styles.statusInProgress;
-      case 'завершено':
+      case 'COMPLETED':
+      case 'ЗАВЕРШЕНО':
         return styles.statusCompleted;
+      case 'PENDING':
+      case 'ОЖИДАНИЕ':
+        return styles.statusOnMachine;
+      case 'PARTIALLY_COMPLETED':
+      case 'ЧАСТИЧНО_ВЫПОЛНЕНО':
+        return styles.statusPartiallyCompleted;
       default:
-        return '';
+        return styles.statusOnMachine;
+    }
+  };
+
+  const getStatusText = (status: string): string => {
+    const normalizedStatus = status.toUpperCase().replace(/\s+/g, '_');
+    switch (normalizedStatus) {
+      case 'NOT_PROCESSED':
+        return 'Не обработано';
+      case 'PENDING':
+        return 'Ожидание';
+      case 'IN_PROGRESS':
+        return 'В работе';
+      case 'COMPLETED':
+        return 'Завершено';
+      case 'PARTIALLY_COMPLETED':
+        return 'Частично выполнено';
+      case 'PASSED_PREVIOUS_STAGE':
+        return 'Готово к обработке';
+      case 'ACTIVE':
+        return 'Активен';
+      case 'INACTIVE':
+        return 'Неактивен';
+      default:
+        return status;
     }
   };
 
@@ -225,7 +260,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ isOpen, onClose, pallet
                       <td>{part.quantity} ({part.completed})</td>
                       <td>
                         <span className={`${styles.statusBadge} ${getStatusClass(part.status)}`}>
-                          {part.status}
+                          {getStatusText(part.status)}
                         </span>
                       </td>
                       <td>

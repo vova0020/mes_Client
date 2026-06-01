@@ -7,11 +7,11 @@ export const useCustomPallets = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrderPallets = useCallback(async (orderId: number) => {
+  const fetchOrderPallets = useCallback(async (orderId: number, stageId?: number) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await customPalletsApi.getOrderPallets(orderId);
+      const data = await customPalletsApi.getOrderPallets(orderId, stageId);
       setPallets(data);
       return data;
     } catch (err: any) {
@@ -24,11 +24,11 @@ export const useCustomPallets = () => {
     }
   }, []);
 
-  const fetchPalletParts = useCallback(async (palletId: number) => {
+  const fetchPalletParts = useCallback(async (palletId: number, stageId?: number) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await customPalletsApi.getPalletParts(palletId);
+      const data = await customPalletsApi.getPalletParts(palletId, stageId);
       setPalletDetails(data);
       return data;
     } catch (err: any) {

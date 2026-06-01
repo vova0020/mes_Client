@@ -12,6 +12,8 @@ export interface CustomPart {
   thickness: number;
   thicknessWithEdging: number;
   quantity: number;
+  distributedQuantity?: number;
+  undistributedQuantity?: number;
   blankLength: number;
   blankWidth: number;
   finishedLength: number;

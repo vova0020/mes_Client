@@ -25,6 +25,31 @@ export interface CustomOrderDetails {
   customParts: any[];
 }
 
+export interface PalletMachineInfo {
+  machineId: number;
+  machineName: string;
+  assignmentStatus?: string;
+  completedAt?: string;
+}
+
+export interface PalletDetail {
+  customPartId: number;
+  partCode: string;
+  partName: string;
+  quantity: number;
+}
+
+export interface OrderPallet {
+  palletId: number;
+  palletNumber: string;
+  readyToProcess: number;
+  completed: number;
+  status: 'NOT_PROCESSED' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  currentMachine?: PalletMachineInfo;
+  completedByMachine?: PalletMachineInfo;
+  details: PalletDetail[];
+}
+
 export const customOrdersApi = {
   getOrdersByStage: async (stageId: number): Promise<CustomOrder[]> => {
     const response = await axios.get(`${API_URL}/custom-orders`, {
@@ -35,6 +60,13 @@ export const customOrdersApi = {
 
   getOrderById: async (orderId: number): Promise<CustomOrderDetails> => {
     const response = await axios.get(`${API_URL}/custom-orders/${orderId}`);
+    return response.data;
+  },
+
+  getOrderPallets: async (orderId: number, stageId?: number): Promise<OrderPallet[]> => {
+    const response = await axios.get(`${API_URL}/custom-orders/${orderId}/pallets`, {
+      params: stageId ? { stageId } : {}
+    });
     return response.data;
   }
 };
