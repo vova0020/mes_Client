@@ -17,16 +17,15 @@ interface Pallet {
 }
 
 interface Part {
-  id: number;
-  articleNumber: string;
-  name: string;
+  customPartId: number;
+  partCode: string;
+  partName: string;
   quantity: number;
-  material: string;
-  size: string;
-  substage: string;
-  readyForProcessing: number;
-  completed: number;
-  status: string;
+  distributedQuantity: number;
+  undistributedQuantity: number;
+  materialName: string;
+  finishedLength: number;
+  finishedWidth: number;
 }
 
 interface PalletsTableProps {
@@ -72,7 +71,7 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
     }
   };
 
-  const availableParts = orderDetails?.parts || [];
+  const availableParts = (orderDetails?.parts || []).filter(part => part.undistributedQuantity > 0);
 
   const filteredParts = availableParts.filter(part => {
     const query = searchQuery.toLowerCase();
@@ -112,7 +111,7 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
       setPartQuantities(newQuantities);
     } else {
       setSelectedParts([...selectedParts, partId]);
-      setPartQuantities({ ...partQuantities, [partId]: maxQuantity });
+      setPartQuantities({ ...partQuantities, [partId]: Math.min(maxQuantity, 1) });
     }
   };
 
@@ -135,7 +134,7 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
       setSelectedParts(allPartIds);
       const quantities: { [key: number]: number } = {};
       sortedParts.forEach(p => {
-        quantities[p.customPartId] = p.quantity;
+        quantities[p.customPartId] = p.undistributedQuantity;
       });
       setPartQuantities(quantities);
     }
@@ -384,6 +383,12 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
             <div className={styles.modalBody}>
               {detailsLoading ? (
                 <div className={styles.loadingMessage}>Загрузка деталей...</div>
+              ) : sortedParts.length === 0 ? (
+                <div className={styles.emptyStateModal}>
+                  <div className={styles.emptyIconModal}>📦</div>
+                  <h3>Нет нераспределенных деталей</h3>
+                  <p>Все детали из этого заказа уже распределены по поддонам</p>
+                </div>
               ) : (
               <table className={styles.partsTable}>
                 <thead>
@@ -400,8 +405,8 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
                     <th onClick={() => handleSort('finishedLength')} style={{ cursor: 'pointer' }}>
                       Размер{getSortIcon('finishedLength')}
                     </th>
-                    <th onClick={() => handleSort('quantity')} style={{ cursor: 'pointer' }}>
-                      Доступно{getSortIcon('quantity')}
+                    <th onClick={() => handleSort('undistributedQuantity')} style={{ cursor: 'pointer' }}>
+                      Не распределено{getSortIcon('undistributedQuantity')}
                     </th>
                     <th>
                       Количество на поддон
@@ -424,23 +429,23 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
                     <tr 
                       key={part.customPartId}
                       className={selectedParts.includes(part.customPartId) ? styles.selected : ''}
-                      onClick={() => handleRowClick(part.customPartId, part.quantity)}
+                      onClick={() => handleRowClick(part.customPartId, part.undistributedQuantity)}
                     >
                       <td>{part.partCode}</td>
                       <td>{part.partName}</td>
                       <td>{part.materialName}</td>
                       <td>{part.finishedLength} x {part.finishedWidth}</td>
-                      <td>{part.quantity}</td>
+                      <td>{part.undistributedQuantity}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <input
                           type="number"
                           className={styles.quantityInput}
                           min="1"
-                          max={part.quantity}
-                          value={partQuantities[part.customPartId] || part.quantity}
-                          onChange={(e) => handleQuantityChange(part.customPartId, e.target.value, part.quantity)}
+                          max={part.undistributedQuantity}
+                          value={partQuantities[part.customPartId] || part.undistributedQuantity}
+                          onChange={(e) => handleQuantityChange(part.customPartId, e.target.value, part.undistributedQuantity)}
                           disabled={!selectedParts.includes(part.customPartId)}
-                          placeholder={part.quantity.toString()}
+                          placeholder={part.undistributedQuantity.toString()}
                         />
                       </td>
                       <td>-</td>

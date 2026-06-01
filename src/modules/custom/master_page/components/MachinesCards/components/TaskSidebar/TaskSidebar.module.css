@@ -1,0 +1,681 @@
+/* Основной контейнер боковой панели */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -80%;
+  width: 80%;
+  height: 100vh;
+  background: linear-gradient(135deg, #374051, #2a303c);
+  box-shadow: 
+    -8px 0 30px rgba(0, 0, 0, 0.5), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-left: 1px solid #1e2a3a;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.sidebar.open {
+  right: 20px;
+  top: 20px;
+  width: calc(85% - 40px);
+  height: calc(100vh - 40px);
+  border-radius: 12px;
+  opacity: 1;
+  transform: translateX(0);
+  box-shadow: 
+    -8px 0 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1000px rgba(0, 0, 0, 0.5);
+}
+
+/* Заголовок панели */
+.sidebarHeader {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(to bottom, #3f4a5f, #343e4f);
+  border-radius: 12px 12px 0 0;
+}
+
+.sidebarHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1.2px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.closeButton:hover {
+  color: #3498db;
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Основное содержимое панели */
+.sidebarContent {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.sidebarContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebarContent::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.sidebarContent::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.sidebarContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Уровень 1: Группа заказа */
+.orderGroup {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
+  border-radius: 10px;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(224, 224, 224, 0.8);
+  overflow: hidden;
+  margin-bottom: 16px;
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.orderHeader {
+  padding: 16px 20px;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.orderHeader:hover {
+  background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+}
+
+.expandIcon {
+  font-size: 14px;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+  width: 16px;
+  text-align: center;
+}
+
+.orderInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.orderTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.orderStats {
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Информационное сообщение */
+.infoMessage {
+  background: linear-gradient(to bottom, #fff9e6, #fff3cc);
+  border: 1px solid #ffe066;
+  border-left: 4px solid #ffc107;
+  color: #856404;
+  padding: 12px 16px;
+  margin: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.warningText {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Контейнер поддонов */
+.palletsContainer {
+  background: rgba(248, 249, 250, 0.8);
+  border-top: 1px solid rgba(224, 224, 224, 0.5);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 5000px;
+    transform: translateY(0);
+  }
+}
+
+/* Уровень 2: Группа поддона */
+.palletGroup {
+  margin: 12px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  border: 1px solid rgba(224, 224, 224, 0.6);
+  overflow: hidden;
+}
+
+.palletHeader {
+  padding: 12px 16px;
+  background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+  border-bottom: 1px solid rgba(144, 202, 249, 0.5);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 20px 1fr 2fr 120px 150px 1fr;
+  gap: 12px;
+  align-items: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.palletHeader:hover {
+  background: linear-gradient(to bottom, #bbdefb, #90caf9);
+}
+
+.palletInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.palletNumber,
+.palletLabel {
+  font-size: 11px;
+  color: #546e7a;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.palletValue {
+  font-size: 13px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.palletActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Уровень 3: Контейнер деталей */
+.detailsContainer {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px;
+  animation: slideDown 0.3s ease-out;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Стилизация скроллбара для таблицы деталей */
+.detailsContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.detailsContainer::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.detailsContainer::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.detailsContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.detailsHeader {
+  display: grid;
+  grid-template-columns: 150px 250px 300px 120px 100px 120px 350px;
+  gap: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  min-width: 1400px;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 150px 250px 300px 120px 100px 120px 350px;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(224, 224, 224, 0.3);
+  align-items: center;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  min-width: 1400px;
+}
+
+.detailRow:hover {
+  background: rgba(240, 248, 255, 0.9);
+  box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.1);
+}
+
+.detailCell {
+  font-size: 13px;
+  color: #2c3e50;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detailActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Индикатор статуса */
+.statusIndicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.statusPending {
+  background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #5d6d7e;
+}
+
+.statusInProgress {
+  background: linear-gradient(to bottom, #f1c40f, #f39c12);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #d35400;
+  animation: pulse 1.5s infinite;
+}
+
+.statusCompleted {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  border-left: 2px solid #219653;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Кнопки действий */
+.actionButton {
+  min-width: 32px;
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.startButton {
+  background: linear-gradient(to bottom, #f1c40f, #f39c12);
+  color: white;
+  border-left: 3px solid #d35400;
+}
+
+.startButton:hover {
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.startButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #aaa;
+  border-left-color: #999;
+}
+
+.deleteButton {
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  color: white;
+  border-left: 3px solid #a0302a;
+  display: none; /* Скрыто временно */
+}
+
+.deleteButton:hover {
+  background: linear-gradient(to bottom, #ed6a5a, #e74c3c);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Поле ввода для переназначения станка */
+.machineInput {
+  flex: 1;
+  min-width: 110px;
+  max-width: 150px;
+  padding: 4px 8px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  border-radius: 4px;
+  background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+  font-size: 11px;
+  color: #333;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  height: 28px;
+}
+
+.machineInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Кнопки действий внизу секций */
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(224, 224, 224, 0.5);
+}
+
+.actionButtonRed {
+  flex: 1;
+  padding: 10px 16px;
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.actionButtonRed:hover {
+  background: linear-gradient(to bottom, #ed6a5a, #e74c3c);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.actionButtonRed:active {
+  background: linear-gradient(to bottom, #c0392b, #e74c3c);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(0);
+}
+
+/* Адаптивность */
+@media (max-width: 1600px) {
+  .sidebar.open {
+    width: calc(90% - 40px);
+  }
+}
+
+@media (max-width: 1400px) {
+  .sidebar.open {
+    width: calc(92% - 40px);
+  }
+  
+  .palletHeader {
+    grid-template-columns: 20px 1fr 1.5fr 100px 120px 280px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .sidebar.open {
+    width: calc(95% - 40px);
+  }
+  
+  .palletHeader {
+    grid-template-columns: 20px 1fr 1.5fr 100px 120px 250px;
+    font-size: 11px;
+  }
+  
+  .palletActions {
+    gap: 4px;
+  }
+  
+  .actionButton {
+    font-size: 10px;
+    padding: 0 6px;
+    min-width: 28px;
+  }
+  
+  .machineInput {
+    min-width: 90px;
+    max-width: 110px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 992px) {
+  .sidebar.open {
+    width: calc(98% - 20px);
+    right: 10px;
+    top: 10px;
+    height: calc(100vh - 20px);
+  }
+  
+  .palletHeader {
+    grid-template-columns: 20px 1fr;
+    gap: 8px;
+  }
+  
+  .palletInfo {
+    grid-column: span 1;
+  }
+  
+  .palletActions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
+  
+  /* Таблица деталей на мобильных - карточный вид */
+  .detailsHeader {
+    display: none;
+  }
+  
+  .detailRow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: auto;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(224, 224, 224, 0.5);
+    margin-bottom: 12px;
+  }
+  
+  .detailCell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(224, 224, 224, 0.3);
+  }
+  
+  .detailCell:last-child {
+    border-bottom: none;
+  }
+  
+  .detailCell::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 11px;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+  
+  .detailActions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .detailActions .actionButton,
+  .detailActions .machineInput {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .sidebar.open {
+    width: calc(100% - 20px);
+    right: 10px;
+    left: 10px;
+    height: calc(100vh - 20px);
+    top: 10px;
+  }
+  
+  .orderHeader {
+    padding: 12px 16px;
+  }
+  
+  .orderTitle {
+    font-size: 14px;
+  }
+  
+  .orderStats {
+    font-size: 12px;
+  }
+  
+  .palletHeader {
+    padding: 10px 12px;
+  }
+  
+  .palletActions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarHeader h2 {
+    font-size: 14px;
+  }
+  
+  .orderTitle {
+    font-size: 13px;
+  }
+  
+  .orderStats {
+    font-size: 11px;
+  }
+  
+  .actionButton {
+    font-size: 10px;
+    height: 26px;
+  }
+}

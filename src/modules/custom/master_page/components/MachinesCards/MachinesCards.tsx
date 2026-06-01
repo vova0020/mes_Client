@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from './MachinesCards.module.css';
-import ShiftTaskModal from './ShiftTaskModal/ShiftTaskModal';
+import TaskSidebar from './components/TaskSidebar/TaskSidebar';
 import useMachinesCustomMaster from '../../../../hooks/custom/master/useMachinesCustomMaster';
 import { resetMachineCounter } from '../../../../api/custom/master/machineCustomMasterService';
 
@@ -11,16 +11,21 @@ interface MachinesCardsProps {
 const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
   const { machines, loading, error, refreshMachines } = useMachinesCustomMaster();
   const [selectedMachineId, setSelectedMachineId] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMachineName, setSelectedMachineName] = useState<string>('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const handleOpenTask = (machineId: number) => {
+  const handleOpenTask = (machineId: number, machineName: string) => {
+    console.log('handleOpenTask called with machineId:', machineId);
     setSelectedMachineId(machineId);
-    setIsModalOpen(true);
+    setSelectedMachineName(machineName);
+    setIsSidebarOpen(true);
+    console.log('Sidebar state set to true');
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseSidebar = () => {
+    setIsSidebarOpen(false);
     setSelectedMachineId(null);
+    setSelectedMachineName('');
   };
 
   const handleResetCounter = async (machineId: number, machineName: string) => {
@@ -210,9 +215,12 @@ const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
 
                   {!machine.noSmenTask && (
                     <div className={styles.buttonContainer}>
-                      <button 
+                      <button
                         className={styles.openTaskButton}
-                        onClick={() => handleOpenTask(machine.id)}
+                        onClick={() => {
+                          console.log('Button clicked for machine:', machine.id);
+                          handleOpenTask(machine.id, machine.name);
+                        }}
                       >
                         Открыть сменное задание
                       </button>
@@ -225,10 +233,11 @@ const MachinesCards: React.FC<MachinesCardsProps> = ({ onDataUpdate }) => {
         </div>
       </div>
 
-      <ShiftTaskModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+      <TaskSidebar
+        isOpen={isSidebarOpen}
+        onClose={handleCloseSidebar}
         machineId={selectedMachineId || 0}
+        machineName={selectedMachineName}
       />
     </>
   );
