@@ -1,0 +1,249 @@
+.dialog {
+  z-index: 1300;
+}
+
+.dialogTitle {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.successIcon {
+  color: #52c41a;
+  font-size: 28px;
+}
+
+.closeButton {
+  color: white !important;
+  min-width: auto !important;
+  padding: 8px !important;
+}
+
+.closeButton:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dialogContent {
+  padding: 24px !important;
+  background-color: #f5f7fa;
+}
+
+.errorAlert {
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.formSection {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.input {
+  background: #f5f7fa;
+}
+
+.partsSection {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.partsSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e8ecf1;
+}
+
+.toggleColumnsButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: none !important;
+  font-size: 13px !important;
+  padding: 6px 16px !important;
+  border-radius: 6px !important;
+  white-space: nowrap;
+}
+
+.columnCount {
+  font-size: 11px;
+  color: #8c8c8c;
+  font-weight: 400;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e8ecf1;
+}
+
+.partsTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.partsTable thead {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.partsTable th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  color: #262626;
+  border-bottom: 2px solid #d9d9d9;
+  white-space: nowrap;
+}
+
+.partsTable tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.partsTable tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.partsTable td {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #595959;
+}
+
+.indexCell {
+  width: 50px;
+  text-align: center;
+  font-weight: 600;
+  color: #8c8c8c;
+}
+
+.stickyColumn {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.partsTable thead .stickyColumn {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  z-index: 3;
+}
+
+.dataCell {
+  min-width: 150px;
+  max-width: 300px;
+}
+
+.routeCell {
+  min-width: 200px;
+  max-width: 250px;
+}
+
+.routeSelect {
+  width: 100%;
+}
+
+.routeSelect .MuiSelect-select {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.cellText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.cellInput {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.cellInput:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.cellInput:hover {
+  border-color: #40a9ff;
+}
+
+.infoMessage {
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.dialogActions {
+  padding: 16px 24px !important;
+  background-color: #fafafa;
+  border-top: 1px solid #e8ecf1;
+  gap: 12px;
+}
+
+.dialogActions button {
+  min-width: 120px;
+  padding: 8px 20px;
+  font-weight: 500;
+  text-transform: none;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .partsTable {
+    font-size: 12px;
+  }
+
+  .partsTable th,
+  .partsTable td {
+    padding: 8px 12px;
+  }
+}

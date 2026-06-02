@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Button, TextField, Alert, CircularProgress } from '@mui/material';
+import { Alert, CircularProgress } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 import styles from './CustomOrderCreation.module.css';
+import { CustomOrderPreviewModal } from './CustomOrderPreviewModal';
+import { uploadCustomOrderFile, Part } from '../../api/custom/order-management/customOrderManagementApi';
 
 interface Props {
   onBack?: () => void;
@@ -11,20 +13,21 @@ interface CustomOrderFormData {
   batchNumber: string;
   orderName: string;
   requiredDate: string;
-  excelFile: File | null;
 }
 
 const CustomOrderCreation: React.FC<Props> = ({ onBack }) => {
   const [formData, setFormData] = useState<CustomOrderFormData>({
     batchNumber: '',
     orderName: '',
-    requiredDate: '',
-    excelFile: null
+    requiredDate: ''
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [parsedParts, setParsedParts] = useState<Part[]>([]);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -39,13 +42,17 @@ const CustomOrderCreation: React.FC<Props> = ({ onBack }) => {
         return;
       }
 
-      setFormData({ ...formData, excelFile: file });
+      setSelectedFile(file);
       setError(null);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('=== CUSTOM ORDER SUBMIT STARTED ===');
+    console.log('Form data:', formData);
+    console.log('Selected file:', selectedFile);
     
     if (!formData.batchNumber.trim()) {
       setError('Введите номер производственной партии');
@@ -62,39 +69,66 @@ const CustomOrderCreation: React.FC<Props> = ({ onBack }) => {
       return;
     }
     
-    if (!formData.excelFile) {
+    if (!selectedFile) {
       setError('Загрузите файл Excel с составом заказа');
       return;
     }
 
-    setIsLoading(true);
+    setIsUploading(true);
     setError(null);
 
     try {
-      // TODO: API интеграция
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Используем API для индивидуального производства
+      const result = await uploadCustomOrderFile(selectedFile);
       
-      setSuccess('Заказ индивидуального производства успешно создан!');
-      
-      setFormData({
-        batchNumber: '',
-        orderName: '',
-        requiredDate: '',
-        excelFile: null
+      console.log('Upload result:', result);
+      console.log('Form data to pass to preview:', {
+        orderNumber: formData.batchNumber,
+        orderName: formData.orderName,
+        requiredDate: formData.requiredDate,
       });
       
-      const fileInput = document.getElementById('excel-file-input') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      if (result.success && result.data.parts) {
+        console.log('Parts received:', result.data.parts);
+        console.log('Total parts count:', result.data.parts.length);
+        setParsedParts(result.data.parts);
+        setIsPreviewOpen(true);
+        console.log('Preview modal opened with form data');
+      } else {
+        console.error('Upload failed:', result.message);
+        setError(result.message || 'Ошибка при парсинге файла');
+      }
       
     } catch (err: any) {
-      setError(err.message || 'Ошибка при создании заказа');
+      console.error('Upload error:', err);
+      setError(err.message || 'Ошибка при загрузке файла');
     } finally {
-      setIsLoading(false);
+      setIsUploading(false);
     }
   };
 
   const handleRemoveFile = () => {
-    setFormData({ ...formData, excelFile: null });
+    setSelectedFile(null);
+    const fileInput = document.getElementById('excel-file-input') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
+
+  const handlePreviewClose = () => {
+    setIsPreviewOpen(false);
+  };
+
+  const handleSuccess = () => {
+    // После успешного создания заказа
+    setIsPreviewOpen(false);
+    setParsedParts([]);
+    setSelectedFile(null);
+    setFormData({
+      batchNumber: '',
+      orderName: '',
+      requiredDate: ''
+    });
+    setSuccess('Заказ индивидуального производства успешно создан!');
+    
     const fileInput = document.getElementById('excel-file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -177,7 +211,7 @@ const CustomOrderCreation: React.FC<Props> = ({ onBack }) => {
             ☁️ Загрузить состав заказа (Excel) *
           </label>
           
-          {!formData.excelFile ? (
+          {!selectedFile ? (
             <label htmlFor="excel-file-input" className={styles.fileUpload}>
               <CloudUpload className={styles.uploadIcon} />
               <span className={styles.uploadText}>Нажмите для выбора файла</span>
@@ -195,9 +229,9 @@ const CustomOrderCreation: React.FC<Props> = ({ onBack }) => {
               <div className={styles.fileInfo}>
                 <span className={styles.fileIcon}>📄</span>
                 <div>
-                  <div className={styles.fileName}>{formData.excelFile.name}</div>
+                  <div className={styles.fileName}>{selectedFile.name}</div>
                   <div className={styles.fileSize}>
-                    {(formData.excelFile.size / 1024).toFixed(2)} KB
+                    {(selectedFile.size / 1024).toFixed(2)} KB
                   </div>
                 </div>
               </div>
@@ -214,22 +248,34 @@ const CustomOrderCreation: React.FC<Props> = ({ onBack }) => {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isUploading}
           className={styles.submitButton}
         >
-          {isLoading ? (
+          {isUploading ? (
             <>
               <CircularProgress size={18} color="inherit" />
-              <span>Создание...</span>
+              <span>Загрузка и парсинг...</span>
             </>
           ) : (
             <>
-              <span>✓</span>
-              <span>Создать заказ</span>
+              <span>📤</span>
+              <span>Загрузить и проверить</span>
             </>
           )}
         </button>
       </form>
+
+      <CustomOrderPreviewModal
+        open={isPreviewOpen}
+        onClose={handlePreviewClose}
+        parts={parsedParts}
+        formData={{
+          orderNumber: formData.batchNumber,
+          orderName: formData.orderName,
+          requiredDate: formData.requiredDate,
+        }}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 };

@@ -23,12 +23,20 @@ interface UploadResponse {
   };
 }
 
+interface CustomFormData {
+  batchNumber: string;
+  orderName: string;
+  requiredDate: string;
+}
+
 interface OrderPreviewModalProps {
   data: UploadResponse;
   onClose: () => void;
   onSuccess: () => void;
   isEditMode?: boolean;
   onEditSuccess?: (parsedPackages: ParsedPackage[]) => void;
+  isCustomProduction?: boolean;
+  customFormData?: CustomFormData;
 }
 
 interface SaveResponse {
@@ -44,11 +52,13 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
   onSuccess,
   isEditMode = false,
   onEditSuccess,
+  isCustomProduction = false,
+  customFormData,
 }) => {
   const [packages, setPackages] = useState<ParsedPackage[]>(data.data.packages);
-  const [batchNumber, setBatchNumber] = useState('');
-  const [orderName, setOrderName] = useState('');
-  const [requiredDate, setRequiredDate] = useState('');
+  const [batchNumber, setBatchNumber] = useState(customFormData?.batchNumber || '');
+  const [orderName, setOrderName] = useState(customFormData?.orderName || '');
+  const [requiredDate, setRequiredDate] = useState(customFormData?.requiredDate || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [saveResult, setSaveResult] = useState<SaveResponse | null>(null);
@@ -185,8 +195,10 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
         <div className={styles.formCard}>
           <div className={styles.formHeader}>
             <h2 className={styles.formTitle}>
-              <span className={styles.formIcon}>📋</span>
-              {isEditMode ? `Выбор упаковок (${packages.length} упаковок)` : `Создание заказа (${packages.length} упаковок)`}
+              <span className={styles.formIcon}>{isCustomProduction ? '⚙️' : '📋'}</span>
+              {isEditMode ? `Выбор упаковок (${packages.length} упаковок)` :
+               isCustomProduction ? `Проверка заказа индивидуального производства (${packages.length} упаковок)` :
+               `Создание заказа (${packages.length} упаковок)`}
             </h2>
             <button
               onClick={onClose}
@@ -221,6 +233,13 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
             {!isEditMode && (
               <div className={styles.orderInfoSection}>
                 <h3 className={styles.sectionTitle}>Информация о заказе</h3>
+                
+                {isCustomProduction && (
+                  <div className={styles.infoMessage}>
+                    <span className={styles.infoIcon}>ℹ️</span>
+                    Данные заполнены из формы. API для сохранения индивидуальных заказов будет добавлен позже.
+                  </div>
+                )}
               
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Номер партии *</label>
@@ -230,7 +249,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                   onChange={(e) => setBatchNumber(e.target.value)}
                   className={styles.input}
                   placeholder="BATCH-2024-001"
-                  disabled={saving}
+                  disabled={saving || isCustomProduction}
                 />
               </div>
 
@@ -242,7 +261,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                   onChange={(e) => setOrderName(e.target.value)}
                   className={styles.input}
                   placeholder="Заказ январь 2024"
-                  disabled={saving}
+                  disabled={saving || isCustomProduction}
                 />
               </div>
 
@@ -253,7 +272,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                   value={requiredDate}
                   onChange={(e) => setRequiredDate(e.target.value)}
                   className={styles.input}
-                  disabled={saving}
+                  disabled={saving || isCustomProduction}
                 />
               </div>
             </div>
@@ -346,8 +365,9 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving || packages.length === 0}
+                disabled={saving || packages.length === 0 || isCustomProduction}
                 className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonLarge}`}
+                title={isCustomProduction ? 'API для индивидуального производства будет добавлен позже' : ''}
               >
                 {saving ? (
                   <>
@@ -357,7 +377,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                 ) : (
                   <>
                     <span className={styles.buttonIcon}>{isEditMode ? '✓' : '💾'}</span>
-                    {isEditMode ? 'Применить' : 'Создать заказ'}
+                    {isEditMode ? 'Применить' : isCustomProduction ? 'Создать заказ (API в разработке)' : 'Создать заказ'}
                   </>
                 )}
               </button>
