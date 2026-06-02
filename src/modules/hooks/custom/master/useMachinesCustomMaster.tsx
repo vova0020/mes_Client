@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useWebSocketRoom } from '../../../../hooks/useWebSocketRoom';
+import { API_URL } from '../../../api/config';
 
 export interface CustomMachine {
   id: number;
@@ -22,7 +23,7 @@ interface UseMachinesResult {
   refreshMachines: () => Promise<void>;
 }
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = API_URL;
 
 const getSelectedStageIdFromStorage = (): number | null => {
   try {
