@@ -2,6 +2,8 @@
  * API для управления индивидуальным производством
  */
 
+import { API_URL } from '../../config';
+
 interface Part {
   partSku: number | null;
   partName: string;
@@ -84,7 +86,7 @@ export const uploadCustomOrderFile = async (file: File): Promise<UploadResponse>
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/custom-order-management/upload`, {
+  const response = await fetch(`${API_URL}/custom-order-management/upload`, {
     method: 'POST',
     body: formData,
   });
@@ -112,7 +114,7 @@ export const uploadCustomOrderFile = async (file: File): Promise<UploadResponse>
  * Сохранение заказа индивидуального производства из файла
  */
 export const saveCustomOrderFromFile = async (orderData: SaveOrderRequest): Promise<SaveOrderResponse> => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/custom-order-management/save-from-file`, {
+  const response = await fetch(`${API_URL}/custom-order-management/save-from-file`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
