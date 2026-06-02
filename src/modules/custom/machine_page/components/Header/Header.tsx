@@ -37,16 +37,16 @@ const Header: React.FC = () => {
   const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSwitchToCustom = () => {
-    navigate('/machine');
+  const handleSwitchToSeries = () => {
+    navigate('/series/machine');
   };
 
   useEffect(() => {
     const productionType = localStorage.getItem('productionType');
     setShowProductionSwitch(productionType === 'BOTH');
     
-    if (productionType && productionType !== 'BOTH' && productionType !== 'SERIAL') {
-      navigate('/machine');
+    if (productionType && productionType !== 'BOTH' && productionType !== 'CUSTOM') {
+      navigate('/series/machine');
     }
   }, [navigate]);
 
@@ -87,10 +87,10 @@ const Header: React.FC = () => {
           <button className={styles.navButton}>{operatorName}</button>
           {showProductionSwitch && (
             <div className={styles.switchContainer}>
-              <button className={`${styles.switchButton} ${styles.active}`}>
+              <button className={styles.switchButton} onClick={handleSwitchToSeries}>
                 Серийное
               </button>
-              <button className={styles.switchButton} onClick={handleSwitchToCustom}>
+              <button className={`${styles.switchButton} ${styles.active}`}>
                 Индивидуальное
               </button>
             </div>

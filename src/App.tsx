@@ -7,6 +7,7 @@ import CustomMasterPage from './modules/custom/master_page/CustomMasterPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingScreen from './componentsGlobal/LoadingScreen';
 import MachinePage from './modules/series/machine_page/MachinePage';
+import CustomMachinePage from './modules/custom/machine_page/CustomMachinePage';
 import MasterYpakPage from './modules/series/master_ypak_page/MasterYpakPage';
 import YpakMachinePage from './modules/series/ypak_machin_page/YpakMachinePage';
 import ComplectPage from './modules/complectPage/ComplectPage';
@@ -30,8 +31,14 @@ function App() {
           </Route>
           
           {/* Защищенные маршруты для операторов workplace БЕЗ финальных этапов - ОБНОВЛЕНО */}
+          {/* Серийное производство */}
           <Route element={<ProtectedRoute requiredRole="workplace" excludeFinalStage={true} />}>
-            <Route path="/machine" element={<MachinePage />} />
+            <Route path="/series/machine" element={<MachinePage />} />
+          </Route>
+          
+          {/* Индивидуальное производство */}
+          <Route element={<ProtectedRoute requiredRole="workplace" excludeFinalStage={true} />}>
+            <Route path="/machine" element={<CustomMachinePage />} />
           </Route>
           
           {/* Маршрут для workplace с noSmenTask */}

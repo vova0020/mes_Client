@@ -27,6 +27,7 @@ export interface Machine {
   segmentName?: string;
   stages?: Stage[];
   noSmenTask?: boolean;
+  productionType?: ProductionType;
 }
 
 export interface Segment {
@@ -86,6 +87,15 @@ const authService = {
     // Сохраняем тип производства отдельно для быстрого доступа
     if (authData.user.productionType) {
       localStorage.setItem('productionType', authData.user.productionType);
+    }
+
+    // Сохраняем тип производства для станков
+    if (authData.assignments.machines) {
+      authData.assignments.machines.forEach(machine => {
+        if (machine.productionType) {
+          localStorage.setItem(`machineProductionType_${machine.id}`, machine.productionType);
+        }
+      });
     }
 
     // Устанавливаем первый доступный этап как выбранный для роли master
@@ -180,6 +190,14 @@ const authService = {
     localStorage.removeItem('tokenExpires');
     localStorage.removeItem('selectedStage');
     localStorage.removeItem('productionType');
+    
+    // Удаляем типы производства для станков
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('machineProductionType_')) {
+        localStorage.removeItem(key);
+      }
+    });
   },
 
   // Проверка наличия определенной роли у пользователя
@@ -253,7 +271,7 @@ const authService = {
             }
           });
           
-          const hasFinalStages = assignments.machines.some(machine => 
+          const hasFinalStages = assignments.machines.some(machine =>
             machine.stages && machine.stages.some(stage => stage.finalStage === true)
           );
           
@@ -263,10 +281,27 @@ const authService = {
             // console.log('Перенаправляем на /ypakmachine (финальные этапы найдены)');
             return '/ypakmachine';
           } else {
-            // console.log('Перенаправляем на /machine (финальных этапов нет)');
+            // Учитываем тип производства
+            const productionType = user.productionType;
+            if (productionType === ProductionType.CUSTOM) {
+              // console.log('Перенаправляем на /machine (индивидуальное производство)');
+              return '/machine';
+            } else if (productionType === ProductionType.SERIAL) {
+              // console.log('Перенаправляем на /series/machine (серийное производство)');
+              return '/series/machine';
+            } else {
+              // По умолчанию для BOTH или отсутствия типа - индивидуальное
+              // console.log('Перенаправляем на /machine (по умолчанию)');
+              return '/machine';
+            }
           }
         } else {
           // console.log('У workplace нет машин, перенаправляем на /machine');
+        }
+        // Учитываем тип производства для случая без машин
+        const productionType = user.productionType;
+        if (productionType === ProductionType.SERIAL) {
+          return '/series/machine';
         }
         return '/machine';
 
@@ -405,6 +440,9 @@ const authService = {
         }
       }
       
+      // Проверяем тип производства
+      const productionType = localStorage.getItem('productionType');
+      
       // Проверяем выбранный этап из localStorage
       const selectedStageString = localStorage.getItem('selectedStage');
       // console.log('Выбранный этап (строка):', selectedStageString);
@@ -418,8 +456,18 @@ const authService = {
             // console.log('Workplace с финальным этапом, перенаправление на /ypakmachine');
             return '/ypakmachine';
           } else {
-            // console.log('Workplace с обычным этапом, перенаправление на /machine');
-            return '/machine';
+            // Учитываем тип производства при перенаправлении
+            if (productionType === 'CUSTOM') {
+              // console.log('Workplace с обычным этапом (индивидуальное), перенаправление на /machine');
+              return '/machine';
+            } else if (productionType === 'SERIAL') {
+              // console.log('Workplace с обычным этапом (серийное), перенаправление на /series/machine');
+              return '/series/machine';
+            } else {
+              // По умолчанию для BOTH или отсутствия типа - индивидуальное
+              // console.log('Workplace с обычным этапом (по умолчанию), перенаправление на /machine');
+              return '/machine';
+            }
           }
         } catch (error) {
           console.error('Ошибка при парсинге выбранного этапа:', error);
@@ -456,8 +504,19 @@ const authService = {
         // console.log('Рабочее место с финальными этапами, перенаправление на /ypakmachine');
         return '/ypakmachine';
       } else {
-        // console.log('Рабочее место без финальных этапов, перенаправление на /machine');
-        return '/machine';
+        // Учитываем тип производства при перенаправлении
+        const productionType = localStorage.getItem('productionType');
+        if (productionType === 'CUSTOM') {
+          // console.log('Рабочее место без финальных этапов (индивидуальное), перенаправление на /machine');
+          return '/machine';
+        } else if (productionType === 'SERIAL') {
+          // console.log('Рабочее место без финальных этапов (серийное), перенаправление на /series/machine');
+          return '/series/machine';
+        } else {
+          // По умолчанию для BOTH или отсутствия типа - индивидуальное
+          // console.log('Рабочее место без финальных этапов (по умолчанию), перенаправление на /machine');
+          return '/machine';
+        }
       }
     }
 
