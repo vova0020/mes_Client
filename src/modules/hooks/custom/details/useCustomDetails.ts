@@ -6,11 +6,11 @@ export const useCustomDetails = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrderDetails = useCallback(async (orderId: number) => {
+  const fetchOrderDetails = useCallback(async (orderId: number, stageId?: number) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await customDetailsApi.getOrderDetails(orderId);
+      const data = await customDetailsApi.getOrderDetails(orderId, stageId);
       setOrderDetails(data);
       return data;
     } catch (err: any) {

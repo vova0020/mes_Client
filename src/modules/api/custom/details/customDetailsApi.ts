@@ -39,8 +39,12 @@ export interface OrderDetailsResponse {
 }
 
 export const customDetailsApi = {
-  getOrderDetails: async (orderId: number): Promise<OrderDetailsResponse> => {
-    const response = await axios.get(`${API_URL}/custom-orders/${orderId}/details`);
+  getOrderDetails: async (orderId: number, stageId?: number): Promise<OrderDetailsResponse> => {
+    const params = stageId ? { stageId } : {};
+    console.log(`API request: GET /custom-orders/${orderId}/details`, params);
+    const response = await axios.get(`${API_URL}/custom-orders/${orderId}/details`, {
+      params
+    });
     return response.data;
   }
 };

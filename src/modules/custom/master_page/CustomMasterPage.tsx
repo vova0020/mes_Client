@@ -20,9 +20,25 @@ const CustomMasterPage: React.FC = () => {
 
   useEffect(() => {
     const stage = getCurrentStage();
+    console.log('CustomMasterPage: Current stage from localStorage:', stage);
     if (stage) {
+      console.log('CustomMasterPage: Setting currentStageId to:', stage.id);
       setCurrentStageId(stage.id);
     }
+
+    // Добавляем слушатель изменения этапа
+    const handleStageChange = (event: CustomEvent) => {
+      const newStage = event.detail;
+      console.log('CustomMasterPage: Stage changed event received:', newStage);
+      setCurrentStageId(newStage.id);
+    };
+
+    window.addEventListener('stageChanged', handleStageChange as EventListener);
+
+    // Очистка слушателя при размонтировании
+    return () => {
+      window.removeEventListener('stageChanged', handleStageChange as EventListener);
+    };
   }, [getCurrentStage]);
 
   const handleOrderSelect = (orderId: number | null) => {

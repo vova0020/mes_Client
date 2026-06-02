@@ -75,9 +75,10 @@ const PalletsTable: React.FC<PalletsTableProps> = ({ selectedOrderId, onShowPart
 
   useEffect(() => {
     if (showCreateModal && selectedOrderId) {
-      fetchOrderDetails(selectedOrderId);
+      console.log('Fetching order details with stageId:', currentStageId);
+      fetchOrderDetails(selectedOrderId, currentStageId || undefined);
     }
-  }, [showCreateModal, selectedOrderId, fetchOrderDetails]);
+  }, [showCreateModal, selectedOrderId, currentStageId, fetchOrderDetails]);
 
   const handleSort = (field: keyof Part) => {
     if (sortField === field) {

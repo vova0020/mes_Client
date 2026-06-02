@@ -95,7 +95,10 @@ export class NavbarService {
   static getSelectedStage(): Stage | null {
     try {
       const selectedStageString = localStorage.getItem('selectedStage');
-      return selectedStageString ? JSON.parse(selectedStageString) : null;
+      console.log('Getting selected stage from localStorage:', selectedStageString);
+      const stage = selectedStageString ? JSON.parse(selectedStageString) : null;
+      console.log('Parsed stage:', stage);
+      return stage;
     } catch (error) {
       console.error('Ошибка при получении выбранного этапа:', error);
       return null;
