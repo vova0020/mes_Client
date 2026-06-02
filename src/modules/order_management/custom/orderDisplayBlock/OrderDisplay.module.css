@@ -1,0 +1,325 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  color: white;
+  background: transparent;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.filtersContainer {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.filtersContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4caf50, #45a049, #2e7d32);
+}
+
+.searchContainer {
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 16px 10px 36px;
+  border: 1px solid #e8eaed;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #2c3e50;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: #8e9aaf;
+  font-weight: 400;
+}
+
+.searchContainer::before {
+  content: '🔍';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #8e9aaf;
+  z-index: 1;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  align-items: end;
+}
+
+@media (max-width: 768px) {
+  .filterRow {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.filterLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  position: relative;
+}
+
+.filterLabel::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 16px;
+  height: 1px;
+  background: #4caf50;
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  border: 1px solid #e8eaed;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  padding-right: 28px;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.rangeContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e8eaed;
+}
+
+.rangeInput {
+  width: 50px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #2c3e50;
+  background: #ffffff;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.rangeInput:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
+}
+
+.rangeSeparator {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  text-align: center;
+}
+
+.tableContainer {
+  flex: 1;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 0 3px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e3e6ea;
+}
+
+.ordersTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeader {
+  background: #d7d7d7;
+  /* background: #faf8f8;  */
+}
+
+.headerCell {
+  color: #333333 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 16px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  text-align: center;
+}
+
+.tableRow {
+  background: transparent !important;
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:hover {
+  background: #f7f4f4 !important;
+}
+
+.cell {
+  color: #333333 !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  font-size: 14px !important;
+  text-align: center;
+}
+
+.progressContainer {
+  position: relative;
+  width: 120px;
+  height: 24px;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #d0d0d0;
+  margin: 0 auto;
+}
+
+.progressBar {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.progressText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: #333333;
+  z-index: 1;
+}
+
+.detailsButton {
+  background: linear-gradient(to bottom, #4caf50, #45a049);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.detailsButton:hover {
+  background: linear-gradient(to bottom, #45a049, #3d8b40);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
+
+.status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.statusInProgress {
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+  border: 1px solid #ff9800;
+}
+
+.statusCompleted {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid #4caf50;
+}
+
+.statusPlanned {
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+  border: 1px solid #2196f3;
+}
+
+.statusPostponed {
+  background: rgba(156, 39, 176, 0.2);
+  color: #9c27b0;
+  border: 1px solid #9c27b0;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #ff4444;
+  font-size: 16px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid #ff4444;
+  border-radius: 8px;
+  margin: 20px;
+  padding: 20px;
+}

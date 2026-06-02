@@ -9,6 +9,7 @@ import StreamsManagement from './components/blocks/StreamsManagement/StreamsMana
 import StatisticsDisplay from './components/blocks/StatisticsDisplay';
 import ProductionTypeSwitch, { ProductionType } from './components/ProductionTypeSwitch';
 import { CustomOrderCreation } from './custom';
+import CustomOrderDisplay from './custom/orderDisplayBlock/OrderDisplay';
 
 import styles from './OrderManagement.module.css';
 
@@ -103,7 +104,11 @@ const OrderManagementBlok: React.FC = () => {
                 Монитор загрузки
               </button>
             </div>
-            {activeTab === 'orders' ? <OrderDisplay /> : <StreamsManagement />}
+            {activeTab === 'orders' ? (
+              productionType === 'series' ? <OrderDisplay /> : <CustomOrderDisplay />
+            ) : (
+              <StreamsManagement />
+            )}
           </>
         );
     }

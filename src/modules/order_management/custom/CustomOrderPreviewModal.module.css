@@ -3,7 +3,7 @@
 }
 
 .dialogTitle {
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  background: linear-gradient(to bottom, #374051, #2d3441);
   color: white;
   padding: 16px 24px;
   display: flex;
@@ -54,6 +54,7 @@
 
 .sectionTitle {
   margin: 0;
+  margin-bottom: 10px;
   font-size: 16px;
   font-weight: 600;
   color: #262626;
