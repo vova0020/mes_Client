@@ -1,0 +1,272 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #ffffff;
+  padding: 0;
+}
+
+.backButton {
+  align-self: flex-start;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.infoAlert {
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 10px 14px;
+  background: rgba(33, 150, 243, 0.15) !important;
+  border: 1px solid rgba(33, 150, 243, 0.3) !important;
+  color: #90caf9 !important;
+}
+
+.infoAlert strong {
+  color: #64b5f6;
+}
+
+.alert {
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 10px 14px;
+}
+
+/* ФОРМА - СВЕТЛЫЙ ФОН */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input {
+  padding: 10px 12px;
+  background: #f5f7fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  color: #2c3e50;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.input::placeholder {
+  color: #8c8c8c;
+}
+
+.input:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+}
+
+.input:hover:not(:focus) {
+  border-color: #8c8c8c;
+}
+
+.fileSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  background: #f5f7fa;
+  border: 2px dashed #d0d7de;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fileUpload:hover {
+  background: #e8ecf1;
+  border-color: #1890ff;
+}
+
+.uploadIcon {
+  font-size: 40px !important;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.uploadText {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.fileInput {
+  display: none;
+}
+
+.filePreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 8px;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileIcon {
+  font-size: 28px;
+}
+
+.fileName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 2px;
+}
+
+.fileSize {
+  font-size: 12px;
+  color: #5c6b7a;
+}
+
+.removeButton {
+  padding: 6px 10px;
+  background: #fff1f0;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+  color: #ff4d4f;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.removeButton:hover {
+  background: #ffa39e;
+  border-color: #ff7875;
+  color: #ffffff;
+}
+
+.submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #52c41a, #45a049);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
+  align-self: flex-start;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.4);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Адаптивность */
+@media screen and (max-width: 1200px) {
+  .formRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .form {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .icon {
+    font-size: 22px;
+  }
+
+  .submitButton {
+    width: 100%;
+  }
+}

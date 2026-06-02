@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Header from './components/Header/Header';
 import Sidebar, { SettingSection } from './components/Sidebar/Sidebar';
-import OrderCreation from './components/blocks/OrderCreation';
+import SeriesOrderCreation from './components/blocks/SeriesOrderCreation';
 import DetailRouteManagement from './components/blocks/DetailRouteManagement';
 import OrderPlanning from './components/blocks/OrderPlanning';
 import OrderDisplay from './components/blocks/orderDisplayBlok/OrderDisplay';
 import StreamsManagement from './components/blocks/StreamsManagement/StreamsManagement';
 import StatisticsDisplay from './components/blocks/StatisticsDisplay';
+import ProductionTypeSwitch, { ProductionType } from './components/ProductionTypeSwitch';
+import { CustomOrderCreation } from './custom';
 
 import styles from './OrderManagement.module.css';
 
@@ -19,6 +21,8 @@ const OrderManagementBlok: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SettingSection>(null);
   // Состояние для отслеживания активной вкладки
   const [activeTab, setActiveTab] = useState<TabType>('orders');
+  // Состояние для типа производства
+  const [productionType, setProductionType] = useState<ProductionType>('series');
 
   // Функция для изменения активного раздела
   const handleSectionChange = (section: SettingSection) => {
@@ -30,21 +34,61 @@ const OrderManagementBlok: React.FC = () => {
     setActiveSection(null);
   };
 
-  // Функция для рендеринга соответствующего компонента в зависимости от активного разд��ла
+  // Функция для рендеринга соответствующего компонента в зависимости от активного раздела
   const renderActiveComponent = () => {
     switch (activeSection) {
       case 'creatOrder':
-        return <OrderCreation onBack={handleBackToMain} />;
+        return (
+          <>
+            <ProductionTypeSwitch 
+              activeType={productionType} 
+              onChange={setProductionType} 
+            />
+            {productionType === 'series' ? (
+              <SeriesOrderCreation onBack={handleBackToMain} />
+            ) : (
+              <CustomOrderCreation onBack={handleBackToMain} />
+            )}
+          </>
+        );
       case 'detailRouteManagement':
-        return <DetailRouteManagement onBack={handleBackToMain} />;
+        return (
+          <>
+            <ProductionTypeSwitch 
+              activeType={productionType} 
+              onChange={setProductionType} 
+            />
+            <DetailRouteManagement onBack={handleBackToMain} />
+          </>
+        );
       case 'orderManagement':
-        return <OrderPlanning onBack={handleBackToMain} />;
+        return (
+          <>
+            <ProductionTypeSwitch 
+              activeType={productionType} 
+              onChange={setProductionType} 
+            />
+            <OrderPlanning onBack={handleBackToMain} />
+          </>
+        );
       case 'statistics':
-        return <StatisticsDisplay onBack={handleBackToMain} />;
+        return (
+          <>
+            <ProductionTypeSwitch 
+              activeType={productionType} 
+              onChange={setProductionType} 
+            />
+            <StatisticsDisplay onBack={handleBackToMain} />
+          </>
+        );
       case 'orderDisplay':
       default:
         return (
           <>
+            <ProductionTypeSwitch 
+              activeType={productionType} 
+              onChange={setProductionType} 
+            />
             <div className={styles.tabNavigation}>
               <button 
                 className={`${styles.tabButton} ${activeTab === 'orders' ? styles.activeTab : ''}`}
