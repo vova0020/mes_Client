@@ -48,7 +48,8 @@ const Header: React.FC = () => {
     if (productionType && productionType !== 'BOTH' && productionType !== 'CUSTOM') {
       navigate('/series/machine');
     }
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     try {

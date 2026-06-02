@@ -276,13 +276,33 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       console.log('[SOCKET main] connect - re-joining room:', room);
       setIsSocketConnected(true);
       try { socket.emit('join', room, (ack: any) => console.log('[SOCKET main] join ack:', ack)); } catch (e) {}
-      void fetchMachine();
+      // Используем прямой вызов API вместо fetchMachine для избежания циклических зависимостей
+      machineApi.getMachineById(effectiveId)
+        .then(data => {
+          setMachine(data);
+          setLoading('success');
+        })
+        .catch(err => {
+          console.error('Ошибка при загрузке данных о станке:', err);
+          setLoading('error');
+          setError(err instanceof Error ? err : new Error('Неизвестная ошибка'));
+        });
     };
 
     const disconnectHandler = (reason: any) => {
       console.log('[SOCKET main] disconnect', reason);
       setIsSocketConnected(false);
-      void fetchMachine();
+      // Используем прямой вызов API
+      machineApi.getMachineById(effectiveId)
+        .then(data => {
+          setMachine(data);
+          setLoading('success');
+        })
+        .catch(err => {
+          console.error('Ошибка при загрузке данных о станке:', err);
+          setLoading('error');
+          setError(err instanceof Error ? err : new Error('Неизвестная ошибка'));
+        });
     };
 
     socket.on('machine:event', handleMachineEvent);
@@ -312,13 +332,14 @@ export const useMachine = (machineId?: number): UseMachineResult => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket, effectiveId, room, refreshMachineData, fetchMachine]);
+  }, [socket, effectiveId, room]);
 
   // Инициалная загрузка только при наличии effectiveId
   useEffect(() => {
     if (!effectiveId) return;
     void fetchMachine();
-  }, [effectiveId, fetchMachine]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveId]);
 
   const changeStatus = useCallback(async (status: MachineStatus): Promise<void> => {
     if (!effectiveId) {

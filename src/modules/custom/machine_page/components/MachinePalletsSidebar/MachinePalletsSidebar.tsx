@@ -1,18 +1,6 @@
 import React from 'react';
 import styles from './MachinePalletsSidebar.module.css';
-
-interface Part {
-  id: number;
-  articleNumber: string;
-  name: string;
-  quantity: number;
-  material: string;
-  size: string;
-  substage: string;
-  readyForProcessing: number;
-  completed: number;
-  status: string;
-}
+import { PartDetail, machineTasksApi } from '../../../../api/custom/machine-tasks/machineTasksApi';
 
 interface PalletsSidebarProps {
   detailInfo: any;
@@ -20,69 +8,126 @@ interface PalletsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   handleOpenML: (palletId?: number) => void;
+  parts: PartDetail[];
+  loading: 'loading' | 'success' | 'error';
   position?: { top: number; right: number };
+  onRefresh?: () => void;
 }
 
-// Моковые данные для деталей в поддоне
-const mockParts: Part[] = [
-  {
-    id: 1,
-    articleNumber: 'ABCD-ABCD-38',
-    name: 'Боковина шкафа правая/левая',
-    quantity: 150,
-    material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-    size: '2050x650',
-    substage: 'Раскрой',
-    readyForProcessing: 50,
-    completed: 25,
-    status: 'PASSED_PREVIOUS_STAGE'
-  },
-  {
-    id: 2,
-    articleNumber: 'ABCD-ABCD-38',
-    name: 'Боковина шкафа правая/левая',
-    quantity: 150,
-    material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-    size: '2050x650',
-    substage: 'Кромление',
-    readyForProcessing: 50,
-    completed: 25,
-    status: 'IN_PROGRESS'
-  },
-  {
-    id: 3,
-    articleNumber: 'ABCD-ABCD-38',
-    name: 'Боковина шкафа правая/левая',
-    quantity: 150,
-    material: 'ЛДСП Дуб Сонома светлый - 16мм (50)',
-    size: '2050x650',
-    substage: 'Присадка',
-    readyForProcessing: 50,
-    completed: 25,
-    status: 'COMPLETED'
-  }
-];
 
-const PalletsSidebar: React.FC<PalletsSidebarProps> = ({ 
-  detailInfo, 
-  detailId, 
-  isOpen, 
-  onClose, 
-  handleOpenML 
+const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
+  detailInfo,
+  detailId,
+  isOpen,
+  onClose,
+  handleOpenML,
+  parts,
+  loading,
+  onRefresh
 }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [sortField, setSortField] = React.useState<keyof Part | null>(null);
+  const [sortField, setSortField] = React.useState<keyof PartDetail | null>(null);
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
-  const [selectedParts, setSelectedParts] = React.useState<number[]>([]);
+  const [selectedParts, setSelectedParts] = React.useState<string[]>([]);
+  const [actionLoading, setActionLoading] = React.useState<boolean>(false);
   
-  // Используем моковые данные
-  const parts = mockParts;
-
-  const handleDrawingClick = (partId: number) => {
-    console.log(`Открыть чертеж для детали ${partId}`);
+  // Определяем, какую кнопку показывать для поддона
+  const getPalletButtonType = (): 'start' | 'complete' | 'disabled' => {
+    if (!parts || parts.length === 0) return 'disabled';
+    
+    const hasInProgress = parts.some(part => part.status === 'IN_PROGRESS');
+    const allCompleted = parts.every(part => part.status === 'COMPLETED');
+    
+    if (allCompleted) return 'disabled';
+    if (hasInProgress) return 'complete';
+    return 'start';
   };
 
-  const handleSort = (field: keyof Part) => {
+  // Обработчик для взятия поддона в работу
+  const handleStartPallet = async () => {
+    if (!detailInfo?.assignmentId || actionLoading) return;
+    
+    try {
+      setActionLoading(true);
+      await machineTasksApi.startPallet(detailInfo.assignmentId);
+      console.log('Поддон взят в работу');
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Ошибка при взятии поддона в работу:', error);
+      alert('Ошибка при взятии поддона в работу');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Обработчик для завершения поддона
+  const handleCompletePallet = async () => {
+    if (!detailInfo?.assignmentId || actionLoading) return;
+    
+    try {
+      setActionLoading(true);
+      await machineTasksApi.completePallet(detailInfo.assignmentId);
+      console.log('Работа над поддоном завершена');
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Ошибка при завершении работы над поддоном:', error);
+      alert('Ошибка при завершении работы над поддоном');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Обработчик для взятия детали в работу
+  const handleStartPart = async (assignmentPartId: number) => {
+    if (actionLoading) return;
+    
+    if (!assignmentPartId) {
+      console.error('assignmentPartId отсутствует');
+      alert('Ошибка: ID детали не найден. Проверьте данные от API.');
+      return;
+    }
+    
+    try {
+      setActionLoading(true);
+      await machineTasksApi.startPart(assignmentPartId);
+      console.log('Деталь взята в работу');
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Ошибка при взятии детали в работу:', error);
+      alert('Ошибка при взятии детали в работу');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Обработчик для завершения детали
+  const handleCompletePart = async (assignmentPartId: number, quantity: string) => {
+    if (actionLoading) return;
+    
+    const processedQuantity = parseInt(quantity, 10);
+    if (isNaN(processedQuantity) || processedQuantity <= 0) {
+      alert('Некорректное количество деталей');
+      return;
+    }
+    
+    try {
+      setActionLoading(true);
+      await machineTasksApi.completePart(assignmentPartId, processedQuantity);
+      console.log('Работа над деталью завершена');
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Ошибка при завершении работы над деталью:', error);
+      alert('Ошибка при завершении работы над деталью');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDrawingClick = (partCode: string) => {
+    console.log(`Открыть чертеж для детали ${partCode}`);
+  };
+
+  const handleSort = (field: keyof PartDetail) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -91,7 +136,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
     }
   };
 
-  const getSortIcon = (field: keyof Part) => {
+  const getSortIcon = (field: keyof PartDetail) => {
     if (sortField !== field) return ' ⇅';
     return sortDirection === 'asc' ? ' ▲' : ' ▼';
   };
@@ -99,8 +144,8 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
   const filteredParts = parts.filter(part => {
     const query = searchQuery.toLowerCase();
     return (
-      part.articleNumber.toLowerCase().includes(query) ||
-      part.name.toLowerCase().includes(query) ||
+      part.partCode.toLowerCase().includes(query) ||
+      part.partName.toLowerCase().includes(query) ||
       part.material.toLowerCase().includes(query) ||
       part.size.toLowerCase().includes(query) ||
       part.substage.toLowerCase().includes(query)
@@ -119,70 +164,45 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
         : bValue.localeCompare(aValue);
     }
     
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return sortDirection === 'asc' 
-        ? aValue - bValue
-        : bValue - aValue;
-    }
-    
     return 0;
   });
 
-  const handleTogglePart = (partId: number) => {
-    if (selectedParts.includes(partId)) {
-      setSelectedParts(selectedParts.filter(id => id !== partId));
+  const handleTogglePart = (partCode: string) => {
+    if (selectedParts.includes(partCode)) {
+      setSelectedParts(selectedParts.filter(code => code !== partCode));
     } else {
-      setSelectedParts([...selectedParts, partId]);
+      setSelectedParts([...selectedParts, partCode]);
     }
   };
 
-  const handleRowClick = (partId: number) => {
-    handleTogglePart(partId);
+  const handleRowClick = (partCode: string) => {
+    handleTogglePart(partCode);
   };
 
   const getStatusClass = (status: string): string => {
-    const normalizedStatus = status.toUpperCase().replace(/\s+/g, '_');
-    switch (normalizedStatus) {
+    switch (status.toUpperCase()) {
       case 'NOT_PROCESSED':
-      case 'ГОТОВО_К_ОБРАБОТКЕ':
-      case 'PASSED_PREVIOUS_STAGE':
+      case 'PENDING':
         return styles.statusPassedPreviousStage;
       case 'IN_PROGRESS':
-      case 'В_РАБОТЕ':
         return styles.statusInProgress;
       case 'COMPLETED':
-      case 'ЗАВЕРШЕНО':
         return styles.statusCompleted;
-      case 'PENDING':
-      case 'ОЖИДАНИЕ':
-        return styles.statusOnMachine;
-      case 'PARTIALLY_COMPLETED':
-      case 'ЧАСТИЧНО_ВЫПОЛНЕНО':
-        return styles.statusPartiallyCompleted;
       default:
         return styles.statusOnMachine;
     }
   };
 
   const getStatusText = (status: string): string => {
-    const normalizedStatus = status.toUpperCase().replace(/\s+/g, '_');
-    switch (normalizedStatus) {
+    switch (status.toUpperCase()) {
       case 'NOT_PROCESSED':
         return 'Не обработано';
       case 'PENDING':
-        return 'Ожидание';
+        return 'Готово к обработке';
       case 'IN_PROGRESS':
         return 'В работе';
       case 'COMPLETED':
         return 'Завершено';
-      case 'PARTIALLY_COMPLETED':
-        return 'Частично выполнено';
-      case 'PASSED_PREVIOUS_STAGE':
-        return 'Готово к обработке';
-      case 'ACTIVE':
-        return 'Активен';
-      case 'INACTIVE':
-        return 'Неактивен';
       default:
         return status;
     }
@@ -211,7 +231,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
             </div>
             <div className={styles.detailProperty}>
               <span className={styles.propertyLabel}>Статус:</span>
-              <span className={styles.propertyValue}>{detailInfo.status || 'В работе'}</span>
+              <span className={styles.propertyValue}>{detailInfo.status ? getStatusText(detailInfo.status) : 'В работе'}</span>
             </div>
           </div>
         )}
@@ -228,7 +248,16 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
       </div>
 
       <div className={styles.sidebarContent}>
-        {parts.length === 0 ? (
+        {loading === 'loading' ? (
+          <div className={styles.stateContainer}>
+            <div className={styles.loadingSpinner}>
+              <div className={styles.spinner}></div>
+            </div>
+            <div className={styles.loadingMessage}>
+              <h3>Загрузка деталей...</h3>
+            </div>
+          </div>
+        ) : parts.length === 0 ? (
           <div className={styles.stateContainer}>
             <div className={styles.emptyIcon}>📭</div>
             <div className={styles.emptyMessage}>
@@ -242,11 +271,11 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
               <table className={styles.palletsTable}>
                 <thead>
                   <tr>
-                    <th onClick={() => handleSort('articleNumber')} style={{ cursor: 'pointer' }}>
-                      Артикул детали{getSortIcon('articleNumber')}
+                    <th onClick={() => handleSort('partCode')} style={{ cursor: 'pointer' }}>
+                      Артикул детали{getSortIcon('partCode')}
                     </th>
-                    <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
-                      Название детали{getSortIcon('name')}
+                    <th onClick={() => handleSort('partName')} style={{ cursor: 'pointer' }}>
+                      Название детали{getSortIcon('partName')}
                     </th>
                     <th onClick={() => handleSort('material')} style={{ cursor: 'pointer' }}>
                       Материал{getSortIcon('material')}
@@ -269,15 +298,22 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedParts.map((part, index) => (
-                    <tr
-                      key={part.id}
-                      className={`${styles.animatedRow} ${selectedParts.includes(part.id) ? styles.selected : ''}`}
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                      onClick={() => handleRowClick(part.id)}
-                    >
-                      <td>{part.articleNumber}</td>
-                      <td>{part.name}</td>
+                  {sortedParts.map((part, index) => {
+                    // Логирование для отладки
+                    if (index === 0) {
+                      console.log('Пример данных детали:', part);
+                      console.log('assignmentPartId:', part.assignmentPartId);
+                    }
+                    
+                    return (
+                      <tr
+                        key={part.partCode}
+                        className={`${styles.animatedRow} ${selectedParts.includes(part.partCode) ? styles.selected : ''}`}
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                        onClick={() => handleRowClick(part.partCode)}
+                      >
+                      <td>{part.partCode}</td>
+                      <td>{part.partName}</td>
                       <td>{part.material}</td>
                       <td>{part.size}</td>
                       <td>{part.substage}</td>
@@ -286,13 +322,13 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                           className={`${styles.actionButton} ${styles.mlButton}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDrawingClick(part.id);
+                            handleDrawingClick(part.partCode);
                           }}
                         >
                           Чертеж
                         </button>
                       </td>
-                      <td>{part.quantity} ({part.completed})</td>
+                      <td>{part.quantity}</td>
                       <td>
                         <span className={`${styles.statusBadge} ${getStatusClass(part.status)}`}>
                           {getStatusText(part.status)}
@@ -303,7 +339,7 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                           className={`${styles.actionButton} ${styles.mlButton}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleOpenML(part.id);
+                            handleOpenML();
                           }}
                         >
                           МЛ детали
@@ -313,18 +349,27 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                             className={`${styles.actionButton} ${styles.completedButton}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log('Завершить', part.id);
+                              handleCompletePart(part.assignmentPartId, part.quantity);
                             }}
+                            disabled={actionLoading}
                           >
                             Завершить
+                          </button>
+                        ) : part.status === 'COMPLETED' ? (
+                          <button
+                            className={`${styles.actionButton} ${styles.completedButton}`}
+                            disabled
+                          >
+                            Завершено
                           </button>
                         ) : (
                           <button
                             className={`${styles.actionButton} ${styles.inProgressButton}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log('Взять в работу', part.id);
+                              handleStartPart(part.assignmentPartId);
                             }}
+                            disabled={actionLoading}
                           >
                             Взять в работу
                           </button>
@@ -334,13 +379,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({
                         <input
                           type="checkbox"
                           className={styles.partCheckbox}
-                          checked={selectedParts.includes(part.id)}
-                          onChange={() => handleTogglePart(part.id)}
+                          checked={selectedParts.includes(part.partCode)}
+                          onChange={() => handleTogglePart(part.partCode)}
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -684,10 +684,11 @@
 
 /* Стили для ячейки материалов */
 .materialsCell {
-  max-width: 250px;
+  max-width: 150px;
   white-space: pre-wrap;
-  line-height: 1.4;
-  font-size: 11px;
+  line-height: 1.3;
+  font-size: 10px;
+  vertical-align: middle;
 }
 
 /* Стили для статусов */
@@ -739,11 +740,16 @@
 
 /* Ячейка с действиями */
 .actionsCell {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
+  vertical-align: middle;
   padding: 8px 12px !important;
+  white-space: nowrap;
+}
+
+.actionsCell > * {
+  display: inline-block;
+  margin: 0 4px;
+  vertical-align: middle;
 }
 
 /* Кнопки действия */
@@ -817,4 +823,44 @@
 
 .completedButton:active {
   background: linear-gradient(to bottom, #27ae60, #229954);
+}
+
+/* Стили для неактивной кнопки "Завершено" */
+.completedButton:disabled {
+  background: #bdc3c7;
+  color: #7f8c8d;
+  opacity: 1;
+  cursor: not-allowed;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: none;
+}
+
+.completedButton:disabled:hover {
+  background: #bdc3c7;
+  transform: none;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Стили для неактивной кнопки "Не готово" */
+.inProgressButton:disabled {
+  background: #bdc3c7;
+  color: #7f8c8d;
+  opacity: 1;
+  cursor: not-allowed;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: none;
+}
+
+.inProgressButton:disabled:hover {
+  background: #bdc3c7;
+  transform: none;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
