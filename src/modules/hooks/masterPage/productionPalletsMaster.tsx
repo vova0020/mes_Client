@@ -19,6 +19,8 @@ import {
   PartDistribution,
   returnParts,
   ReturnPartsResponse,
+  createPalletForDefectReturn,
+  CreatePalletForDefectReturnResponse,
 } from '../../api/masterPage/productionPalletsServiceMaster';
 import { useWebSocketRoom } from '../../../hooks/useWebSocketRoom';
 
@@ -30,6 +32,7 @@ interface UseProductionPalletsResult {
   bufferCells: BufferCellDto[];
   machines: MachineDto[];
   unallocatedQuantity: number;
+  defectiveQuantity: number;
   isWebSocketConnected: boolean;
   webSocketError: string | null;
   fetchPallets: (detailId: number | null) => Promise<void>;
@@ -38,6 +41,7 @@ interface UseProductionPalletsResult {
   loadSegmentResources: () => Promise<void>;
   refreshPalletData: (status: string) => Promise<void>;
   createPallet: (partId: number, quantity: number, palletName?: string) => Promise<CreatePalletResponse>;
+  createPalletForDefectReturn: (partId: number, quantity: number, returnToStageId: number, palletName?: string) => Promise<CreatePalletForDefectReturnResponse>;
   defectParts: (palletId: number, quantity: number, description?: string, machineId?: number) => Promise<DefectPartsResponse>;
   redistributeParts: (sourcePalletId: number, distributions: PartDistribution[], machineId?: number) => Promise<RedistributePartsResponse>;
   returnParts: (partId: number, palletId: number, quantity: number, returnToStageId: number) => Promise<ReturnPartsResponse>;
@@ -73,6 +77,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   const [error, setError] = useState<Error | null>(null);
   const [currentDetailId, setCurrentDetailId] = useState<number | null>(initialDetailId);
   const [unallocatedQuantity, setUnallocatedQuantity] = useState<number>(0);
+  const [defectiveQuantity, setDefectiveQuantity] = useState<number>(0);
   const [bufferCells, setBufferCells] = useState<BufferCellDto[]>([]);
   const [machines, setMachines] = useState<MachineDto[]>([]);
   
@@ -204,6 +209,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       const fetchedData = await fetchProductionPalletsByDetailId(detailId);
       
       setUnallocatedQuantity(fetchedData.unallocatedQuantity);
+      setDefectiveQuantity(fetchedData.defectiveQuantity);
       
       if (fetchedData.pallets.length > 0) {
         const normalizedPallets = fetchedData.pallets.map(pallet => ({
@@ -251,6 +257,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
 
           updatePalletsSmartly(normalizedPallets);
           setUnallocatedQuantity(fetchedData.unallocatedQuantity);
+          setDefectiveQuantity(fetchedData.defectiveQuantity);
 
           console.log(`Данные поддонов обновлены (debounced).`);
         } catch (err) {
@@ -531,6 +538,32 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
       setLoading(false);
     }
   }, [currentDetailId, fetchPallets]);
+
+  const createPalletForDefectReturnHandler = useCallback(async (
+    partId: number,
+    quantity: number,
+    returnToStageId: number,
+    palletName?: string
+  ): Promise<CreatePalletForDefectReturnResponse> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await createPalletForDefectReturn(partId, quantity, returnToStageId, palletName);
+      
+      if (currentDetailId === partId) {
+        await fetchPallets(currentDetailId);
+      }
+
+      return response;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Ошибка при создании поддона для возврата отбракованных деталей');
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDetailId, fetchPallets]);
   
   // Инициализация с начальным ID детали
   useEffect(() => {
@@ -544,6 +577,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     loading,
     error,
     unallocatedQuantity,
+    defectiveQuantity,
     isWebSocketConnected,
     webSocketError,
     fetchPallets,
@@ -554,6 +588,7 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
     loadSegmentResources,
     refreshPalletData,
     createPallet,
+    createPalletForDefectReturn: createPalletForDefectReturnHandler,
     defectParts: defectPartsHandler,
     redistributeParts: redistributePartsHandler,
     returnParts: returnPartsHandler

@@ -77,6 +77,7 @@ export interface PalletsResponseDto {
   pallets: ProductionPallet[];
   total: number;
   unallocatedQuantity?: number; // Количество нераспределенных деталей
+  defectiveQuantity?: number; // Количество отбракованных деталей (доступно для возврата)
 }
 
 // Интерфейс для ответа API с буферными ячейками
@@ -118,6 +119,15 @@ export interface CreatePalletRequest {
   palletName?: string;
 }
 
+// Интерфейс для запроса создания поддона для возврата отбракованных деталей
+export interface CreatePalletForDefectReturnRequest {
+  partId: number;
+  quantity: number;
+  returnToStageId: number;
+  userId: number;
+  palletName?: string;
+}
+
 // Интерфейс для ответа создания поддона
 export interface CreatePalletResponse {
   message: string;
@@ -135,6 +145,30 @@ export interface CreatePalletResponse {
       totalQuantity: number;
       availableQuantity: number;
     };
+  };
+}
+
+// Интерфейс для ответа создания поддона для возврата отбракованных деталей
+export interface CreatePalletForDefectReturnResponse {
+  message: string;
+  pallet: {
+    id: number;
+    name: string;
+    partId: number;
+    quantity: number;
+    returnToStage: {
+      id: number;
+      name: string;
+    };
+  };
+  movement: {
+    id: number;
+    quantity: number;
+  };
+  defectStats: {
+    totalDefective: number;
+    alreadyReturned: number;
+    remainingToReturn: number;
   };
 }
 
@@ -259,9 +293,9 @@ export const getProcessStepText = (operation?: OperationDto | null): string => {
 };
 
 // Функция для получения производственных поддонов по ID детали
-export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<{ pallets: ProductionPallet[], unallocatedQuantity: number }> => {
+export const fetchProductionPalletsByDetailId = async (detailId: number | null): Promise<{ pallets: ProductionPallet[], unallocatedQuantity: number, defectiveQuantity: number }> => {
   if (detailId === null) {
-    return { pallets: [], unallocatedQuantity: 0 };
+    return { pallets: [], unallocatedQuantity: 0, defectiveQuantity: 0 };
   }
 
   const stageid = getSegmentIdFromStorage();
@@ -282,7 +316,8 @@ export const fetchProductionPalletsByDetailId = async (detailId: number | null):
 
     return {
       pallets: processedPallets,
-      unallocatedQuantity: response.data.unallocatedQuantity || 0
+      unallocatedQuantity: response.data.unallocatedQuantity || 0,
+      defectiveQuantity: response.data.defectiveQuantity || 0
     };
   } catch (error) {
     console.error('Ошибка при получении поддонов детали:', error);
@@ -494,6 +529,43 @@ export const createPalletByPart = async (
     return response.data;
   } catch (error) {
     console.error('Ошибка при создании поддона:', error);
+    throw error;
+  }
+};
+
+// Новая функция: создание поддона для возврата отбракованных деталей
+export const createPalletForDefectReturn = async (
+  partId: number,
+  quantity: number,
+  returnToStageId: number,
+  palletName?: string
+): Promise<CreatePalletForDefectReturnResponse> => {
+  try {
+    // Получаем userId из localStorage
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      throw new Error('Данные пользователя не найдены');
+    }
+    const user = JSON.parse(userData);
+    const userId = user.id;
+
+    const payload: CreatePalletForDefectReturnRequest = {
+      partId,
+      quantity,
+      returnToStageId,
+      userId,
+      palletName
+    };
+
+    const response = await axios.post<CreatePalletForDefectReturnResponse>(
+      `${API_URL}/master/create-pallet-for-defect-return`,
+      payload
+    );
+
+    console.log('Поддон для возврата отбракованных деталей успешно создан:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при создании поддона для возврата отбракованных деталей:', error);
     throw error;
   }
 };

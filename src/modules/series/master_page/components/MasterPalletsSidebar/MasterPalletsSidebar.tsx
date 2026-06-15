@@ -28,12 +28,14 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
     loading,
     error,
     unallocatedQuantity,
+    defectiveQuantity,
     fetchPallets,
     updateMachine,
     updateBufferCell,
     loadSegmentResources,
     refreshPalletData,
     createPallet,
+    createPalletForDefectReturn,
     defectParts,
     redistributeParts,
     returnParts
@@ -322,8 +324,9 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       return;
     }
 
-    if (quantity > unallocatedQuantity) {
-      setErrorMessage(`Количество не может превышать доступное количество (${unallocatedQuantity})`);
+    const totalAvailable = unallocatedQuantity + defectiveQuantity;
+    if (quantity > totalAvailable) {
+      setErrorMessage(`Количество не может превышать доступное количество (${totalAvailable})`);
       return;
     }
 
@@ -331,18 +334,50 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
       setIsCreatingPallet(true);
       setErrorMessage(null);
 
-      await createPallet(
-        detailId,
-        quantity,
-        createPalletName.trim() || undefined
-      );
+      // Определяем, какой метод использовать
+      // Если есть только отбракованные детали (нет нераспределенных), используем специальный эндпоинт
+      if (unallocatedQuantity === 0 && defectiveQuantity > 0) {
+        // Получаем returnToStageId из selectedStage
+        let returnToStageId: number | null = null;
+        try {
+          const selectedStageData = localStorage.getItem('selectedStage');
+          if (selectedStageData) {
+            const selectedStage = JSON.parse(selectedStageData);
+            returnToStageId = selectedStage.id;
+          }
+        } catch (error) {
+          console.error('Ошибка при получении selectedStage:', error);
+        }
+
+        if (!returnToStageId) {
+          setErrorMessage('Не удалось определить ID этапа для возврата деталей');
+          return;
+        }
+
+        await createPalletForDefectReturn(
+          detailId,
+          quantity,
+          returnToStageId,
+          createPalletName.trim() || undefined
+        );
+        
+        console.log('Поддон для возврата отбракованных деталей успешно создан');
+      } else {
+        // Используем обычный метод создания поддона
+        await createPallet(
+          detailId,
+          quantity,
+          createPalletName.trim() || undefined
+        );
+        
+        console.log('Поддон успешно создан');
+      }
 
       // Закрываем модальное окно после успешного создания
       handleCloseCreatePalletModal();
-      
-      console.log('Поддон успешно создан');
-    } catch (err) {
-      setErrorMessage('Не удалось создать поддон');
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || err?.message || 'Не удалось создать поддон';
+      setErrorMessage(errorMsg);
       console.error('Ошибка при создании поддона:', err);
     } finally {
       setIsCreatingPallet(false);
@@ -772,12 +807,22 @@ return (
         </div>
         {/* Отображаем информацию о нераспределенных деталях */}
         {!loading && detailId && (
-          <div className={styles.detailProperty}>
-            <span className={styles.propertyLabel}>Нераспределено:</span>
-            <span className={`${styles.propertyValue} ${unallocatedQuantity > 0 ? styles.unallocatedQuantity : ''}`}>
-              {unallocatedQuantity} шт.
-            </span>
-          </div>
+          <>
+            <div className={styles.detailProperty}>
+              <span className={styles.propertyLabel}>Нераспределено:</span>
+              <span className={`${styles.propertyValue} ${unallocatedQuantity > 0 ? styles.unallocatedQuantity : ''}`}>
+                {unallocatedQuantity} шт.
+              </span>
+            </div>
+            {defectiveQuantity > 0 && (
+              <div className={styles.detailProperty}>
+                <span className={styles.propertyLabel}>Отбраковано:</span>
+                <span className={`${styles.propertyValue} ${styles.defectiveQuantity}`}>
+                  {defectiveQuantity} шт.
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -822,9 +867,14 @@ return (
             {detailId ? (
               <>
                 <p>Для выбранной детали не найдено ни одного поддона.</p>
-                {unallocatedQuantity > 0 && (
+                {(unallocatedQuantity > 0 || defectiveQuantity > 0) && (
                   <>
-                    <p>Доступно для распределения: <strong>{unallocatedQuantity} шт.</strong></p>
+                    {unallocatedQuantity > 0 && (
+                      <p>Доступно для распределения: <strong>{unallocatedQuantity} шт.</strong></p>
+                    )}
+                    {defectiveQuantity > 0 && (
+                      <p>Отбракованных деталей для возврата: <strong>{defectiveQuantity} шт.</strong></p>
+                    )}
                     <button 
                       className={styles.createPalletButton}
                       onClick={handleOpenCreatePalletModal}
@@ -842,11 +892,18 @@ return (
         </div>
       ) : (
         <div className={`${styles.tableContainer} ${showDetails ? styles.showDetails : styles.hideDetails}`}>
-          {/* Кнопка создания поддона, если есть нераспределенные детали */}
-          {unallocatedQuantity > 0 && (
+          {/* Кнопка создания поддона, если есть нераспределенные или отбракованные детали */}
+          {(unallocatedQuantity > 0 || defectiveQuantity > 0) && (
             <div className={styles.createPalletSection}>
               <div className={styles.unallocatedInfo}>
-                Нераспределено: <strong>{unallocatedQuantity} шт.</strong>
+                {unallocatedQuantity > 0 && (
+                  <span>Нераспределено: <strong>{unallocatedQuantity} шт.</strong></span>
+                )}
+                {defectiveQuantity > 0 && (
+                  <span style={{ marginLeft: unallocatedQuantity > 0 ? '10px' : '0' }}>
+                    Отбраковано: <strong>{defectiveQuantity} шт.</strong>
+                  </span>
+                )}
               </div>
               <button 
                 className={styles.createPalletButtonSmall}
@@ -931,7 +988,12 @@ return (
       }}>
         <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
           <div className={styles.modalHeader}>
-            <h3>Создать новый поддон</h3>
+            <h3>
+              {unallocatedQuantity === 0 && defectiveQuantity > 0 
+                ? 'Создать поддон для возврата отбракованных деталей' 
+                : 'Создать новый поддон'
+              }
+            </h3>
             <button 
               className={styles.modalCloseButton}
               onClick={handleCloseCreatePalletModal}
@@ -942,19 +1004,42 @@ return (
           </div>
           
           <div className={styles.modalBody}>
+            {unallocatedQuantity === 0 && defectiveQuantity > 0 && (
+              <div style={{ 
+                marginBottom: '16px', 
+                padding: '12px', 
+                background: 'linear-gradient(135deg, #fff3cd, #ffeaa7)',
+                border: '1px solid #f1c40f',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#856404'
+              }}>
+                ℹ️ Вы создаёте поддон для возврата отбракованных деталей. 
+                Детали будут автоматически возвращены в производство на текущий этап.
+              </div>
+            )}
+            
             <div className={styles.formGroup}>
               <label htmlFor="palletQuantity">Количество деталей *</label>
               <input
                 id="palletQuantity"
                 type="number"
                 min="1"
-                max={unallocatedQuantity}
+                max={unallocatedQuantity + defectiveQuantity}
                 value={createPalletQuantity}
                 onChange={(e) => setCreatePalletQuantity(e.target.value)}
-                placeholder={`Максимум: ${unallocatedQuantity}`}
+                placeholder={`Максимум: ${unallocatedQuantity + defectiveQuantity}`}
                 disabled={isCreatingPallet}
                 className={styles.formInput}
               />
+              {defectiveQuantity > 0 && (
+                <small style={{ color: '#666', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {unallocatedQuantity > 0 
+                    ? `Доступно: ${unallocatedQuantity} нераспределенных + ${defectiveQuantity} отбракованных`
+                    : `Доступно для возврата: ${defectiveQuantity} отбракованных деталей`
+                  }
+                </small>
+              )}
             </div>
             
             <div className={styles.formGroup}>
