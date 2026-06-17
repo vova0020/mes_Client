@@ -120,6 +120,17 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data, onBac
       });
       
       return Array.from(groupedByUnit.entries()).map(([unitKey, machines]) => {
+        if (showTotal) {
+          return {
+            unit: unitKey,
+            labels: machines.map((m: any) => m.machineName),
+            datasets: [{
+              label: '',
+              data: machines.map((m: any) => m.totalValue)
+            }]
+          };
+        }
+        
         const allDates = new Set<string>();
         machines.forEach((m: any) => {
           (m.dataPoints || []).forEach((dp: any) => allDates.add(dp.date));
@@ -141,26 +152,6 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data, onBac
     }
     
     if (showTotal) {
-      if (selectedStageId) {
-        const groupedByUnit = new Map<string, any[]>();
-        stats.forEach((s: any) => {
-          const unitKey = s.unit || 'unknown';
-          if (!groupedByUnit.has(unitKey)) {
-            groupedByUnit.set(unitKey, []);
-          }
-          groupedByUnit.get(unitKey)!.push(s);
-        });
-        
-        return Array.from(groupedByUnit.entries()).map(([unitKey, machines]) => ({
-          unit: unitKey,
-          labels: machines.map((m: any) => m.machineName),
-          datasets: [{
-            label: '',
-            data: machines.map((m: any) => m.totalValue)
-          }]
-        }));
-      }
-      
       return [{
         unit: unit === UnitOfMeasurement.SQUARE_METERS ? 'м²' : 'шт',
         labels: stats.map((s: any) => s.stageName),
@@ -354,7 +345,10 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data, onBac
             type="date" 
             className={styles.dateInput}
             value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
+            onChange={(e) => {
+              setDateFrom(e.target.value);
+              if (e.target.value) setPeriod('custom');
+            }}
             placeholder="От"
           />
           <span className={styles.dateSeparator}>—</span>
@@ -362,7 +356,10 @@ const ProductionStatistics: React.FC<ProductionStatisticsProps> = ({ data, onBac
             type="date" 
             className={styles.dateInput}
             value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
+            onChange={(e) => {
+              setDateTo(e.target.value);
+              if (e.target.value) setPeriod('custom');
+            }}
             placeholder="До"
           />
         </div>
