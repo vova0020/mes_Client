@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { useMachineUptimeStages, useMachineUptimeStats } from '../../../../../../hooks/statisticsHook';
 import { DateRangeType, MachineStatus } from '../../../../../../api/statisticsApi';
 import { useWebSocketRoom } from '../../../../../../../hooks/useWebSocketRoom';
+import { exportMachineUptimeToExcel } from './utils/exportToExcel';
 import styles from './MachineUptimeStatistics.module.css';
 
 type DateRange = '24h' | 'week' | 'month' | 'custom';
@@ -109,7 +110,7 @@ const MachineUptimeStatistics: React.FC = () => {
             className={`${styles.rangeButton} ${dateRange === '24h' ? styles.active : ''}`}
             onClick={() => setDateRange('24h')}
           >
-            24 часа
+           Сегодня
           </button>
           <button
             className={`${styles.rangeButton} ${dateRange === 'week' ? styles.active : ''}`}
@@ -147,6 +148,15 @@ const MachineUptimeStatistics: React.FC = () => {
               className={styles.dateInput}
             />
           </div>
+        )}
+        
+        {data && (
+          <button
+            className={styles.exportButton}
+            onClick={() => exportMachineUptimeToExcel(data)}
+          >
+            📥 Экспорт в Excel
+          </button>
         )}
       </div>
 

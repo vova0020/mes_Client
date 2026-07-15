@@ -129,6 +129,32 @@
   color: #999;
 }
 
+.exportButton {
+  padding: 8px 16px;
+  background: linear-gradient(to bottom, #27ae60, #229954);
+  border: 1px solid #1e8449;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  margin-left: auto;
+}
+
+.exportButton:hover {
+  background: linear-gradient(to bottom, #229954, #1e8449);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+}
+
+.exportButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 .dateRange {
   color: #fff;
   font-size: 14px;
