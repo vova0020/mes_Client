@@ -2,18 +2,31 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button, CircularProgress, Alert } from '@mui/material';
 import { Search, Clear, Visibility, Edit, CheckCircle, Delete, Schedule, MonetizationOn } from '@mui/icons-material';
 import styles from './SeriesOrderCreation.module.css';
+import { OrderUploadModal } from './OrderUploadModal';
 
 // Импорты API и хуков
 import { useProductionOrders } from '../../../hooks/productionOrdersHook';
 import { usePackageDirectory } from '../../../hooks/packageDirectoryHook';
-import { 
-  OrderStatus, 
-  CreateProductionOrderDto, 
+import {
+  OrderStatus,
+  CreateProductionOrderDto,
   ProductionOrderResponseDto,
   CreatePackageDto,
   UpdateProductionOrderDto
 } from '../../../api/productionOrdersApi/productionOrdersApi';
 import { orderManagementApi } from '../../../api/orderManagementApi';
+
+interface ParsedPackage {
+  code: string;
+  name: string;
+  quantity: number;
+  exists?: boolean;
+  existingPackage?: {
+    packageId: number;
+    packageCode: string;
+    packageName: string;
+  };
+}
 
 interface OrderFormData {
   batchNumber: string;
@@ -77,6 +90,10 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
   } = usePackageDirectory();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isEditUploadModalOpen, setIsEditUploadModalOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<ProductionOrderResponseDto | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>([]);
   const [showPostponed, setShowPostponed] = useState(false);
@@ -176,6 +193,95 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
       )
     }));
   }, []);
+
+  // Обработчик редактирования заказа
+  const handleEditOrder = (order: ProductionOrderResponseDto) => {
+    if (order.status === OrderStatus.IN_PROGRESS) {
+      alert('Нельзя редактировать заказы, которые находятся в работе');
+      return;
+    }
+    
+    setEditingOrder(order);
+    
+    const formPackages = availablePackages.map(pkg => {
+      const orderPackage = order.packages?.find(op => op.packageId === pkg.packageId);
+      const hasDetails = (pkg.detailsCount || 0) > 0;
+      const quantity = hasDetails && orderPackage ? orderPackage.quantity : 0;
+      
+      return {
+        packageId: pkg.packageId,
+        packageCode: pkg.packageCode,
+        packageName: pkg.packageName,
+        quantity: quantity,
+        detailsCount: pkg.detailsCount
+      };
+    });
+    setOrderForm({
+      batchNumber: order.batchNumber,
+      orderName: order.orderName,
+      requiredDate: order.requiredDate.split('T')[0],
+      packages: formPackages
+    });
+    setPackageSearchQuery('');
+    setIsEditDialogOpen(true);
+  };
+
+  // Обработчик сохранения редактирования заказа
+  const handleUpdateOrder = async () => {
+    if (!editingOrder) return;
+
+    try {
+      const selectedPackages: CreatePackageDto[] = orderForm.packages
+        .filter(pkg => pkg.quantity > 0 && (pkg.detailsCount || 0) > 0)
+        .map(pkg => ({
+          packageDirectoryId: pkg.packageId,
+          quantity: pkg.quantity
+        }));
+
+      if (selectedPackages.length === 0) {
+        alert('Выберите хотя бы одну упаковку с деталями для заказа');
+        return;
+      }
+
+      if (!orderForm.batchNumber || !orderForm.orderName || !orderForm.requiredDate) {
+        alert('Заполните все обязательные поля');
+        return;
+      }
+
+      const updateDto: UpdateProductionOrderDto = {
+        batchNumber: orderForm.batchNumber,
+        orderName: orderForm.orderName,
+        requiredDate: new Date(orderForm.requiredDate).toISOString(),
+        packages: selectedPackages
+      };
+
+      await updateOrder(editingOrder.orderId, updateDto);
+      setIsEditDialogOpen(false);
+      setEditingOrder(null);
+    } catch (error: any) {
+      console.error('Ошибка при обновлении заказа:', error);
+      alert(`Ошибка при обновлении заказа: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  // Обработчик загрузки упаковок из Excel для редактирования
+  const handleEditUploadSuccess = (parsedPackages: ParsedPackage[]) => {
+    const updatedPackages = orderForm.packages.map(pkg => {
+      const parsedPkg = parsedPackages.find(p =>
+        p.existingPackage?.packageId === pkg.packageId
+      );
+      return {
+        ...pkg,
+        quantity: parsedPkg ? parsedPkg.quantity : 0
+      };
+    });
+    
+    setOrderForm({
+      ...orderForm,
+      packages: updatedPackages
+    });
+    setIsEditUploadModalOpen(false);
+  };
 
   const handleApproveOrder = async (orderId: number) => {
     try {
@@ -349,9 +455,10 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
                       <button className={styles.actionBtn} title="Расход">
                         <MonetizationOn />
                       </button>
-                      <button 
-                        className={styles.actionBtn} 
-                        disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED}
+                      <button
+                        className={styles.actionBtn}
+                        onClick={() => handleEditOrder(order)}
+                        disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED || isUpdating}
                         title="Редактировать"
                       >
                         <Edit />
@@ -398,7 +505,10 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
         >
           {isCreating ? <CircularProgress size={16} /> : '+'} Создать заказ
         </button>
-        <button className={styles.loadButton}>
+        <button
+          onClick={() => setIsUploadModalOpen(true)}
+          className={styles.loadButton}
+        >
           📤 Загрузить из Excel
         </button>
         <button 
@@ -515,6 +625,165 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Диалог редактирования заказа */}
+      {isEditDialogOpen && (
+        <div className={styles.modal} onClick={() => setIsEditDialogOpen(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Редактирование заказа</h3>
+              <button onClick={() => setIsEditDialogOpen(false)} className={styles.closeButton}>✕</button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>📦 Номер партии *</label>
+                  <input
+                    type="text"
+                    value={orderForm.batchNumber}
+                    onChange={(e) => setOrderForm({...orderForm, batchNumber: e.target.value})}
+                    placeholder="Введите номер"
+                    className={styles.input}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>📋 Название заказа *</label>
+                  <input
+                    type="text"
+                    value={orderForm.orderName}
+                    onChange={(e) => setOrderForm({...orderForm, orderName: e.target.value})}
+                    placeholder="Введите название"
+                    className={styles.input}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>📅 Дата готовности *</label>
+                  <input
+                    type="date"
+                    value={orderForm.requiredDate}
+                    onChange={(e) => setOrderForm({...orderForm, requiredDate: e.target.value})}
+                    className={styles.input}
+                  />
+                </div>
+              </div>
+
+              {/* Текущие упаковки заказа */}
+              {editingOrder?.packages && editingOrder.packages.length > 0 && (
+                <div className={styles.packagesSection}>
+                  <label>📋 Текущие упаковки в заказе:</label>
+                  <table className={styles.packagesTable}>
+                    <thead>
+                      <tr>
+                        <th>Артикул</th>
+                        <th>Название</th>
+                        <th>Количество</th>
+                        <th>Прогресс</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {editingOrder.packages.map((pkg) => (
+                        <tr key={pkg.packageId}>
+                          <td>{pkg.packageCode}</td>
+                          <td>{pkg.packageName}</td>
+                          <td>{pkg.quantity}</td>
+                          <td>{pkg.completionPercentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className={styles.packagesSection}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label>📦 Изменить состав упаковок</label>
+                  <button
+                    onClick={() => setIsEditUploadModalOpen(true)}
+                    disabled={isUpdating}
+                    className={styles.loadButton}
+                    style={{ margin: 0, padding: '6px 12px', fontSize: '13px' }}
+                  >
+                    📤 Загрузить из Excel
+                  </button>
+                </div>
+                
+                <div className={styles.searchBox}>
+                  <Search className={styles.searchIcon} />
+                  <input
+                    type="text"
+                    placeholder="Поиск упаковок..."
+                    value={packageSearchQuery}
+                    onChange={(e) => setPackageSearchQuery(e.target.value)}
+                    className={styles.searchInput}
+                  />
+                  {packageSearchQuery && (
+                    <button onClick={() => setPackageSearchQuery('')} className={styles.clearButton}>
+                      <Clear />
+                    </button>
+                  )}
+                </div>
+
+                <div className={styles.packagesList}>
+                  <table className={styles.packagesTable}>
+                    <thead>
+                      <tr>
+                        <th>Артикул</th>
+                        <th>Название</th>
+                        <th>Количество</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPackages.map((pkg) => (
+                        <tr key={pkg.packageId} className={pkg.quantity > 0 ? styles.selectedRow : ''}>
+                          <td>{pkg.packageCode}</td>
+                          <td>{pkg.packageName}</td>
+                          <td>
+                            <input
+                              type="number"
+                              value={pkg.quantity || ''}
+                              onChange={(e) => handlePackageQuantityChange(pkg.packageId, parseInt(e.target.value) || 0)}
+                              className={styles.quantityInput}
+                              min="0"
+                              placeholder="0"
+                              disabled={!(pkg.detailsCount || 0)}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button onClick={() => setIsEditDialogOpen(false)} className={styles.cancelButton}>
+                Отмена
+              </button>
+              <button onClick={handleUpdateOrder} disabled={isUpdating} className={styles.saveButton}>
+                {isUpdating ? <CircularProgress size={16} /> : '✓'} Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно загрузки из Excel */}
+      {isUploadModalOpen && (
+        <OrderUploadModal onClose={() => setIsUploadModalOpen(false)} />
+      )}
+
+      {/* Модальное окно загрузки из Excel для редактирования */}
+      {isEditUploadModalOpen && (
+        <OrderUploadModal
+          onClose={() => setIsEditUploadModalOpen(false)}
+          isEditMode={true}
+          onEditSuccess={handleEditUploadSuccess}
+        />
       )}
     </div>
   );
