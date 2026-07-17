@@ -457,14 +457,19 @@ const PalletsSidebar: React.FC<PalletsSidebarProps> = ({detailInfo, detailId, is
   };
 
   // Обработчик перераспределения деталей
-  const handleRedistributeParts = async (distributions: any[], machineId?: number) => {
+  const handleRedistributeParts = async (distributions: any[], machineId?: number, sourceMachineId?: number) => {
     if (!redistributePalletId) return;
+
+    const sourcePallet = pallets.find(p => p.id === redistributePalletId);
+    console.log('[redistribute] sourcePallet.machine:', JSON.stringify(sourcePallet?.machine));
+    console.log('[redistribute] sourcePallet.currentOperation:', JSON.stringify(sourcePallet?.currentOperation));
+    console.log('[redistribute] sourceMachineId passed from modal:', sourceMachineId);
 
     try {
       setIsRedistributing(true);
       setErrorMessage(null);
 
-      await redistributeParts(redistributePalletId, distributions, machineId);
+      await redistributeParts(redistributePalletId, distributions, machineId, sourceMachineId);
       
       setShowRedistributeModal(false);
       console.log('Детали успешно перераспределены');

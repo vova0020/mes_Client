@@ -203,6 +203,7 @@ export interface PartDistribution {
 export interface RedistributePartsRequest {
   sourcePalletId: number;
   machineId?: number;
+  sourceMachineId?: number;
   distributions: PartDistribution[];
 }
 
@@ -618,13 +619,15 @@ export const defectParts = async (
 export const redistributeParts = async (
   sourcePalletId: number,
   distributions: PartDistribution[],
-  machineId?: number
+  machineId?: number,
+  sourceMachineId?: number
 ): Promise<RedistributePartsResponse> => {
   try {
     const payload: RedistributePartsRequest = {
       sourcePalletId,
       distributions,
-      machineId
+      machineId,
+      sourceMachineId
     };
 
     const response = await axios.post<RedistributePartsResponse>(

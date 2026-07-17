@@ -43,7 +43,7 @@ interface UseProductionPalletsResult {
   createPallet: (partId: number, quantity: number, palletName?: string) => Promise<CreatePalletResponse>;
   createPalletForDefectReturn: (partId: number, quantity: number, returnToStageId: number, palletName?: string) => Promise<CreatePalletForDefectReturnResponse>;
   defectParts: (palletId: number, quantity: number, description?: string, machineId?: number) => Promise<DefectPartsResponse>;
-  redistributeParts: (sourcePalletId: number, distributions: PartDistribution[], machineId?: number) => Promise<RedistributePartsResponse>;
+  redistributeParts: (sourcePalletId: number, distributions: PartDistribution[], machineId?: number, sourceMachineId?: number) => Promise<RedistributePartsResponse>;
   returnParts: (partId: number, palletId: number, quantity: number, returnToStageId: number) => Promise<ReturnPartsResponse>;
 }
 
@@ -491,13 +491,14 @@ const useProductionPallets = (initialDetailId: number | null = null): UseProduct
   const redistributePartsHandler = useCallback(async (
     sourcePalletId: number,
     distributions: PartDistribution[],
-    machineId?: number
+    machineId?: number,
+    sourceMachineId?: number
   ): Promise<RedistributePartsResponse> => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await redistributeParts(sourcePalletId, distributions, machineId);
+      const response = await redistributeParts(sourcePalletId, distributions, machineId, sourceMachineId);
       
       if (currentDetailId) {
         await fetchPallets(currentDetailId);

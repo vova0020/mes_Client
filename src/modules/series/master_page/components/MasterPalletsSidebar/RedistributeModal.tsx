@@ -7,7 +7,7 @@ interface RedistributeModalProps {
   onClose: () => void;
   pallet: ProductionPallet;
   existingPallets: ProductionPallet[];
-  onRedistribute: (distributions: PartDistribution[], machineId?: number) => Promise<void>;
+  onRedistribute: (distributions: PartDistribution[], machineId?: number, sourceMachineId?: number) => Promise<void>;
   isProcessing: boolean;
 }
 
@@ -124,7 +124,11 @@ const RedistributeModal: React.FC<RedistributeModalProps> = ({
         palletName: d.isNewPallet ? d.palletName : undefined
       }));
 
-      await onRedistribute(apiDistributions, getMachineIdFromStorage());
+      await onRedistribute(
+        apiDistributions,
+        getMachineIdFromStorage(),
+        pallet.machine?.id
+      );
       onClose();
     } catch (error) {
       setErrorMessage('Ошибка при перераспределении деталей');
