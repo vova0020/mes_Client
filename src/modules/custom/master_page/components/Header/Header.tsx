@@ -30,23 +30,21 @@ const Header: React.FC = () => {
   // Состояния для хранения данных о технологическом этапе и производственной линии
   const [techStageName, setTechStageName] = useState<string>('НАЗВАНИЕ ТЕХНОЛОГИЧЕСКОГО ЭТАПА');
   const [productionLineName, setProductionLineName] = useState<string>('Производственная линия');
-  const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
+  // СКРЫТО: переключатель типа производства — всегда серийное
+  const [showProductionSwitch] = useState<boolean>(false);
 
   // Используем хук для работы с навбаром
   const { getCurrentStage } = useStageNavbar();
   const navigate = useNavigate();
 
-  const handleSwitchToSeries = () => {
-    navigate('/master');
-  };
+  // СКРЫТО: переключение типа производства — всегда редирект на серийное
+  // const handleSwitchToSeries = () => {
+  //   navigate('/master');
+  // };
 
+  // Всегда перенаправляем на серийное производство
   useEffect(() => {
-    const productionType = localStorage.getItem('productionType');
-    setShowProductionSwitch(productionType === 'BOTH');
-    
-    if (productionType && productionType !== 'BOTH' && productionType !== 'CUSTOM') {
-      navigate('/master');
-    }
+    navigate('/master');
   }, [navigate]);
 
   // Функция для загрузки данных этапа
@@ -131,7 +129,8 @@ const Header: React.FC = () => {
         </div>
         <div className={styles.navButtons}>
           <Navbar />
-          {showProductionSwitch && (
+          {/* СКРЫТО: переключатель серийное/индивидуальное */}
+          {/* {showProductionSwitch && (
             <div className={styles.switchContainer}>
               <button className={styles.switchButton} onClick={handleSwitchToSeries}>
                 Серийное
@@ -140,7 +139,7 @@ const Header: React.FC = () => {
                 Индивидуальное
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

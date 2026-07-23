@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ProductionType } from '@/types/production';
+// СКРЫТО: useNavigate и ProductionType больше не нужны (индивидуальное скрыто)
+// import { useNavigate } from 'react-router-dom';
+// import { ProductionType } from '@/types/production';
 import styles from './Header.module.css';
 // Если есть логотип/иконки, импортируйте их, например:
 import logo from '../../../../../assets/logo-Photoroom.png';
@@ -30,24 +31,22 @@ const Header: React.FC = () => {
   // Состояния для хранения данных о технологическом этапе и производственной линии
   const [techStageName, setTechStageName] = useState<string>('НАЗВАНИЕ ТЕХНОЛОГИЧЕСКОГО ЭТАПА');
   const [productionLineName, setProductionLineName] = useState<string>('Производственная линия');
-  const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
-
   // Используем хук для работы с навбаром
   const { getCurrentStage } = useStageNavbar();
-  const navigate = useNavigate();
 
-  const handleSwitchToCustom = () => {
-    navigate('/custom-master');
-  };
+  // СКРЫТО: переключение на индивидуальное производство
+  // const handleSwitchToCustom = () => {
+  //   navigate('/custom-master');
+  // };
 
-  useEffect(() => {
-    const productionType = localStorage.getItem('productionType');
-    setShowProductionSwitch(productionType === 'BOTH');
-    
-    if (productionType && productionType !== 'BOTH' && productionType !== 'SERIAL') {
-      navigate('/custom-master');
-    }
-  }, [navigate]);
+  // СКРЫТО: логика проверки типа производства
+  // useEffect(() => {
+  //   const productionType = localStorage.getItem('productionType');
+  //   setShowProductionSwitch(productionType === 'BOTH');
+  //   if (productionType && productionType !== 'BOTH' && productionType !== 'SERIAL') {
+  //     navigate('/custom-master');
+  //   }
+  // }, [navigate]);
 
   // Функция для загрузки данных этапа
   const loadStageData = () => {
@@ -131,7 +130,8 @@ const Header: React.FC = () => {
         </div>
         <div className={styles.navButtons}>
           <Navbar />
-          {showProductionSwitch && (
+          {/* СКРЫТО: переключатель серийное/индивидуальное */}
+          {/* {showProductionSwitch && (
             <div className={styles.switchContainer}>
               <button className={`${styles.switchButton} ${styles.active}`}>
                 Серийное
@@ -140,7 +140,7 @@ const Header: React.FC = () => {
                 Индивидуальное
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

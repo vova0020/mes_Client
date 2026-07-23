@@ -34,21 +34,23 @@ const Header: React.FC = () => {
   const [machineName, setMachineName] = useState<string>("СТАНОК");
   const [operatorName, setOperatorName] = useState<string>("ОПЕРАТОР");
   const [stages, setStages] = useState<Stage[]>([]);
-  const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
+  // СКРЫТО: переключатель типа производства — всегда серийное
+  // const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSwitchToCustom = () => {
-    navigate('/machine');
-  };
+  // СКРЫТО: переключение на индивидуальное производство
+  // const handleSwitchToCustom = () => {
+  //   navigate('/machine');
+  // };
 
-  useEffect(() => {
-    const productionType = localStorage.getItem('productionType');
-    setShowProductionSwitch(productionType === 'BOTH');
-    
-    if (productionType && productionType !== 'BOTH' && productionType !== 'SERIAL') {
-      navigate('/machine');
-    }
-  }, [navigate]);
+  // СКРЫТО: логика проверки типа производства
+  // useEffect(() => {
+  //   const productionType = localStorage.getItem('productionType');
+  //   setShowProductionSwitch(productionType === 'BOTH');
+  //   if (productionType && productionType !== 'BOTH' && productionType !== 'SERIAL') {
+  //     navigate('/machine');
+  //   }
+  // }, [navigate]);
 
   useEffect(() => {
     try {
@@ -85,7 +87,8 @@ const Header: React.FC = () => {
           <StageSelector stages={stages} onStageSelect={handleStageSelect} />
           <button className={styles.navButton}>{machineName}</button>
           <button className={styles.navButton}>{operatorName}</button>
-          {showProductionSwitch && (
+          {/* СКРЫТО: переключатель серийное/индивидуальное */}
+          {/* {showProductionSwitch && (
             <div className={styles.switchContainer}>
               <button className={`${styles.switchButton} ${styles.active}`}>
                 Серийное
@@ -94,7 +97,7 @@ const Header: React.FC = () => {
                 Индивидуальное
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

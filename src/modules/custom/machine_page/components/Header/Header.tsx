@@ -34,20 +34,18 @@ const Header: React.FC = () => {
   const [machineName, setMachineName] = useState<string>("СТАНОК");
   const [operatorName, setOperatorName] = useState<string>("ОПЕРАТОР");
   const [stages, setStages] = useState<Stage[]>([]);
-  const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
+  // СКРЫТО: переключатель типа производства — всегда серийное
+  // const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSwitchToSeries = () => {
-    navigate('/series/machine');
-  };
+  // СКРЫТО: переключение типа производства
+  // const handleSwitchToSeries = () => {
+  //   navigate('/series/machine');
+  // };
 
+  // Всегда перенаправляем на серийное производство
   useEffect(() => {
-    const productionType = localStorage.getItem('productionType');
-    setShowProductionSwitch(productionType === 'BOTH');
-    
-    if (productionType && productionType !== 'BOTH' && productionType !== 'CUSTOM') {
-      navigate('/series/machine');
-    }
+    navigate('/series/machine');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -86,7 +84,8 @@ const Header: React.FC = () => {
           <StageSelector stages={stages} onStageSelect={handleStageSelect} />
           <button className={styles.navButton}>{machineName}</button>
           <button className={styles.navButton}>{operatorName}</button>
-          {showProductionSwitch && (
+          {/* СКРЫТО: переключатель серийное/индивидуальное */}
+          {/* {showProductionSwitch && (
             <div className={styles.switchContainer}>
               <button className={styles.switchButton} onClick={handleSwitchToSeries}>
                 Серийное
@@ -95,7 +94,7 @@ const Header: React.FC = () => {
                 Индивидуальное
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

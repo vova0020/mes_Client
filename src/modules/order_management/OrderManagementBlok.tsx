@@ -7,9 +7,10 @@ import OrderPlanning from './components/blocks/OrderPlanning';
 import OrderDisplay from './components/blocks/orderDisplayBlok/OrderDisplay';
 import StreamsManagement from './components/blocks/StreamsManagement/StreamsManagement';
 import StatisticsDisplay from './components/blocks/StatisticsDisplay';
-import ProductionTypeSwitch, { ProductionType } from './components/ProductionTypeSwitch';
-import { CustomOrderCreation } from './custom';
-import CustomOrderDisplay from './custom/orderDisplayBlock/OrderDisplay';
+// СКРЫТО: переключатель типа производства — всегда серийное
+// import ProductionTypeSwitch, { ProductionType } from './components/ProductionTypeSwitch';
+// import { CustomOrderCreation } from './custom';
+// import CustomOrderDisplay from './custom/orderDisplayBlock/OrderDisplay';
 
 import styles from './OrderManagement.module.css';
 
@@ -22,8 +23,8 @@ const OrderManagementBlok: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SettingSection>(null);
   // Состояние для отслеживания активной вкладки
   const [activeTab, setActiveTab] = useState<TabType>('orders');
-  // Состояние для типа производства
-  const [productionType, setProductionType] = useState<ProductionType>('series');
+  // СКРЫТО: состояние для типа производства — всегда серийное
+  // const [productionType, setProductionType] = useState<ProductionType>('series');
 
   // Функция для изменения активного раздела
   const handleSectionChange = (section: SettingSection) => {
@@ -41,44 +42,28 @@ const OrderManagementBlok: React.FC = () => {
       case 'creatOrder':
         return (
           <>
-            <ProductionTypeSwitch 
-              activeType={productionType} 
-              onChange={setProductionType} 
-            />
-            {productionType === 'series' ? (
-              <SeriesOrderCreation onBack={handleBackToMain} />
-            ) : (
-              <CustomOrderCreation onBack={handleBackToMain} />
-            )}
+            {/* СКРЫТО: ProductionTypeSwitch — всегда серийное */}
+            <SeriesOrderCreation onBack={handleBackToMain} />
           </>
         );
       case 'detailRouteManagement':
         return (
           <>
-            <ProductionTypeSwitch 
-              activeType={productionType} 
-              onChange={setProductionType} 
-            />
+            {/* СКРЫТО: ProductionTypeSwitch — всегда серийное */}
             <DetailRouteManagement onBack={handleBackToMain} />
           </>
         );
       case 'orderManagement':
         return (
           <>
-            <ProductionTypeSwitch 
-              activeType={productionType} 
-              onChange={setProductionType} 
-            />
+            {/* СКРЫТО: ProductionTypeSwitch — всегда серийное */}
             <OrderPlanning onBack={handleBackToMain} />
           </>
         );
       case 'statistics':
         return (
           <>
-            <ProductionTypeSwitch 
-              activeType={productionType} 
-              onChange={setProductionType} 
-            />
+            {/* СКРЫТО: ProductionTypeSwitch — всегда серийное */}
             <StatisticsDisplay onBack={handleBackToMain} />
           </>
         );
@@ -86,18 +71,15 @@ const OrderManagementBlok: React.FC = () => {
       default:
         return (
           <>
-            <ProductionTypeSwitch 
-              activeType={productionType} 
-              onChange={setProductionType} 
-            />
+            {/* СКРЫТО: ProductionTypeSwitch — всегда серийное */}
             <div className={styles.tabNavigation}>
-              <button 
+              <button
                 className={`${styles.tabButton} ${activeTab === 'orders' ? styles.activeTab : ''}`}
                 onClick={() => setActiveTab('orders')}
               >
                 Монитор заказов
               </button>
-              <button 
+              <button
                 className={`${styles.tabButton} ${activeTab === 'streams' ? styles.activeTab : ''}`}
                 onClick={() => setActiveTab('streams')}
               >
@@ -105,7 +87,7 @@ const OrderManagementBlok: React.FC = () => {
               </button>
             </div>
             {activeTab === 'orders' ? (
-              productionType === 'series' ? <OrderDisplay /> : <CustomOrderDisplay />
+              <OrderDisplay />
             ) : (
               <StreamsManagement />
             )}

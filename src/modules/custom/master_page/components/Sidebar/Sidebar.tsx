@@ -27,9 +27,10 @@ const Sidebar: React.FC = () => {
     setIsStartActive(false);
   };
 
-  const handleNavigateToSeries = () => {
-    navigate('/master');
-  };
+  // СКРЫТО: навигация на серийное производство (всегда серийное)
+  // const handleNavigateToSeries = () => {
+  //   navigate('/master');
+  // };
 
   return (
     <div className={styles.sidebar}>
@@ -57,7 +58,8 @@ const Sidebar: React.FC = () => {
 
         {/* Низ панели (например, меню или логотип) */}
         <div className={styles.footerIcon}>
-          <Button onClick={handleNavigateToSeries} title="Серийное производство">
+          {/* СКРЫТО: кнопка навигации на серийное производство */}
+          <Button title="Статистика">
             <StatisticIcon className={styles.icon} />
           </Button>
           <Button>

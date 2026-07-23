@@ -29,9 +29,10 @@ const Sidebar: React.FC = () => {
     setIsStartActive(false);
   };
 
-  const handleNavigateToCustom = () => {
-    navigate('/custom-master');
-  };
+  // СКРЫТО: навигация на индивидуальное производство
+  // const handleNavigateToCustom = () => {
+  //   navigate('/custom-master');
+  // };
 
   const handleOpenReclamationsModal = () => {
     setIsReclamationsModalOpen(true);
