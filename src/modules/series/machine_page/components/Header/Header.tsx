@@ -5,6 +5,7 @@ import styles from './Header.module.css';
 import logo from '../../../../../assets/logo-Photoroom.png';
 import LogoutButton from '../../../../../componentsGlobal/LogoutButton/LogoutButton';
 import StageSelector from '../StageSelector/StageSelector';
+import { useMachine } from '../../../../hooks/machinhook/useMachine';
 
 interface Stage {
   id: number;
@@ -34,9 +35,10 @@ const Header: React.FC = () => {
   const [machineName, setMachineName] = useState<string>("СТАНОК");
   const [operatorName, setOperatorName] = useState<string>("ОПЕРАТОР");
   const [stages, setStages] = useState<Stage[]>([]);
-  // СКРЫТО: переключатель типа производства — всегда серийное
-  // const [showProductionSwitch, setShowProductionSwitch] = useState<boolean>(false);
   const navigate = useNavigate();
+  
+  // Получаем данные станка из хука
+  const { machine } = useMachine();
 
   // СКРЫТО: переключение на индивидуальное производство
   // const handleSwitchToCustom = () => {
@@ -85,19 +87,19 @@ const Header: React.FC = () => {
       <div className={styles.leftContainer}>
         <div className={styles.navButtons}>
           <StageSelector stages={stages} onStageSelect={handleStageSelect} />
-          <button className={styles.navButton}>{machineName}</button>
-          <button className={styles.navButton}>{operatorName}</button>
-          {/* СКРЫТО: переключатель серийное/индивидуальное */}
-          {/* {showProductionSwitch && (
-            <div className={styles.switchContainer}>
-              <button className={`${styles.switchButton} ${styles.active}`}>
-                Серийное
-              </button>
-              <button className={styles.switchButton} onClick={handleSwitchToCustom}>
-                Индивидуальное
-              </button>
-            </div>
-          )} */}
+          <button className={styles.navButton}>
+            {machineName}
+            {machine?.machineCode && (
+              <span style={{ marginLeft: '8px', opacity: 0.7 }}>
+                ({machine.machineCode})
+              </span>
+            )}
+          </button>
+          {machine?.boundOperators && machine.boundOperators.length > 0 && (
+            <button className={styles.navButton} style={{ fontSize: '13px' }}>
+              Операторы: {machine.boundOperators.map(op => `№${op.operatorNumber} ${op.firstName}`).join(', ')}
+            </button>
+          )}
         </div>
       </div>
 

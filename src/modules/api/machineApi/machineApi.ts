@@ -1,6 +1,16 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// Интерфейс для привязанного оператора
+export interface BoundOperator {
+  userId: number;
+  operatorNumber: number;
+  firstName: string;
+  lastName: string;
+  position: string;
+  boundAt: string;
+}
+
 // Типы данных для API станков
 export interface Machine {
   id: number;
@@ -10,6 +20,8 @@ export interface Machine {
   noShiftAssignment?: boolean;
   segmentId: number | null;
   segmentName: string | null;
+  machineCode?: string;
+  boundOperators?: BoundOperator[];
 }
 
 // Тип для статусов станка

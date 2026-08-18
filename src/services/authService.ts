@@ -304,17 +304,8 @@ const authService = {
         return '/series/machine';
 
       case 'operator':
-        if (assignments.machines && assignments.machines.length > 0) {
-          // Если есть только один станок, направляем сразу на него
-          if (assignments.machines.length === 1) {
-            return `/machine`;
-          } else {
-            // Если станков несколько, направляем на страницу выбора
-            return '/machine';
-          }
-        } else {
-          return '/machine';
-        }
+        // Операторы всегда направляются на личный кабинет
+        return '/operator-dashboard';
 
       default:
         // Если основная роль не определена, проверяем доступные роли
@@ -396,6 +387,12 @@ const authService = {
     
     if (!user || !assignments) {
       // console.log('Нет данных пользователя или assignments, перенаправление на /login');
+      return '/login';
+    }
+
+    // Проверяем наличие primaryRole
+    if (!user.primaryRole) {
+      console.error('У пользователя отсутствует primaryRole');
       return '/login';
     }
 

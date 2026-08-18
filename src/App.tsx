@@ -13,6 +13,7 @@ import YpakMachinePage from './modules/series/ypak_machin_page/YpakMachinePage';
 import ComplectPage from './modules/complectPage/ComplectPage';
 import SettingsPage from './modules/settings_page/SettingsPage';
 import OrderManagementBlok from './modules/order_management/OrderManagementBlok';
+import OperatorDashboard from './modules/operator_dashboard/OperatorDashboard';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 
 
@@ -74,9 +75,12 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute requiredRole="complect" />}>
             <Route path="/complect" element={<ComplectPage />} />
-          </Route> 
+          </Route>
           
-
+          {/* Маршрут для операторов */}
+          <Route element={<ProtectedRoute requiredRole="operator" />}>
+            <Route path="/operator-dashboard" element={<OperatorDashboard />} />
+          </Route>
 
           
           {/* Главная страница - редирект на нужный маршрут */}
