@@ -243,6 +243,7 @@
 .thProdPart     { width: 160px; }
 .thProdMaterial { width: 130px; }
 .thProdPallet   { width: 130px; }
+.thProdOperator { width: 140px; }
 .thProdQty      { width: 75px; text-align: center; vertical-align: middle; }
 .thProdDuration { width: 75px; text-align: center; vertical-align: middle; }
 
@@ -276,7 +277,8 @@
 .tdProdOrder,
 .tdProdPart,
 .tdProdMaterial,
-.tdProdPallet {
+.tdProdPallet,
+.tdProdOperator {
   vertical-align: top;
 }
 

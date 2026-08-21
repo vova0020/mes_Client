@@ -101,11 +101,19 @@ export interface StageFilterOption {
   stageName: string;
 }
 
+export interface OperatorFilterOption {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+}
+
 export interface FilterOptions {
   orders: OrderFilterOption[];
   materials: MaterialFilterOption[];
   machines: MachineFilterOption[];
   stages: StageFilterOption[];
+  operators: OperatorFilterOption[];
 }
 
 // Функция для получения детальной информации по браку с фильтрацией
@@ -192,6 +200,7 @@ export interface MachineProductionFilterParams {
   machineId?: number;
   stageId?: number;
   orderId?: number;
+  operatorId?: number;
 }
 
 // Функция для получения журнала выпуска продукции
@@ -205,6 +214,7 @@ export const getMachineProduction = async (
     if (params.machineId) queryParams.append('machineId', params.machineId.toString());
     if (params.stageId) queryParams.append('stageId', params.stageId.toString());
     if (params.orderId) queryParams.append('orderId', params.orderId.toString());
+    if (params.operatorId) queryParams.append('operatorId', params.operatorId.toString());
 
     const response = await axios.get<MachineProductionRecord[]>(
       `${API_URL}/statistics/machine-production?${queryParams.toString()}`
@@ -212,6 +222,28 @@ export const getMachineProduction = async (
     return response.data;
   } catch (error) {
     console.error('Ошибка при получении данных о выпуске продукции:', error);
+    throw error;
+  }
+};
+
+// Интерфейс для оператора (расширенная версия с должностью)
+export interface Operator {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  position?: string;
+}
+
+// Функция для получения списка всех операторов
+export const getOperators = async (): Promise<Operator[]> => {
+  try {
+    const response = await axios.get<Operator[]>(
+      `${API_URL}/statistics/operators`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при получении списка операторов:', error);
     throw error;
   }
 };

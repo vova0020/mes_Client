@@ -74,6 +74,15 @@ const ProductionTableRow: React.FC<ProductionTableRowProps> = memo(({
           <div className={styles.cellMain}>{record.palletName}</div>
         </div>
       </td>
+      <td className={styles.tdProdOperator}>
+        {record.operatorName ? (
+          <div className={styles.cellContent}>
+            <div className={styles.cellMain}>{record.operatorName}</div>
+          </div>
+        ) : (
+          <span className={styles.cellSub}>—</span>
+        )}
+      </td>
       <td className={styles.tdProdQty}>
         <div className={styles.prodQtyCell}>
           <span className={styles.prodQtyBadge}>

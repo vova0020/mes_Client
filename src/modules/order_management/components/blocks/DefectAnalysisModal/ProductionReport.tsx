@@ -8,6 +8,7 @@ import {
   MachineFilterOption,
   StageFilterOption,
   OrderFilterOption,
+  OperatorFilterOption,
 } from '../../../../api/orderManagementApi/defectStatisticsApi';
 
 interface ProductionReportProps {
@@ -21,12 +22,14 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
   const [machines, setMachines] = useState<MachineFilterOption[]>([]);
   const [stages, setStages] = useState<StageFilterOption[]>([]);
   const [orders, setOrders] = useState<OrderFilterOption[]>([]);
+  const [operators, setOperators] = useState<OperatorFilterOption[]>([]);
   
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedMachine, setSelectedMachine] = useState<number | ''>('');
   const [selectedStage, setSelectedStage] = useState<number | ''>('');
   const [selectedOrder, setSelectedOrder] = useState<number | ''>('');
+  const [selectedOperator, setSelectedOperator] = useState<number | ''>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
@@ -45,6 +48,7 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
       setMachines(data.machines);
       setStages(data.stages);
       setOrders(data.orders);
+      setOperators(data.operators || []);
     } catch (error) {
       console.error('Ошибка загрузки опций фильтров:', error);
     }
@@ -64,6 +68,7 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
       if (selectedMachine) params.machineId = Number(selectedMachine);
       if (selectedStage) params.stageId = Number(selectedStage);
       if (selectedOrder) params.orderId = Number(selectedOrder);
+      if (selectedOperator) params.operatorId = Number(selectedOperator);
       const data = await getMachineProduction(params);
       setRecords(data);
     } catch (error) {
@@ -72,7 +77,7 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo, selectedMachine, selectedStage, selectedOrder]);
+  }, [dateFrom, dateTo, selectedMachine, selectedStage, selectedOrder, selectedOperator]);
 
   const resetFilters = useCallback(() => {
     setDateFrom('');
@@ -80,6 +85,7 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
     setSelectedMachine('');
     setSelectedStage('');
     setSelectedOrder('');
+    setSelectedOperator('');
     setSearchQuery('');
     setDebouncedSearchQuery('');
     setRecords([]);
@@ -194,6 +200,21 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
               ))}
             </select>
           </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Оператор:</label>
+            <select
+              value={selectedOperator}
+              onChange={(e) => setSelectedOperator(e.target.value ? Number(e.target.value) : '')}
+              className={styles.filterSelect}
+            >
+              <option value="">Все операторы</option>
+              {operators.map((op) => (
+                <option key={op.userId} value={op.userId}>
+                  {op.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className={styles.filterActions}>
           <button
@@ -262,6 +283,7 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
                     <th className={styles.thProdPart}>Деталь</th>
                     <th className={styles.thProdMaterial}>Материал</th>
                     <th className={styles.thProdPallet}>Поддон</th>
+                    <th className={styles.thProdOperator}>Оператор</th>
                     <th className={styles.thProdQty}>Кол-во</th>
                     <th className={styles.thProdDuration}>Время</th>
                   </tr>
