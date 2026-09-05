@@ -4,6 +4,7 @@ import styles from './Header.module.css';
 import logo from '../../../../../assets/logo-Photoroom.png';
 import LogoutButton from '../../../../../componentsGlobal/LogoutButton/LogoutButton';
 import StageSelector from '../../../machine_page/components/StageSelector/StageSelector';
+import { useMachine } from '../../../../hooks/machinNoSmenHook/useMachine';
 
 interface Stage {
   id: number;
@@ -33,8 +34,10 @@ interface User {
 
 const Header: React.FC = () => {
   const [machineName, setMachineName] = useState<string>("СТАНОК");
-  const [operatorName, setOperatorName] = useState<string>("ОПЕРАТОР");
   const [stages, setStages] = useState<Stage[]>([]);
+  
+  // Получаем данные станка из хука
+  const { machine } = useMachine();
 
   useEffect(() => {
     try {
@@ -42,16 +45,10 @@ const Header: React.FC = () => {
       if (assignmentsData) {
         const assignments: Assignments = JSON.parse(assignmentsData);
         if (assignments.machines && assignments.machines.length > 0) {
-          const machine = assignments.machines[0];
-          setMachineName(machine.name);
-          setStages(machine.stages || []);
+          const machineData = assignments.machines[0];
+          setMachineName(machineData.name);
+          setStages(machineData.stages || []);
         }
-      }
-
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user: User = JSON.parse(userData);
-        setOperatorName(user.fullName);
       }
     } catch (error) {
       console.error("Ошибка при получении данных из localStorage:", error);
@@ -68,8 +65,19 @@ const Header: React.FC = () => {
       <div className={styles.leftContainer}>
         <div className={styles.navButtons}>
           <StageSelector stages={stages} onStageSelect={handleStageSelect} />
-          <button className={styles.navButton}>{machineName}</button>
-          <button className={styles.navButton}>{operatorName}</button>
+          <button className={styles.navButton}>
+            {machineName}
+            {machine?.machineCode && (
+              <span style={{ marginLeft: '8px', opacity: 0.7 }}>
+                ({machine.machineCode})
+              </span>
+            )}
+          </button>
+          {machine?.boundOperators && machine.boundOperators.length > 0 && (
+            <button className={styles.navButton} style={{ fontSize: '13px' }}>
+              Операторы: {machine.boundOperators.map(op => `№${op.operatorNumber} ${op.firstName}`).join(', ')}
+            </button>
+          )}
         </div>
       </div>
 
