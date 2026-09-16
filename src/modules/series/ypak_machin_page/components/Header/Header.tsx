@@ -1,35 +1,29 @@
 
 import React, { useEffect, useState } from 'react';
 import styles from './Header.module.css';
-// Если есть логотип/иконки, импортируйте их, например:
 import logo from '../../../../../assets/logo-Photoroom.png';
 import LogoutButton from '../../../../../componentsGlobal/LogoutButton/LogoutButton';
+import { Machine } from '../../../../api/machinNoSmenApi/machineApi';
 
 // Интерфейсы для типизации данных из localStorage
-interface Machine {
-  id: number;
-  name: string;
-  status: string;
-  segmentId: number;
-  segmentName: string;
-}
-
 interface Assignments {
-  machines: Machine[];
+  machines: {
+    id: number;
+    name: string;
+    status: string;
+    segmentId: number;
+    segmentName: string;
+  }[];
 }
 
-interface User {
-  id: number;
-  username: string;
-  role: string;
-  fullName: string;
+interface HeaderProps {
+  machine?: Machine | null;
 }
 
-const Header: React.FC = () => {
+const Header: React.FC<HeaderProps> = ({ machine }) => {
   // Состояния для хранения данных из localStorage
-  const [techStage, setTechStage] = useState<string>("НАЗВАНИЕ ТЕХНОЛОГИЧЕСКОГО ЭТАПА");
+  const [techStage, setTechStage] = useState<string>("Упаковка");
   const [machineName, setMachineName] = useState<string>("СТАНОК");
-  const [operatorName, setOperatorName] = useState<string>("ОПЕРАТОР");
 
   useEffect(() => {
     // Получение данных из localStorage при монтировании компонента
@@ -40,17 +34,10 @@ const Header: React.FC = () => {
         const assignments: Assignments = JSON.parse(assignmentsData);
         if (assignments.machines && assignments.machines.length > 0) {
           // Берем первую машину из списка для примера
-          const machine = assignments.machines[0];
-          setMachineName(machine.name);
-          setTechStage(machine.segmentName);
+          const machineData = assignments.machines[0];
+          setMachineName(machineData.name);
+          setTechStage(machineData.segmentName || 'Упаковка');
         }
-      }
-
-      // Получение данных об операторе
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user: User = JSON.parse(userData);
-        setOperatorName(user.fullName);
       }
     } catch (error) {
       console.error("Ошибка при получении данных из localStorage:", error);
@@ -65,15 +52,25 @@ const Header: React.FC = () => {
           {techStage}
         </div>
         <div className={styles.navButtons}>
-          <button className={styles.navButton}>{machineName}</button>
-          <button className={styles.navButton}>{operatorName}</button>
+          <button className={styles.navButton}>
+            {machine?.name || machineName}
+            {machine?.machineCode && (
+              <span style={{ marginLeft: '8px', opacity: 0.7 }}>
+                ({machine.machineCode})
+              </span>
+            )}
+          </button>
+          {machine?.boundOperators && machine.boundOperators.length > 0 && (
+            <button className={styles.navButton} style={{ fontSize: '13px' }}>
+              Операторы: {machine.boundOperators.map(op => `№${op.operatorNumber} ${op.firstName}`).join(', ')}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Правый блок: логотип с текстом и кнопка питания (теперь в колонку) */}
        <div className={styles.rightContainer}>
         <div className={styles.brandContainer}>
-          {/* Если есть логотип, раскомментируйте и подставьте нужный импорт */}
           <img src={logo} alt="Logo" className={styles.logo} />
           {/* <span className={styles.brandName}>FIT-MES</span> */}
         </div>

@@ -111,7 +111,7 @@ const YpakMachinePage: React.FC = () => {
       <div className={styles.Content_Block}>
         {/* Шапка */}
         <div className={styles.headerBlock}>
-          <Header />
+          <Header machine={machine} />
         </div>
 
         {/* Основной контейнер с контентом */}

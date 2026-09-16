@@ -1,6 +1,15 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// Интерфейс для привязанного оператора
+export interface BoundOperator {
+  userId: number;
+  operatorNumber: number;
+  firstName: string;
+  lastName: string;
+  boundAt?: string;
+}
+
 // Интерфейсы для типизации данных
 export interface YpakOrder {
   orderId: number;
@@ -14,7 +23,9 @@ export interface YpakOrder {
 export interface YpakMachine {
   machineId: number;
   machineName: string;
+  machineCode?: string;
   status: string;
+  boundOperators?: BoundOperator[];
 }
 
 export interface YpakPackage {
@@ -54,6 +65,8 @@ export interface YpakTask {
 export interface YpakMachineDetails {
   machineId: number;
   machineName: string;
+  machineCode?: string;
+  boundOperators?: BoundOperator[];
   tasks: YpakTask[];
 }
 
@@ -93,13 +106,20 @@ export const getMachineTask = async (): Promise<YpakMachineDetails> => {
   }
   
   try {
-    const response = await axios.get(`${API_URL}/packing-assignments/by-machine/${machineId}`);
-    const tasks: YpakTask[] = response.data;
+    // Получаем данные о станке через /machins/{id}
+    const machineResponse = await axios.get(`${API_URL}/machins/${machineId}`);
+    const machineData = machineResponse.data;
+    
+    // Получаем задачи упаковки
+    const tasksResponse = await axios.get(`${API_URL}/packing-assignments/by-machine/${machineId}`);
+    const tasks: YpakTask[] = tasksResponse.data;
     
     // Формируем объект с информацией о станке и задачах
     const machineDetails: YpakMachineDetails = {
       machineId: machineId,
-      machineName: tasks.length > 0 ? tasks[0].machine.machineName : 'Неизвестный станок',
+      machineName: machineData.name,
+      machineCode: machineData.machineCode,
+      boundOperators: machineData.boundOperators,
       tasks: tasks
     };
     
