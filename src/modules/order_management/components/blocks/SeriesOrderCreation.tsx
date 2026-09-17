@@ -431,7 +431,10 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
                 </td>
               </tr>
             ) : (
-              filteredOrders.map((order) => (
+              filteredOrders.map((order) => {
+                // Отладка: выводим статус заказа
+                console.log(`Заказ ${order.batchNumber}: статус = "${order.status}"`);
+                return (
                 <tr key={order.orderId} className={styles.tableRow}>
                   <td>{order.batchNumber}</td>
                   <td>{order.orderName}</td>
@@ -479,10 +482,10 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
                       >
                         <Schedule />
                       </button>
-                      <button 
+                      <button
                         className={styles.actionBtn}
                         onClick={() => handleDeleteOrder(order.orderId)}
-                        disabled={order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED}
+                        disabled={order.status === OrderStatus.LAUNCH_PERMITTED || order.status === OrderStatus.IN_PROGRESS || order.status === OrderStatus.COMPLETED}
                         title="Удалить"
                       >
                         <Delete />
@@ -490,7 +493,8 @@ const SeriesOrderCreation: React.FC<Props> = ({ onBack }) => {
                     </div>
                   </td>
                 </tr>
-              ))
+              );
+              })
             )}
           </tbody>
         </table>

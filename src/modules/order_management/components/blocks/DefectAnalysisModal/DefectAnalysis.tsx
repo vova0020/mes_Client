@@ -6,7 +6,6 @@ import {
   getDefectStatistics,
   getFilterOptions,
   OrderFilterOption,
-  MaterialFilterOption,
   MachineFilterOption,
   StageFilterOption,
 } from '../../../../api/orderManagementApi/defectStatisticsApi';
@@ -22,20 +21,28 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
   const [machines, setMachines] = useState<MachineFilterOption[]>([]);
   const [stages, setStages] = useState<StageFilterOption[]>([]);
   const [orders, setOrders] = useState<OrderFilterOption[]>([]);
-  const [materials, setMaterials] = useState<MaterialFilterOption[]>([]);
   
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [selectedMaterial, setSelectedMaterial] = useState<number | ''>('');
   const [selectedMachine, setSelectedMachine] = useState<number | ''>('');
   const [selectedStage, setSelectedStage] = useState<number | ''>('');
   const [selectedOrder, setSelectedOrder] = useState<number | ''>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Debounce для поиска
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const loadFilterOptions = useCallback(async () => {
     try {
       const data = await getFilterOptions();
       setOrders(data.orders);
-      setMaterials(data.materials);
       setMachines(data.machines);
       setStages(data.stages);
     } catch (error) {
@@ -54,7 +61,6 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
       const params: any = {};
       if (dateFrom) params.startDate = dateFrom;
       if (dateTo) params.endDate = dateTo;
-      if (selectedMaterial) params.materialId = Number(selectedMaterial);
       if (selectedMachine) params.machineId = Number(selectedMachine);
       if (selectedStage) params.stageId = Number(selectedStage);
       if (selectedOrder) params.orderId = Number(selectedOrder);
@@ -66,22 +72,42 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo, selectedMaterial, selectedMachine, selectedStage, selectedOrder]);
+  }, [dateFrom, dateTo, selectedMachine, selectedStage, selectedOrder]);
 
   const resetFilters = useCallback(() => {
     setDateFrom('');
     setDateTo('');
-    setSelectedMaterial('');
     setSelectedMachine('');
     setSelectedStage('');
     setSelectedOrder('');
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
     setRecords([]);
   }, []);
 
+  // Мемоизация фильтрации с debounced query
+  const filteredRecords = useMemo(() => {
+    if (!debouncedSearchQuery) return records;
+    
+    const query = debouncedSearchQuery.toLowerCase();
+    return records.filter((record) =>
+      record.partCode?.toLowerCase().includes(query) ||
+      record.partName?.toLowerCase().includes(query) ||
+      record.materialName?.toLowerCase().includes(query) ||
+      record.materialSku?.toLowerCase().includes(query) ||
+      record.packages.some(pkg =>
+        pkg.packageName?.toLowerCase().includes(query) ||
+        pkg.packageCode?.toLowerCase().includes(query) ||
+        pkg.orderName?.toLowerCase().includes(query) ||
+        pkg.orderBatchNumber?.toLowerCase().includes(query)
+      )
+    );
+  }, [records, debouncedSearchQuery]);
+
   // Мемоизация статистики
   const statistics = useMemo(() => {
-    const totalDefects = records.reduce((sum, r) => sum + r.defectQuantity, 0);
-    const uniquePartsReturns = records.reduce((acc, r) => {
+    const totalDefects = filteredRecords.reduce((sum, r) => sum + r.defectQuantity, 0);
+    const uniquePartsReturns = filteredRecords.reduce((acc, r) => {
       if (!acc.has(r.partId)) acc.set(r.partId, r.totalReturnedQuantity);
       return acc;
     }, new Map<number, number>());
@@ -89,31 +115,31 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
     const totalLost = totalDefects - totalReturned;
 
     return { totalDefects, totalReturned, totalLost };
-  }, [records]);
+  }, [filteredRecords]);
 
   // Мемоизация анализа по материалам
   const defectsByMaterial = useMemo(() => {
-    return records.reduce((acc, r) => {
+    return filteredRecords.reduce((acc, r) => {
       if (r.materialName) acc[r.materialName] = (acc[r.materialName] || 0) + r.defectQuantity;
       return acc;
     }, {} as Record<string, number>);
-  }, [records]);
+  }, [filteredRecords]);
 
   // Мемоизация анализа по станкам
   const defectsByMachine = useMemo(() => {
-    return records.reduce((acc, r) => {
+    return filteredRecords.reduce((acc, r) => {
       if (r.machineName) acc[r.machineName] = (acc[r.machineName] || 0) + r.defectQuantity;
       return acc;
     }, {} as Record<string, number>);
-  }, [records]);
+  }, [filteredRecords]);
 
   // Мемоизация анализа по этапам
   const defectsByStage = useMemo(() => {
-    return records.reduce((acc, r) => {
+    return filteredRecords.reduce((acc, r) => {
       acc[r.stageName] = (acc[r.stageName] || 0) + r.defectQuantity;
       return acc;
     }, {} as Record<string, number>);
-  }, [records]);
+  }, [filteredRecords]);
 
   const formatDate = useCallback((date: Date | string) =>
     new Date(date).toLocaleDateString('ru-RU', {
@@ -164,22 +190,7 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
             </select>
           </div>
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Материал:</label>
-            <select
-              value={selectedMaterial}
-              onChange={(e) => setSelectedMaterial(e.target.value ? Number(e.target.value) : '')}
-              className={styles.filterSelect}
-            >
-              <option value="">Все материалы</option>
-              {materials.map((m) => (
-                <option key={m.materialId} value={m.materialId}>
-                  {m.materialName} ({m.article})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Станок:</label>
+            <label className={styles.filterLabel}>Рабочее место (станок):</label>
             <select
               value={selectedMachine}
               onChange={(e) => setSelectedMachine(e.target.value ? Number(e.target.value) : '')}
@@ -228,6 +239,18 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
 
       {records.length > 0 && (
         <>
+          <div className={styles.searchSection}>
+            <div className={styles.searchGroup}>
+              <label className={styles.searchLabel}>🔎 Поиск:</label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Поиск по детали, материалу, упаковке..."
+                className={styles.searchInput}
+              />
+            </div>
+          </div>
           <div className={styles.statisticsSection}>
             <h4>📈 Общая статистика</h4>
             <div className={styles.statsGrid}>
@@ -301,7 +324,7 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
           )}
 
           <div className={styles.detailsSection}>
-            <h4>📋 Детальная информация ({records.length} записей)</h4>
+            <h4>📋 Детальная информация ({filteredRecords.length} записей)</h4>
             <div className={styles.tableWrapper}>
               <table className={styles.defectTable}>
                 <thead>
@@ -318,7 +341,7 @@ const DefectAnalysis: React.FC<DefectAnalysisProps> = ({ onClose }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {records.map((record) => (
+                  {filteredRecords.map((record) => (
                     <DefectTableRow
                       key={record.reclamationId}
                       record={record}

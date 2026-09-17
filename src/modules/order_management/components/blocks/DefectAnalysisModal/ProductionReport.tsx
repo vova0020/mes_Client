@@ -254,14 +254,14 @@ const ProductionReport: React.FC<ProductionReportProps> = ({ onClose }) => {
                 <div className={styles.statValue}>{filteredRecords.length}</div>
                 <div className={styles.statLabel}>Операций {debouncedSearchQuery ? 'найдено' : 'выполнено'}</div>
               </div>
-              <div className={styles.statCard}>
+              {/* <div className={styles.statCard}>
                 <div className={styles.statValue}>{statistics.totalQty}</div>
                 <div className={styles.statLabel}>Деталей обработано</div>
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statValue}>{formatDuration(statistics.totalDuration)}</div>
                 <div className={styles.statLabel}>Суммарное время работы</div>
-              </div>
+              </div> */}
               <div className={styles.statCard}>
                 <div className={styles.statValue}>
                   {records.length > 0 ? Math.round(statistics.totalQty / records.length) : 0}
