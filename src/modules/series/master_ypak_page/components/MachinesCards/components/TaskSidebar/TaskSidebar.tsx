@@ -698,10 +698,11 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                               ))}
                             </select>
                             
-                            <button 
+                            <button
                               className={`${styles.actionButton} ${styles.deleteButton}`}
                               onClick={() => handleDeleteItem(item.taskId)}
-                              title="Удалить из сменного задания"
+                              disabled={mapApiStatusToUiStatus(item.status) !== 'pending'}
+                              title={mapApiStatusToUiStatus(item.status) === 'pending' ? 'Удалить из сменного задания' : 'Удаление недоступно: деталь уже обрабатывается или завершена'}
                             >
                               Удалить
                             </button>
