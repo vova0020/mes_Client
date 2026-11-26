@@ -15,6 +15,10 @@ export const useOperatorWorkMonitor = () => {
 
   const AUTO_REFRESH_MS = 15000;
 
+  // Показываем индикатор загрузки только при первоначальной загрузке,
+  // чтобы автообновление не вызывало моргание страницы.
+  const isInitialLoadRef = useRef(true);
+
   /**
    * Умное обновление: меняет в стейте только те записи, которые реально
    * изменились, и добавляет/удаляет операторов. Это позволяет React
@@ -53,7 +57,9 @@ export const useOperatorWorkMonitor = () => {
   }, []);
 
   const fetchOperators = useCallback(async () => {
-    setLoading(true);
+    if (isInitialLoadRef.current) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await operatorWorkMonitorApi.getWorkMonitor();
@@ -61,7 +67,10 @@ export const useOperatorWorkMonitor = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
     } finally {
-      setLoading(false);
+      if (isInitialLoadRef.current) {
+        setLoading(false);
+        isInitialLoadRef.current = false;
+      }
     }
   }, [updateOperatorsSmartly]);
 
