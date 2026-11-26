@@ -88,3 +88,39 @@ export interface GetMachineUptimeParams {
   startDate?: string;
   endDate?: string;
 }
+
+// --- Operator productivity (выработка операторов) ---
+
+export interface OperatorMachineDetail {
+  machineId: number;
+  machineName: string;
+  machineCode: string;
+  loadUnit: string;
+  quantityProcessed: number;
+  bindingCount: number;
+}
+
+export interface OperatorStageDetail {
+  stageId: number;
+  stageName: string;
+  quantityProcessed: number;
+}
+
+export interface OperatorProductivityRecord {
+  operatorId: number;
+  operatorName: string;
+  totalAuthorizedSeconds: number;
+  totalQuantity: number;
+  bindingCount: number;
+  machines: OperatorMachineDetail[];
+  stages: OperatorStageDetail[];
+}
+
+export interface OperatorProductivityParams {
+  startDate?: string;
+  endDate?: string;
+  operatorId?: number;
+  machineId?: number;
+  stageId?: number;
+  search?: string;
+}

@@ -1,73 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styles from './PersonnelStatistics.module.css';
+import { useOperatorProductivity } from '../../../../../../hooks/statisticsHook';
+import { OperatorProductivityRecord } from '../../../../../../api/statisticsApi';
 
-// Типы данных, соответствующие структуре отчёта из макета FIT-MES
-interface PersonnelReportRow {
-  wid: string;
-  name: string;
-  machine: string;
-  stage: string;
-  unit: string;
-  mins: number;
-  soloMins: number;
-  teamMins: number;
-  personal: number;
-  team: number;
-  soloRate: number | null;
-  brigadeRate: number | null;
+interface FilterState {
+  dateFrom: string;
+  dateTo: string;
+  search: string;
 }
 
-interface PersonnelReport {
-  rows: PersonnelReportRow[];
-  people: number;
-  time: number;
-  unitSums: Record<string, number>;
-}
+const quickPeriods = [
+  { id: 'today', label: 'Сегодня' },
+  { id: 'yesterday', label: 'Вчера' },
+  { id: 'week', label: '7 дней' },
+  { id: 'month', label: '30 дней' },
+];
 
-interface PersonnelStatisticsProps {
-  onBack?: () => void;
-}
+const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+  const [filters, setFilters] = useState<FilterState>({
+    dateFrom: '',
+    dateTo: '',
+    search: '',
+  });
 
-const PersonnelStatistics: React.FC<PersonnelStatisticsProps> = ({ onBack }) => {
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [workerFilter, setWorkerFilter] = useState('all');
-  const [stageFilter, setStageFilter] = useState('all');
-  const [machineFilter, setMachineFilter] = useState('all');
-  const [isReportBuilt, setIsReportBuilt] = useState(false);
+  const params = useMemo(() => {
+    const p: Record<string, string | number> = {};
+    if (filters.dateFrom) p.startDate = filters.dateFrom;
+    if (filters.dateTo) p.endDate = filters.dateTo;
+    if (filters.search.trim()) p.search = filters.search.trim();
+    return p;
+  }, [filters.dateFrom, filters.dateTo, filters.search]);
 
-  // Демонстрационные данные (без подключения к реальным данным)
-  const workers = [
-    'Назаров Алексей',
-    'Смирнов Анатолий',
-    'Шоханов Дмитрий',
-    'Саркисян Сергей',
-    'Петров Виктор',
-    'Иванов Максим',
-    'Кузнецов Олег',
-    'Фёдорова Елена',
-    'Ильин Максим',
-    'Борисов Антон',
-  ];
-
-  const stages = ['Раскрой ЛДСП', 'Присадка', 'Кромкооблицовка', 'Упаковка'];
-
-  const machines = [
-    'KDT Двухголовый',
-    'Большая пила',
-    'SKIPPER №2',
-    'Валерий 3000',
-    'KOT проходной',
-    'Упаковка №1',
-    'Викки',
-  ];
-
-  const quickPeriods = [
-    { id: 'today', label: 'Сегодня' },
-    { id: 'yesterday', label: 'Вчера' },
-    { id: 'week', label: '7 дней' },
-    { id: 'month', label: '30 дней' },
-  ];
+  const { records, loading, error } = useOperatorProductivity(params);
 
   const handleQuickPeriod = (id: string) => {
     const today = new Date();
@@ -80,41 +44,40 @@ const PersonnelStatistics: React.FC<PersonnelStatisticsProps> = ({ onBack }) => 
     } else if (id === 'month') {
       start = new Date(today.getTime() - 29 * 24 * 3600 * 1000).toISOString().split('T')[0];
     }
-    setDateFrom(start);
-    setDateTo(end);
-  };
-
-  const handleBuildReport = () => {
-    if (dateFrom && dateTo) {
-      setIsReportBuilt(true);
-    }
+    setFilters((f) => ({ ...f, dateFrom: start, dateTo: end }));
   };
 
   const handleReset = () => {
-    setDateFrom('');
-    setDateTo('');
-    setWorkerFilter('all');
-    setStageFilter('all');
-    setMachineFilter('all');
-    setIsReportBuilt(false);
+    setFilters({ dateFrom: '', dateTo: '', search: '' });
   };
 
-  const formatMins = (n: number) => {
-    const v = Math.round(n);
-    const h = Math.floor(v / 60);
-    const m = v % 60;
+  const formatSeconds = (s: number) => {
+    const total = Math.round(s / 60);
+    const h = Math.floor(total / 60);
+    const m = total % 60;
     return `${h} ч ${String(m).padStart(2, '0')} мин`;
   };
 
   const num = (n: number) =>
-    Number(n).toLocaleString('ru-RU', { maximumFractionDigits: 1 });
+    Number(n).toLocaleString('ru-RU', { maximumFractionDigits: 0 });
 
-  const unitSums: Record<string, number> = {
-    'м²': 1245.6,
-    'шт.': 3872,
-    'пог. м': 2134.2,
-    'компл.': 956,
-  };
+  // KPI: суммарное время авторизации
+  const totalAuthorizedSeconds = useMemo(
+    () => records.reduce((sum, r) => sum + (r.totalAuthorizedSeconds || 0), 0),
+    [records]
+  );
+
+  // KPI: фактический выпуск по единицам измерения (по станкам операторов)
+  const unitSums = useMemo(() => {
+    const sums: Record<string, number> = {};
+    records.forEach((rec) => {
+      rec.machines.forEach((m) => {
+        const unit = m.loadUnit || 'шт.';
+        sums[unit] = (sums[unit] || 0) + (m.quantityProcessed || 0);
+      });
+    });
+    return sums;
+  }, [records]);
 
   return (
     <div className={styles.container}>
@@ -131,28 +94,26 @@ const PersonnelStatistics: React.FC<PersonnelStatisticsProps> = ({ onBack }) => 
       <section className={styles.filterPanel}>
         <div className={styles.filterHead}>
           <b>Фильтры отчёта</b>
-          <small>Сначала задайте период, затем сформируйте отчёт</small>
+          <small>Данные загружаются автоматически после задания параметров</small>
         </div>
 
         <div className={styles.filterLayout}>
           <div className={styles.formGroup}>
-            <label>
-              Период <span className={styles.required}>*</span>
-            </label>
+            <label>Период <span className={styles.required}>*</span></label>
             <div className={styles.periodLine}>
               <input
                 type="date"
                 className={styles.dateInput}
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
+                value={filters.dateFrom}
+                onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))}
                 aria-label="Период с"
               />
               <span className={styles.dash}>—</span>
               <input
                 type="date"
                 className={styles.dateInput}
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
+                value={filters.dateTo}
+                onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
                 aria-label="Период по"
               />
             </div>
@@ -171,81 +132,27 @@ const PersonnelStatistics: React.FC<PersonnelStatisticsProps> = ({ onBack }) => 
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="worker">Сотрудник</label>
-            <select
-              id="worker"
-              className={styles.select}
-              value={workerFilter}
-              onChange={(e) => setWorkerFilter(e.target.value)}
-            >
-              <option value="all">Все сотрудники</option>
-              {workers.map((w) => (
-                <option key={w} value={w}>
-                  {w}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="search">Поиск по ФИО</label>
+            <input
+              id="search"
+              type="text"
+              className={styles.dateInput}
+              style={{ minWidth: 0 }}
+              placeholder="Например, Иванов"
+              value={filters.search}
+              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+            />
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="stage">Производственный этап</label>
-            <select
-              id="stage"
-              className={styles.select}
-              value={stageFilter}
-              onChange={(e) => setStageFilter(e.target.value)}
-            >
-              <option value="all">Все этапы</option>
-              {stages.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="machine">Рабочее место</label>
-            <select
-              id="machine"
-              className={styles.select}
-              value={machineFilter}
-              onChange={(e) => setMachineFilter(e.target.value)}
-            >
-              <option value="all">Все рабочие места</option>
-              {machines.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className={styles.actions}>
-          <div className={styles.actionLeft}>
+            <label>Действия</label>
             <button
               type="button"
-              className={`${styles.button} ${styles.primary}`}
-              onClick={handleBuildReport}
-              disabled={!(dateFrom && dateTo)}
+              className={styles.button}
+              onClick={handleReset}
+              style={{ marginTop: 4 }}
             >
-              ▤ &nbsp; Сформировать отчёт
-            </button>
-            <button type="button" className={styles.button} onClick={handleReset}>
               Сбросить фильтры
-            </button>
-            <span className={styles.statusHint}>
-              {dateFrom && dateTo ? 'Параметры выбраны · отчёт не сформирован' : 'Период не выбран'}
-            </span>
-          </div>
-          <div className={styles.actionRight}>
-            <button
-              type="button"
-              className={`${styles.button} ${styles.excel}`}
-              disabled={!isReportBuilt}
-            >
-              ▣ &nbsp; Экспорт в Excel
             </button>
           </div>
         </div>
@@ -253,52 +160,60 @@ const PersonnelStatistics: React.FC<PersonnelStatisticsProps> = ({ onBack }) => 
 
       {/* Отчёт */}
       <div className={styles.report}>
-        {/* Состояние: отчёт не сформирован */}
-        {!isReportBuilt && (
+        {loading && (
+          <div className={styles.empty}>
+            <div className={styles.emptyIco}>⏳</div>
+            <h3>Загрузка данных…</h3>
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className={styles.empty}>
+            <div className={styles.emptyIco}>⚠️</div>
+            <h3>Ошибка загрузки</h3>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && records.length === 0 && (
           <div className={styles.empty}>
             <div className={styles.emptyIco}>▤</div>
-            <h3>Отчёт пока не сформирован</h3>
+            <h3>Данные не найдены</h3>
             <p>
-              Выберите период и при необходимости сотрудника, этап или рабочее место. Затем
-              нажмите «Сформировать отчёт».
+              По выбранным параметрам нет записей о выработке операторов.
+              Попробуйте расширить период или снять поиск по ФИО.
             </p>
             <div className={styles.note}>
-              До формирования отчёта таблица и сводные показатели не отображаются, экспорт в Excel
-              недоступен.
+              Убедитесь, что в выбранном периоде есть авторизации операторов и подтверждённый выпуск.
             </div>
           </div>
         )}
 
-        {/* Состояние: отчёт сформирован */}
-        {isReportBuilt && (
+        {!loading && !error && records.length > 0 && (
           <div className={styles.result}>
             <div className={styles.kpis}>
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>СОТРУДНИКОВ В ОТЧЁТЕ</div>
-                <div className={styles.kpiNum}>10</div>
+                <div className={styles.kpiNum}>{records.length}</div>
                 <div className={styles.minor}>С авторизацией за выбранный период</div>
               </div>
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>ВРЕМЯ АВТОРИЗАЦИИ</div>
-                <div className={styles.kpiNum}>152 ч 30 мин</div>
-                <div className={styles.minor}>Сумма времени по сотрудникам</div>
+                <div className={styles.kpiNum}>{formatSeconds(totalAuthorizedSeconds)}</div>
+                <div className={styles.minor}>Сумма времени по операторам</div>
               </div>
               <div className={styles.kpiWide}>
-                <div className={styles.kpiLabel}>
-                  ФАКТИЧЕСКИЙ ВЫПУСК ПО ЕДИНИЦАМ ИЗМЕРЕНИЯ
-                </div>
+                <div className={styles.kpiLabel}>ФАКТИЧЕСКИЙ ВЫПУСК ПО ЕДИНИЦАМ ИЗМЕРЕНИЯ</div>
                 <div className={styles.metricSet}>
                   {Object.entries(unitSums).map(([unit, qty]) => (
                     <div key={unit} className={styles.metricPill}>
-                      <strong>
-                        {num(qty)} {unit}
-                      </strong>
+                      <strong>{num(qty)} {unit}</strong>
                       <small>Всего выпущено</small>
                     </div>
                   ))}
                 </div>
                 <div className={styles.minor}>
-                  Бригадный выпуск учитывается в общих итогах один раз
+                  Выпуск учитывается по станкам в единице измерения станка
                 </div>
               </div>
             </div>
@@ -308,97 +223,56 @@ const PersonnelStatistics: React.FC<PersonnelStatisticsProps> = ({ onBack }) => 
                 <div>
                   <h3>Выработка сотрудников</h3>
                   <div className={styles.note}>
-                    Период: {dateFrom} — {dateTo} · {stages.find((s) => s === stageFilter) ?? 'Все этапы'} ·{' '}
-                    {machines.find((m) => m === machineFilter) ?? 'Все рабочие места'}
+                    Период: {filters.dateFrom || '—'} — {filters.dateTo || '—'}
+                    {filters.search ? ` · поиск: ${filters.search}` : ''}
                   </div>
                 </div>
-                <span className={styles.chip}>10 сотрудников · 24 строк</span>
+                <span className={styles.chip}>
+                  {records.length} {records.length === 1 ? 'оператор' : 'операторов'}
+                </span>
               </div>
 
               <div className={styles.tableWrap}>
                 <table className={styles.datatable}>
                   <colgroup>
+                    <col style={{ width: '30%' }} />
+                    <col style={{ width: '20%' }} />
                     <col style={{ width: '15%' }} />
-                    <col style={{ width: '13%' }} />
-                    <col style={{ width: '11%' }} />
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '11%' }} />
-                    <col style={{ width: '11%' }} />
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '9%' }} />
+                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '20%' }} />
                   </colgroup>
                   <thead>
                     <tr>
-                      <th>Рабочее место</th>
-                      <th>Этап</th>
-                      <th className={styles.num}>Всего авториз.</th>
-                      <th className={styles.num}>Один</th>
-                      <th className={styles.num}>В бригаде</th>
-                      <th className={styles.num}>Личный выпуск</th>
-                      <th className={styles.num}>С участием в бригаде</th>
-                      <th className={styles.num}>Личная/ч</th>
-                      <th className={styles.num}>Бригада/чел.-ч</th>
+                      <th colSpan={2}>Оператор</th>
+                      <th className={styles.num}>Рабочее место</th>
+                      <th className={styles.num}>Выпуск</th>
+                      <th className={styles.num}>Привязок</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {workers.map((w, idx) => (
-                      <React.Fragment key={w}>
-                        {idx === 0 || idx === 3 ? (
-                          <tr className={styles.groupRow}>
-                            <td colSpan={9}>
-                              ▾ &nbsp; {w}
-                              <span className={styles.groupStats}>
-                                {formatMins(480 + idx * 30)} · {idx === 0 ? 2 : 1} рабочих места
-                              </span>
-                            </td>
-                          </tr>
-                        ) : null}
-                        <tr className={styles.dataRow}>
-                          <td className={styles.indent}>
-                            {machines[(idx + 2) % machines.length]}
+                    {records.map((rec) => (
+                      <React.Fragment key={rec.operatorId}>
+                        <tr className={styles.groupRow}>
+                          <td colSpan={2}>
+                            {rec.operatorName}
+                            <span className={styles.groupStats}>
+                              {formatSeconds(rec.totalAuthorizedSeconds)} · {rec.bindingCount} привязок ·{' '}
+                              {num(rec.totalQuantity)} {rec.machines[0]?.loadUnit ?? ''}
+                            </span>
                           </td>
-                          <td>
-                            {stages[(idx + 1) % stages.length]}
-                          </td>
-                          <td className={styles.num}>{formatMins(420 + idx * 12)}</td>
-                          <td className={styles.num}>{formatMins(200 + idx * 8)}</td>
-                          <td className={styles.num}>{formatMins(120 + idx * 5)}</td>
-                          <td className={styles.num}>
-                            <span className={styles.greenVal}>{num(120 + idx * 7)}</span>{' '}
-                            <span className={styles.kind}>м²</span>
-                          </td>
-                          <td className={styles.num}>
-                            {idx % 2 === 0 ? (
-                              <>
-                                <span className={styles.teamVal}>{num(90 + idx * 4)}</span>{' '}
-                                <span className={styles.kind}>м²</span>
-                              </>
-                            ) : (
-                              <span className={styles.zero}>—</span>
-                            )}
-                          </td>
-                          <td className={styles.num}>
-                            {idx % 3 === 0 ? (
-                              <>
-                                <span className={styles.blueVal}>{num(8.5 + idx * 0.4)}</span>{' '}
-                                <span className={styles.kind}>м²/ч</span>
-                              </>
-                            ) : (
-                              <span className={styles.zero}>—</span>
-                            )}
-                          </td>
-                          <td className={styles.num}>
-                            {idx % 2 === 0 ? (
-                              <>
-                                <span className={styles.teamVal}>{num(7.2 + idx * 0.3)}</span>{' '}
-                                <span className={styles.kind}>м²/чел.-ч</span>
-                              </>
-                            ) : (
-                              <span className={styles.zero}>—</span>
-                            )}
-                          </td>
+                          <td />
+                          <td />
+                          <td />
                         </tr>
+                        {rec.machines.map((m) => (
+                          <tr className={styles.dataRow} key={m.machineId}>
+                            <td className={styles.indent}>{m.machineName}</td>
+                            <td className={styles.num}>{m.machineCode}</td>
+                            <td className={styles.num}>{num(m.quantityProcessed)}</td>
+                            <td className={styles.num}>{m.loadUnit}</td>
+                            <td className={styles.num}>{m.bindingCount}</td>
+                          </tr>
+                        ))}
                       </React.Fragment>
                     ))}
                   </tbody>
@@ -406,29 +280,19 @@ const PersonnelStatistics: React.FC<PersonnelStatisticsProps> = ({ onBack }) => 
               </div>
 
               <div className={styles.footBar}>
-                <span>Показано: 24 записей по рабочим местам</span>
+                <span>Показано: {records.length} операторов</span>
                 <span>
-                  Время — по авторизации, включая перерывы. Бригадный показатель — общий для
-                  участников.
+                  Время — по суммарной авторизации (привязке к станкам). Выпуск — в единицах измерения станка.
                 </span>
               </div>
-            </div>
-
-            <div className={styles.warning}>
-              Личная/ч = личный выпуск ÷ часы{' '}
-              <b>одиночной</b> авторизации. Бригада/чел.-ч = уникальный выпуск команды ÷ сумма часов{' '}
-              <b>совместной</b> авторизации всех её участников. Это показатель бригады, не личный
-              вклад помощника. При неоднозначном составе значение «—». Выпуск команды не суммируйте
-              по участникам.
             </div>
           </div>
         )}
       </div>
 
       <p className={styles.disclaimer}>
-        Демонстрационный макет, не подключённый к базе FIT-MES. Открытые сессии в примерах
-        рассчитаны на момент условного среза. В рабочей системе время открытой авторизации следует
-        рассчитывать на момент формирования отчёта.
+        Источник данных — эндпоинт /statistics/operator-productivity. Время авторизации рассчитывается
+        из суммарных секунд привязки к станкам за выбранный период.
       </p>
     </div>
   );

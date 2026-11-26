@@ -1,15 +1,17 @@
-import { 
-  ProductionLine, 
-  StageStats, 
-  MachineStats, 
-  LineStatsParams, 
+import {
+  ProductionLine,
+  StageStats,
+  MachineStats,
+  LineStatsParams,
   StageStatsParams,
   UnitOfMeasurement,
   DateRangeType,
   StageInfo,
   MachineUptimeStats,
   MachineUptimeResponse,
-  GetMachineUptimeParams
+  GetMachineUptimeParams,
+  OperatorProductivityParams,
+  OperatorProductivityRecord
 } from './types';
 
 
@@ -80,6 +82,23 @@ export const statisticsApi = {
 
     const response = await fetch(`${BASE_URL}/machine-uptime?${searchParams}`);
     if (!response.ok) throw new Error('Failed to fetch machine uptime stats');
+    return response.json();
+  },
+
+  async getOperatorProductivity(
+    params: OperatorProductivityParams = {}
+  ): Promise<OperatorProductivityRecord[]> {
+    const searchParams = new URLSearchParams();
+
+    if (params.startDate) searchParams.append('startDate', params.startDate);
+    if (params.endDate) searchParams.append('endDate', params.endDate);
+    if (params.operatorId !== undefined) searchParams.append('operatorId', params.operatorId.toString());
+    if (params.machineId !== undefined) searchParams.append('machineId', params.machineId.toString());
+    if (params.stageId !== undefined) searchParams.append('stageId', params.stageId.toString());
+    if (params.search) searchParams.append('search', params.search);
+
+    const response = await fetch(`${BASE_URL}/operator-productivity?${searchParams}`);
+    if (!response.ok) throw new Error('Failed to fetch operator productivity');
     return response.json();
   }
 };

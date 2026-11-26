@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { statisticsApi } from '../../api/statisticsApi';
-import { 
-  ProductionLine, 
-  StageStats, 
-  MachineStats, 
-  DateRangeType, 
+import {
+  ProductionLine,
+  StageStats,
+  MachineStats,
+  DateRangeType,
   UnitOfMeasurement,
   StageInfo,
   MachineUptimeStats,
-  MachineUptimeResponse
+  MachineUptimeResponse,
+  OperatorProductivityParams,
+  OperatorProductivityRecord
 } from '../../api/statisticsApi';
 
 export const useProductionLines = () => {
@@ -179,4 +181,32 @@ export const useMachineUptimeStats = (
   }, [dateRangeType, stageId, startDate, endDate, refreshKey]);
 
   return { data, loading, error };
+};
+
+export const useOperatorProductivity = (
+  params: OperatorProductivityParams = {},
+  refreshKey?: number
+) => {
+  const [records, setRecords] = useState<OperatorProductivityRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        setLoading(true);
+        const data = await statisticsApi.getOperatorProductivity(params);
+        setRecords(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch operator productivity');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecords();
+  }, [params, refreshKey]);
+
+  return { records, loading, error };
 };
