@@ -6,6 +6,7 @@ import DetailRouteManagement from './components/blocks/DetailRouteManagement';
 import OrderPlanning from './components/blocks/OrderPlanning';
 import OrderDisplay from './components/blocks/orderDisplayBlok/OrderDisplay';
 import StreamsManagement from './components/blocks/StreamsManagement/StreamsManagement';
+import PersonnelMonitor from './components/blocks/personnelMonitor/PersonnelMonitor';
 import StatisticsDisplay from './components/blocks/StatisticsDisplay';
 // СКРЫТО: переключатель типа производства — всегда серийное
 // import ProductionTypeSwitch, { ProductionType } from './components/ProductionTypeSwitch';
@@ -14,7 +15,7 @@ import StatisticsDisplay from './components/blocks/StatisticsDisplay';
 
 import styles from './OrderManagement.module.css';
 
-type TabType = 'orders' | 'streams';
+type TabType = 'orders' | 'streams' | 'personnel';
 
 
 
@@ -85,11 +86,19 @@ const OrderManagementBlok: React.FC = () => {
               >
                 Монитор загрузки
               </button>
+              <button
+                className={`${styles.tabButton} ${activeTab === 'personnel' ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab('personnel')}
+              >
+                Монитор персонала
+              </button>
             </div>
             {activeTab === 'orders' ? (
               <OrderDisplay />
-            ) : (
+            ) : activeTab === 'streams' ? (
               <StreamsManagement />
+            ) : (
+              <PersonnelMonitor />
             )}
           </>
         );
