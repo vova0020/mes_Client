@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FIT-MES — Выработка персонала · Макет v1.2</title>
+<style>
+:root{--page:#e8edf2;--nav:#263243;--nav2:#354154;--shell:#303b4e;--shell2:#253145;--line:#506075;--white:#fff;--ink:#27374c;--muted:#77889b;--blue:#2588cf;--blue2:#1775b7;--blueSoft:#e7f3fc;--green:#238c61;--amber:#bd7a23;--red:#b04a58}
+*{box-sizing:border-box}body{margin:0;min-width:1160px;background:var(--page);color:var(--ink);font-family:Arial,Segoe UI,sans-serif;font-size:13px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.5;filter:grayscale(.32)}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #76bde9;outline-offset:2px}
+.frame{display:grid;grid-template-columns:69px minmax(0,1fr);min-height:100vh;padding:7px 8px 9px 7px;gap:9px}.sidebar{border-radius:7px;background:linear-gradient(160deg,#38465b,#263040);border:1px solid #566171;box-shadow:0 2px 5px #0004;display:flex;flex-direction:column;align-items:center;padding:15px 6px;gap:13px}.navicon{width:43px;height:43px;display:grid;place-items:center;background:#283346;border:1px solid #4a576c;border-radius:4px;color:#c5d4e1;font-size:20px;position:relative}.navicon.active{color:white;background:#16283a;box-shadow:inset 0 0 0 1px #4bb6ff,0 0 7px #55acf855}.navicon.active:before{content:"";height:24px;width:3px;background:#39a7ed;position:absolute;left:-7px}.nav-space{height:315px;flex-shrink:1;min-height:80px}.main{min-width:0}.header{height:73px;background:linear-gradient(180deg,#354053,#2f394c);border-radius:4px;box-shadow:0 2px 5px #0005;border:1px solid #515d6b;padding:12px 18px;display:flex;align-items:flex-start;justify-content:space-between}.lefthead{display:flex;gap:9px;padding-top:13px}.topbutton{padding:7px 14px;color:#fff;background:linear-gradient(#477495,#2a4b6a);border:1px solid #23425f;border-radius:3px;font-size:11px;font-weight:600}.brand{text-align:right;color:white;font-size:15px;font-weight:700;letter-spacing:.4px;display:flex;gap:7px;align-items:center}.brand-mark{width:25px;height:25px;border-radius:50%;border:3px dotted #edf3f7;display:grid;place-items:center;font-size:15px}.brand-meta{font-size:10px;font-weight:400;color:#bfccd9;display:block;letter-spacing:0;margin-top:2px}.board{margin-top:13px;border:1px solid #526174;border-radius:7px;min-height:calc(100vh - 108px);box-shadow:0 2px 5px #0003;background:linear-gradient(180deg,#354154,#2d384a);padding:15px 14px 17px}.pagetitle{text-align:center;color:#fff;font-size:18px;font-weight:700;margin:0 0 15px}.board-tabs{display:flex;gap:2px;background:#4b5669;padding:3px;border-radius:5px;margin-bottom:13px;height:32px}.board-tabs span{flex:1;display:grid;place-items:center;font-size:11px;color:#cbd6df}.board-tabs .on{background:#687489;border-radius:3px;color:#fff;font-weight:700}.contentframe{background:linear-gradient(160deg,#364357,#2e384b);border:1px solid #506077;border-radius:7px;min-height:620px;padding:13px;box-shadow:inset 0 0 0 1px #27354b,0 2px 8px #09152233}.screen-title{height:29px;display:flex;align-items:center;justify-content:space-between;padding:0 4px 9px;color:#fff}.screen-title strong{font-size:14px}.screen-title span{font-size:11px;color:#b5c8d9}.screen-title .highlight{color:#69bdf5}.filter-panel{background:#fff;border-radius:5px;padding:13px 15px 14px;box-shadow:0 1px 4px #15263933}.filter-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}.filter-head b{font-size:13px}.filter-head small{color:#738396}.filter-layout{display:grid;grid-template-columns:minmax(325px,1.5fr) minmax(130px,1fr) minmax(170px,1fr) minmax(170px,1fr);gap:10px 12px}.form-group{min-width:0}.form-group label{display:block;font-size:11px;font-weight:600;color:#5d7081;margin-bottom:5px}.form-group select,.form-group input{width:100%;height:34px;border:1px solid #c7d0d9;background:#f8fafc;color:#27374c;border-radius:4px;padding:0 9px}.form-group input:focus,.form-group select:focus{background:white}.periodline{display:flex;align-items:center;gap:6px}.periodline input{min-width:0}.dash{color:#8493a1}.quickrow{display:flex;align-items:center;gap:5px;margin-top:8px}.quick{padding:5px 9px;background:#eef1f4;color:#4b6073;border:1px solid #d8e1e9;border-radius:3px;font-size:11px}.quick.selected{background:#2288c9;color:white;border-color:#2288c9}.actions{display:flex;justify-content:space-between;gap:12px;margin-top:13px;align-items:center;border-top:1px solid #edf0f3;padding-top:11px}.action-left,.action-right{display:flex;align-items:center;gap:8px}.button{height:34px;border-radius:4px;border:1px solid #cad4de;background:#f0f3f6;color:#39516a;padding:0 15px;font-weight:600;font-size:12px}.button.primary{background:linear-gradient(#2d9be2,#147cc1);border-color:#1474b4;color:white;box-shadow:0 2px 3px #0002}.button.excel{background:linear-gradient(#27995f,#187a49);border-color:#126a3e;color:white}.statushint{font-size:11px;color:#73869a}.report{margin-top:13px}.empty{min-height:322px;background:#fff;border-radius:5px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;text-align:center;color:#6a7e92;padding:25px;border:1px dashed #d3dbe3}.empty-ico{font-size:39px;color:#94a9bc;border:2px solid #d7e0e9;border-radius:50%;width:75px;height:75px;display:grid;place-items:center}.empty h3{margin:0;font-size:17px;color:#425a6e}.empty p{margin:0;max-width:480px;line-height:1.6}.empty .note{font-size:11px;color:#889baa}.kpis{display:grid;grid-template-columns:1fr 1fr 1.9fr;gap:11px;margin-bottom:12px}.kpi{background:#fff;border-radius:5px;min-height:100px;padding:13px 16px;border:1px solid #dce2e8;box-shadow:0 1px 3px #14263b20}.kpi-label{font-size:11px;color:#62768c;font-weight:600;letter-spacing:.1px}.kpi-num{font-size:30px;color:#1d3d58;font-weight:700;line-height:1.18;margin-top:7px}.kpi .minor{font-size:11px;color:#91a0ae;margin-top:4px}.metricset{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.metricpill{display:flex;flex-direction:column;gap:2px;padding:6px 9px;background:#eef5fa;border:1px solid #e0edf5;border-radius:5px;min-width:100px}.metricpill strong{font-size:15px;color:#1b5b85}.metricpill small{font-size:10px;color:#687f91}.kpi strong.units{font-size:17px}.tablecard{background:#fff;border:1px solid #d9e1e8;border-radius:5px;overflow:hidden;box-shadow:0 1px 3px #13253925}.tablehead{padding:12px 14px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px}.tablehead h3{font-size:14px;margin:0}.tablehead .note{font-size:11px;color:#778799;margin-top:4px}.chip{font-size:11px;color:#466987;background:#e9f3fb;border:1px solid #cbdff0;border-radius:4px;padding:5px 8px}.tablewrap{overflow-x:auto}.datatable{width:100%;border-collapse:collapse;table-layout:fixed;min-width:1310px}.datatable thead{background:#e1e7ed}.datatable th{font-size:11px;font-weight:700;color:#44586b;text-align:left;padding:11px 12px;border:1px solid #d5dce3;vertical-align:middle}.datatable td{padding:10px 12px;font-size:12px;border-bottom:1px solid #e1e7ec;color:#334b5f;vertical-align:middle}.datatable tbody .group{background:#edf4fa}.datatable tbody .group td{padding:8px 12px;font-weight:700;color:#284b65;border-top:1px solid #d1dde8}.group .stats{font-size:10px;color:#8498ab;font-weight:400;margin-left:10px}.datatable tbody .data:nth-child(even){background:#fafcfe}.datatable tbody .data:hover{background:#edf6fd}.indent{padding-left:28px!important}.num{text-align:right!important;font-variant-numeric:tabular-nums}.mono{font-variant-numeric:tabular-nums}.blueval{color:#137dbb;font-weight:700}.greenval{color:#267e5a;font-weight:700}.teamval{color:#a26c2d;font-weight:700}.zero{color:#acb6c0}.kind{font-size:10px;color:#8596a4}.footbar{padding:12px 15px;background:#f9fbfc;border-top:1px solid #e1e7ed;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;color:#8190a0}.disclaimer{margin-top:10px;font-size:11px;color:#cad5e2;line-height:1.55}.warning{margin-top:8px;border-left:3px solid #d8a851;background:#fff4da;color:#8b6526;padding:8px 10px;font-size:11px;line-height:1.5}.hidden{display:none!important}@media(max-width:1380px){.filter-layout{grid-template-columns:1.5fr 1fr 1fr}.form-group:last-child{grid-column:2 / 4}}@media(max-width:1180px){.filter-layout{grid-template-columns:1fr 1fr}.form-group:last-child{grid-column:auto}.kpis{grid-template-columns:1fr 1fr}.kpis .wide{grid-column:1 / -1}}
+.datatable th{padding:10px 7px;line-height:1.3;font-size:10px}.datatable td{padding:9px 7px;font-size:11px}.datatable .indent{padding-left:16px!important}.report .footbar{flex-wrap:wrap}.kpis .minor{line-height:1.3}</style>
+</head>
+<body>
+<div class="frame">
+  <aside class="sidebar" aria-label="Боковое меню"><div class="nav-space"></div><div class="navicon active" title="Статистика">▥</div><div class="navicon" title="История обработки">▤</div><div class="navicon" title="Монитор заказов">▦</div><div class="navicon" title="Заказы">◈</div><div class="navicon" title="Настройки">⚙</div></aside>
+  <div class="main">
+    <header class="header"><div class="lefthead"><button class="topbutton" type="button">Управление заказами ▾</button><button class="topbutton" type="button">Администратор Системы</button></div><div class="brand"><div class="brand-mark">✣</div><div>FIT-MES<span class="brand-meta">Демонстрационный макет · v1.2</span></div></div></header>
+    <section class="board">
+      <h1 class="pagetitle">Монитор выработки персонала</h1>
+      <div class="board-tabs"><span class="on">ВЫРАБОТКА ПЕРСОНАЛА</span><span>СТАТИСТИКА ПРОИЗВОДСТВА</span><span>ВРЕМЯ РАБОТЫ СТАНКОВ</span></div>
+      <div class="contentframe">
+        <div class="screen-title"><strong>▥ &nbsp; Выработка персонала</strong><span>Операторы · индивидуальная и бригадная эффективность <span class="highlight">●</span></span></div>
+        <section class="filter-panel" aria-label="Фильтры отчёта">
+          <div class="filter-head"><b>Фильтры отчёта</b><small>Сначала задайте период, затем сформируйте отчёт</small></div>
+          <div class="filter-layout">
+            <div class="form-group"><label>Период <span style="color:#bd4f56">*</span></label><div class="periodline"><input id="dateFrom" type="date" aria-label="Период с"/><span class="dash">—</span><input id="dateTo" type="date" aria-label="Период по"/></div><div class="quickrow"><button type="button" class="quick" data-quick="today">Сегодня</button><button type="button" class="quick" data-quick="yesterday">Вчера</button><button type="button" class="quick" data-quick="week">7 дней</button><button type="button" class="quick" data-quick="month">30 дней</button></div></div>
+            <div class="form-group"><label for="worker">Сотрудник</label><select id="worker"><option value="all">Все сотрудники</option></select></div>
+            <div class="form-group"><label for="stage">Производственный этап</label><select id="stage"><option value="all">Все этапы</option></select></div>
+            <div class="form-group"><label for="machine">Рабочее место</label><select id="machine"><option value="all">Все рабочие места</option></select></div>
+          </div>
+          <div class="actions"><div class="action-left"><button type="button" class="button primary" id="build">▤ &nbsp; Сформировать отчёт</button><button type="button" class="button" id="reset">Сбросить фильтры</button><span id="filterMsg" class="statushint">Период не выбран</span></div><div class="action-right"><button type="button" class="button excel" id="excel" disabled>▣ &nbsp; Экспорт в Excel</button></div></div>
+        </section>
+        <div id="report" class="report">
+          <div id="empty" class="empty"><div class="empty-ico">▤</div><h3>Отчёт пока не сформирован</h3><p>Выберите период и при необходимости сотрудника, этап или рабочее место. Затем нажмите «Сформировать отчёт».</p><div class="note">До формирования отчёта таблица и сводные показатели не отображаются, экспорт в Excel недоступен.</div></div>
+          <div id="result" class="hidden">
+            <div class="kpis"><div class="kpi"><div class="kpi-label">СОТРУДНИКОВ В ОТЧЁТЕ</div><div class="kpi-num" id="kpiPeople">—</div><div class="minor">С авторизацией за выбранный период</div></div><div class="kpi"><div class="kpi-label">ВРЕМЯ АВТОРИЗАЦИИ</div><div class="kpi-num" id="kpiTime">—</div><div class="minor">Сумма времени по сотрудникам</div></div><div class="kpi wide"><div class="kpi-label">ФАКТИЧЕСКИЙ ВЫПУСК ПО ЕДИНИЦАМ ИЗМЕРЕНИЯ</div><div id="kpiUnits" class="metricset"></div><div class="minor">Бригадный выпуск учитывается в общих итогах один раз</div></div></div>
+            <div class="tablecard"><div class="tablehead"><div><h3>Выработка сотрудников</h3><div class="note" id="reportTitle">—</div></div><span id="count" class="chip">—</span></div><div class="tablewrap"><table class="datatable" id="dataTable"><colgroup><col style="width:15%"><col style="width:13%"><col style="width:11%"><col style="width:10%"><col style="width:10%"><col style="width:11%"><col style="width:11%"><col style="width:10%"><col style="width:9%"></colgroup><thead><tr><th>Рабочее место</th><th>Этап</th><th class="num">Всего авториз.</th><th class="num">Один</th><th class="num">В бригаде</th><th class="num">Личный выпуск</th><th class="num">С участием в бригаде</th><th class="num">Личная/ч</th><th class="num">Бригада/чел.-ч</th></tr></thead><tbody id="tbody"></tbody></table></div><div class="footbar"><span id="bottomCount">—</span><span>Время — по авторизации, включая перерывы. Бригадный показатель — общий для участников.</span></div></div>
+            <div class="warning">Личная/ч = личный выпуск ÷ часы <b>одиночной</b> авторизации. Бригада/чел.-ч = уникальный выпуск команды ÷ сумма часов <b>совместной</b> авторизации всех её участников. Это показатель бригады, не личный вклад помощника. При неоднозначном составе значение «—». Выпуск команды не суммируйте по участникам.</div>
+          </div>
+        </div>
+        <p class="disclaimer">Демонстрационный макет, не подключённый к базе FIT-MES. Открытые сессии в примерах рассчитаны на момент условного среза 30.10.2026, 19:35. В рабочей системе время открытой авторизации следует рассчитывать на момент формирования отчёта.</p>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+'use strict';
+const SNAPSHOT='2026-10-30T19:35:00';
+const $ = id => document.getElementById(id);
+const emp = [
+  {id:'nazarov',name:'Назаров Алексей'},
+  {id:'smirnov',name:'Смирнов Анатолий'},
+  {id:'shokhanov',name:'Шоханов Дмитрий'},
+  {id:'sarkisyan',name:'Саркисян Сергей'},
+  {id:'petrov',name:'Петров Виктор'},
+  {id:'ivanov',name:'Иванов Максим'},
+  {id:'kuznetsov',name:'Кузнецов Олег'},
+  {id:'fedorova',name:'Фёдорова Елена'},
+  {id:'ilyin',name:'Ильин Максим'},
+  {id:'borisov',name:'Борисов Антон'}
+];
+const machines = [
+ {id:'kdt',name:'KDT Двухголовый',stage:'Раскрой ЛДСП',unit:'м²'},
+ {id:'big',name:'Большая пила',stage:'Раскрой ЛДСП',unit:'м²'},
+ {id:'skipper',name:'SKIPPER №2',stage:'Присадка',unit:'шт.'},
+ {id:'valery',name:'Валерий 3000',stage:'Присадка',unit:'шт.'},
+ {id:'kot',name:'KOT проходной',stage:'Кромкооблицовка',unit:'пог. м'},
+ {id:'pack',name:'Упаковка №1',stage:'Упаковка',unit:'компл.'},
+ {id:'vicky',name:'Викки',stage:'Присадка',unit:'шт.'}
+];
+// Демонстрационные данные. Журнал сессий в действующей версии FIT-MES ещё предстоит создать.
+const sessions = [
+ ['nazarov','kdt','2026-10-30T08:00:00','2026-10-30T16:15:00'],
+ ['smirnov','kdt','2026-10-30T10:00:00','2026-10-30T16:05:00'],
+ ['shokhanov','skipper','2026-10-30T08:05:00','2026-10-30T15:05:00'],
+ ['sarkisyan','valery','2026-10-30T08:20:00','2026-10-30T16:30:00'],
+ ['petrov','kot','2026-10-30T08:30:00','2026-10-30T16:40:00'],
+ ['ivanov','skipper','2026-10-30T07:00:00','2026-10-30T08:00:00'],
+ ['ivanov','kot','2026-10-30T11:00:00','2026-10-30T14:00:00'],
+ ['ivanov','pack','2026-10-30T14:30:00','2026-10-30T17:00:00'],
+ ['kuznetsov','big','2026-10-30T08:00:00','2026-10-30T13:20:00'],
+ ['kuznetsov','skipper','2026-10-30T15:15:00','2026-10-30T17:05:00'],
+ ['fedorova','pack','2026-10-30T08:00:00','2026-10-30T17:00:00'],
+ ['ilyin','pack','2026-10-30T09:00:00','2026-10-30T17:00:00'],
+ ['borisov','vicky','2026-10-30T08:30:00',null],
+ ['nazarov','kdt','2026-10-29T08:00:00','2026-10-29T16:00:00'],
+ ['smirnov','kdt','2026-10-29T09:00:00','2026-10-29T16:00:00'],
+ ['shokhanov','skipper','2026-10-29T08:00:00','2026-10-29T16:00:00'],
+ ['kuznetsov','big','2026-10-29T08:00:00','2026-10-29T16:00:00'],
+ ['petrov','kot','2026-10-29T08:00:00','2026-10-29T16:00:00'],
+ ['fedorova','pack','2026-10-29T08:00:00','2026-10-29T16:00:00'],
+ ['ilyin','pack','2026-10-29T08:45:00','2026-10-29T16:00:00'],
+ ['sarkisyan','valery','2026-10-28T08:00:00','2026-10-28T16:00:00'],
+ ['ivanov','kot','2026-10-28T08:00:00','2026-10-28T16:00:00'],
+ ['nazarov','kdt','2026-10-27T08:00:00','2026-10-27T16:00:00'],
+ ['shokhanov','skipper','2026-10-27T08:00:00','2026-10-27T16:00:00'],
+ ['petrov','kot','2026-10-24T08:00:00','2026-10-24T16:00:00'],
+ ['kuznetsov','big','2026-10-24T08:00:00','2026-10-24T16:00:00'],
+ ['fedorova','pack','2026-10-23T08:00:00','2026-10-23T16:00:00'],
+ ['ilyin','pack','2026-10-23T09:00:00','2026-10-23T16:00:00'],
+];
+// Выпуски учитываются по уникальному ID подтверждения (не по дублированным записям истории).
+const operations = [
+ ['30kdt-a','2026-10-30T09:30:00','kdt',178,['nazarov']],
+ ['30kdt-b','2026-10-30T15:45:00','kdt',220,['nazarov','smirnov']],
+ ['30ski-i','2026-10-30T07:45:00','skipper',40,['ivanov']],
+ ['30ski-a','2026-10-30T10:30:00','skipper',180,['shokhanov']],
+ ['30ski-b','2026-10-30T14:30:00','skipper',160,['shokhanov']],
+ ['30ski-c','2026-10-30T16:55:00','skipper',110,['kuznetsov']],
+ ['30val-a','2026-10-30T16:05:00','valery',295,['sarkisyan']],
+ ['30kot-a','2026-10-30T10:20:00','kot',260,['petrov']],
+ ['30kot-b','2026-10-30T13:50:00','kot',530,['petrov','ivanov']],
+ ['30big-a','2026-10-30T12:45:00','big',132,['kuznetsov']],
+ ['30pack-a','2026-10-30T16:30:00','pack',110,['fedorova','ilyin','ivanov']],
+ ['29kdt-a','2026-10-29T15:20:00','kdt',180,['nazarov','smirnov']],
+ ['29ski-a','2026-10-29T14:20:00','skipper',360,['shokhanov']],
+ ['29big-a','2026-10-29T15:15:00','big',160,['kuznetsov']],
+ ['29kot-a','2026-10-29T13:20:00','kot',480,['petrov']],
+ ['29pack-a','2026-10-29T15:50:00','pack',94,['fedorova','ilyin']],
+ ['28val-a','2026-10-28T15:20:00','valery',290,['sarkisyan']],
+ ['28kot-a','2026-10-28T15:15:00','kot',440,['ivanov']],
+ ['27kdt-a','2026-10-27T15:10:00','kdt',201,['nazarov']],
+ ['27ski-a','2026-10-27T15:10:00','skipper',365,['shokhanov']],
+ ['24kot-a','2026-10-24T14:55:00','kot',410,['petrov']],
+ ['24big-a','2026-10-24T14:55:00','big',157,['kuznetsov']],
+ ['23pack-a','2026-10-23T15:10:00','pack',90,['fedorova','ilyin']]
+];
+const LOCAL='2026-10-30';
+let formed=null;let lastQuick=null;
+function dateLocal(s){return new Date(s).getTime()};
+function shortDate(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`}
+function prettyMins(n){let v=Math.round(n);return `${Math.floor(v/60)} ч ${String(v%60).padStart(2,'0')} мин`}
+function prettyHour(n){return (n/60).toLocaleString('ru-RU',{maximumFractionDigits:2})}
+function num(n){return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:1})}
+function valOf(arr){return arr.map(x=>x.value)};
+function esc(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function fillSelect(id,items,first){let x=$(id);x.innerHTML=`<option value="all">${first}</option>`+items.map(item=>`<option value="${esc(item.value)}">${esc(item.name)}</option>`).join('')}
+function init(){fillSelect('worker',emp.map(e=>({value:e.id,name:e.name})).sort((a,b)=>a.name.localeCompare(b.name,'ru')),'Все сотрудники');fillSelect('stage',[...new Set(machines.map(m=>m.stage))].map(n=>({value:n,name:n})),'Все этапы');fillMachine()}
+function fillMachine(){let old=$('machine').value,stage=$('stage').value;let ms=machines.filter(m=>stage==='all'||m.stage===stage).map(m=>({value:m.id,name:m.name}));fillSelect('machine',ms,'Все рабочие места');if(ms.some(x=>x.value===old))$('machine').value=old}
+function clearReport(msg='Период не выбран',heading='Отчёт пока не сформирован'){
+ formed=null;$('excel').disabled=true;$('filterMsg').textContent=msg;$('result').classList.add('hidden');$('empty').classList.remove('hidden');$('empty').querySelector('h3').textContent=heading;
+ $('empty').querySelector('p').textContent=heading==='Отчёт пока не сформирован'?'Выберите период и при необходимости сотрудника, этап или рабочее место. Затем нажмите «Сформировать отчёт».':'Фильтры изменены. Нажмите «Сформировать отчёт», чтобы получить новые данные.';
+}
+function markDirty(){clearReport(($('dateFrom').value&&$('dateTo').value)?'Параметры выбраны · отчёт не сформирован':'Период не выбран',($('dateFrom').value&&$('dateTo').value)?'Параметры изменены':'Отчёт пока не сформирован');}
+function isoAt(day,time){return dateLocal(day+'T'+time)}
+function getPeriod(){let a=$('dateFrom').value,b=$('dateTo').value;if(!a||!b){$('filterMsg').textContent='Укажите даты начала и окончания периода';return null}if(a>b){$('filterMsg').textContent='Дата начала позже даты окончания';return null}return {from:a,to:b,start:isoAt(a,'00:00:00'),end:isoAt(b,'00:00:00')+24*3600*1000};}
+function isIn(op,p){let at=dateLocal(op[1]);return at>=p.start&&at<p.end;}
+function opMachine(op){return machines.find(m=>m.id===op[2])}
+// Общие интервалы авторизации рассчитываются независимо от фильтра по сотруднику.
+function sessionIntervals(wid,mid,p){const raw=sessions.filter(x=>x[0]===wid&&x[1]===mid).map(x=>[Math.max(p.start,dateLocal(x[2])),Math.min(p.end,dateLocal(x[3]||SNAPSHOT),dateLocal(SNAPSHOT))]).filter(x=>x[1]>x[0]).sort((a,b)=>a[0]-b[0]);return mergeIntervals(raw)}
+function mergeIntervals(raw){let out=[];for(let [a,b] of raw){if(out.length&&a<=out[out.length-1][1])out[out.length-1][1]=Math.max(out[out.length-1][1],b);else out.push([a,b]);}return out}
+function minutesOf(ints){return ints.reduce((n,x)=>n+(x[1]-x[0])/60000,0)}
+function intersection(a,b){let res=[];for(let [s,e] of a)for(let [s2,e2] of b){let l=Math.max(s,s2),r=Math.min(e,e2);if(r>l)res.push([l,r]);}return mergeIntervals(res.sort((x,y)=>x[0]-y[0]))}
+function getReport(){const p=getPeriod();if(!p)return null;const worker=$('worker').value,stage=$('stage').value,machine=$('machine').value;
+ const selected=machines.filter(m=>(stage==='all'||m.stage===stage)&&(machine==='all'||m.id===machine)), mid=new Set(selected.map(m=>m.id));
+ // Индивидуальное/совместное время: число авторизованных на станке по журналу, а не длительность операций.
+ const ix=new Map(); for(let m of selected)for(let w of emp)ix.set(w.id+'|'+m.id,sessionIntervals(w.id,m.id,p));
+ const rows=[],rowmap=new Map();const included=operations.filter(op=>isIn(op,p)&&mid.has(op[2])&&(worker==='all'||op[4].includes(worker)));
+ // Включаем и сотрудников, у которых есть выпуск, но нет достоверных исторических сессий.
+ const wanted=new Set();for(let [key,int] of ix)if(int.length&&(worker==='all'||key.split('|')[0]===worker))wanted.add(key);
+ for(let op of included)for(let w of op[4])if(worker==='all'||w===worker)wanted.add(w+'|'+op[2]);
+ for(let key of wanted){let [wid,midkey]=key.split('|');let w=emp.find(e=>e.id===wid),m=machines.find(e=>e.id===midkey);if(!w||!m)continue;
+ let own=ix.get(key)||[],others=emp.filter(x=>x.id!==wid).flatMap(x=>(ix.get(x.id+'|'+midkey)||[]));
+ let solo=0,team=0;for(let [a,b] of own){let cuts=[a,b];for(let [c,d] of others){if(c>a&&c<b)cuts.push(c);if(d>a&&d<b)cuts.push(d)}cuts=[...new Set(cuts)].sort((x,y)=>x-y);for(let i=0;i<cuts.length-1;i++){let t=(cuts[i]+cuts[i+1])/2;let active=others.some(([c,d])=>c<=t&&t<d);if(active)team+=(cuts[i+1]-cuts[i])/60000;else solo+=(cuts[i+1]-cuts[i])/60000}}
+ let row={wid,mid:midkey,name:w.name,machine:m.name,stage:m.stage,unit:m.unit,mins:solo+team,soloMins:solo,teamMins:team,personal:0,team:0,teamKeys:new Set(),soloRate:null,brigadeRate:null};rows.push(row);rowmap.set(key,row);
+ }
+ // Уникальные подтверждения. При фильтре по одному участнику полная численность бригады сохраняется.
+ const brigadeGroups=new Map();for(let op of included){let members=[...new Set(op[4])],groupKey=op[2]+'|'+[...members].sort().join(',');if(members.length>1){if(!brigadeGroups.has(groupKey))brigadeGroups.set(groupKey,{mid:op[2],members:members,output:0});brigadeGroups.get(groupKey).output+=op[3]}
+ for(let w of members){let r=rowmap.get(w+'|'+op[2]);if(!r)continue;if(members.length===1)r.personal+=op[3];else {r.team+=op[3];r.teamKeys.add(groupKey)}}}
+ for(let [key,g] of brigadeGroups){let together=null;for(let wid of g.members){let xs=ix.get(wid+'|'+g.mid)||[];together=together===null?xs:intersection(together,xs)}let personHours=minutesOf(together||[])*g.members.length/60;g.rate=personHours>0?g.output/personHours:null;g.personHours=personHours;}
+ for(let r of rows){r.soloRate=r.soloMins>0?r.personal*60/r.soloMins:null;const keys=[...r.teamKeys];r.brigadeRate=keys.length===1?(brigadeGroups.get(keys[0])?.rate??null):null;}
+ rows.sort((a,b)=>a.name.localeCompare(b.name,'ru')||a.machine.localeCompare(b.machine,'ru'));
+ // Итоговый выпуск по уникальным операциям. Дубли показов по сотрудникам не складывать.
+ let activeOps=included.filter(op=>op[4].some(w=>rowmap.has(w+'|'+op[2]))),unitSums={};for(let op of activeOps){let u=opMachine(op).unit;unitSums[u]=(unitSums[u]||0)+op[3];}
+ let people=new Set(rows.map(r=>r.wid)).size,time=rows.reduce((sum,r)=>sum+r.mins,0);return {p,worker,stage,machine,rows,people,time,unitSums,activeOps};
+}
+function showReport(){let rep=getReport();if(!rep)return;formed=rep;$('empty').classList.add('hidden');$('result').classList.remove('hidden');$('excel').disabled=false;
+ $('filterMsg').textContent='Отчёт сформирован';$('kpiPeople').textContent=num(rep.people);$('kpiTime').textContent=prettyMins(rep.time);
+ $('kpiUnits').innerHTML=Object.entries(rep.unitSums).length?Object.entries(rep.unitSums).map(([u,q])=>`<div class="metricpill"><strong>${num(q)} ${esc(u)}</strong><small>Всего выпущено</small></div>`).join(''):'<span style="color:#8294a5">Нет зарегистрированного выпуска</span>';
+ $('reportTitle').textContent=`Период: ${shortDate(rep.p.from)} — ${shortDate(rep.p.to)} · ${$('stage').selectedOptions[0].textContent} · ${$('machine').selectedOptions[0].textContent}`;
+ $('count').textContent=`${rep.people} сотрудников · ${rep.rows.length} строк`;
+ let groups=new Map();for(let r of rep.rows){if(!groups.has(r.wid))groups.set(r.wid,[]);groups.get(r.wid).push(r)}
+ let body='';for(let [wid,group] of groups){let total=group.reduce((s,r)=>s+r.mins,0);let w=emp.find(e=>e.id===wid);body+=`<tr class="group"><td colspan="9">▾ &nbsp; ${esc(w.name)}<span class="stats">${prettyMins(total)} · ${group.length} ${group.length===1?'рабочее место':'рабочих места'}</span></td></tr>`;
+ for(let r of group){body+=`<tr class="data"><td class="indent">${esc(r.machine)}</td><td>${esc(r.stage)}</td><td class="num mono">${prettyMins(r.mins)}</td><td class="num mono">${prettyMins(r.soloMins)}</td><td class="num mono">${prettyMins(r.teamMins)}</td><td class="num"><span class="greenval">${num(r.personal)}</span> <span class="kind">${esc(r.unit)}</span></td><td class="num">${r.team?`<span class="teamval">${num(r.team)}</span> <span class="kind">${esc(r.unit)}</span>`:'<span class="zero">—</span>'}</td><td class="num">${r.soloRate===null?'<span class="zero">—</span>':`<span class="blueval">${num(r.soloRate)}</span> <span class="kind">${esc(r.unit)}/ч</span>`}</td><td class="num">${r.brigadeRate===null?'<span class="zero">—</span>':`<span class="teamval">${num(r.brigadeRate)}</span> <span class="kind">${esc(r.unit)}/чел.-ч</span>`}</td></tr>`;}}
+ $('tbody').innerHTML=body||'<tr><td colspan="9" style="padding:40px;text-align:center;color:#8c9aa9">В заданных фильтрах данных нет</td></tr>';
+ $('bottomCount').textContent=rep.rows.length?`Показано: ${rep.rows.length} записей по рабочим местам`:'Нет записей за выбранный период';
+}
+function setQuick(kind){const end='2026-10-30';let start=end;if(kind==='yesterday')start='2026-10-29';if(kind==='week')start='2026-10-24';if(kind==='month')start='2026-10-01';let e=kind==='yesterday'?'2026-10-29':end;$('dateFrom').value=start;$('dateTo').value=e;lastQuick=kind;document.querySelectorAll('[data-quick]').forEach(b=>b.classList.toggle('selected',b.dataset.quick===kind));markDirty();}
+function reset(){for(let id of ['dateFrom','dateTo'])$(id).value='';$('worker').value='all';$('stage').value='all';fillMachine();$('machine').value='all';lastQuick=null;document.querySelectorAll('[data-quick]').forEach(b=>b.classList.remove('selected'));clearReport()}
+// Build a compact, standards-compatible XLSX workbook without remote JS dependencies.
+const enc=new TextEncoder();const xesc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function colName(n){let s='';for(n++;n>0;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s}
+function xmlCell(v,idx,row,style=0){let ref=colName(idx)+row;if(typeof v==='number'&&Number.isFinite(v))return `<c r="${ref}" s="${style}"><v>${v}</v></c>`;return `<c r="${ref}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${xesc(v)}</t></is></c>`}
+function sheetXml(rows,headerRow=1){let max=rows.reduce((m,r)=>Math.max(m,r.length),0);let widths=rows[headerRow-1]?.map((_,j)=>j===0?28:j===1?25:20)||[];return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="${headerRow}" topLeftCell="A${headerRow+1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${Array.from({length:max},(_,i)=>`<col min="${i+1}" max="${i+1}" width="${widths[i]||19}" customWidth="1"/>`).join('')}</cols><sheetData>${rows.map((r,i)=>`<row r="${i+1}">${r.map((v,j)=>xmlCell(v,j,i+1,i===headerRow-1?2:i===0?1:0)).join('')}</row>`).join('')}</sheetData><autoFilter ref="A${headerRow}:${colName(max-1)}${Math.max(headerRow+1,rows.length)}"/></worksheet>`}
+const CT=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+const ROOTREL=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+const WORKBOOK=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Выработка" sheetId="1" r:id="rId1"/><sheet name="Параметры" sheetId="2" r:id="rId2"/></sheets></workbook>`;
+const WORKBOOKREL=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+const STYLE=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><color rgb="FF153B57"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF2B5B7A"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFill="1" applyFont="1"/></cellXfs></styleSheet>`;
+// ZIP stored (method 0), UTF-8 filenames. XLSX is a ZIP archive of Open XML files.
+const CRC=[];for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRC[i]=c>>>0}
+function crc32(arr){let c=0xFFFFFFFF;for(const byte of arr)c=CRC[(c^byte)&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function little16(dv,pos,n){dv.setUint16(pos,n,true)}function little32(dv,pos,n){dv.setUint32(pos,n>>>0,true)}
+function zipFiles(files){let parts=[],central=[],offset=0;for(const [name,source] of files){let fn=enc.encode(name),dat=enc.encode(source),crc=crc32(dat);let h=new Uint8Array(30+fn.length),v=new DataView(h.buffer);little32(v,0,0x04034b50);little16(v,4,20);little16(v,6,0x0800);little16(v,8,0);little32(v,14,crc);little32(v,18,dat.length);little32(v,22,dat.length);little16(v,26,fn.length);h.set(fn,30);parts.push(h,dat);
+ let c=new Uint8Array(46+fn.length),w=new DataView(c.buffer);little32(w,0,0x02014b50);little16(w,4,20);little16(w,6,20);little16(w,8,0x0800);little16(w,10,0);little32(w,16,crc);little32(w,20,dat.length);little32(w,24,dat.length);little16(w,28,fn.length);little32(w,42,offset);c.set(fn,46);central.push(c);offset+=h.length+dat.length}
+ let size=central.reduce((s,c)=>s+c.length,0),end=new Uint8Array(22),v=new DataView(end.buffer);little32(v,0,0x06054b50);little16(v,8,central.length);little16(v,10,central.length);little32(v,12,size);little32(v,16,offset);return new Blob([...parts,...central,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+function exportExcel(){if(!formed)return;let r=formed;const flat=[['FIT-MES — Выработка персонала v1.2'],['Период',shortDate(r.p.from)+' — '+shortDate(r.p.to)],[],['Сотрудник','Рабочее место','Производственный этап','Всего часов авторизации','Одиночных часов','Совместных часов','Личная выработка','Бригадная выработка с участием','Ед. измерения','Личная выработка / ч','Бригадная выработка / чел.-ч'],...r.rows.map(x=>[x.name,x.machine,x.stage,Math.round(x.mins/60*100)/100,Math.round(x.soloMins/60*100)/100,Math.round(x.teamMins/60*100)/100,x.personal,x.team,x.unit,x.soloRate===null?'':Math.round(x.soloRate*100)/100,x.brigadeRate===null?'':Math.round(x.brigadeRate*100)/100])];
+ let summary=[['FIT-MES — Параметры отчёта'],['Параметр','Значение'],['Период с',shortDate(r.p.from)],['Период по',shortDate(r.p.to)],['Сотрудник',$('worker').selectedOptions[0].textContent],['Производственный этап',$('stage').selectedOptions[0].textContent],['Рабочее место',$('machine').selectedOptions[0].textContent],['Количество сотрудников',r.people],['Время авторизации, ч',Math.round(r.time/60*100)/100],['Фактический выпуск по единицам',''],...Object.entries(r.unitSums).map(([unit,total])=>['Выпуск: '+unit,total]),['Правило','Бригадный выпуск повторяется для участников только справочно; общая сумма считается по уникальным операциям.'],['Личная производительность','Личный выпуск / часы одиночной авторизации.'],['Бригадная производительность','Уникальный выпуск бригады / сумма часов совместной авторизации всех участников.'],['Оговорка','Бригадная производительность отражает работу коллектива, не личный вклад.'],['Источник','Демонстрационные данные макета FIT-MES.']];
+ let files=[['[Content_Types].xml',CT],['_rels/.rels',ROOTREL],['xl/workbook.xml',WORKBOOK],['xl/_rels/workbook.xml.rels',WORKBOOKREL],['xl/styles.xml',STYLE],['xl/worksheets/sheet1.xml',sheetXml(flat,4)],['xl/worksheets/sheet2.xml',sheetXml(summary,2)]];
+ let blob=zipFiles(files),href=URL.createObjectURL(blob),a=document.createElement('a');a.href=href;a.download=`FIT-MES_Выработка_${r.p.from}_${r.p.to}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),3000)
+}
+init();document.querySelectorAll('[data-quick]').forEach(b=>b.addEventListener('click',()=>setQuick(b.dataset.quick)));['dateFrom','dateTo'].forEach(id=>$(id).addEventListener('change',()=>{lastQuick=null;document.querySelectorAll('[data-quick]').forEach(b=>b.classList.remove('selected'));markDirty()}));$('stage').addEventListener('change',()=>{fillMachine();markDirty()});['worker','machine'].forEach(id=>$(id).addEventListener('change',markDirty));$('build').addEventListener('click',showReport);$('reset').addEventListener('click',reset);$('excel').addEventListener('click',exportExcel);clearReport();
+</script>
+</body>
+</html>
