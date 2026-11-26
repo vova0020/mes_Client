@@ -124,3 +124,24 @@ export interface OperatorProductivityParams {
   stageId?: number;
   search?: string;
 }
+
+// --- Фильтры для статистики персонала (списки для выпадающих списков) ---
+
+export interface OperatorListItem {
+  userId: number;
+  fullName: string;
+  position: string;
+}
+
+export interface StageListItem {
+  stageId: number;
+  stageName: string;
+  finalStage: boolean;
+}
+
+export interface MachineListItem {
+  machineId: number;
+  machineName: string;
+  machineCode: string;
+  loadUnit: string;
+}

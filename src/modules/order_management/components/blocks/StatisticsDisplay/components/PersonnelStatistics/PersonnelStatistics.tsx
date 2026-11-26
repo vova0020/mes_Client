@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import styles from './PersonnelStatistics.module.css';
-import { useOperatorProductivity } from '../../../../../../hooks/statisticsHook';
+import { useOperatorProductivity, useOperators, useStages, useMachines } from '../../../../../../hooks/statisticsHook';
 import { OperatorProductivityRecord } from '../../../../../../api/statisticsApi';
 
 interface FilterState {
   dateFrom: string;
   dateTo: string;
   search: string;
+  operatorId: number | '';
+  machineId: number | '';
+  stageId: number | '';
 }
 
 const quickPeriods = [
@@ -21,15 +24,25 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     dateFrom: '',
     dateTo: '',
     search: '',
+    operatorId: '',
+    machineId: '',
+    stageId: '',
   });
+
+  const { operators } = useOperators();
+  const { stages } = useStages();
+  const { machines } = useMachines();
 
   const params = useMemo(() => {
     const p: Record<string, string | number> = {};
     if (filters.dateFrom) p.startDate = filters.dateFrom;
     if (filters.dateTo) p.endDate = filters.dateTo;
     if (filters.search.trim()) p.search = filters.search.trim();
+    if (filters.operatorId !== '') p.operatorId = filters.operatorId;
+    if (filters.machineId !== '') p.machineId = filters.machineId;
+    if (filters.stageId !== '') p.stageId = filters.stageId;
     return p;
-  }, [filters.dateFrom, filters.dateTo, filters.search]);
+  }, [filters.dateFrom, filters.dateTo, filters.search, filters.operatorId, filters.machineId, filters.stageId]);
 
   const { records, loading, error } = useOperatorProductivity(params);
 
@@ -48,7 +61,7 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   };
 
   const handleReset = () => {
-    setFilters({ dateFrom: '', dateTo: '', search: '' });
+    setFilters({ dateFrom: '', dateTo: '', search: '', operatorId: '', machineId: '', stageId: '' });
   };
 
   const formatSeconds = (s: number) => {
@@ -142,6 +155,72 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="machine-filter">Рабочее место (станок)</label>
+            <select
+              id="machine-filter"
+              className={styles.select}
+              value={filters.machineId}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  machineId: e.target.value === '' ? '' : Number(e.target.value),
+                }))
+              }
+            >
+              <option value="">Все станки</option>
+              {machines.map((m) => (
+                <option key={m.machineId} value={m.machineId}>
+                  {m.machineName} ({m.machineCode})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="stage-filter">Этап производства</label>
+            <select
+              id="stage-filter"
+              className={styles.select}
+              value={filters.stageId}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  stageId: e.target.value === '' ? '' : Number(e.target.value),
+                }))
+              }
+            >
+              <option value="">Все этапы</option>
+              {stages.map((s) => (
+                <option key={s.stageId} value={s.stageId}>
+                  {s.stageName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="operator-filter">Оператор (сотрудник)</label>
+            <select
+              id="operator-filter"
+              className={styles.select}
+              value={filters.operatorId}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  operatorId: e.target.value === '' ? '' : Number(e.target.value),
+                }))
+              }
+            >
+              <option value="">Все операторы</option>
+              {operators.map((o) => (
+                <option key={o.userId} value={o.userId}>
+                  {o.fullName}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className={styles.formGroup}>
@@ -243,9 +322,9 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                   </colgroup>
                   <thead>
                     <tr>
-                      <th colSpan={2}>Оператор</th>
-                      <th className={styles.num}>Рабочее место</th>
+                      <th colSpan={2}>Оператор / Рабочее место</th>
                       <th className={styles.num}>Выпуск</th>
+                      <th className={styles.num}>Ед. изм.</th>
                       <th className={styles.num}>Привязок</th>
                     </tr>
                   </thead>

@@ -11,7 +11,10 @@ import {
   MachineUptimeResponse,
   GetMachineUptimeParams,
   OperatorProductivityParams,
-  OperatorProductivityRecord
+  OperatorProductivityRecord,
+  OperatorListItem,
+  StageListItem,
+  MachineListItem
 } from './types';
 
 
@@ -99,6 +102,24 @@ export const statisticsApi = {
 
     const response = await fetch(`${BASE_URL}/operator-productivity?${searchParams}`);
     if (!response.ok) throw new Error('Failed to fetch operator productivity');
+    return response.json();
+  },
+
+  async getOperators(): Promise<OperatorListItem[]> {
+    const response = await fetch(`${BASE_URL}/operators`);
+    if (!response.ok) throw new Error('Failed to fetch operators');
+    return response.json();
+  },
+
+  async getStages(): Promise<StageListItem[]> {
+    const response = await fetch(`${BASE_URL}/stages`);
+    if (!response.ok) throw new Error('Failed to fetch stages');
+    return response.json();
+  },
+
+  async getMachines(): Promise<MachineListItem[]> {
+    const response = await fetch(`${BASE_URL}/machines`);
+    if (!response.ok) throw new Error('Failed to fetch machines');
     return response.json();
   }
 };

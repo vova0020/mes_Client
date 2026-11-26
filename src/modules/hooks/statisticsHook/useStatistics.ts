@@ -10,7 +10,10 @@ import {
   MachineUptimeStats,
   MachineUptimeResponse,
   OperatorProductivityParams,
-  OperatorProductivityRecord
+  OperatorProductivityRecord,
+  OperatorListItem,
+  StageListItem,
+  MachineListItem
 } from '../../api/statisticsApi';
 
 export const useProductionLines = () => {
@@ -209,4 +212,79 @@ export const useOperatorProductivity = (
   }, [params, refreshKey]);
 
   return { records, loading, error };
+};
+
+export const useOperators = () => {
+  const [operators, setOperators] = useState<OperatorListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOperators = async () => {
+      try {
+        setLoading(true);
+        const data = await statisticsApi.getOperators();
+        setOperators(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch operators');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOperators();
+  }, []);
+
+  return { operators, loading, error };
+};
+
+export const useStages = () => {
+  const [stages, setStages] = useState<StageListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStages = async () => {
+      try {
+        setLoading(true);
+        const data = await statisticsApi.getStages();
+        setStages(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch stages');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStages();
+  }, []);
+
+  return { stages, loading, error };
+};
+
+export const useMachines = () => {
+  const [machines, setMachines] = useState<MachineListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMachines = async () => {
+      try {
+        setLoading(true);
+        const data = await statisticsApi.getMachines();
+        setMachines(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch machines');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMachines();
+  }, []);
+
+  return { machines, loading, error };
 };
