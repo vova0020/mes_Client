@@ -97,10 +97,6 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       {/* Заголовок экрана */}
       <div className={styles.screenTitle}>
         <strong>▥ &nbsp; Выработка персонала</strong>
-        <span>
-          Операторы · индивидуальная и бригадная эффективность{' '}
-          <span className={styles.highlight}>●</span>
-        </span>
       </div>
 
       {/* Панель фильтров */}
@@ -369,10 +365,7 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         )}
       </div>
 
-      <p className={styles.disclaimer}>
-        Источник данных — эндпоинт /statistics/operator-productivity. Время авторизации рассчитывается
-        из суммарных секунд привязки к станкам за выбранный период.
-      </p>
+     
     </div>
   );
 };
