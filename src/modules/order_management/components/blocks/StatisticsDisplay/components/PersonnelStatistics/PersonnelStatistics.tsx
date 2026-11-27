@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import styles from './PersonnelStatistics.module.css';
 import { useOperatorProductivity, useOperators, useStages, useMachines } from '../../../../../../hooks/statisticsHook';
-import { OperatorProductivityRecord } from '../../../../../../api/statisticsApi';
+import { exportPersonnelToExcel } from './utils/exportPersonnelToExcel';
 
 interface FilterState {
   dateFrom: string;
@@ -12,12 +12,7 @@ interface FilterState {
   stageId: number | '';
 }
 
-const quickPeriods = [
-  { id: 'today', label: 'Сегодня' },
-  { id: 'yesterday', label: 'Вчера' },
-  { id: 'week', label: '7 дней' },
-  { id: 'month', label: '30 дней' },
-];
+type QuickPeriod = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
 
 const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [filters, setFilters] = useState<FilterState>({
@@ -28,6 +23,8 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     machineId: '',
     stageId: '',
   });
+
+  const [activePeriod, setActivePeriod] = useState<QuickPeriod | null>(null);
 
   const { operators } = useOperators();
   const { stages } = useStages();
@@ -46,22 +43,31 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const { records, loading, error } = useOperatorProductivity(params);
 
-  const handleQuickPeriod = (id: string) => {
+  const handleQuickPeriod = (id: QuickPeriod) => {
+    if (id === 'custom') {
+      setActivePeriod('custom');
+      return;
+    }
     const today = new Date();
     const end = today.toISOString().split('T')[0];
     let start = end;
     if (id === 'yesterday') {
-      start = new Date(today.getTime() - 24 * 3600 * 1000).toISOString().split('T')[0];
+      const d = new Date(today.getTime() - 24 * 3600 * 1000);
+      start = d.toISOString().split('T')[0];
     } else if (id === 'week') {
-      start = new Date(today.getTime() - 6 * 24 * 3600 * 1000).toISOString().split('T')[0];
+      const d = new Date(today.getTime() - 6 * 24 * 3600 * 1000);
+      start = d.toISOString().split('T')[0];
     } else if (id === 'month') {
-      start = new Date(today.getTime() - 29 * 24 * 3600 * 1000).toISOString().split('T')[0];
+      const d = new Date(today.getTime() - 29 * 24 * 3600 * 1000);
+      start = d.toISOString().split('T')[0];
     }
+    setActivePeriod(id);
     setFilters((f) => ({ ...f, dateFrom: start, dateTo: end }));
   };
 
   const handleReset = () => {
     setFilters({ dateFrom: '', dateTo: '', search: '', operatorId: '', machineId: '', stageId: '' });
+    setActivePeriod(null);
   };
 
   const formatSeconds = (s: number) => {
@@ -74,21 +80,17 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const num = (n: number) =>
     Number(n).toLocaleString('ru-RU', { maximumFractionDigits: 0 });
 
-  // Форматирование номеров операторов (привязка) — несколько номеров через запятую
   const formatOperatorNumbers = (numbers: number[] | undefined) => {
     if (!numbers || numbers.length === 0) return '—';
-    return numbers
-      .map((n) => num(n))
-      .join(', ');
+    return numbers.map((n) => num(n)).join(', ');
   };
 
-  // KPI: суммарное время авторизации
+  // KPI
   const totalAuthorizedSeconds = useMemo(
     () => records.reduce((sum, r) => sum + (r.totalAuthorizedSeconds || 0), 0),
     [records]
   );
 
-  // KPI: фактический выпуск по единицам измерения (по станкам операторов)
   const unitSums = useMemo(() => {
     const sums: Record<string, number> = {};
     records.forEach((rec) => {
@@ -100,146 +102,171 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     return sums;
   }, [records]);
 
+  // Экспорт в Excel
+  const handleExport = useCallback(() => {
+    exportPersonnelToExcel({
+      records,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+      totalAuthorizedSeconds,
+      unitSums,
+    });
+  }, [records, filters.dateFrom, filters.dateTo, totalAuthorizedSeconds, unitSums]);
+
+  const hasFilters =
+    filters.search || filters.operatorId !== '' || filters.machineId !== '' || filters.stageId !== '';
+
   return (
     <div className={styles.container}>
-      {/* Заголовок экрана */}
-      <div className={styles.screenTitle}>
-        <strong>▥ &nbsp; Выработка персонала</strong>
-      </div>
-
-      {/* Панель фильтров */}
-      <section className={styles.filterPanel}>
-        <div className={styles.filterHead}>
-          <b>Фильтры отчёта</b>
-          <small>Данные загружаются автоматически после задания параметров</small>
+      {/* Панель управления — первая строка: период + экспорт */}
+      <div className={styles.controls}>
+        <div className={styles.controlGroup}>
+          <span className={styles.label}>Период:</span>
         </div>
 
-        <div className={styles.filterLayout}>
-          <div className={styles.formGroup}>
-            <label>Период <span className={styles.required}>*</span></label>
-            <div className={styles.periodLine}>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={filters.dateFrom}
-                onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))}
-                aria-label="Период с"
-              />
-              <span className={styles.dash}>—</span>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={filters.dateTo}
-                onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
-                aria-label="Период по"
-              />
-            </div>
-            <div className={styles.quickRow}>
-              {quickPeriods.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={styles.quickBtn}
-                  onClick={() => handleQuickPeriod(p.id)}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className={styles.dateRangeButtons}>
+          <button
+            className={activePeriod === 'today' ? styles.rangeButtonActive : styles.rangeButton}
+            onClick={() => handleQuickPeriod('today')}
+          >
+            Сегодня
+          </button>
+          <button
+            className={activePeriod === 'yesterday' ? styles.rangeButtonActive : styles.rangeButton}
+            onClick={() => handleQuickPeriod('yesterday')}
+          >
+            Вчера
+          </button>
+          <button
+            className={activePeriod === 'week' ? styles.rangeButtonActive : styles.rangeButton}
+            onClick={() => handleQuickPeriod('week')}
+          >
+            Неделя
+          </button>
+          <button
+            className={activePeriod === 'month' ? styles.rangeButtonActive : styles.rangeButton}
+            onClick={() => handleQuickPeriod('month')}
+          >
+            Месяц
+          </button>
+          <button
+            className={activePeriod === 'custom' ? styles.rangeButtonActive : styles.rangeButton}
+            onClick={() => handleQuickPeriod('custom')}
+          >
+            Свои даты
+          </button>
+        </div>
 
-          <div className={styles.formGroup}>
-            <label htmlFor="search">Поиск по ФИО</label>
+        {activePeriod === 'custom' && (
+          <div className={styles.customDateRange}>
             <input
-              id="search"
-              type="text"
+              type="date"
               className={styles.dateInput}
-              style={{ minWidth: 0 }}
-              placeholder="Например, Иванов"
-              value={filters.search}
-              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+              value={filters.dateFrom}
+              onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))}
+            />
+            <span className={styles.dateSeparator}>—</span>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={filters.dateTo}
+              onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
             />
           </div>
+        )}
 
-          <div className={styles.formGroup}>
-            <label htmlFor="machine-filter">Рабочее место (станок)</label>
-            <select
-              id="machine-filter"
-              className={styles.select}
-              value={filters.machineId}
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  machineId: e.target.value === '' ? '' : Number(e.target.value),
-                }))
-              }
-            >
-              <option value="">Все станки</option>
-              {machines.map((m) => (
-                <option key={m.machineId} value={m.machineId}>
-                  {m.machineName} ({m.machineCode})
-                </option>
-              ))}
-            </select>
-          </div>
+        {records.length > 0 && (
+          <button
+            className={styles.exportButton}
+            onClick={handleExport}
+          >
+            📥 Экспорт в Excel
+          </button>
+        )}
+      </div>
 
-          <div className={styles.formGroup}>
-            <label htmlFor="stage-filter">Этап производства</label>
-            <select
-              id="stage-filter"
-              className={styles.select}
-              value={filters.stageId}
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  stageId: e.target.value === '' ? '' : Number(e.target.value),
-                }))
-              }
-            >
-              <option value="">Все этапы</option>
-              {stages.map((s) => (
-                <option key={s.stageId} value={s.stageId}>
-                  {s.stageName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="operator-filter">Оператор (сотрудник)</label>
-            <select
-              id="operator-filter"
-              className={styles.select}
-              value={filters.operatorId}
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  operatorId: e.target.value === '' ? '' : Number(e.target.value),
-                }))
-              }
-            >
-              <option value="">Все операторы</option>
-              {operators.map((o) => (
-                <option key={o.userId} value={o.userId}>
-                  {o.fullName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label>Действия</label>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={handleReset}
-              style={{ marginTop: 4 }}
-            >
-              Сбросить фильтры
-            </button>
-          </div>
+      {/* Панель управления — вторая строка: фильтры */}
+      <div className={styles.controls}>
+        <div className={styles.controlGroup}>
+          <span className={styles.label}>Поиск:</span>
+          <input
+            type="text"
+            className={styles.textInput}
+            placeholder="ФИО оператора"
+            value={filters.search}
+            onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+          />
         </div>
-      </section>
+
+        <div className={styles.controlGroup}>
+          <span className={styles.label}>Этап:</span>
+          <select
+            className={styles.select}
+            value={filters.stageId}
+            onChange={(e) =>
+              setFilters((f) => ({
+                ...f,
+                stageId: e.target.value === '' ? '' : Number(e.target.value),
+              }))
+            }
+          >
+            <option value="">Все этапы</option>
+            {stages.map((s) => (
+              <option key={s.stageId} value={s.stageId}>
+                {s.stageName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.controlGroup}>
+          <span className={styles.label}>Станок:</span>
+          <select
+            className={styles.select}
+            value={filters.machineId}
+            onChange={(e) =>
+              setFilters((f) => ({
+                ...f,
+                machineId: e.target.value === '' ? '' : Number(e.target.value),
+              }))
+            }
+          >
+            <option value="">Все станки</option>
+            {machines.map((m) => (
+              <option key={m.machineId} value={m.machineId}>
+                {m.machineName} ({m.machineCode})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.controlGroup}>
+          <span className={styles.label}>Оператор:</span>
+          <select
+            className={styles.select}
+            value={filters.operatorId}
+            onChange={(e) =>
+              setFilters((f) => ({
+                ...f,
+                operatorId: e.target.value === '' ? '' : Number(e.target.value),
+              }))
+            }
+          >
+            <option value="">Все операторы</option>
+            {operators.map((o) => (
+              <option key={o.userId} value={o.userId}>
+                {o.fullName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {hasFilters && (
+          <button className={styles.resetButton} onClick={handleReset}>
+            ✕ Сбросить
+          </button>
+        )}
+      </div>
 
       {/* Отчёт */}
       <div className={styles.report}>
@@ -260,11 +287,11 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
         {!loading && !error && records.length === 0 && (
           <div className={styles.empty}>
-            <div className={styles.emptyIco}>▤</div>
+            <div className={styles.emptyIco}>📋</div>
             <h3>Данные не найдены</h3>
             <p>
               По выбранным параметрам нет записей о выработке операторов.
-              Попробуйте расширить период или снять поиск по ФИО.
+              Попробуйте расширить период или снять фильтры.
             </p>
             <div className={styles.note}>
               Убедитесь, что в выбранном периоде есть авторизации операторов и подтверждённый выпуск.
@@ -273,20 +300,27 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         )}
 
         {!loading && !error && records.length > 0 && (
-          <div className={styles.result}>
+          <>
+            {/* Период */}
+            <div className={styles.dateRangeInfo}>
+              Период: {filters.dateFrom || '—'} — {filters.dateTo || '—'}
+              {filters.search ? ` · поиск: ${filters.search}` : ''}
+            </div>
+
+            {/* KPI карточки */}
             <div className={styles.kpis}>
               <div className={styles.kpi}>
-                <div className={styles.kpiLabel}>СОТРУДНИКОВ В ОТЧЁТЕ</div>
+                <div className={styles.kpiLabel}>Сотрудников в отчёте</div>
                 <div className={styles.kpiNum}>{records.length}</div>
                 <div className={styles.minor}>С авторизацией за выбранный период</div>
               </div>
               <div className={styles.kpi}>
-                <div className={styles.kpiLabel}>ВРЕМЯ АВТОРИЗАЦИИ</div>
+                <div className={styles.kpiLabel}>Время авторизации</div>
                 <div className={styles.kpiNum}>{formatSeconds(totalAuthorizedSeconds)}</div>
                 <div className={styles.minor}>Сумма времени по операторам</div>
               </div>
               <div className={styles.kpiWide}>
-                <div className={styles.kpiLabel}>ФАКТИЧЕСКИЙ ВЫПУСК ПО ЕДИНИЦАМ ИЗМЕРЕНИЯ</div>
+                <div className={styles.kpiLabel}>Фактический выпуск по единицам измерения</div>
                 <div className={styles.metricSet}>
                   {Object.entries(unitSums).map(([unit, qty]) => (
                     <div key={unit} className={styles.metricPill}>
@@ -301,13 +335,13 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               </div>
             </div>
 
+            {/* Таблица */}
             <div className={styles.tableCard}>
               <div className={styles.tableHead}>
                 <div>
                   <h3>Выработка сотрудников</h3>
                   <div className={styles.note}>
                     Период: {filters.dateFrom || '—'} — {filters.dateTo || '—'}
-                    {filters.search ? ` · поиск: ${filters.search}` : ''}
                   </div>
                 </div>
                 <span className={styles.chip}>
@@ -354,11 +388,17 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                           <td />
                         </tr>
                         {rec.machines.map((m) => (
-                          <tr className={styles.dataRow} key={m.machineId}>
-                            <td className={styles.indent}>{m.machineName || <span className={styles.zero}>—</span>}</td>
-                            <td className={styles.num}>{m.machineCode || <span className={styles.zero}>—</span>}</td>
+                          <tr key={m.machineId}>
+                            <td className={styles.indent}>
+                              {m.machineName || <span className={styles.zero}>—</span>}
+                            </td>
+                            <td className={styles.num}>
+                              {m.machineCode || <span className={styles.zero}>—</span>}
+                            </td>
                             <td className={styles.num}>{num(m.quantityProcessed)}</td>
-                            <td className={styles.num}>{m.loadUnit || <span className={styles.zero}>—</span>}</td>
+                            <td className={styles.num}>
+                              {m.loadUnit || <span className={styles.zero}>—</span>}
+                            </td>
                             <td className={styles.num}>
                               <span className={styles.blueVal}>{formatSeconds(m.authorizedSeconds)}</span>
                             </td>
@@ -381,11 +421,9 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 </span>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
-
-     
     </div>
   );
 };

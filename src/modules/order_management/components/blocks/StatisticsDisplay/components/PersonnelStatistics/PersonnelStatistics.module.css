@@ -1,3 +1,4 @@
+/* ===== Контейнер (как у MachineUptimeStatistics) ===== */
 .container {
   padding: 12px;
   overflow-y: auto;
@@ -11,94 +12,139 @@
   height: 100%;
 }
 
-/* Заголовок экрана */
-.screenTitle {
+/* ===== Панель управления (фильтры) — как controls у станков ===== */
+.controls {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 14px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.screenTitle span {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 400;
-  color: #bfccd9;
-  margin-top: 4px;
-}
-
-.highlight {
-  color: #b04a58;
-  margin-left: 4px;
-}
-
-/* Панель фильтров */
-.filterPanel {
-  background: linear-gradient(145deg, #ffffff, #f0f0f0);
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 16px;
+  gap: 12px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  padding: 12px;
+  border-radius: 6px;
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid #e0e0e0;
 }
 
-.filterHead {
+.controlGroup {
   display: flex;
-  flex-direction: column;
-  padding-bottom: 10px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #d5d5d5;
-  color: #333;
-}
-
-.filterHead small {
-  color: #77889b;
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.filterLayout {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 6px;
 }
 
-.formGroup label {
+.label {
   color: #555;
   font-size: 13px;
   font-weight: 500;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
 }
 
 .required {
-  color: #b04a58;
+  color: #e74c3c;
 }
 
-.periodLine {
+/* Селекты */
+.select {
+  padding: 6px 10px;
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.select:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
+  border-color: #999;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* Текстовый ввод */
+.textInput {
+  padding: 6px 10px;
+  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  color: #333;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-width: 140px;
+}
+
+.textInput::placeholder {
+  color: #aaa;
+}
+
+.textInput:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
+  border-color: #999;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* Кнопки быстрого периода — как dateRangeButtons у станков */
+.dateRangeButtons {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  padding: 3px;
+}
+
+.rangeButton {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #666;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.rangeButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.rangeButtonActive {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  background: linear-gradient(to bottom, #3498db, #2980b9);
+  color: #fff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* Даты */
+.customDateRange {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.dash {
-  color: #999;
-  font-size: 14px;
+  gap: 6px;
 }
 
 .dateInput {
@@ -114,6 +160,7 @@
 }
 
 .dateInput:hover {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
   border-color: #999;
 }
 
@@ -123,129 +170,76 @@
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
-.quickRow {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
+.dateSeparator {
+  color: #999;
 }
 
-.quickBtn {
-  flex: 1;
-  padding: 6px 12px;
+/* Кнопка сброса */
+.resetButton {
+  padding: 6px 14px;
   background: linear-gradient(to bottom, #ffffff, #f9f9f9);
   border: 1px solid #ddd;
   border-radius: 4px;
-  color: #666;
+  color: #e74c3c;
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.quickBtn:hover {
-  border-color: #999;
-  color: #333;
-}
-
-.select {
-  padding: 6px 10px;
-  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  color: #333;
-  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.select:hover {
-  border-color: #999;
+.resetButton:hover {
+  border-color: #e74c3c;
+  background: linear-gradient(to bottom, #fff5f5, #ffeaea);
 }
 
-.select:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid #d5d5d5;
-}
-
-.actionLeft {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.actionRight {
-  display: flex;
-  align-items: center;
-}
-
-.button {
+/* Кнопка экспорта — как exportButton у станков */
+.exportButton {
   padding: 8px 16px;
-  background: linear-gradient(to bottom, #ffffff, #f9f9f9);
-  border: 1px solid #ddd;
+  background: linear-gradient(to bottom, #27ae60, #229954);
+  border: 1px solid #1e8449;
   border-radius: 4px;
-  color: #333;
+  color: #fff;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-  filter: grayscale(0.32);
-}
-
-.primary {
-  background: linear-gradient(to bottom, #3498db, #2980b9);
-  border-color: #1775b7;
-  color: #fff;
-  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  margin-left: auto;
 }
 
-.primary:hover:not(:disabled) {
-  background: linear-gradient(to bottom, #2980b9, #1775b7);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
-}
-
-.excel {
-  background: linear-gradient(to bottom, #27ae60, #229954);
-  border-color: #1e8449;
-  color: #fff;
-  font-weight: 600;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-}
-
-.excel:hover:not(:disabled) {
+.exportButton:hover {
   background: linear-gradient(to bottom, #229954, #1e8449);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
 }
 
-.statusHint {
-  color: #77889b;
-  font-size: 12px;
+.exportButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Отчёт */
-.report {
-  flex: 1;
+.exportButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
+/* ===== Период (как dateRange у станков) ===== */
+.dateRangeInfo {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== Пустое состояние ===== */
 .empty {
   display: flex;
   flex-direction: column;
@@ -287,6 +281,7 @@
   font-size: 12px;
 }
 
+/* ===== KPI карточки (как chartCard у станков) ===== */
 .kpis {
   display: grid;
   grid-template-columns: 1fr 1fr 2fr;
@@ -321,6 +316,7 @@
   letter-spacing: 0.5px;
   margin-bottom: 6px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
 }
 
 .kpiNum {
@@ -336,6 +332,7 @@
   font-size: 12px;
 }
 
+/* Метрики выпуска */
 .metricSet {
   display: flex;
   flex-wrap: wrap;
@@ -363,7 +360,7 @@
   font-size: 11px;
 }
 
-/* Таблица */
+/* ===== Таблица (как chartCard у станков) ===== */
 .tableCard {
   background: linear-gradient(145deg, #ffffff, #f0f0f0);
   border: 1px solid #e0e0e0;
@@ -483,54 +480,33 @@
   gap: 8px;
 }
 
-.warning {
-  margin-top: 12px;
-  padding: 12px 14px;
-  background: #fdf4e8;
-  border: 1px solid #f0d8a8;
-  border-radius: 6px;
-  color: #8a5a1f;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.warning b {
-  color: #6b4413;
-}
-
-.disclaimer {
-  margin-top: 14px;
-  color: #77889b;
-  font-size: 11px;
-  text-align: center;
-  line-height: 1.5;
-}
-
+/* ===== Адаптивность ===== */
 @media (max-width: 1100px) {
-  .filterLayout {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .kpis {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 700px) {
-  .filterLayout {
-    grid-template-columns: 1fr;
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
   }
 
-  .kpis {
-    grid-template-columns: 1fr;
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .actionLeft,
-  .actionRight {
+  .dateRangeButtons {
+    flex-direction: column;
+  }
+
+  .rangeButton,
+  .rangeButtonActive {
     width: 100%;
   }
 
-  .actionRight {
-    justify-content: flex-end;
+  .kpis {
+    grid-template-columns: 1fr;
   }
 }
