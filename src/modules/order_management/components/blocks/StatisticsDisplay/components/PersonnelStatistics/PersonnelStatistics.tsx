@@ -74,6 +74,14 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const num = (n: number) =>
     Number(n).toLocaleString('ru-RU', { maximumFractionDigits: 0 });
 
+  // Форматирование номеров операторов (привязка) — несколько номеров через запятую
+  const formatOperatorNumbers = (numbers: number[] | undefined) => {
+    if (!numbers || numbers.length === 0) return '—';
+    return numbers
+      .map((n) => num(n))
+      .join(', ');
+  };
+
   // KPI: суммарное время авторизации
   const totalAuthorizedSeconds = useMemo(
     () => records.reduce((sum, r) => sum + (r.totalAuthorizedSeconds || 0), 0),
@@ -321,7 +329,7 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                       <th colSpan={2}>Оператор / Рабочее место</th>
                       <th className={styles.num}>Выпуск</th>
                       <th className={styles.num}>Ед. изм.</th>
-                      <th className={styles.num}>Привязок</th>
+                      <th className={styles.num}>№</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -345,7 +353,7 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                             <td className={styles.num}>{m.machineCode}</td>
                             <td className={styles.num}>{num(m.quantityProcessed)}</td>
                             <td className={styles.num}>{m.loadUnit}</td>
-                            <td className={styles.num}>{m.bindingCount}</td>
+                            <td className={styles.num}>{formatOperatorNumbers(m.operatorNumbers)}</td>
                           </tr>
                         ))}
                       </React.Fragment>
