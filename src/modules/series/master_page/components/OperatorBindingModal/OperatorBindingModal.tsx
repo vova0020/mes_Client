@@ -1,276 +1,289 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './OperatorBindingModal.module.css';
+import useOperatorBindingMaster from '../../../../hooks/masterPage/useOperatorBindingMaster';
+import type {
+  MasterSegment,
+  MachineWithOperators,
+  BoundOperator,
+  OperatorInfo,
+} from '../../../../api/masterPage/operatorBindingMasterService';
 
-// Этапы производства (демонстрационные данные)
-interface Stage {
-  id: string;
-  name: string;
-}
+// ===== Вспомогательные функции =====
 
-// Станок
-interface Machine {
-  id: string;
-  name: string;
-  code: string;
-  stage: string;
-  active: boolean;
-}
+/** Форматирует ISO-дату в «ЧЧ:ММ» */
+const formatBoundAt = (iso: string): string => {
+  try {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  } catch {
+    return '—';
+  }
+};
 
-// Сотрудник (оператор)
-interface Employee {
-  id: number;
-  name: string;
-  machine: string | null;
-  position: number | null;
-  start: string | null;
-  prior: number;
-}
+/** Статус станка → человекочитаемый текст */
+const statusLabel = (s: string): string => {
+  switch (s) {
+    case 'ACTIVE':
+      return 'Активен';
+    case 'INACTIVE':
+      return 'Неактивен';
+    case 'MAINTENANCE':
+      return 'Обслуживание';
+    case 'BROKEN':
+      return 'Сломан';
+    default:
+      return s;
+  }
+};
 
-const defaultStages: Stage[] = [
-  { id: 'edge', name: 'Кромкооблицовка' },
-  { id: 'drill', name: 'Присадка' },
-  { id: 'packing', name: 'Упаковка' },
-];
+/** Статус станка → активен ли */
+const isActive = (s: string): boolean => s === 'ACTIVE';
 
-const defaultMachines: Machine[] = [
-  { id: 'm1', name: 'Кромка №1', code: 'P311', stage: 'edge', active: true },
-  { id: 'm2', name: 'Кромка №2', code: 'P312', stage: 'edge', active: true },
-  { id: 'm3', name: 'Piramida', code: 'P313', stage: 'edge', active: false },
-  { id: 'm4', name: 'Двухсторонний IMAI ALCP0530', code: 'P314', stage: 'edge', active: false },
-  { id: 'm5', name: 'SKIPPER №2', code: 'P411', stage: 'drill', active: true },
-  { id: 'm6', name: 'Валерий 3000', code: 'P412', stage: 'drill', active: false },
-  { id: 'm7', name: 'Упаковка готовой продукции', code: 'P511', stage: 'packing', active: true },
-];
-
-const defaultEmployees: Employee[] = [
-  { id: 1, name: 'Иванов Иван', machine: 'm1', position: 1, start: '08:10', prior: 0 },
-  { id: 2, name: 'Петров Сергей', machine: 'm1', position: 2, start: '08:15', prior: 0 },
-  { id: 3, name: 'Сидоров Алексей', machine: 'm2', position: 1, start: '08:05', prior: 0 },
-  { id: 4, name: 'Кузнецов Дмитрий', machine: 'm2', position: 2, start: '09:00', prior: 35 },
-  { id: 5, name: 'Смирнов Андрей', machine: 'm5', position: 1, start: '07:55', prior: 0 },
-  { id: 6, name: 'Орлов Максим', machine: 'm7', position: 1, start: '08:20', prior: 0 },
-  { id: 7, name: 'Фёдоров Николай', machine: 'm7', position: 2, start: '08:35', prior: 0 },
-  { id: 8, name: 'Зайцев Павел', machine: 'm7', position: 3, start: '09:10', prior: 0 },
-  { id: 9, name: 'Белов Виктор', machine: 'm7', position: 4, start: '09:15', prior: 0 },
-  { id: 10, name: 'Морозов Игорь', machine: 'm7', position: 5, start: '09:15', prior: 0 },
-  { id: 11, name: 'Васильев Роман', machine: null, position: null, start: null, prior: 170 },
-  { id: 12, name: 'Соколов Артём', machine: null, position: null, start: null, prior: 0 },
-  { id: 13, name: 'Волков Денис', machine: null, position: null, start: null, prior: 215 },
-  { id: 14, name: 'Новиков Егор', machine: null, position: null, start: null, prior: 0 },
-  { id: 15, name: 'Попов Михаил', machine: null, position: null, start: null, prior: 80 },
-  { id: 16, name: 'Лебедев Олег', machine: null, position: null, start: null, prior: 0 },
-  { id: 17, name: 'Ковалёв Антон', machine: null, position: null, start: null, prior: 0 },
-  { id: 18, name: 'Богданов Кирилл', machine: null, position: null, start: null, prior: 0 },
-];
+// ===== Компонент =====
 
 interface OperatorBindingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const nowMinutes = 14 * 60 + 40;
-
-const mins = (t: string | null): number => {
-  if (!t) return 0;
-  const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
-};
-
-const formatMins = (m: number): string =>
-  `${Math.floor(m / 60)} ч ${String(m % 60).padStart(2, '0')} мин`;
-
-const currentDuration = (e: Employee): number =>
-  e.machine ? Math.max(0, nowMinutes - mins(e.start)) : 0;
-
-const dayDuration = (e: Employee): number => e.prior + currentDuration(e);
-
-const formatTime = (m: number): string =>
-  `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-
 const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onClose }) => {
-  const [employees, setEmployees] = useState<Employee[]>(() =>
-    defaultEmployees.map((e) => ({ ...e }))
-  );
-  const [masterStage, setMasterStage] = useState<string>('edge');
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // --- Хук с API ---
+  const {
+    segments,
+    segmentsLoading,
+    segmentsError,
+    loadSegments,
+    machines,
+    machinesLoading,
+    machinesError,
+    loadMachines,
+    operators,
+    operatorsLoading,
+    loadOperators,
+    handleBind,
+    handleUnbind,
+    handleChangeNumber,
+    actionLoading,
+  } = useOperatorBindingMaster();
+
+  // --- Локальное состояние UI ---
+  const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+
+  // Суб-модалки
   const [subModalMode, setSubModalMode] = useState<'assign' | 'detach' | 'num' | null>(null);
-  const [subModalMachine, setSubModalMachine] = useState<string | null>(null);
-  const [subModalEmployee, setSubModalEmployee] = useState<number | null>(null);
+  const [subModalMachineId, setSubModalMachineId] = useState<number | null>(null);
+  const [subModalOperatorId, setSubModalOperatorId] = useState<number | null>(null);
   const [subModalSearch, setSubModalSearch] = useState('');
   const [newPosition, setNewPosition] = useState('');
-  const [toast, setToast] = useState<string | null>(null);
 
-  // Сброс состояния при открытии
+  // Тост
+  const [toast, setToast] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
+  // ===== Инициализация при открытии =====
   useEffect(() => {
     if (isOpen) {
-      setEmployees(defaultEmployees.map((e) => ({ ...e })));
-      setMasterStage('edge');
+      // Сброс состояния
       setExpanded({});
       setSubModalMode(null);
-      setSubModalMachine(null);
-      setSubModalEmployee(null);
+      setSubModalMachineId(null);
+      setSubModalOperatorId(null);
       setSubModalSearch('');
       setNewPosition('');
       setToast(null);
+
+      // Загружаем участки
+      loadSegments();
     }
-  }, [isOpen]);
+  }, [isOpen, loadSegments]);
+
+  // При загрузке участков — выбираем первый или из localStorage
+  useEffect(() => {
+    if (segments.length === 0) return;
+
+    // Пытаемся взять участок из localStorage
+    let stageFromStorage: number | null = null;
+    try {
+      const raw = localStorage.getItem('selectedStage');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        stageFromStorage = parsed?.id || null;
+      }
+    } catch {
+      // ignore
+    }
+
+    // Если участок из localStorage есть в списке — выбираем его, иначе первый
+    if (stageFromStorage && segments.some((s) => s.stageId === stageFromStorage)) {
+      setSelectedStageId(stageFromStorage);
+    } else {
+      setSelectedStageId(segments[0].stageId);
+    }
+  }, [segments]);
+
+  // При смене участка — загружаем станки
+  useEffect(() => {
+    if (selectedStageId !== null) {
+      loadMachines(selectedStageId);
+    }
+  }, [selectedStageId, loadMachines]);
 
   // Автоскрытие тоста
   useEffect(() => {
     if (toast) {
-      const timer = setTimeout(() => setToast(null), 2700);
+      const timer = setTimeout(() => setToast(null), 3000);
       return () => clearTimeout(timer);
     }
   }, [toast]);
 
-  if (!isOpen) return null;
-
-  const machineById = (id: string | null): Machine | undefined =>
-    id ? defaultMachines.find((m) => m.id === id) : undefined;
-
-  const employeeById = (id: number): Employee | undefined =>
-    employees.find((e) => e.id === id);
-
-  const currentMachines = defaultMachines.filter((m) => m.stage === masterStage);
-  const countAssigned = employees.filter(
-    (e) => e.machine && currentMachines.some((m) => m.id === e.machine)
-  ).length;
-
-  const firstFree = (machineId: string): number => {
-    const used = new Set(
-      employees.filter((e) => e.machine === machineId).map((e) => e.position)
-    );
-    let n = 1;
-    while (used.has(n)) n++;
-    return n;
-  };
-
-  const showToast = (msg: string) => {
+  // ===== Показать тост =====
+  const showToast = useCallback((msg: string, type: 'success' | 'error' = 'success') => {
     setToast(msg);
-  };
+    setToastType(type);
+  }, []);
 
-  const assignSelected = () => {
-    if (!subModalEmployee || !subModalMachine) return;
-    setEmployees((prev) => {
-      const next = prev.map((e) => ({ ...e }));
-      const emp = next.find((e) => e.id === subModalEmployee);
-      if (!emp) return prev;
-      // Если уже привязан — сохраняем время
-      if (emp.machine) {
-        emp.prior += currentDuration(emp);
-      }
-      const newNumber = firstFree(subModalMachine);
-      emp.machine = subModalMachine;
-      emp.position = newNumber;
-      emp.start = formatTime(nowMinutes);
-      return next;
-    });
-    showToast('Оператор назначен на рабочее место');
-    closeSubModal();
-  };
-
-  const confirmDetach = () => {
-    if (!subModalEmployee) return;
-    setEmployees((prev) => {
-      const next = prev.map((e) => ({ ...e }));
-      const emp = next.find((e) => e.id === subModalEmployee);
-      if (!emp) return prev;
-      emp.prior += currentDuration(emp);
-      emp.machine = null;
-      emp.position = null;
-      emp.start = null;
-      return next;
-    });
-    showToast('Привязка завершена');
-    closeSubModal();
-  };
-
-  const confirmNumber = () => {
-    if (!subModalEmployee) return;
-    const next = parseInt(newPosition, 10);
-    if (isNaN(next) || next <= 0) return;
-    setEmployees((prev) => {
-      const updated = prev.map((e) => ({ ...e }));
-      const emp = updated.find((e) => e.id === subModalEmployee);
-      if (!emp) return prev;
-      const occupant = updated.find(
-        (x) => x.machine === emp.machine && x.position === next && x.id !== emp.id
-      );
-      if (occupant) occupant.position = emp.position;
-      emp.position = next;
-      return updated;
-    });
-    showToast('Номер оператора изменён');
-    closeSubModal();
-  };
-
-  const closeSubModal = () => {
+  // ===== Закрыть суб-модалку =====
+  const closeSubModal = useCallback(() => {
     setSubModalMode(null);
-    setSubModalEmployee(null);
-    setSubModalMachine(null);
+    setSubModalOperatorId(null);
+    setSubModalMachineId(null);
     setSubModalSearch('');
     setNewPosition('');
-  };
+  }, []);
 
-  const openAssign = (machineId: string) => {
-    setSubModalMode('assign');
-    setSubModalMachine(machineId);
-    setSubModalEmployee(null);
-    setSubModalSearch('');
-  };
+  // ===== Открыть суб-модалку назначения =====
+  const openAssign = useCallback(
+    (machineId: number) => {
+      setSubModalMode('assign');
+      setSubModalMachineId(machineId);
+      setSubModalOperatorId(null);
+      setSubModalSearch('');
+      // Загружаем список операторов
+      loadOperators();
+    },
+    [loadOperators]
+  );
 
-  const openDetach = (id: number) => {
+  // ===== Открыть суб-модалку открепления =====
+  const openDetach = useCallback((operatorId: number, machineId: number) => {
     setSubModalMode('detach');
-    setSubModalEmployee(id);
+    setSubModalOperatorId(operatorId);
+    setSubModalMachineId(machineId);
+  }, []);
+
+  // ===== Открыть суб-модалку смены номера =====
+  const openChangeNum = useCallback((operatorId: number, machineId: number, currentNumber: number) => {
+    setSubModalMode('num');
+    setSubModalOperatorId(operatorId);
+    setSubModalMachineId(machineId);
+    setNewPosition(String(currentNumber));
+  }, []);
+
+  // ===== Назначить оператора =====
+  const assignSelected = useCallback(async () => {
+    if (!subModalOperatorId || !subModalMachineId) return;
+    const result = await handleBind(subModalOperatorId, subModalMachineId);
+    if (result.success) {
+      showToast(result.message || 'Оператор назначен на рабочее место');
+    } else {
+      showToast(result.message || 'Ошибка при назначении', 'error');
+    }
+    closeSubModal();
+  }, [subModalOperatorId, subModalMachineId, handleBind, showToast, closeSubModal]);
+
+  // ===== Открепить оператора =====
+  const confirmDetach = useCallback(async () => {
+    if (!subModalOperatorId || !subModalMachineId) return;
+    const result = await handleUnbind(subModalOperatorId, subModalMachineId);
+    if (result.success) {
+      showToast(result.message || 'Оператор откреплён');
+    } else {
+      showToast(result.message || 'Ошибка при откреплении', 'error');
+    }
+    closeSubModal();
+  }, [subModalOperatorId, subModalMachineId, handleUnbind, showToast, closeSubModal]);
+
+  // ===== Сменить номер =====
+  const confirmNumber = useCallback(async () => {
+    if (!subModalOperatorId || !subModalMachineId) return;
+    const num = parseInt(newPosition, 10);
+    if (isNaN(num) || num <= 0) return;
+    const result = await handleChangeNumber(subModalOperatorId, subModalMachineId, num);
+    if (result.success) {
+      showToast(result.message || 'Номер оператора изменён');
+    } else {
+      showToast(result.message || 'Ошибка при смене номера', 'error');
+    }
+    closeSubModal();
+  }, [subModalOperatorId, subModalMachineId, newPosition, handleChangeNumber, showToast, closeSubModal]);
+
+  // ===== Ранний выход =====
+  if (!isOpen) return null;
+
+  // ===== Подсчёт назначенных =====
+  const countAssigned = machines.reduce((sum, m) => sum + m.operatorsCount, 0);
+
+  // Текущий участок
+  const currentSegment = segments.find((s) => s.stageId === selectedStageId);
+
+  // ===== Найти оператора в списке привязанных к станку =====
+  const findBoundOperator = (machineId: number, operatorId: number): BoundOperator | undefined => {
+    const machine = machines.find((m) => m.machineId === machineId);
+    return machine?.operators.find((op) => op.userId === operatorId);
   };
 
-  const openChangeNum = (id: number) => {
-    setSubModalMode('num');
-    setSubModalEmployee(id);
-    const e = employeeById(id);
-    setNewPosition(e?.position ? String(e.position) : '');
-  };
+  // ===== Найти станок по ID =====
+  const findMachine = (machineId: number): MachineWithOperators | undefined =>
+    machines.find((m) => m.machineId === machineId);
 
   // ===== Рендер карточки станка =====
-  const renderStationCard = (m: Machine) => {
-    const ops = employees
-      .filter((e) => e.machine === m.id)
-      .sort((a, b) => (a.position || 0) - (b.position || 0));
-    const maxShown = expanded[m.id] ? ops.length : Math.min(3, ops.length);
+  const renderStationCard = (m: MachineWithOperators) => {
+    const ops = [...m.operators].sort((a, b) => a.operatorNumber - b.operatorNumber);
+    const maxShown = expanded[m.machineId] ? ops.length : Math.min(3, ops.length);
     const shown = ops.slice(0, maxShown);
+    const active = isActive(m.status);
 
     return (
-      <div key={m.id} className={`${styles.station} ${!m.active ? styles.stationInactive : ''}`}>
-        <div className={`${styles.stationTop} ${!m.active ? styles.stationTopInactive : ''}`}>
+      <div
+        key={m.machineId}
+        className={`${styles.station} ${!active ? styles.stationInactive : ''}`}
+      >
+        <div className={`${styles.stationTop} ${!active ? styles.stationTopInactive : ''}`}>
           <div>
-            <div className={styles.stationName}>{m.name}</div>
+            <div className={styles.stationName}>{m.machineName}</div>
             <div className={styles.stationSubline}>
-              <span className={styles.stationCode}>
-                Код: <strong>{m.code}</strong>
-              </span>
-              <small>Операторов: {ops.length}</small>
+              {m.machineCode && (
+                <span className={styles.stationCode}>
+                  Код: <strong>{m.machineCode}</strong>
+                </span>
+              )}
+              <small>Операторов: {m.operatorsCount}</small>
             </div>
           </div>
-          <span className={`${styles.tag} ${m.active ? styles.tagOn : styles.tagOff}`}>
-            {m.active ? 'Активен' : 'Неактивен'}
+          <span className={`${styles.tag} ${active ? styles.tagOn : styles.tagOff}`}>
+            {statusLabel(m.status)}
           </span>
         </div>
         <div className={styles.stationBody}>
-          {shown.map((e) => (
-            <div key={e.id} className={styles.opLine}>
+          {shown.map((op) => (
+            <div key={op.userId} className={styles.opLine}>
               <button
                 className={styles.numPill}
                 title="Изменить номер"
-                onClick={() => openChangeNum(e.id)}
+                onClick={() => openChangeNum(op.userId, m.machineId, op.operatorNumber)}
               >
-                № {e.position} ▾
+                № {op.operatorNumber} ▾
               </button>
-              <span className={styles.opName}>{e.name}</span>
-              <span className={styles.opTime}>с {e.start}</span>
+              <span className={styles.opName}>
+                {op.lastName} {op.firstName}
+              </span>
+              {op.position && <span className={styles.opPosition}>{op.position}</span>}
+              <span className={styles.opTime}>с {formatBoundAt(op.boundAt)}</span>
               <button
                 className={`${styles.iconBtn} ${styles.iconBtnDel}`}
                 title="Открепить"
-                onClick={() => openDetach(e.id)}
+                onClick={() => openDetach(op.userId, m.machineId)}
               >
                 ✕
               </button>
@@ -282,14 +295,25 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
           {ops.length > 3 && (
             <button
               className={styles.expandBtn}
-              onClick={() => setExpanded((p) => ({ ...p, [m.id]: !p[m.id] }))}
+              onClick={() =>
+                setExpanded((p) => ({ ...p, [m.machineId]: !p[m.machineId] }))
+              }
             >
-              {expanded[m.id] ? 'Свернуть' : `Показать ещё ${ops.length - 3} операторов`} ▾
+              {expanded[m.machineId]
+                ? 'Свернуть'
+                : `Показать ещё ${ops.length - 3} операторов`}{' '}
+              ▾
             </button>
           )}
           <div className={styles.addRow}>
-            <span className={styles.addRowHint}>Номера назначаются по свободным позициям</span>
-            <button className={styles.assignBtn} onClick={() => openAssign(m.id)}>
+            <span className={styles.addRowHint}>
+              Номера назначаются по свободным позициям
+            </span>
+            <button
+              className={styles.assignBtn}
+              onClick={() => openAssign(m.machineId)}
+              disabled={actionLoading}
+            >
               ＋ Назначить оператора
             </button>
           </div>
@@ -300,20 +324,28 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
 
   // ===== Рендер суб-модалки назначения =====
   const renderAssignSubModal = () => {
-    if (subModalMode !== 'assign' || !subModalMachine) return null;
-    const m = machineById(subModalMachine);
-    const current = subModalEmployee ? employeeById(subModalEmployee) : undefined;
-    const prev = current ? machineById(current.machine) : undefined;
-    const filtered = employees
+    if (subModalMode !== 'assign' || subModalMachineId === null) return null;
+    const m = findMachine(subModalMachineId);
+    const selectedOp = subModalOperatorId
+      ? operators.find((o) => o.userId === subModalOperatorId)
+      : undefined;
+    const prevMachine = selectedOp?.currentBinding
+      ? selectedOp.currentBinding.machineName
+      : undefined;
+
+    // Фильтруем операторов: исключаем уже привязанных к этому станку
+    const filtered = operators
       .filter(
-        (e) =>
-          e.name.toLowerCase().includes(subModalSearch.toLowerCase()) &&
-          e.machine !== subModalMachine
+        (o) =>
+          `${o.lastName} ${o.firstName}`
+            .toLowerCase()
+            .includes(subModalSearch.toLowerCase()) &&
+          !(o.currentBinding && o.currentBinding.machineId === subModalMachineId)
       )
       .sort(
         (a, b) =>
-          Number(Boolean(a.machine)) - Number(Boolean(b.machine)) ||
-          a.name.localeCompare(b.name, 'ru')
+          Number(Boolean(a.isBound)) - Number(Boolean(b.isBound)) ||
+          `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'ru')
       );
 
     return (
@@ -321,15 +353,19 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
         <div className={styles.subModalBox} onClick={(e) => e.stopPropagation()}>
           <div className={styles.subModalHeader}>
             <span>
-              Назначить оператора · {m?.name}
-              <span className={styles.subModalCode}>Код: {m?.code}</span>
+              Назначить оператора · {m?.machineName}
+              {m?.machineCode && (
+                <span className={styles.subModalCode}>Код: {m.machineCode}</span>
+              )}
             </span>
             <button className={styles.subModalClose} onClick={closeSubModal}>
               ✕
             </button>
           </div>
           <div className={styles.subModalBody}>
-            <p className={styles.muted}>Все учётные записи с глобальной ролью «Оператор»</p>
+            <p className={styles.muted}>
+              Все учётные записи с глобальной ролью «Оператор»
+            </p>
             <div className={styles.searchBox}>
               <span>⌕</span>
               <input
@@ -339,36 +375,54 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
                 autoFocus
               />
             </div>
-            <div className={styles.resultList}>
-              {filtered.map((e) => {
-                const mm = machineById(e.machine);
-                return (
-                  <div
-                    key={e.id}
-                    className={`${styles.person} ${subModalEmployee === e.id ? styles.personActive : ''}`}
-                    onClick={() => setSubModalEmployee(e.id)}
-                  >
-                    <div>
-                      <b>{e.name}</b>
-                      <small>{mm ? `Привязан: ${mm.name}` : 'Не привязан'}</small>
+            {operatorsLoading ? (
+              <div className={styles.emptyList}>Загрузка операторов...</div>
+            ) : (
+              <div className={styles.resultList}>
+                {filtered.map((o) => {
+                  const fullName = `${o.lastName} ${o.firstName}`;
+                  return (
+                    <div
+                      key={o.userId}
+                      className={`${styles.person} ${
+                        subModalOperatorId === o.userId ? styles.personActive : ''
+                      }`}
+                      onClick={() => setSubModalOperatorId(o.userId)}
+                    >
+                      <div>
+                        <b>{fullName}</b>
+                        {o.position && (
+                          <small style={{ display: 'block', color: '#888' }}>
+                            {o.position}
+                          </small>
+                        )}
+                        <small>
+                          {o.isBound && o.currentBinding
+                            ? `Привязан: ${o.currentBinding.machineName}`
+                            : 'Не привязан'}
+                        </small>
+                      </div>
+                      <span
+                        className={`${styles.tag} ${
+                          o.isBound ? styles.tagOff : styles.tagOn
+                        }`}
+                      >
+                        {o.isBound ? 'Перевод' : 'Свободен'}
+                      </span>
                     </div>
-                    <span className={`${styles.tag} ${mm ? styles.tagOff : styles.tagOn}`}>
-                      {mm ? 'Перевод' : 'Свободен'}
-                    </span>
-                  </div>
-                );
-              })}
-              {filtered.length === 0 && (
-                <div className={styles.emptyList}>Совпадений не найдено</div>
-              )}
-            </div>
-            {current && prev && (
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <div className={styles.emptyList}>Совпадений не найдено</div>
+                )}
+              </div>
+            )}
+            {selectedOp && prevMachine && (
               <div className={styles.warning}>
-                <b>Оператор уже привязан:</b> {prev.name} (
-                {defaultStages.find((s) => s.id === prev.stage)?.name}).
+                <b>Оператор уже привязан:</b> {prevMachine}.
                 <br />
                 После подтверждения прежняя привязка завершится, начнётся новая на станке «
-                {m?.name}».
+                {m?.machineName}».
               </div>
             )}
           </div>
@@ -378,10 +432,14 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
             </button>
             <button
               className={styles.btnPrimary}
-              disabled={!subModalEmployee}
+              disabled={!subModalOperatorId || actionLoading}
               onClick={assignSelected}
             >
-              {prev ? 'Перевести' : 'Назначить'}
+              {actionLoading
+                ? 'Назначение...'
+                : prevMachine
+                ? 'Перевести'
+                : 'Назначить'}
             </button>
           </div>
         </div>
@@ -391,10 +449,14 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
 
   // ===== Рендер суб-модалки открепления =====
   const renderDetachSubModal = () => {
-    if (subModalMode !== 'detach' || !subModalEmployee) return null;
-    const e = employeeById(subModalEmployee);
-    if (!e) return null;
-    const m = e.machine ? machineById(e.machine) : undefined;
+    if (subModalMode !== 'detach' || subModalOperatorId === null || subModalMachineId === null)
+      return null;
+
+    const op = findBoundOperator(subModalMachineId, subModalOperatorId);
+    const m = findMachine(subModalMachineId);
+
+    if (!op) return null;
+
     return (
       <div className={styles.subModalOverlay} onClick={closeSubModal}>
         <div className={styles.subModalBox} onClick={(ev) => ev.stopPropagation()}>
@@ -405,8 +467,11 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
             </button>
           </div>
           <div className={styles.subModalBody}>
-            <b>{e.name}</b>
-            <p>Рабочее место: {m?.name}</p>
+            <b>
+              {op.lastName} {op.firstName}
+            </b>
+            {op.position && <p style={{ color: '#888', margin: '4px 0' }}>{op.position}</p>}
+            <p>Рабочее место: {m?.machineName}</p>
             <p className={styles.muted}>
               Текущая авторизация будет завершена. Остальные операторы сохранят свои номера.
             </p>
@@ -415,8 +480,12 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
             <button className={styles.btnGray} onClick={closeSubModal}>
               Отмена
             </button>
-            <button className={styles.btnRed} onClick={confirmDetach}>
-              Открепить
+            <button
+              className={styles.btnRed}
+              onClick={confirmDetach}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Открепление...' : 'Открепить'}
             </button>
           </div>
         </div>
@@ -426,8 +495,11 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
 
   // ===== Рендер суб-модалки изменения номера =====
   const renderNumSubModal = () => {
-    if (subModalMode !== 'num' || !subModalEmployee) return null;
-    const e = employeeById(subModalEmployee);
+    if (subModalMode !== 'num' || subModalOperatorId === null || subModalMachineId === null)
+      return null;
+
+    const op = findBoundOperator(subModalMachineId, subModalOperatorId);
+
     return (
       <div className={styles.subModalOverlay} onClick={closeSubModal}>
         <div className={styles.subModalBox} onClick={(ev) => ev.stopPropagation()}>
@@ -439,7 +511,11 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
           </div>
           <div className={styles.subModalBody}>
             <p>
-              Новый номер для <b>{e?.name}</b>:
+              Новый номер для{' '}
+              <b>
+                {op ? `${op.lastName} ${op.firstName}` : 'оператора'}
+              </b>
+              :
             </p>
             <input
               className={styles.numInput}
@@ -455,16 +531,18 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
             <button className={styles.btnGray} onClick={closeSubModal}>
               Отмена
             </button>
-            <button className={styles.btnPrimary} onClick={confirmNumber}>
-              Сохранить
+            <button
+              className={styles.btnPrimary}
+              onClick={confirmNumber}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Сохранение...' : 'Сохранить'}
             </button>
           </div>
         </div>
       </div>
     );
   };
-
-  const stage = defaultStages.find((s) => s.id === masterStage);
 
   return (
     <>
@@ -490,18 +568,27 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
           {/* Панель управления */}
           <div className={styles.controlBar}>
             <label className={styles.stageSelector}>
-              <span className={styles.stageSelectorLabel}>Этап:</span>
-              <select value={masterStage} onChange={(e) => setMasterStage(e.target.value)}>
-                {defaultStages.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+              <span className={styles.stageSelectorLabel}>Участок:</span>
+              {segmentsLoading ? (
+                <span style={{ fontSize: 13, color: '#888' }}>Загрузка...</span>
+              ) : segmentsError ? (
+                <span style={{ fontSize: 13, color: '#e74c3c' }}>{segmentsError}</span>
+              ) : (
+                <select
+                  value={selectedStageId ?? ''}
+                  onChange={(e) => setSelectedStageId(Number(e.target.value))}
+                >
+                  {segments.map((s) => (
+                    <option key={s.stageId} value={s.stageId}>
+                      {s.stageName}
+                    </option>
+                  ))}
+                </select>
+              )}
             </label>
             <div className={styles.stageSummary}>
               <div className={styles.miniStat}>
-                <b>{currentMachines.length}</b> рабочих мест
+                <b>{machines.length}</b> рабочих мест
               </div>
               <div className={styles.miniStat}>
                 <b>{countAssigned}</b> назначено
@@ -512,16 +599,34 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
           {/* Контент — карточки станков */}
           <div className={styles.content}>
             <div className={styles.overline}>
-              РАБОЧИЕ МЕСТА ЭТАПА «{stage?.name.toUpperCase()}»
+              РАБОЧИЕ МЕСТА УЧАСТКА «{currentSegment?.stageName?.toUpperCase() || '...'}»
             </div>
-            <div className={styles.stations}>
-              {currentMachines.map((m) => renderStationCard(m))}
-            </div>
+
+            {machinesLoading ? (
+              <div className={styles.foothelp} style={{ textAlign: 'center', padding: '40px 0' }}>
+                Загрузка станков...
+              </div>
+            ) : machinesError ? (
+              <div
+                className={styles.foothelp}
+                style={{ textAlign: 'center', padding: '40px 0', color: '#e74c3c' }}
+              >
+                {machinesError}
+              </div>
+            ) : machines.length === 0 ? (
+              <div className={styles.foothelp} style={{ textAlign: 'center', padding: '40px 0' }}>
+                На этом участке нет станков
+              </div>
+            ) : (
+              <div className={styles.stations}>
+                {machines.map((m) => renderStationCard(m))}
+              </div>
+            )}
+
             <div className={styles.foothelp}>
               Назначение выполняется по одному сотруднику и начинает отсчёт времени авторизации
               сразу. Данные автоматически синхронизируются с личным кабинетом оператора и монитором
-              персонала. <strong>Коды станков в макете демонстрационные</strong>; в реальной системе
-              отображается код рабочего места из его настроек.
+              персонала.
             </div>
           </div>
         </div>
@@ -533,7 +638,14 @@ const OperatorBindingModal: React.FC<OperatorBindingModalProps> = ({ isOpen, onC
       {renderNumSubModal()}
 
       {/* Тост-уведомление */}
-      {toast && <div className={styles.toast}>{toast}</div>}
+      {toast && (
+        <div
+          className={styles.toast}
+          style={toastType === 'error' ? { background: '#e74c3c' } : undefined}
+        >
+          {toast}
+        </div>
+      )}
     </>
   );
 };
