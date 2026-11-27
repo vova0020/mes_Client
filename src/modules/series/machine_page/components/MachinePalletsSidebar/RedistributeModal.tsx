@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './MachinePalletsSidebar.module.css';
-import { ProductionPallet } from '../../../api/machineApi/machinProductionPalletsService';
-import { PartDistribution } from '../../../api/machineApi/machineApi';
+import { ProductionPallet } from '../../../../api/machineApi/machinProductionPalletsService';
+import { PartDistribution } from '../../../../api/machineApi/machineApi';
 
 interface RedistributeModalProps {
   isOpen: boolean;

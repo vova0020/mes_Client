@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import styles from './TaskSidebar.module.css';
 import useMachines from '../../../../../../hooks/masterPage/useMachinesMaster';
-import { MachineTask } from '../../../../../api/masterPage/machineMasterService';
-import { startPalletProcessing, completePalletProcessing } from '../../../../../api/machineApi/machinProductionPalletsService';
+import { MachineTask } from '../../../../../../api/masterPage/machineMasterService';
+import { startPalletProcessing, completePalletProcessing } from '../../../../../../api/machineApi/machinProductionPalletsService';
 
 // Типы статусов деталей
 type TaskStatus = 'PENDING' | 'BUFFERED' | 'ON_MACHINE' | 'IN_PROGRESS' | 'COMPLETED' | 'PARTIALLY_COMPLETED' ;
@@ -670,11 +670,11 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
     }, {} as Record<string, GroupedDetail>);
     
     // Сортируем группы по приоритету (меньшее число = выше приоритет)
-    return Object.values(grouped).sort((a, b) => {
+    return (Object.values(grouped) as GroupedDetail[]).sort((a, b) => {
       if (a.priority === null && b.priority === null) return 0;
       if (a.priority === null) return 1;
       if (b.priority === null) return -1;
-      return a.priority - b.priority; 
+      return a.priority! - b.priority!;
     });
   };
   

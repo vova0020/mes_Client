@@ -13,7 +13,7 @@ import { ReactComponent as PolomkaActiveIcon } from '../../../../../assets/sideb
 import { ReactComponent as WifiIcon } from '../../../../../assets/sidebar/wifi.svg'; // Необходимо добавить иконку WiFi
 
 import { Button, Tooltip } from '@mui/material';
-import { Machine, MachineStatus } from '../../../api/machinNoSmenApi/machineApi';
+import { Machine, MachineStatus } from '../../../../api/machinNoSmenApi/machineApi';
 
 interface SidebarProps {
   machine?: Machine | null; 

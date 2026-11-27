@@ -4,11 +4,11 @@ import { API_URL } from '../config';
 // Интерфейс для привязанного оператора
 export interface BoundOperator {
   userId: number;
-  operatorNumber: number;
+  operatorNumber: string;
   firstName: string;
   lastName: string;
-  position: string;
-  boundAt: string;
+  position?: string;
+  boundAt?: string;
 }
 
 // Типы данных для API станков

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './NoSmenPalletsSidebar.module.css';
-import { ProductionPallet, PartDistribution } from '../../../api/machinNoSmenApi/productionPalletsService';
+import { ProductionPallet, PartDistribution } from '../../../../api/machinNoSmenApi/productionPalletsService';
 
 interface RedistributeModalProps {
   isOpen: boolean;

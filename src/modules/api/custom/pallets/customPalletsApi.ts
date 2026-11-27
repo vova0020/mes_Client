@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { API_URL } from '../../config';
+import type { PalletMachineInfo } from '../orders/customOrdersApi';
 
 export interface PalletPart {
   customPartId: number;
@@ -11,12 +12,6 @@ export interface PalletPart {
   quantity: number;
 }
 
-export interface PalletMachineInfo {
-  machineId: number;
-  machineName: string;
-  assignmentStatus?: string;
-  completedAt?: string;
-}
 
 export interface PalletAssignedMachine {
   assignmentId: number;

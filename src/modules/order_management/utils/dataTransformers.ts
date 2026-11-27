@@ -104,7 +104,7 @@ export const transformOrderDetailsToPlanning = (orderDetails: OrderDetailsRespon
     details: pkg.details.map(detail => ({
       id: detail.partId.toString(),
       name: detail.partName,
-      quantity: detail.quantityPerPackage,
+      quantity: detail.quantityPerPackage ?? 0,
       unit: 'шт',
       articleNumber: detail.partCode,
     })),

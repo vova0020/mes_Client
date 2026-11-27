@@ -259,7 +259,7 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
           quantity: 0
         }))
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при создании заказа:', error);
       
       // Детальное логирование ошибки
@@ -360,7 +360,7 @@ const OrderCreation: React.FC<Props> = ({ onBack }) => {
       await updateOrder(editingOrder.orderId, updateDto);
       setIsEditDialogOpen(false);
       setEditingOrder(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при обновлении заказа:', error);
       
       // Детальное логирование ошибки

@@ -206,7 +206,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {pkg.details.map((detail) => (
+                                    {pkg.details.map((detail: any) => (
                                       <tr key={detail.partId}>
                                         <td>{detail.partCode}</td>
                                         <td>{detail.partName}</td>
@@ -274,7 +274,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ orderId, orderDet
                       <React.Fragment key={part.partId}>
                         <tr
                           className={`${styles.detailRow} ${isPartRelatedToPackage(part.partId, selectedPackageId) ? styles.highlightedDetail : ''}`}
-                          onClick={() => toggleDetailExpansion(part.partId)}
+                          onClick={() => toggleDetailExpansion(part.partId!)}
                         >
                           <td>{part.partCode}</td>
                           <td>{part.partName}</td>

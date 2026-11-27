@@ -7,7 +7,7 @@ import { useMachine } from '../../../../hooks/machinhook/useMachine';
 import DefectModal from './DefectModal';
 import RedistributeModal from './RedistributeModal';
 import ReturnModal from './ReturnModal';
-import { PartDistribution, RedistributePartsRequest } from '../../../api/machineApi/machineApi';
+import { PartDistribution, RedistributePartsRequest } from '../../../../api/machineApi/machineApi';
 import {
   ProductionPallet,
   BufferCellDto,
@@ -16,7 +16,7 @@ import {
   getProcessStepText,
   CompleteProcessingResponseDto
 } from '../../../../api/machineApi/machinProductionPalletsService';
-import { DefectPalletPartsDto } from '../../../api/machineApi/machineApi';
+import { DefectPalletPartsDto } from '../../../../api/machineApi/machineApi';
 
 interface PalletsSidebarProps {
   detailInfo: any;

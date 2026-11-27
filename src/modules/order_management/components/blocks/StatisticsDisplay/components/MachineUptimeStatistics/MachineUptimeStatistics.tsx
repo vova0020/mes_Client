@@ -213,7 +213,7 @@ const MachineUptimeStatistics: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => formatTime(value)}
+                    formatter={(value) => formatTime(value as number)}
                     contentStyle={{
                       background: '#2d3441',
                       border: '1px solid #3498db',

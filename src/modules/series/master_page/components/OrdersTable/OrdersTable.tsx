@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './OrdersTable.module.css';
-import { Order } from '../../../api/masterPage/orderServiceMaster';
+import { Order } from '../../../../api/masterPage/orderServiceMaster';
 
 interface OrdersTableProps {
   orders: Order[];

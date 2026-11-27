@@ -36,6 +36,7 @@ export interface OrderDetail {
   partCode: string;
   partName: string;
   totalQuantity: number;
+  quantityPerPackage?: number;
   status: string;
   size: string;
   materialId: number;

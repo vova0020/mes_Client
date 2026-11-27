@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './MachinePalletsSidebar.module.css';
-import { DefectPalletPartsDto } from '../../../api/machineApi/machineApi';
+import { DefectPalletPartsDto } from '../../../../api/machineApi/machineApi';
 
 interface DefectModalProps {
   isOpen: boolean;

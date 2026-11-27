@@ -63,7 +63,7 @@ export const CopyDetailModal: React.FC<CopyDetailModalProps> = ({
     sbPart: false,
     pfSb: false,
     sbPartSku: '',
-    conveyorPosition: '',
+    conveyorPosition: undefined,
     quantity: 1,
     routeId: 0,
     packageId: 0,
@@ -76,8 +76,8 @@ export const CopyDetailModal: React.FC<CopyDetailModalProps> = ({
   useEffect(() => {
     if (detail && isOpen) {
       // Получаем routeId из packageDetails для текущей упаковки
-      const currentPackageDetail = detail.packageDetails?.find(pd => pd.packageId === currentPackageId);
-      const routeId = currentPackageDetail?.route?.routeId || detail.route?.routeId || 0;
+      const currentPackageDetail = detail.packageDetails?.find((pd: any) => pd.packageId === currentPackageId);
+      const routeId = (currentPackageDetail as any)?.route?.routeId || detail.route?.routeId || 0;
       
       setFormData({
         partSku: `${detail.partSku}`,
@@ -106,8 +106,8 @@ export const CopyDetailModal: React.FC<CopyDetailModalProps> = ({
         sbPart: detail.sbPart,
         pfSb: detail.pfSb,
         sbPartSku: detail.sbPartSku || '',
-        conveyorPosition: detail.conveyorPosition || '',
-        quantity: currentPackageDetail?.quantity || detail.quantity || 1,
+        conveyorPosition: detail.conveyorPosition ?? undefined,
+        quantity: (currentPackageDetail as any)?.quantity || detail.quantity || 1,
         routeId: routeId,
         packageId: currentPackageId || 0,
       });

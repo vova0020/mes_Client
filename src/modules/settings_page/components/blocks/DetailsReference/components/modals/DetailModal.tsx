@@ -57,7 +57,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
     sbPart: false,
     pfSb: false,
     sbPartSku: '',
-    conveyorPosition: '',
+    conveyorPosition: undefined,
     quantity: 1,
     routeId: 0,
   });
@@ -94,7 +94,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
         sbPart: detail.sbPart,
         pfSb: detail.pfSb,
         sbPartSku: detail.sbPartSku || '',
-        conveyorPosition: detail.conveyorPosition || '',
+        conveyorPosition: detail.conveyorPosition ?? undefined,
         quantity: detail.quantity || 1,
         routeId: detail.route?.routeId || 0,
       });
@@ -127,7 +127,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
         sbPart: false,
         pfSb: false,
         sbPartSku: '',
-        conveyorPosition: '',
+        conveyorPosition: undefined,
         quantity: 1,
         routeId: 0,
       });

@@ -26,7 +26,7 @@ export const exportMachineUptimeToExcel = (data: any) => {
 
     summaryData.push([
       machine.machineName,
-      statusLabels[machine.currentStatus],
+      statusLabels[machine.currentStatus as MachineStatus],
       statusData[MachineStatus.ACTIVE]?.toFixed(2) || '0',
       statusData[MachineStatus.INACTIVE]?.toFixed(2) || '0',
       statusData[MachineStatus.MAINTENANCE]?.toFixed(2) || '0',

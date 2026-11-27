@@ -1,5 +1,5 @@
 import React from 'react';
-import { RouteStage } from '../../api/routeListApi/routeListApi';
+import { RouteStage } from '../../../api/routeListApi/routeListApi';
 import styles from '../styles.module.css';
 
 interface RoutingTableProps {
