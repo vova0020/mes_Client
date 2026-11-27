@@ -1,0 +1,706 @@
+/* ===== Backdrop ===== */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 39, 51, 0.75);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 30px 20px;
+  overflow-y: auto;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== Контейнер модального окна ===== */
+.modalContainer {
+  width: 100%;
+  max-width: 960px;
+  background: #f7f8fa;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 60px);
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(16px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== Заголовок модального окна ===== */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(180deg, #364154, #2d3644);
+  color: white;
+  flex-shrink: 0;
+}
+
+.modalHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.modalHeaderIcon {
+  font-size: 28px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.modalSubtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 3px;
+}
+
+.modalCloseBtn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+/* ===== Панель управления ===== */
+.controlBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8ee;
+  flex-shrink: 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.stageSelector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f5f7fa;
+  padding: 8px 14px;
+  border: 1px solid #dbe2ea;
+  border-radius: 6px;
+}
+
+.stageSelectorLabel {
+  color: #718099;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.stageSelector select {
+  border: none;
+  color: #285275;
+  font-weight: 600;
+  min-width: 180px;
+  outline: none;
+  font-size: 14px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.stageSummary {
+  display: flex;
+  gap: 10px;
+}
+
+.miniStat {
+  background: #f5f7fa;
+  border: 1px solid #dbe3eb;
+  border-radius: 6px;
+  padding: 8px 16px;
+  color: #6a788b;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.miniStat b {
+  color: #283e57;
+  font-size: 20px;
+  margin-right: 6px;
+}
+
+/* ===== Контент ===== */
+.content {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.overline {
+  color: #293549;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.stations {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* ===== Карточка станка ===== */
+.station {
+  border: 1px solid #d8dfe8;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(31, 56, 82, 0.06);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.stationInactive {
+  opacity: 0.75;
+}
+
+.stationTop {
+  border-left: 5px solid #19ad65;
+  background: #f1f4f8;
+  border-bottom: 1px solid #dfe5ed;
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stationTopInactive {
+  border-left-color: #808991;
+}
+
+.stationName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #39495b;
+}
+
+.stationSubline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 11px;
+  row-gap: 4px;
+  margin-top: 5px;
+}
+
+.stationSubline small {
+  color: #8795a7;
+  font-size: 11px;
+}
+
+.stationCode {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #e3edfa;
+  border: 1px solid #bed7f4;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #325f88;
+  white-space: nowrap;
+}
+
+.stationCode strong {
+  font-size: 12px;
+  color: #174d7c;
+  letter-spacing: 0.4px;
+}
+
+.stationBody {
+  padding: 11px 13px;
+}
+
+/* ===== Строка оператора ===== */
+.opLine {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 6px;
+  border-bottom: 1px solid #edf0f4;
+  min-height: 43px;
+}
+
+.opLine:last-of-type {
+  border-bottom: none;
+}
+
+.numPill {
+  background: #e3effa;
+  border: 1px solid #bcd9f1;
+  color: #236693;
+  border-radius: 4px;
+  min-width: 38px;
+  padding: 4px 5px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.numPill:hover {
+  background: #d5e6f7;
+}
+
+.opName {
+  font-weight: 600;
+  color: #344155;
+  flex: 1;
+  font-size: 13px;
+}
+
+.opTime {
+  color: #8a98a9;
+  font-size: 11px;
+}
+
+.iconBtn {
+  border: 1px solid #d4dfe8;
+  background: #fafcff;
+  color: #66758b;
+  border-radius: 4px;
+  padding: 4px 7px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: #e6f0fa;
+}
+
+.iconBtnDel {
+  color: #dc6464;
+  background: #fffafa;
+  border-color: #f1dddd;
+}
+
+.iconBtnDel:hover {
+  background: #ffeaea;
+}
+
+.expandBtn {
+  border: none;
+  background: none;
+  color: #137ebf;
+  padding: 9px 3px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.expandBtn:hover {
+  text-decoration: underline;
+}
+
+.subtleEmpty {
+  color: #a9b6c4;
+  font-size: 12px;
+  padding: 12px 4px;
+  text-align: center;
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.addRowHint {
+  color: #8795a7;
+  font-size: 11px;
+}
+
+.assignBtn {
+  background: linear-gradient(180deg, #1eae67, #18995a);
+  border: 1px solid #168a51;
+  color: white;
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.assignBtn:hover {
+  background: linear-gradient(180deg, #23bd73, #1c9f5f);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Tags ===== */
+.tag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tagOn {
+  background: #e7f6ec;
+  color: #1eae67;
+  border: 1px solid #c6ebd4;
+}
+
+.tagOff {
+  background: #f2f3f5;
+  color: #808991;
+  border: 1px solid #e0e3e7;
+}
+
+/* ===== Подвал ===== */
+.foothelp {
+  color: #8795a7;
+  font-size: 12px;
+  margin-top: 18px;
+  line-height: 1.6;
+  padding: 12px 0;
+  border-top: 1px solid #e8ecf0;
+}
+
+.foothelp strong {
+  color: #6a788b;
+}
+
+/* ===== Суб-модалки (назначение / открепление / номер) ===== */
+.subModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 28, 40, 0.5);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.subModalBox {
+  background: #fff;
+  border-radius: 8px;
+  width: 520px;
+  max-width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  animation: slideIn 0.18s ease;
+}
+
+.subModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e6ebf0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #293549;
+}
+
+.subModalCode {
+  display: inline-block;
+  font-size: 11px;
+  color: #647d94;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.subModalClose {
+  border: none;
+  background: none;
+  color: #8a98a9;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  line-height: 1;
+}
+
+.subModalClose:hover {
+  color: #dc6464;
+}
+
+.subModalBody {
+  padding: 16px 18px;
+  overflow-y: auto;
+}
+
+.subModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid #e6ebf0;
+}
+
+/* ===== Общие элементы ===== */
+.muted {
+  color: #8795a7;
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dbe2ea;
+  border-radius: 5px;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.searchBox span {
+  color: #93a1b1;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.searchBox input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  color: #344155;
+  background: transparent;
+}
+
+.resultList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border: 1px solid #e2e8ee;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.person:hover {
+  background: #f5f9fd;
+  border-color: #cfe2f3;
+}
+
+.personActive {
+  background: #e8f4ff;
+  border-color: #7fb8e6;
+  box-shadow: 0 0 0 2px rgba(20, 91, 152, 0.12);
+}
+
+.person b {
+  font-size: 13px;
+  color: #344155;
+}
+
+.person small {
+  font-size: 11px;
+  color: #8795a7;
+  display: block;
+  margin-top: 2px;
+}
+
+.warning {
+  background: #fff7e6;
+  border: 1px solid #ffe0a3;
+  color: #8a6d1f;
+  padding: 10px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.emptyList {
+  padding: 20px;
+  text-align: center;
+  color: #a9b6c4;
+  font-size: 13px;
+}
+
+/* ===== Кнопки ===== */
+.btnGray {
+  border: 1px solid #d4dfe8;
+  background: #fafcff;
+  color: #5a6b80;
+  padding: 8px 20px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnGray:hover {
+  background: #eef4fa;
+}
+
+.btnPrimary {
+  border: none;
+  background: linear-gradient(180deg, #1eae67, #18995a);
+  color: white;
+  padding: 8px 22px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #23bd73, #1c9f5f);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnRed {
+  border: none;
+  background: linear-gradient(180deg, #e0524d, #cf3b35);
+  color: white;
+  padding: 8px 22px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnRed:hover {
+  background: linear-gradient(180deg, #e5645f, #d44640);
+}
+
+.numInput {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #dbe2ea;
+  border-radius: 5px;
+  font-size: 14px;
+  outline: none;
+  margin-top: 8px;
+}
+
+.numInput:focus {
+  border-color: #145b98;
+  box-shadow: 0 0 0 2px rgba(20, 91, 152, 0.12);
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  background: #29465b;
+  color: white;
+  padding: 13px 18px;
+  border-radius: 6px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+  z-index: 1200;
+  font-size: 13px;
+  animation: toastIn 0.2s ease;
+}
+
+@keyframes toastIn {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .modalContainer {
+    max-width: 100%;
+  }
+  .stations {
+    grid-template-columns: 1fr;
+  }
+  .controlBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .stageSummary {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .backdrop {
+    padding: 10px;
+  }
+  .modalHeader {
+    padding: 14px 16px;
+  }
+  .modalTitle {
+    font-size: 16px;
+  }
+  .content {
+    padding: 14px 16px;
+  }
+  .controlBar {
+    padding: 12px 16px;
+  }
+  .subModalBox {
+    width: 100%;
+  }
+}

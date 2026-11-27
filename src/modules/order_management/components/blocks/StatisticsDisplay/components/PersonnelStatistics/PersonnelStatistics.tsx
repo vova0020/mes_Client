@@ -318,17 +318,21 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               <div className={styles.tableWrap}>
                 <table className={styles.datatable}>
                   <colgroup>
-                    <col style={{ width: '30%' }} />
-                    <col style={{ width: '20%' }} />
-                    <col style={{ width: '15%' }} />
-                    <col style={{ width: '15%' }} />
-                    <col style={{ width: '20%' }} />
+                    <col style={{ width: '22%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '16%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '16%' }} />
                   </colgroup>
                   <thead>
                     <tr>
                       <th colSpan={2}>Оператор / Рабочее место</th>
                       <th className={styles.num}>Выпуск</th>
                       <th className={styles.num}>Ед. изм.</th>
+                      <th className={styles.num}>Время привязки</th>
+                      <th className={styles.num}>Привязок</th>
                       <th className={styles.num}>№</th>
                     </tr>
                   </thead>
@@ -346,13 +350,21 @@ const PersonnelStatistics: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                           <td />
                           <td />
                           <td />
+                          <td />
+                          <td />
                         </tr>
                         {rec.machines.map((m) => (
                           <tr className={styles.dataRow} key={m.machineId}>
-                            <td className={styles.indent}>{m.machineName}</td>
-                            <td className={styles.num}>{m.machineCode}</td>
+                            <td className={styles.indent}>{m.machineName || <span className={styles.zero}>—</span>}</td>
+                            <td className={styles.num}>{m.machineCode || <span className={styles.zero}>—</span>}</td>
                             <td className={styles.num}>{num(m.quantityProcessed)}</td>
-                            <td className={styles.num}>{m.loadUnit}</td>
+                            <td className={styles.num}>{m.loadUnit || <span className={styles.zero}>—</span>}</td>
+                            <td className={styles.num}>
+                              <span className={styles.blueVal}>{formatSeconds(m.authorizedSeconds)}</span>
+                            </td>
+                            <td className={styles.num}>
+                              <span className={styles.teamVal}>{m.bindingCount}</span>
+                            </td>
                             <td className={styles.num}>{formatOperatorNumbers(m.operatorNumbers)}</td>
                           </tr>
                         ))}

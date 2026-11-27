@@ -98,6 +98,7 @@ export interface OperatorMachineDetail {
   loadUnit: string;
   quantityProcessed: number;
   bindingCount: number;
+  authorizedSeconds: number;
   operatorNumbers: number[];
 }
 

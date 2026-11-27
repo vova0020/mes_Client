@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 // СКРЫТО: useNavigate и ProductionType больше не нужны (индивидуальное скрыто)
 // import { useNavigate } from 'react-router-dom';
@@ -8,10 +7,12 @@ import styles from './Header.module.css';
 import logo from '../../../../../assets/logo-Photoroom.png';
 // Импортируем компонент LogoutButton вместо иконки LogoutIcon
 import LogoutButton from '../../../../../componentsGlobal/LogoutButton/LogoutButton';
-// Импортируем новый к��мпонент Navbar
+// Импортируем новый компонент Navbar
 import Navbar from '../../../../../componentsGlobal/Navbar/Navbar';
 // Импортируем хук для работы с навбаром
 import { useStageNavbar } from '../../../../../componentsGlobal/Navbar/useStageNavbar';
+// Импортируем компонент привязки операторов
+import OperatorBindingModal from '../OperatorBindingModal/OperatorBindingModal';
 
 // Интерфейс для данных сегмента из localStorage
 interface SegmentData {
@@ -33,6 +34,9 @@ const Header: React.FC = () => {
   const [productionLineName, setProductionLineName] = useState<string>('Производственная линия');
   // Используем хук для работы с навбаром
   const { getCurrentStage } = useStageNavbar();
+
+  // Состояние для открытия модального окна привязки операторов
+  const [isOperatorBindingOpen, setIsOperatorBindingOpen] = useState(false);
 
   // СКРЫТО: переключение на индивидуальное производство
   // const handleSwitchToCustom = () => {
@@ -130,6 +134,15 @@ const Header: React.FC = () => {
         </div>
         <div className={styles.navButtons}>
           <Navbar />
+          {/* Кнопка привязки операторов к станкам мастера */}
+          <button
+            className={styles.operatorBindButton}
+            onClick={() => setIsOperatorBindingOpen(true)}
+            title="Распределение операторов"
+          >
+            <span className={styles.operatorBindIcon}>♧</span>
+            <span className={styles.operatorBindText}>Операторы</span>
+          </button>
           {/* СКРЫТО: переключатель серийное/индивидуальное */}
           {/* {showProductionSwitch && (
             <div className={styles.switchContainer}>
@@ -154,6 +167,11 @@ const Header: React.FC = () => {
         {/* Заменяем старую кнопку выхода на компонент LogoutButton */}
         <LogoutButton className={styles.exitButton} />
       </div>
+      {/* Модальное окно привязки операторов к станкам мастера */}
+      <OperatorBindingModal
+        isOpen={isOperatorBindingOpen}
+        onClose={() => setIsOperatorBindingOpen(false)}
+      />
     </header>
   );
 };
